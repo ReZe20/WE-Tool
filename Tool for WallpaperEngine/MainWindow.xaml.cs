@@ -26,6 +26,28 @@ namespace Tool_for_WallpaperEngine
         public MainWindow()
         {
             InitializeComponent();
+            ExtendsContentIntoTitleBar = true;
+        }
+
+        private void nvSample_ItemInvoked(NavigationView sneder, NavigationViewItemInvokedEventArgs args)
+        {
+            string tag = args.InvokedItemContainer.Tag.ToString();
+
+            switch (tag)
+            {
+                case "Papers":
+                    contentFrame.Navigate(typeof(Papers), null);
+                    break;
+                case "LoadPapers":
+                    contentFrame.Navigate(typeof(LoadPapers), null);
+                    break;
+            }
+        }
+
+        private void nvSample_Loaded(object sender, RoutedEventArgs e)
+        {
+            contentFrame.Navigate(typeof(Papers), null);
         }
     }
 }
+ 

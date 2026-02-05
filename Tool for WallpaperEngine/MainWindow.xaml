@@ -10,23 +10,24 @@
     Title="Tool for WallpaperEngine">
 
     <Window.SystemBackdrop>
-        <DesktopAcrylicBackdrop />
+        <DesktopAcrylicBackdrop/>
     </Window.SystemBackdrop>
+    <Grid Background="Transparent">
+        <NavigationView x:Name="nvSample" ItemInvoked="nvSample_ItemInvoked" Loaded="nvSample_Loaded" IsPaneOpen="False">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="已安装壁纸" Tag="Papers" IsSelected="True">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8B9;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
 
-    <NavigationView x:Name="nvSample">
-        <NavigationView.MenuItems>
-            <NavigationViewItem Content="已安装壁纸" Tag="SamplePage1">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE8B9;" />
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-
-            <NavigationViewItem Content="导入壁纸" Tag="SamplePage2">
-                <NavigationViewItem.Icon>
-                    <SymbolIcon Symbol="Import"/>
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-        </NavigationView.MenuItems>
-        <Frame x:Name="contentFrame"/>
-    </NavigationView>
+                <NavigationViewItem Content="导入壁纸" Tag="LoadPapers">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Import"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <Frame x:Name="contentFrame"/>
+        </NavigationView>
+    </Grid>
 </Window>
