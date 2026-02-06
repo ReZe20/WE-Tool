@@ -41,12 +41,25 @@ namespace Tool_for_WallpaperEngine
                 case "LoadPapers":
                     contentFrame.Navigate(typeof(LoadPapers), null);
                     break;
+                case "Info":
+                    contentFrame.Navigate(typeof(Info), null);
+                    break;
+                case "Settings":
+                    contentFrame.Navigate(typeof(Settings), null);
+                    break;
             }
         }
-
         private void nvSample_Loaded(object sender, RoutedEventArgs e)
         {
             contentFrame.Navigate(typeof(Papers), null);
+        }
+        private void NavigateTo(Type pageType, object? parameter)
+        {
+            if (contentFrame.Content != null && contentFrame.Content.GetType() == pageType)
+            {
+                return;
+            }
+            contentFrame.Navigate(pageType, parameter);
         }
     }
 }
