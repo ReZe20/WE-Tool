@@ -32,6 +32,9 @@ namespace Tool_for_WallpaperEngine
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
+
+        public static Window? MainWindowInstance { get; private set; }
+
         public App()
         {
             InitializeComponent();
@@ -44,6 +47,7 @@ namespace Tool_for_WallpaperEngine
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             _window = new MainWindow();
+            MainWindowInstance = _window;
             _window.Activate();
         }
     }

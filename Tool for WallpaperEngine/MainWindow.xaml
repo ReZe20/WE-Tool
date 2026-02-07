@@ -13,9 +13,9 @@
         <DesktopAcrylicBackdrop/>
     </Window.SystemBackdrop>
     <Grid Background="Transparent">
-        <NavigationView x:Name="nvSample" OpenPaneLength="240" ItemInvoked="nvSample_ItemInvoked" Loaded="nvSample_Loaded" IsSettingsVisible="False" IsPaneOpen="False">
+        <NavigationView x:Name="nvSample" OpenPaneLength="240" ItemInvoked="nvSample_ItemInvoked" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="False">
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="已安装壁纸" Tag="Papers" IsSelected="True">
+                <NavigationViewItem Content="已安装壁纸" Tag="Papers">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8B9;"/>
                     </NavigationViewItem.Icon>
