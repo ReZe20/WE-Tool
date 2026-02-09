@@ -12,8 +12,15 @@
     <Window.SystemBackdrop>
         <DesktopAcrylicBackdrop/>
     </Window.SystemBackdrop>
-    <Grid Background="Transparent">
-        <NavigationView x:Name="nvSample" OpenPaneLength="240" ItemInvoked="nvSample_ItemInvoked" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="False">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Height="40" VerticalAlignment="Top" IsHitTestVisible="False">
+            <TextBlock Text="Tool for WallpaperEngine" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+        <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="nvSample_ItemInvoked" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="False">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="已安装壁纸" Tag="Papers">
                     <NavigationViewItem.Icon>

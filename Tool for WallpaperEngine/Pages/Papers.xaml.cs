@@ -12,6 +12,8 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Tool_for_WallpaperEngine.Service;
+using Tool_for_WallpaperEngine.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -23,25 +25,25 @@ namespace Tool_for_WallpaperEngine;
 /// </summary>
 public sealed partial class Papers : Page
 {
+    public SettingsViewModel ViewModel { get; }
 
     public Papers()
     {
         InitializeComponent();
+        // 确保加载数据
+        Loaded += async (s, e) => await ViewModel.InitializeAsync();
+
+        ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
     }
 
-    private void FoldLeftColumn_Click(object sender, RoutedEventArgs e)
+    private void LeftToggleFilterButton_Click(object sender, RoutedEventArgs e)
     {
-        LeftColumn.Width = new GridLength(0);
-        ExpandLeftColumnButton.Visibility = Visibility.Visible;
-        FoldLeftColumnButton.Visibility = Visibility.Collapsed;
+        LeftSplitView.IsPaneOpen = !LeftSplitView.IsPaneOpen;
     }
-    private void ExpandLeftColumn_Click(object sender, RoutedEventArgs e)
+    private void RightToggleFilterButton_Click(object sender, RoutedEventArgs e)
     {
-        LeftColumn.Width = new GridLength(195);
-        ExpandLeftColumnButton.Visibility = Visibility.Collapsed;
-        FoldLeftColumnButton.Visibility = Visibility.Visible;
+        RightSplitView.IsPaneOpen = !RightSplitView.IsPaneOpen;
     }
-
     private void sortByname_CLick(object sender, RoutedEventArgs e)
     {
         sortButtonIcon.Glyph = "\uE8D2";
@@ -70,70 +72,56 @@ public sealed partial class Papers : Page
         else
             btnSortDirectionIcon.Glyph = "\uE70E";
     }
+    private async void ResetFilter_Click(object sender, RoutedEventArgs e)
+    {
+        await ViewModel.ResetFiltersAsync(1);
+    }
     private void SelectAllportraitmonitor_Click(object sender, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in portraitmonitor.Children)
-            cb.IsChecked = true;
+        
     }
     private void DeselectAllportraitmonitor_Click(object sneder, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in portraitmonitor.Children)
-            cb.IsChecked = false;
+        
     }
     private void SelectAlltripledisplay_Click(object sender, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in tripledisplay.Children)
-            cb.IsChecked = true;
+        
     }
     private void DeselectAlltripledisplay_Click(object sneder, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in tripledisplay.Children)
-            cb.IsChecked = false;
+        
     }
     private void SelectAlldualdisplay_Click(object sender, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in dualdisplay.Children)
-            cb.IsChecked = true;
+        
     }
     private void DeselectAlldualdisplay_Click(object sneder, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in dualdisplay.Children)
-            cb.IsChecked = false;
+        
     }
     private void SelectAllultrawide_Click(object sender, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in ultrawide.Children)
-            cb.IsChecked = true;
+        
     }
     private void DeselectAllultrawide_Click(object sneder, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in ultrawide.Children)
-            cb.IsChecked = false;
+        
     }
     private void SelectAllwidescreen_Click(object sender, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in widescreen.Children)
-            cb.IsChecked = true;
+        
     }
     private void DeselectAllwidescreen_Click(object sneder, RoutedEventArgs e)
     {
-        foreach (CheckBox cb in widescreen.Children)
-            cb.IsChecked = false;
+        
     }
-    private void SelectAllTags_Click(object sender, RoutedEventArgs e)
+    private async void SelectAllTags_Click(object sender, RoutedEventArgs e)
     {
-        foreach (var child in TagsContainer.Children)
-        {
-            if (child is CheckBox cb)
-                cb.IsChecked = true;
-        }
-    }
-    private void DeselectAllTags_Click(object sender, RoutedEventArgs e)
+        await ViewModel.ResetFiltersAsync(2);
+    } 
+    private async void DeselectAllTags_Click(object sender, RoutedEventArgs e)
     {
-        foreach (var child in TagsContainer.Children)
-        {
-            if (child is CheckBox cb)
-                cb.IsChecked = false;
-        }
+        await ViewModel.DeselctAllAsync(1);
     }
 }

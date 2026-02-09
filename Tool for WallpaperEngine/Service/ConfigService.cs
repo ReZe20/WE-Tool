@@ -24,6 +24,9 @@ namespace Tool_for_WallpaperEngine.Service
                 var file = await folder.GetFileAsync(FileName);
                 var text = await FileIO.ReadTextAsync(file);
                 var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                //这一行调完就删
+                System.Diagnostics.Debug.WriteLine(ApplicationData.Current.LocalFolder.Path);
+
                 return JsonSerializer.Deserialize<AppSettings>(text, opts) ?? new AppSettings();
             }
             catch
@@ -34,10 +37,18 @@ namespace Tool_for_WallpaperEngine.Service
 
         public async Task SaveAsync(AppSettings settings)
         {
-            var folder = ApplicationData.Current.LocalFolder;
-            var file = await folder.CreateFileAsync(FileName, CreationCollisionOption.ReplaceExisting);
-            var text = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-            await FileIO.WriteTextAsync(file, text);
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    var folder = ApplicationData.Current.LocalFolder;
+                    var file = await folder.CreateFileAsync(FileName, CreationCollisionOption.ReplaceExisting);
+                    var text = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+                    await FileIO.WriteTextAsync(file, text);
+                }
+                catch (Exception ex)
+                { }
+            });
         }
     }
 }

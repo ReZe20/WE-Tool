@@ -8,309 +8,311 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Tool_for_WallpaperEngine.Models"
     mc:Ignorable="d"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     NavigationCacheMode="Required">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock Text="Tool for WallpaperEngine" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="270"/>
-            </Grid.ColumnDefinitions>
-            <Grid Grid.Column="0">
-                <AutoSuggestBox QueryIcon="Find" Height="35" Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Stretch" PlaceholderText="在这里搜索" Margin="195,0,185,0"/>
-                <Border Grid.Row="1" BorderBrush="#E0E0E0" Margin="0,40,0,0" VerticalAlignment="Top" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
+        <Button x:Name="LeftToggleFilterButton" Height="35" Grid.Row="0" Click="LeftToggleFilterButton_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="侧边栏">
+            <Button.Content>
+                <StackPanel Orientation="Horizontal">
+                    <FontIcon Glyph="&#xE71D;" Margin="0,0,5,0"/>
+                    <TextBlock Text="筛选结果"/>
+                </StackPanel>
+            </Button.Content>
+        </Button>
+
+        <AutoSuggestBox Grid.Row="0" Height="35" QueryIcon="Find" PlaceholderText="在这里搜索" Margin="105,0,304,0" FontSize="16" FontWeight="Light" VerticalAlignment="Center"/>
+
+        <StackPanel Grid.Row="0" HorizontalAlignment="Right" Orientation="Horizontal" Margin="10,0,120,0">
+            <DropDownButton Width="140" Height="35" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right">
+                <DropDownButton.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon x:Name="sortButtonIcon" Glyph="&#xE8CB;"/>
+                        <TextBlock x:Name="sortButtonText" Text="排列方式" Margin="5,0,0,0" />
+                    </StackPanel>
+                </DropDownButton.Content>
+                <DropDownButton.Flyout>
+                    <MenuFlyout Placement="Bottom">
+                        <MenuFlyoutItem Text="按名称排序" FontWeight="Bold" Width="140" Click="sortByname_CLick">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE8D2;"/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="按订阅时间" FontWeight="Bold" Width="140" Click="sortBysubscribe_CLick">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xED0E;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="按更新时间" FontWeight="Bold" Width="140" Click="sortByupdate_CLick">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xF738;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="按大小排序" FontWeight="Bold" Width="140" Click="sortBysize_CLick">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xEDA2;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                    </MenuFlyout>
+                </DropDownButton.Flyout>
+            </DropDownButton>
+            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" Click="btnSortDirection_Click">
+                <ToggleButton.Content>
+                    <FontIcon x:Name="btnSortDirectionIcon" Glyph="&#xE70D;"/>
+                </ToggleButton.Content>
+            </ToggleButton>
+        </StackPanel>
+        <Button x:Name="RightToggleFilterButton" Grid.Row="0" HorizontalAlignment="Right" Click="RightToggleFilterButton_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="侧边栏">
+            <Button.Content>
+                <StackPanel Orientation="Horizontal">
+                    <FontIcon Glyph="&#xE712;" Margin="5,0,5,0"/>
+                    <TextBlock Text="详情面板" Margin="5,0,5,0"/>
+                </StackPanel>
+            </Button.Content>
+        </Button>
+        <SplitView 
+                x:Name="RightSplitView" 
+                PanePlacement="Right" 
+                OpenPaneLength="304" 
+                DisplayMode="Inline"
+                Grid.Row="1"
+            IsPaneOpen="{x:Bind ViewModel.RightSplitViewPaneOpen, Mode=TwoWay}">
+            <SplitView.Pane>
+                <TextBlock Text="我是右侧栏" />
+            </SplitView.Pane>
+            <SplitView.Content>
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="195" x:Name="LeftColumn"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="200"/>
                     </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="40"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
 
-                    <GridView x:Name="WallpaperGridView" Grid.Column="1" Grid.Row="1" Margin="12" SelectionMode="Single">
+                    <SplitView x:Name="LeftSplitView" Grid.Column="0" PanePlacement="Left" OpenPaneLength="200" DisplayMode="Inline" IsPaneOpen="{x:Bind ViewModel.LeftSplitViewPaneOpen, Mode=TwoWay}">
+                        <SplitView.Pane>
+                            <Grid BorderBrush="#E0E0E0" BorderThickness="0,0,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
 
-                        <GridView.ItemTemplate>
-                            <DataTemplate x:DataType="models:WallpaperItem">
-                                <Grid Width="280" Height="200" Margin="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
+                                <Button Margin="16,10,16,5" HorizontalAlignment="Stretch" Click="ResetFilter_Click" Style="{StaticResource AccentButtonStyle}" Grid.Row="0">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <FontIcon Glyph="&#xE895;" Margin="10,0,10,0"/>
+                                            <TextBlock Text="重置过滤器"/>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel Padding="15,0,15,10">
+                                        <Expander Header="类型" x:Name="TypeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.TypeExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                            <StackPanel x:Name="TypeFilterPanel">
+                                                <CheckBox Content="场景" Tag="Scene" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="视频" Tag="Video" IsChecked="{x:Bind ViewModel.Video, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="网页" Tag="Web" IsChecked="{x:Bind ViewModel.Web, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="应用程序" Tag="Application" IsChecked="{x:Bind ViewModel.Application, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
+                                                <CheckBox Content="常规壁纸" Tag="Regular" IsChecked="{x:Bind ViewModel.Regular, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="预设" Tag="Preset" IsChecked="{x:Bind ViewModel.Preset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </StackPanel>
+                                        </Expander>
 
-                                    <Image Grid.Row="0" Stretch="UniformToFill">
-                                        <Image.Source>
-                                            <BitmapImage UriSource="{x:Bind Preview}" DecodePixelWidth="280" />
-                                        </Image.Source>
-                                    </Image>
+                                        <Expander Header="年龄分级" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                            <StackPanel x:Name="AgeRatingFilterPanel">
+                                                <CheckBox Content="大众级(G)" Tag="G" IsChecked="{x:Bind ViewModel.G, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="家长指导(PG-13)" Tag="PG" IsChecked="{x:Bind ViewModel.PG, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="限制级/成人级(R-18)" Tag="R" IsChecked="{x:Bind ViewModel.R, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </StackPanel>
+                                        </Expander>
 
-                                    <Grid Grid.Row="0" VerticalAlignment="Bottom" Height="40" Background="#99000000">
-                                        <TextBlock Text="{x:Bind Title}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="8,0"/>
-                                    </Grid>
+                                        <Expander Header="来源" x:Name="SourceExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.SourceExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                            <StackPanel x:Name="SourceFilterPanel">
+                                                <CheckBox Content="官方" Tag="Official" IsChecked="{x:Bind ViewModel.Official, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="创意工坊" Tag="Workshop" IsChecked="{x:Bind ViewModel.Workshop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="我的壁纸" Tag="Mine" IsChecked="{x:Bind ViewModel.Mine, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </StackPanel>
+                                        </Expander>
 
+                                        <Expander Header="分辨率" HorizontalAlignment="Stretch" Visibility="Collapsed" Margin="0,4,0,4">
+                                            <StackPanel>
+                                                <TextBlock Text="宽屏" FontWeight="Bold" Margin="3"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Content="所有" Click="SelectAllwidescreen_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
+                                                    <Button Content="无" Click="DeselectAllwidescreen_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
+                                                </Grid>
+                                                <StackPanel x:Name="widescreen">
+                                                    <CheckBox Content="标清" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <CheckBox Content="1280x 720" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <CheckBox Content="1366x768" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <CheckBox Content="1920x1080 - 全高清" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <CheckBox Content="2560x1440" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <CheckBox Content="3840x2160 - 4K" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                </StackPanel>
+                                                <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
+
+                                                <TextBlock Text="超宽屏" FontWeight="Bold" Margin="3"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Content="所有" Click="SelectAllultrawide_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
+                                                    <Button Content="无" Click="DeselectAllultrawide_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
+                                                </Grid>
+                                                <StackPanel x:Name="ultrawide">
+                                                    <CheckBox Content="超宽（标准）" IsChecked="True"/>
+                                                    <CheckBox Content="2560 x 1080" IsChecked="True"/>
+                                                    <CheckBox Content="3440 x 1440" IsChecked="True"/>
+                                                </StackPanel>
+                                                <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
+
+                                                <TextBlock Text="双显示器" FontWeight="Bold" Margin="3"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Content="所有" Click="SelectAlldualdisplay_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
+                                                    <Button Content="无" Click="DeselectAlldualdisplay_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
+                                                </Grid>
+                                                <StackPanel x:Name="dualdisplay">
+                                                    <CheckBox Content="双显示器（标准）" IsChecked="True"/>
+                                                    <CheckBox Content="3840 x 1080" IsChecked="True"/>
+                                                    <CheckBox Content="5120 x 1440" IsChecked="True"/>
+                                                    <CheckBox Content="7680 x 2160" IsChecked="True"/>
+                                                </StackPanel>
+                                                <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
+
+                                                <TextBlock Text="三显示器" FontWeight="Bold" Margin="3"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Content="所有" Click="SelectAlltripledisplay_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
+                                                    <Button Content="无" Click="DeselectAlltripledisplay_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
+                                                </Grid>
+                                                <StackPanel x:Name="tripledisplay">
+                                                    <CheckBox Content="三显示器（标准）" IsChecked="True"/>
+                                                    <CheckBox Content="4096 x 768" IsChecked="True"/>
+                                                    <CheckBox Content="5760 x 1080" IsChecked="True"/>
+                                                    <CheckBox Content="7680 x 1440" IsChecked="True"/>
+                                                    <CheckBox Content="11520 x 2160" IsChecked="True"/>
+                                                </StackPanel>
+                                                <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
+
+                                                <TextBlock Text="纵向显示器" FontWeight="Bold" Margin="3"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Content="所有" Click="SelectAllportraitmonitor_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
+                                                    <Button Content="无" Click="DeselectAllportraitmonitor_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
+                                                </Grid>
+                                                <StackPanel x:Name="portraitmonitor">
+                                                    <CheckBox Content="纵向（标准）" IsChecked="True"/>
+                                                    <CheckBox Content="720 x 1280" IsChecked="True"/>
+                                                    <CheckBox Content="1080 x 1920" IsChecked="True"/>
+                                                    <CheckBox Content="1440 x 2560" IsChecked="True"/>
+                                                    <CheckBox Content="2160 x 3840" IsChecked="True"/>
+                                                </StackPanel>
+                                                <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
+
+                                                <CheckBox Content="其它分辨率" IsChecked="True"/>
+                                                <CheckBox Content="动态 分辨率" IsChecked="True"/>
+                                            </StackPanel>
+                                        </Expander>
+
+                                        <Expander Header="标签" x:Name="TagsExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.TagsExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                            <StackPanel x:Name="TagsContainer">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Content="所有" Click="SelectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
+                                                    <Button Content="无" Click="DeselectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
+                                                </Grid>
+                                                <CheckBox Content="抽象" Tag="Abstract" IsChecked="{x:Bind ViewModel.Abstract, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="动物" Tag="Animal" IsChecked="{x:Bind ViewModel.Animal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <CheckBox Content="动漫" Tag="Anime" IsChecked="{x:Bind ViewModel.Anime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="卡通" Tag="Cartoon" IsChecked="{x:Bind ViewModel.Cartoon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="CGI" Tag="CGI" IsChecked="{x:Bind ViewModel.CGI, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="网络朋克" Tag="Cyberpunk" IsChecked="{x:Bind ViewModel.Cyberpunk, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="幻想" Tag="Fantasy" IsChecked="{x:Bind ViewModel.Fantasy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="游戏" Tag="Game" IsChecked="{x:Bind ViewModel.Game, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="女性" Tag="Girls" IsChecked="{x:Bind ViewModel.Girls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="男性" Tag="Guys" IsChecked="{x:Bind ViewModel.Guys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="风景" Tag="Landscape" IsChecked="{x:Bind ViewModel.Landscape, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="中世纪" Tag="Medieval" IsChecked="{x:Bind ViewModel.Medieval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="网红事物" Tag="Memes" IsChecked="{x:Bind ViewModel.Memes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="MMD" Tag="MMD" IsChecked="{x:Bind ViewModel.MMD, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="音乐" Tag="Music" IsChecked="{x:Bind ViewModel.Music, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="自然" Tag="Nature" IsChecked="{x:Bind ViewModel.Nature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="像素艺术" Tag="Pixelart" IsChecked="{x:Bind ViewModel.Pixelart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="轻松" Tag="Relaxing" IsChecked="{x:Bind ViewModel.Relaxing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="复古" Tag="Retro" IsChecked="{x:Bind ViewModel.Retro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="科幻" Tag="SciFi" IsChecked="{x:Bind ViewModel.SciFi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="运动" Tag="Sports" IsChecked="{x:Bind ViewModel.Sports, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="科技" Tag="Technology" IsChecked="{x:Bind ViewModel.Technology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="电视节目" Tag="Television" IsChecked="{x:Bind ViewModel.Television, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="汽车" Tag="Vehicle" IsChecked="{x:Bind ViewModel.Vehicle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="未指定样式" Tag="Unspecified" IsChecked="{x:Bind ViewModel.Unspecified, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </StackPanel>
+                                        </Expander>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </SplitView.Pane>
+
+                        <SplitView.Content>
+                            <Grid Padding="12,0,12,12">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    
                                 </Grid>
-                            </DataTemplate>
-                        </GridView.ItemTemplate>
-                    </GridView>
 
-                    <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,0" Click="btnSortDirection_Click">
-                        <ToggleButton.Content>
-                            <FontIcon x:Name="btnSortDirectionIcon" Glyph="&#xE70D;"/>
-                        </ToggleButton.Content>
-                    </ToggleButton>
-                    <DropDownButton Width="140" Height="35" Margin="0,0,44,0" Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right">
-                        <DropDownButton.Content>
-                            <StackPanel Orientation="Horizontal">
-                                <FontIcon x:Name="sortButtonIcon" Glyph="&#xE8CB;"/>
-                                <TextBlock x:Name="sortButtonText" Text="排列方式" Margin="5,0,0,0" />
-                            </StackPanel>
-                        </DropDownButton.Content>
-                        <DropDownButton.Flyout>
-                            <MenuFlyout Placement="Bottom">
-                                <MenuFlyoutItem Text="按名称排序" FontWeight="Bold" Width="140" Click="sortByname_CLick">
-                                    <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xE8D2;"/>
-                                    </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutItem Text="按订阅时间" FontWeight="Bold" Width="140" Click="sortBysubscribe_CLick">
-                                    <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xED0E;" />
-                                    </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutItem Text="按更新时间" FontWeight="Bold" Width="140" Click="sortByupdate_CLick">
-                                    <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xF738;" />
-                                    </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutItem Text="按大小排序" FontWeight="Bold" Width="140" Click="sortBysize_CLick">
-                                    <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xEDA2;" />
-                                    </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
-                            </MenuFlyout>
-                        </DropDownButton.Flyout>
-                    </DropDownButton>
-
-                    <Button x:Name="FoldLeftColumnButton"
-                            Grid.Column="0"
-                            Grid.Row="0"
-                            VerticalAlignment="Top"
-                            Height="35"
-                            HorizontalAlignment="Left"
-                            Width="190"
-                            Margin="3,0,0,0"
-                            Click="FoldLeftColumn_Click"
-                            ToolTipService.ToolTip="折叠筛选面板">
-                        <Button.Content>
-                            <StackPanel Orientation="Horizontal">
-                                <FontIcon Glyph="&#xE71C;"/>
-                                <TextBlock Text="筛选结果" Margin="5,0,0,0"/>
-                            </StackPanel>
-                        </Button.Content>
-                    </Button>
-
-                    <Button x:Name="ExpandLeftColumnButton"
-                            Style="{StaticResource AccentButtonStyle}"
-                            Grid.Column="1"
-                            Grid.Row="0"
-                            VerticalAlignment="Top"
-                            Height="35"
-                            HorizontalAlignment="Left"
-                            Width="190"
-                            Margin="3,0,10,0"
-                            Click="ExpandLeftColumn_Click"
-                            ToolTipService.ToolTip="展开筛选面板"
-                            Visibility="Collapsed">
-                        <Button.Content>
-                            <StackPanel Orientation="Horizontal">
-                                <FontIcon Glyph="&#xE71C;"/>
-                                <TextBlock Text="筛选结果" Margin="5,0,0,0"/>
-                            </StackPanel>
-                        </Button.Content>
-                    </Button>
-
-                    <Border Grid.Column="0" Grid.Row="1" BorderBrush="#E0E0E0" HorizontalAlignment="Right" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                    <ScrollViewer Padding="12" Grid.Column="0" Grid.Row="1" Margin="0,0,0,0" HorizontalAlignment="Stretch">
-                        <StackPanel Spacing="8">
-                            <Button HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}">
-                                <Button.Content>
-                                    <StackPanel Orientation="Horizontal">
-                                        <FontIcon Glyph="&#xE895;" Margin="0,0,10,0"/>
-                                        <TextBlock Text="重置过滤器"/>
-                                    </StackPanel>
-                                </Button.Content>
-                            </Button>
-                            <Expander Header="类型" IsExpanded="True" HorizontalAlignment="Stretch">
-                                <StackPanel>
-                                    <CheckBox Content="场景" IsChecked="True"/>
-                                    <CheckBox Content="视频" IsChecked="True"/>
-                                    <CheckBox Content="网页" IsChecked="True"/>
-                                    <CheckBox Content="应用程序" IsChecked="True"/>
-                                    <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
-                                    <CheckBox Content="常规壁纸" IsChecked="True"/>
-                                    <CheckBox Content="预设" IsChecked="True"/>
-                                </StackPanel>
-                            </Expander>
-
-                            <Expander Header="年龄分级" HorizontalAlignment="Stretch">
-                                <StackPanel>
-                                    <CheckBox Content="大众级(G)" IsChecked="True"/>
-                                    <CheckBox Content="家长指导(PG-13)" IsChecked="True"/>
-                                    <CheckBox Content="限制级/成人级(R-18)" IsChecked="True"/>
-                                </StackPanel>
-                            </Expander>
-
-                            <Expander Header="来源" HorizontalAlignment="Stretch">
-                                <StackPanel>
-                                    <CheckBox Content="官方" IsChecked="True"/>
-                                    <CheckBox Content="创意工坊" IsChecked="True"/>
-                                    <CheckBox Content="我的壁纸" IsChecked="True"/>
-                                </StackPanel>
-                            </Expander>
-
-                            <Expander Header="分辨率" HorizontalAlignment="Stretch" Visibility="Collapsed">
-                                <StackPanel>
-                                    <TextBlock Text="宽屏" FontWeight="Bold" Margin="3"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button Content="所有" Click="SelectAllwidescreen_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
-                                        <Button Content="无" Click="DeselectAllwidescreen_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
-                                    </Grid>
-                                    <StackPanel x:Name="widescreen">
-                                        <CheckBox Content="标清" IsChecked="True"/>
-                                        <CheckBox Content="1280x 720" IsChecked="True"/>
-                                        <CheckBox Content="1366x768" IsChecked="True"/>
-                                        <CheckBox Content="1920x1080 - 全高清" IsChecked="True"/>
-                                        <CheckBox Content="2560x1440" IsChecked="True"/>
-                                        <CheckBox Content="3840x2160 - 4K" IsChecked="True"/>
-                                    </StackPanel>
-                                    <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
-
-                                    <TextBlock Text="超宽屏" FontWeight="Bold" Margin="3"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button Content="所有" Click="SelectAllultrawide_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
-                                        <Button Content="无" Click="DeselectAllultrawide_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
-                                    </Grid>
-                                    <StackPanel x:Name="ultrawide">
-                                        <CheckBox Content="超宽（标准）" IsChecked="True"/>
-                                        <CheckBox Content="2560 x 1080" IsChecked="True"/>
-                                        <CheckBox Content="3440 x 1440" IsChecked="True"/>
-                                    </StackPanel>
-                                    <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
-
-                                    <TextBlock Text="双显示器" FontWeight="Bold" Margin="3"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button Content="所有" Click="SelectAlldualdisplay_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
-                                        <Button Content="无" Click="DeselectAlldualdisplay_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
-                                    </Grid>
-                                    <StackPanel x:Name="dualdisplay">
-                                        <CheckBox Content="双显示器（标准）" IsChecked="True"/>
-                                        <CheckBox Content="3840 x 1080" IsChecked="True"/>
-                                        <CheckBox Content="5120 x 1440" IsChecked="True"/>
-                                        <CheckBox Content="7680 x 2160" IsChecked="True"/>
-                                    </StackPanel>
-                                    <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
-
-                                    <TextBlock Text="三显示器" FontWeight="Bold" Margin="3"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button Content="所有" Click="SelectAlltripledisplay_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
-                                        <Button Content="无" Click="DeselectAlltripledisplay_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
-                                    </Grid>
-                                    <StackPanel x:Name="tripledisplay">
-                                        <CheckBox Content="三显示器（标准）" IsChecked="True"/>
-                                        <CheckBox Content="4096 x 768" IsChecked="True"/>
-                                        <CheckBox Content="5760 x 1080" IsChecked="True"/>
-                                        <CheckBox Content="7680 x 1440" IsChecked="True"/>
-                                        <CheckBox Content="11520 x 2160" IsChecked="True"/>
-                                    </StackPanel>
-                                    <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
-
-                                    <TextBlock Text="纵向显示器" FontWeight="Bold" Margin="3"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button Content="所有" Click="SelectAllportraitmonitor_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
-                                        <Button Content="无" Click="DeselectAllportraitmonitor_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
-                                    </Grid>
-                                    <StackPanel x:Name="portraitmonitor">
-                                        <CheckBox Content="纵向（标准）" IsChecked="True"/>
-                                        <CheckBox Content="720 x 1280" IsChecked="True"/>
-                                        <CheckBox Content="1080 x 1920" IsChecked="True"/>
-                                        <CheckBox Content="1440 x 2560" IsChecked="True"/>
-                                        <CheckBox Content="2160 x 3840" IsChecked="True"/>
-                                    </StackPanel>
-                                    <Border Height="1" Margin="0,6" Background="#E0E0E0"/>
-
-                                    <CheckBox Content="其它分辨率" IsChecked="True"/>
-                                    <CheckBox Content="动态 分辨率" IsChecked="True"/>
-                                </StackPanel>
-                            </Expander>
-
-                            <Expander Header="标签" IsExpanded="True" HorizontalAlignment="Stretch">
-                                <StackPanel x:Name="TagsContainer">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button Content="所有" Click="SelectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
-                                        <Button Content="无" Click="DeselectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
-                                    </Grid>
-                                    <CheckBox Content="抽象" Tag="Abstract" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="动物" Tag="Animal" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="动漫" Tag="Anime" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="卡通" Tag="Cartoon" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="CGI" Tag="CGI" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="网络朋克" Tag="Cyberpunk" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="幻想" Tag="Fantasy" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="游戏" Tag="Game" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="女性" Tag="Girls" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="男性" Tag="Guys" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="风景" Tag="Landscape" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="中世纪" Tag="Medieval" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="网红事物" Tag="Memes" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="MMD" Tag="MMD" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="音乐" Tag="Music" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="自然" Tag="Nature" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="像素艺术" Tag="Pixel art" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="轻松" Tag="Relaxing" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="复古" Tag="Retro" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="科幻" Tag="Sci-Fi" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="运动" Tag="Sports" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="科技" Tag="Technology" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="电视节目" Tag="Television" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="汽车" Tag="Vehicle" IsChecked="True" Margin="0,4,0,4"/>
-                                    <CheckBox Content="未指定样式" Tag="Unspecified" IsChecked="True" Margin="0,4,0,4"/>
-                                </StackPanel>
-                            </Expander>
-                        </StackPanel>
-                    </ScrollViewer>
-
-                    <Border Grid.Row="1" Grid.Column="1" BorderBrush="#E0E0E0" HorizontalAlignment="Right" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
+                                <GridView x:Name="WallpaperGridView" Grid.Row="1" SelectionMode="Single" Padding="0,0,0,20">
+                                    <GridView.ItemTemplate>
+                                        <DataTemplate x:DataType="models:WallpaperItem">
+                                            <Grid Width="180" Margin="8">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Image Grid.Row="0" Stretch="UniformToFill">
+                                                    <Image.Source>
+                                                        <BitmapImage UriSource="{x:Bind Preview}" DecodePixelWidth="280" />
+                                                    </Image.Source>
+                                                </Image>
+                                                <TextBlock Grid.Row="1" Text="{x:Bind Title}" HorizontalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridView.ItemTemplate>
+                                </GridView>
+                            </Grid>
+                        </SplitView.Content>
+                    </SplitView>
                 </Grid>
-            </Grid>
-        </Grid>
+            </SplitView.Content>
+            </SplitView>
     </Grid>
 </Page>
