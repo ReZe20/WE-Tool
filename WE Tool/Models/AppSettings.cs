@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Tool_for_WallpaperEngine.Models
+namespace WE_Tool.Models
 {
     public class AppSettings
     {
@@ -19,6 +19,9 @@ namespace Tool_for_WallpaperEngine.Models
     {
         public bool LeftSplitViewPaneOpen { get; set; } = true;
         public bool RightSplitViewPaneOpen { get; set; } = true;
+        public int SortOrder { get; set; } = 0;
+        public bool IsSortAscending { get; set; } = true;
+
 
         public class Expander
         {
@@ -27,8 +30,7 @@ namespace Tool_for_WallpaperEngine.Models
             public bool Video { get; set; } = true;
             public bool Web { get; set; } = true;
             public bool Application { get; set; } = true;
-            public bool Regular { get; set; } = true;
-            public bool Preset { get; set; } = true;
+            public bool Unknown { get; set; } = true;
 
             public bool RatingExpander { get; set; } = true;
             public bool G { get; set; } = true;

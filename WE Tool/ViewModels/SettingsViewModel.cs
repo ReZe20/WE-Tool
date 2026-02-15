@@ -1,18 +1,26 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Tool_for_WallpaperEngine.Models;
-using Tool_for_WallpaperEngine.Service;
+using WE_Tool.Helper;
+using WE_Tool.Models;
+using WE_Tool.Service;
 
-namespace Tool_for_WallpaperEngine.ViewModels
+namespace WE_Tool.ViewModels
 {
     public partial class SettingsViewModel : ObservableObject
     {
-        private bool _isBatchUpdating = false;
+        public bool _isBatchUpdating = false;
+
+        [ObservableProperty]
+        private WallpaperItem _selectedWallpaper;
 
         private readonly IConfigService _configService;
         private readonly IPickerService _pickerService;
@@ -23,13 +31,19 @@ namespace Tool_for_WallpaperEngine.ViewModels
         public bool _leftSplitViewPaneOpen;
         public bool _rightSplitViewPaneOpen;
 
+        private int _sortOrder;
+        private string _sortGlyph = "\uE8D2";
+        private string _sortText = "按名称排序";
+        private string _sortDirectionGlyph;
+        private bool _isSortAscending = false;
+        public IRelayCommand<string> ChangeSortCommand { get; }
+
         public bool _typeExpander;
         public bool _scene;
         public bool _video;
         public bool _web;
         public bool _application;
-        public bool _regular;
-        public bool _preset;
+        public bool _unknown;
 
         public bool _ratingExpander;
         public bool _g;
@@ -83,25 +97,62 @@ namespace Tool_for_WallpaperEngine.ViewModels
         private bool _dontConvertTEX;
         private bool _coverAllFiles;
 
-        // debounce / save control
         private CancellationTokenSource? _saveCts;
         private readonly TimeSpan _saveDelay = TimeSpan.FromMilliseconds(500);
         private readonly SemaphoreSlim _saveSemaphore = new SemaphoreSlim(1, 1);
 
         public IAsyncRelayCommand SaveCommand { get; }
         public IAsyncRelayCommand<object> BrowseFolderCommand { get; }
-
+        public IAsyncRelayCommand<object> BrowseFileCommand { get; }
+        public IAsyncRelayCommand<object> OpenFolderCommand { get; }
+        public IAsyncRelayCommand<string> AutoDetectWorkshopPathCommand { get; }
         public SettingsViewModel(IConfigService configService, IPickerService pickerService)
         {
             _configService = configService;
             _pickerService = pickerService;
 
+            ChangeSortCommand = new RelayCommand<string>(ExecuteChangeSort);
             SaveCommand = new AsyncRelayCommand(SaveAsync);
             BrowseFolderCommand = new AsyncRelayCommand<object>(BrowseFolderAsync);
+            BrowseFileCommand = new AsyncRelayCommand<object>(BrowseFileAsync);
+            OpenFolderCommand = new AsyncRelayCommand<object>(OpenFolderAsync);
+
+            AutoDetectWorkshopPathCommand = new AsyncRelayCommand<string>(AutoDetectWorkshopPathAsync);
+        }
+        public void ExecuteChangeSort(string? parameter)
+        {
+            if (int.TryParse(parameter, out int newOrder))
+            {
+                SortOrder = newOrder;
+            }
+        }
+        private void UpdateSortUI()
+        {
+            switch (SortOrder)
+            {
+                case 0:
+                    SortGlyph = "\uE8D2";
+                    SortText = "按名称排序";
+                    break;
+                case 1:
+                    SortGlyph = "\uED0E";
+                    SortText = "按订阅时间";
+                    break;
+                case 2:
+                    SortGlyph = "\uF738";
+                    SortText = "按更新时间";
+                    break;
+                case 3:
+                    SortGlyph = "\uEDA2";
+                    SortText = "按大小排序";
+                    break;
+            }
         }
 
         public async Task InitializeAsync()
         {
+            _isBatchUpdating = true;
+
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
             _startPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
@@ -109,13 +160,19 @@ namespace Tool_for_WallpaperEngine.ViewModels
             LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
             RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
 
+            _isSortAscending = _settings.Papers.IsSortAscending;
+            SortDirectionGlyph = _isSortAscending ? "\uE70E" : "\uE70D";
+            OnPropertyChanged(nameof(IsSortAscending));
+            OnPropertyChanged(nameof(SortDirectionGlyph));
+            SortOrder = _settings.Papers.SortOrder;
+            UpdateSortUI();
+
             TypeExpander = _settings.Expander.TypeExpander;
             Scene = _settings.Expander.Scene;
             Video = _settings.Expander.Video;
             Web = _settings.Expander.Web;
             Application = _settings.Expander.Application;
-            Regular = _settings.Expander.Regular;
-            Preset = _settings.Expander.Preset;
+            Unknown = _settings.Expander.Unknown;
 
             RatingExpander = _settings.Expander.RatingExpander;
             G = _settings.Expander.G;
@@ -155,9 +212,24 @@ namespace Tool_for_WallpaperEngine.ViewModels
             Unspecified = _settings.Expander.Unspecified;
 
             DownloadPath = _settings.Path.DownloadPath;
+            string mode = "000";
             WorkshopPath = _settings.Path.WorkshopPath;
             ProjectPath = _settings.Path.ProjectPath;
             AcfPath = _settings.Path.AcfPath;
+            if (string.IsNullOrEmpty(WorkshopPath))
+                mode = mode.Remove(0, 1).Insert(0, "1");
+            if (string.IsNullOrEmpty(ProjectPath))
+                mode = mode.Remove(1, 1).Insert(1, "1");
+            if (string.IsNullOrEmpty(AcfPath))
+                mode = mode.Remove(2, 1).Insert(2, "1");
+            foreach (var c in mode)
+            {
+                if (c == '1')
+                {
+                    await AutoDetectWorkshopPathAsync(mode);
+                    break;
+                }
+            }
 
             IgnoreExtension = _settings.Extract.IgnoreExtension;
             IgnoreExtensionList = _settings.Extract.IgnoreExtensionList;
@@ -170,73 +242,49 @@ namespace Tool_for_WallpaperEngine.ViewModels
             DontConvertTEX = _settings.Extract.DontConvertTEX;
             CoverAllFiles = _settings.Extract.CoverAllFiles;
 
-            OnPropertyChanged(nameof(StartPageTag));
-
-            OnPropertyChanged(nameof(LeftSplitViewPaneOpen));
-            OnPropertyChanged(nameof(RightSplitViewPaneOpen));
-
-            OnPropertyChanged(nameof(TypeExpander));
-            OnPropertyChanged(nameof(Scene));
-            OnPropertyChanged(nameof(Video));
-            OnPropertyChanged(nameof(Web));
-            OnPropertyChanged(nameof(Application));
-            OnPropertyChanged(nameof(Regular));
-            OnPropertyChanged(nameof(Preset));
-
-            OnPropertyChanged(nameof(RatingExpander));
-            OnPropertyChanged(nameof(G));
-            OnPropertyChanged(nameof(PG));
-            OnPropertyChanged(nameof(R));
-
-            OnPropertyChanged(nameof(SourceExpander));
-            OnPropertyChanged(nameof(Official));
-            OnPropertyChanged(nameof(Workshop));
-            OnPropertyChanged(nameof(Mine));
-
-            OnPropertyChanged(nameof(TagsExpander));
-            OnPropertyChanged(nameof(Abstract));
-            OnPropertyChanged(nameof(Animal));
-            OnPropertyChanged(nameof(Anime));
-            OnPropertyChanged(nameof(Cartoon));
-            OnPropertyChanged(nameof(CGI));
-            OnPropertyChanged(nameof(Cyberpunk));
-            OnPropertyChanged(nameof(Fantasy));
-            OnPropertyChanged(nameof(Game));
-            OnPropertyChanged(nameof(Girls));
-            OnPropertyChanged(nameof(Guys));
-            OnPropertyChanged(nameof(Landscape));
-            OnPropertyChanged(nameof(Medieval));
-            OnPropertyChanged(nameof(Memes));
-            OnPropertyChanged(nameof(MMD));
-            OnPropertyChanged(nameof(Music));
-            OnPropertyChanged(nameof(Nature));
-            OnPropertyChanged(nameof(Pixelart));
-            OnPropertyChanged(nameof(Relaxing));
-            OnPropertyChanged(nameof(Retro));
-            OnPropertyChanged(nameof(SciFi));
-            OnPropertyChanged(nameof(Sports));
-            OnPropertyChanged(nameof(Technology));
-            OnPropertyChanged(nameof(Television));
-            OnPropertyChanged(nameof(Vehicle));
-            OnPropertyChanged(nameof(Unspecified));
-
-            OnPropertyChanged(nameof(DownloadPath));
-            OnPropertyChanged(nameof(WorkshopPath));
-            OnPropertyChanged(nameof(ProjectPath));
-            OnPropertyChanged(nameof(AcfPath));
-
-            OnPropertyChanged(nameof(IgnoreExtension));
-            OnPropertyChanged(nameof(IgnoreExtensionList));
-            OnPropertyChanged(nameof(OnlyExtension));
-            OnPropertyChanged(nameof(OnlyExtensionList));
-            OnPropertyChanged(nameof(ConvertTEX));
-            OnPropertyChanged(nameof(OneFolder));
-            OnPropertyChanged(nameof(OutProjectJSON));
-            OnPropertyChanged(nameof(UseProjectName));
-            OnPropertyChanged(nameof(DontConvertTEX));
-            OnPropertyChanged(nameof(CoverAllFiles));
+            _isBatchUpdating = false;
+            OnPropertyChanged(string.Empty);
         }
 
+        public int SortOrder
+        {
+            get => _sortOrder;
+            set 
+            {
+                if (SetProperty(ref _sortOrder, value))
+                {
+                    UpdateSortUI();
+                    DebounceSave();
+                }
+            }
+        }
+        public string SortGlyph
+        {
+            get => _sortGlyph;
+            set => SetProperty(ref _sortGlyph, value);
+        }
+        public string SortText
+        {
+            get => _sortText;
+            set => SetProperty(ref _sortText, value);
+        }
+        public string SortDirectionGlyph
+        {
+            get => SortDirectionGlyph = IsSortAscending ? "\uE70D" : "\uE70E";
+            set => SetProperty(ref _sortDirectionGlyph, value);
+        }
+        public bool IsSortAscending
+        {
+            get => _isSortAscending;
+            set
+            {
+                if (SetProperty(ref _isSortAscending, value))
+                {
+                    SortDirectionGlyph = value ? "\uE70D" : "\uE70E";
+                    DebounceSave();
+                }
+            }
+        }
         public string StartPageTag
         {
             get => _startPageTag;
@@ -312,26 +360,15 @@ namespace Tool_for_WallpaperEngine.ViewModels
                     DebounceSave();
             }
         }
-        public bool Regular
+        public bool Unknown
         {
-            get => _regular;
+            get => _unknown;
             set
             {
-                if (SetProperty(ref _regular, value))
+                if (SetProperty(ref _unknown, value))
                     DebounceSave();
             }
         }
-        public bool Preset
-        {
-            get => _preset;
-            set
-            {
-                if (SetProperty(ref _preset, value))
-                    DebounceSave();
-            }
-        }
-
-        // Rating 相关属性
         public bool RatingExpander
         {
             get => _ratingExpander;
@@ -407,7 +444,6 @@ namespace Tool_for_WallpaperEngine.ViewModels
             }
         }
 
-        // Tags 相关属性
         public bool TagsExpander
         {
             get => _tagsExpander;
@@ -783,7 +819,7 @@ namespace Tool_for_WallpaperEngine.ViewModels
             }
         }
 
-        public async Task ResetFiltersAsync(int mode)
+        public async Task ResetFiltersAsync(int mode, bool selectmode)
         {
             if (_isBatchUpdating) return;
 
@@ -791,133 +827,76 @@ namespace Tool_for_WallpaperEngine.ViewModels
 
             try
             {
-                var actions = new List<Action>
-                {
-                    () => Scene = true,
-                    () => Video = true,
-                    () => Web = true,
-                    () => Application = true,
-                    () => Regular = true,
-                    () => Preset = true,
-
-                    () => G = true,
-                    () => PG = true,
-                    () => R = true,
-
-                    () => Official = true,
-                    () => Workshop = true,
-                    () => Mine = true,
-                };
-                var tags = new List<Action>
-                {
-                    () => Abstract = true,
-                    () => Animal = true,
-                    () => Anime = true,
-                    () => Cartoon = true,
-                    () => CGI = true,
-                    () => Cyberpunk = true,
-                    () => Fantasy = true,
-                    () => Game = true,
-                    () => Girls = true,
-                    () => Guys = true,
-                    () => Landscape = true,
-                    () => Medieval = true,
-                    () => Memes = true,
-                    () => MMD = true,
-                    () => Music = true,
-                    () => Nature = true,
-                    () => Pixelart = true,
-                    () => Relaxing = true,
-                    () => Retro = true,
-                    () => SciFi = true,
-                    () => Sports = true,
-                    () => Technology = true,
-                    () => Television = true,
-                    () => Vehicle = true,
-                    () => Unspecified = true
-                };
                 if (mode == 1)
                 {
+                    var actions = new List<Action>
+                    {
+                        () => Scene = selectmode,
+                        () => Video = selectmode,
+                        () => Web = selectmode,
+                        () => Application = selectmode,
+                        () => Unknown = selectmode,
+
+                        () => G = selectmode,
+                        () => PG = selectmode,
+                        () => R = selectmode,
+
+                        () => Official = selectmode,
+                        () => Workshop = selectmode,
+                        () => Mine = selectmode,
+                    };
                     foreach (var action in actions)
                     {
                         action();
-                        await Task.Delay(1);
                     }
                 }
-                if (mode == 2 || mode == 1)
+                if (mode == 1 || mode == 2)
                 {
-
+                    var tags = new List<Action>
+                    {
+                        () => Abstract = selectmode,
+                        () => Animal = selectmode,
+                        () => Anime = selectmode,
+                        () => Cartoon = selectmode,
+                        () => CGI = selectmode,
+                        () => Cyberpunk = selectmode,
+                        () => Fantasy = selectmode,
+                        () => Game = selectmode,
+                        () => Girls = selectmode,
+                        () => Guys = selectmode,
+                        () => Landscape = selectmode,
+                        () => Medieval = selectmode,
+                        () => Memes = selectmode,
+                        () => MMD = selectmode,
+                        () => Music = selectmode,
+                        () => Nature = selectmode,
+                        () => Pixelart = selectmode,
+                        () => Relaxing = selectmode,
+                        () => Retro = selectmode,
+                        () => SciFi = selectmode,
+                        () => Sports = selectmode,
+                        () => Technology = selectmode,
+                        () => Television = selectmode,
+                        () => Vehicle = selectmode,
+                        () => Unspecified = selectmode
+                    };
                     foreach (var action in tags)
                     {
                         action();
-                        await Task.Delay(1);
                     }
                 }
             }
             finally
             {
                 _isBatchUpdating = false;
-
-                await SaveAsync();
-            }
-        }
-
-        public async Task DeselctAllAsync(int mode)
-        {
-            if (_isBatchUpdating) return;
-
-            _isBatchUpdating = true;
-
-            try
-            {
-
-                var tags = new List<Action>
-                {
-                    () => Abstract = false,
-                    () => Animal = false,
-                    () => Anime = false,
-                    () => Cartoon = false,
-                    () => CGI = false,
-                    () => Cyberpunk = false,
-                    () => Fantasy = false,
-                    () => Game = false,
-                    () => Girls = false,
-                    () => Guys = false,
-                    () => Landscape = false,
-                    () => Medieval = false,
-                    () => Memes = false,
-                    () => MMD = false,
-                    () => Music = false,
-                    () => Nature = false,
-                    () => Pixelart = false,
-                    () => Relaxing = false,
-                    () => Retro = false,
-                    () => SciFi = false,
-                    () => Sports = false,
-                    () => Technology = false,
-                    () => Television = false,
-                    () => Vehicle = false,
-                    () => Unspecified = false
-                };
-                if (mode == 1)
-                {
-                    foreach (var action in tags)
-                    {
-                        action();
-                        await Task.Delay(1);
-                    }
-                }
-            }
-            finally
-            {
-                _isBatchUpdating = false;
-
+                OnPropertyChanged(nameof(Abstract));
                 await SaveAsync();
             }
         }
 
         private void DebounceSave()
         {
+            if (_isBatchUpdating) return;
             _saveCts?.Cancel();
             _saveCts = new CancellationTokenSource();
             var ct = _saveCts.Token;
@@ -946,14 +925,16 @@ namespace Tool_for_WallpaperEngine.ViewModels
                 _settings.Papers.LeftSplitViewPaneOpen = LeftSplitViewPaneOpen;
                 _settings.Papers.RightSplitViewPaneOpen = RightSplitViewPaneOpen;
 
+                _settings.Papers.IsSortAscending = IsSortAscending;
+                _settings.Papers.SortOrder = SortOrder;
+
                 // 类型相关
                 _settings.Expander.TypeExpander = TypeExpander;
                 _settings.Expander.Scene = Scene;
                 _settings.Expander.Video = Video;
                 _settings.Expander.Web = Web;
                 _settings.Expander.Application = Application;
-                _settings.Expander.Regular = Regular;
-                _settings.Expander.Preset = Preset;
+                _settings.Expander.Unknown = Unknown;
 
                 // 分级相关
                 _settings.Expander.RatingExpander = RatingExpander;
@@ -1018,18 +999,25 @@ namespace Tool_for_WallpaperEngine.ViewModels
                 _saveSemaphore.Release();
             }
         }
+        private async Task BrowseFileAsync(object? parameter)
+        {
+            var filePath = await _pickerService.PickFileAsync();
 
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath) && parameter != null)
+            {
+                AcfPath = filePath;
+
+                await SaveAsync();
+            }
+        }
         private async Task BrowseFolderAsync(object? parameter)
         {
-            var path = await _pickerService.PickFileAsync();
+            var path = await _pickerService.PickFolderAsync();
             if (!string.IsNullOrEmpty(path))
             {
-                var key = (parameter as string) ?? "DownloadPath";
+                var key = (parameter as string) ?? "WorkshopPath";
                 switch (key)
                 {
-                    case "DownloadPath":
-                        DownloadPath = path;
-                        break;
                     case "WorkshopPath":
                         WorkshopPath = path;
                         break;
@@ -1043,6 +1031,86 @@ namespace Tool_for_WallpaperEngine.ViewModels
                         DownloadPath = path;
                         break;
                 }
+            }
+        }
+        private async Task OpenFolderAsync(object? parameter)
+        {
+            string? targetPath = null;
+            var key = (parameter as string) ?? "DownloadPath";
+
+            switch (key)
+            {
+                case "WorkshopPath":
+                    targetPath = WorkshopPath;
+                    break;
+                case "ProjectPath":
+                    targetPath = ProjectPath;
+                    break;
+                case "DownloadPath":
+                default:
+                    targetPath = DownloadPath;
+                    break;
+            }
+            if (string.IsNullOrEmpty(targetPath) || !System.IO.Directory.Exists(targetPath))
+            {
+                try
+                {
+                    System.IO.Directory.CreateDirectory(targetPath);
+                }
+                catch (Exception ex)
+                {
+                    await DialogHelper.ShowMessageAsync("错误",$"打开目录不存在，程序在创建目录时失败: {ex.Message}");
+                    return;
+                }
+            }
+                await _pickerService.OpenFolderAsync(targetPath);
+        }
+
+        public async Task AutoDetectWorkshopPathAsync(string mode)
+        {
+            var result = await Task.Run(() =>
+            {
+                string? foundBaseDir = null;
+                try
+                {
+                    using (RegistryKey rootKey = Registry.CurrentUser)
+                    {
+                        string[] possibleSubKeys = { @"Software\WallpaperEngine", @"Software\Wallpaper Engine" };
+                        foreach (var subKey in possibleSubKeys)
+                        {
+                            using (RegistryKey weKey = rootKey.OpenSubKey(subKey))
+                            {
+                                if (weKey == null) continue;
+                                object installPath = weKey.GetValue("installPath");
+                                if (installPath is string pathStr)
+                                {
+                                    string targetSuffix = @"\common\wallpaper_engine";
+                                    int index = pathStr.ToLower().LastIndexOf(targetSuffix);
+                                    if (index != -1)
+                                    {
+                                        foundBaseDir = pathStr.Substring(0, index);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"读取注册表失败: {ex.Message}");
+                }
+                return foundBaseDir;
+            });
+
+            if (!string.IsNullOrEmpty(result))
+            {
+                if (mode[0] == '1')
+                    WorkshopPath = result + @"\workshop\content\431960";
+                if (mode[1] == '1')
+                    ProjectPath = result + @"\common\wallpaper_engine\projects\myprojects";
+                if (mode[2] == '1')
+                    AcfPath = result + @"\workshop\appworkshop_431960.acf";
             }
         }
     }

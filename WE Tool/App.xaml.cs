@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,7 +20,7 @@ using Windows.Foundation.Collections;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Tool_for_WallpaperEngine
+namespace WE_Tool
 {
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
@@ -37,7 +38,16 @@ namespace Tool_for_WallpaperEngine
 
         public App()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+
+            string logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "YourAppName", "logs", "log.txt");
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
+            Log.Information("应用程序已启动。");
         }
 
         /// <summary>

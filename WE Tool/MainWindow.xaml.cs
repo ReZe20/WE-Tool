@@ -11,19 +11,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Tool_for_WallpaperEngine.Service;
+using WE_Tool.Service;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using WinUIEx;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Tool_for_WallpaperEngine
+namespace WE_Tool
 {
     /// <summary>
     /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainWindow : Window
+    public sealed partial class MainWindow : WindowEx
     {
         private readonly IConfigService _configService = new ConfigService();
         public MainWindow()

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Tool_for_WallpaperEngine.Models;
+using WE_Tool.Models;
 using Windows.Storage;
 
-namespace Tool_for_WallpaperEngine.Service
+namespace WE_Tool.Service
 {
     public interface IConfigService
     {

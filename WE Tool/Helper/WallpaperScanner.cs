@@ -3,10 +3,11 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using Tool_for_WallpaperEngine.Models;
+using WE_Tool.Models; 
 
-namespace Tool_for_WallpaperEngine.Helper
+namespace WE_Tool.Helper
 {
     internal class WallpaperScanner
     {
@@ -37,9 +38,6 @@ namespace Tool_for_WallpaperEngine.Helper
                         string jsonText = await File.ReadAllTextAsync(jsonPath);
                         JObject json = JObject.Parse(jsonText);
 
-                        // --- 修改点：移除了 "type" == "scene" 的判断 ---
-                        // 只要有 project.json 且有 preview 图片就加载
-
                         string previewFile = json?["preview"]?.Value<string>();
                         if (string.IsNullOrEmpty(previewFile)) continue;
 
@@ -49,9 +47,37 @@ namespace Tool_for_WallpaperEngine.Helper
                         string title = json?["title"]?.Value<string>() ?? "无标题";
                         string rating = json?["contentrating"]?.Value<string>() ?? "Everyone";
 
+                        string declaredType = json?["type"]?.Value<string>();
+                        string finalType;
+                        if (!string.IsNullOrEmpty(declaredType))
+                        {
+                            finalType = declaredType;
+                        }
+                        else
+                        {
+                            string directoriesPath = Path.Combine(current, "directories");
+                            if (Directory.Exists(directoriesPath))
+                            {
+                                finalType = "web";
+                            }
+                            else
+                            {
+                                finalType = "unknown";
+                            }
+                        }
+
+                        long filesize = 0;
+                        try
+                        {
+                            filesize = new DirectoryInfo(current).EnumerateFiles("*", SearchOption.AllDirectories).Sum(fi => fi.Length);
+                        }
+                        catch (Exception)
+                        {
+                            filesize = 0;
+                        }
                         var tagsList = new List<string>();
                         var tagsToken = json?["tags"];
-                        if (tagsToken != null)
+                        if (tagsToken != null)    
                         {
                             foreach (var t in tagsToken) tagsList.Add(t.ToString());
                         }
@@ -59,15 +85,18 @@ namespace Tool_for_WallpaperEngine.Helper
                         results.Add(new WallpaperItem
                         {
                             FolderPath = current,
-                            Title = title, 
+                            Title = title,
+                            FileSize = filesize,
+                            CreationTime = Directory.GetCreationTime(current),
+                            UpdateTime = Directory.GetLastWriteTime(current),
                             Preview = previewFullPath,
                             ContentRating = rating,
-                            Tags = tagsList
+                            Tags = tagsList,
+                            Type = finalType
                         });
                     }
                     catch (Exception ex)
                     {
-                        // 忽略错误，继续扫描
                         System.Diagnostics.Debug.WriteLine($"扫描错误: {ex.Message}");
                     }
                 }

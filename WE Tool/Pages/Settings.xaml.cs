@@ -10,8 +10,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Tool_for_WallpaperEngine.Service;
-using Tool_for_WallpaperEngine.ViewModels;
+using WE_Tool.Service;
+using WE_Tool.ViewModels;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
@@ -21,7 +21,7 @@ using WinRT.Interop;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Tool_for_WallpaperEngine;
+namespace WE_Tool;
 
 /// <summary>
 /// An empty page that can be used on its own or navigated to within a Frame.

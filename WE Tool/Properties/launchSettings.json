@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "Tool for WallpaperEngine (Package)": {
+    "WE Tool (Package)": {
       "commandName": "MsixPackage"
     },
-    "Tool for WallpaperEngine (Unpackaged)": {
+    "WE Tool(Unpackaged)": {
       "commandName": "Project"
     }
   }
