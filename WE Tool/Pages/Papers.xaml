@@ -136,7 +136,7 @@
                                                 <CheckBox Content="未知类型" Tag="Unknow" IsChecked="{x:Bind ViewModel.Unknown, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="预设和未检测到类型的壁纸都会归为未知壁纸"/>
                                             </StackPanel>
                                         </Expander>
-
+                                        
                                         <Expander Header="年龄分级" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="AgeRatingFilterPanel">
                                                 <CheckBox Content="大众级(G)" Tag="G" IsChecked="{x:Bind ViewModel.G, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>

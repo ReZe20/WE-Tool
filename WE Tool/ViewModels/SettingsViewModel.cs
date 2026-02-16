@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Serilog;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
@@ -910,6 +911,10 @@ namespace WE_Tool.ViewModels
                         await SaveAsync();
                 }
                 catch (TaskCanceledException) { }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "保存设置时出现异常。");
+                }
             }, ct);
         }
 
@@ -1051,7 +1056,7 @@ namespace WE_Tool.ViewModels
                     targetPath = DownloadPath;
                     break;
             }
-            if (string.IsNullOrEmpty(targetPath) || !System.IO.Directory.Exists(targetPath))
+            if (!string.IsNullOrEmpty(targetPath) && !System.IO.Directory.Exists(targetPath))
             {
                 try
                 {
@@ -1060,10 +1065,17 @@ namespace WE_Tool.ViewModels
                 catch (Exception ex)
                 {
                     await DialogHelper.ShowMessageAsync("错误",$"打开目录不存在，程序在创建目录时失败: {ex.Message}");
+                    Log.Error(ex, "创建目录时出现异常。");
                     return;
                 }
             }
-                await _pickerService.OpenFolderAsync(targetPath);
+            if (string.IsNullOrEmpty(targetPath))
+            {
+                await DialogHelper.ShowMessageAsync("错误", "打开目录为空，请先选择目录。");
+                Log.Warning("用户尝试打开空目录。");
+                return;
+            }
+            await _pickerService.OpenFolderAsync(targetPath);
         }
 
         public async Task AutoDetectWorkshopPathAsync(string mode)
@@ -1099,6 +1111,7 @@ namespace WE_Tool.ViewModels
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"读取注册表失败: {ex.Message}");
+                    Log.Warning(ex,"读取WallpaperEngine注册表出现异常。");
                 }
                 return foundBaseDir;
             });

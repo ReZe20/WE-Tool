@@ -40,7 +40,7 @@ namespace WE_Tool
         {
             this.InitializeComponent();
 
-            string logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "YourAppName", "logs", "log.txt");
+            string logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WE Tool", "logs", "log.txt");
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()

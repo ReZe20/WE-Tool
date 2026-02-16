@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -71,8 +72,9 @@ namespace WE_Tool.Helper
                         {
                             filesize = new DirectoryInfo(current).EnumerateFiles("*", SearchOption.AllDirectories).Sum(fi => fi.Length);
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
+                            Log.Warning(ex,$"获取壁纸大小时异常。{title}");
                             filesize = 0;
                         }
                         var tagsList = new List<string>();
@@ -97,6 +99,7 @@ namespace WE_Tool.Helper
                     }
                     catch (Exception ex)
                     {
+                        Log.Error(ex, "扫描壁纸时出现错误。");
                         System.Diagnostics.Debug.WriteLine($"扫描错误: {ex.Message}");
                     }
                 }

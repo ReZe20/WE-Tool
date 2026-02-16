@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Serilog;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -58,9 +59,9 @@ namespace WE_Tool
                         contentFrame.Navigate(pageType);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // 忽略加载失败，保留默认行为
+                Log.Error(ex,"初始化失败。");
             }
         }
 

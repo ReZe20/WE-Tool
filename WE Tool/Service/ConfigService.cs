@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using WE_Tool.Models;
@@ -31,6 +32,7 @@ namespace WE_Tool.Service
             }
             catch
             {
+                Log.Information("未找到config.json,以默认值重新创建并初始化。");
                 return new AppSettings();
             }
         }
@@ -47,7 +49,9 @@ namespace WE_Tool.Service
                     await FileIO.WriteTextAsync(file, text);
                 }
                 catch (Exception ex)
-                { }
+                {
+                    Log.Warning(ex,"保存config.json文件时发生错误。");
+                }
             });
         }
     }

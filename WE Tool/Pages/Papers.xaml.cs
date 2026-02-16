@@ -24,6 +24,7 @@ using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Serilog;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -164,7 +165,7 @@ public sealed partial class Papers : Page
                 };
                 return sortedQuery.ToList();
 
-            }, token);  
+            }, token);
 
             if (IsListEqual(Wallpapers, filteredResult)) return;
 
@@ -178,6 +179,10 @@ public sealed partial class Papers : Page
             });
         }
         catch (TaskCanceledException) { }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"筛选结果时出现异常。");
+        }
     }
     private void ShadowRect_Loaded(object sender, RoutedEventArgs e)
     {
