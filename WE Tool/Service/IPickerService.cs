@@ -1,9 +1,13 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
+using WE_Tool.Models;
 
 namespace WE_Tool.Service
 {
@@ -12,6 +16,7 @@ namespace WE_Tool.Service
         Task<string?> PickFolderAsync();
         Task<string?> PickFileAsync();
         Task OpenFolderAsync(string folderPath);
+        Task<bool> DeleteFolderAsync(string folderPath);               
     }
 
     public class PickerService : IPickerService 
@@ -50,6 +55,25 @@ namespace WE_Tool.Service
                     FileName = folderPath,
                     UseShellExecute = true
                 });
+            });
+        }
+        public async Task<bool> DeleteFolderAsync(string folderPath)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    if (Directory.Exists(folderPath))
+                    {
+                        Directory.Delete(folderPath, true);
+                    }
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"[PickerService] 物理删除文件夹失败：{folderPath}");
+                    return false;
+                }
             });
         }
     }

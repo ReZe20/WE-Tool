@@ -7,26 +7,74 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:WE_Tool.Models"
+    xmlns:loc="using:WE_Tool.Helper"
+    xmlns:converters="using:WE_Tool.Converters"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     x:Name="PageRoot"
     NavigationCacheMode="Required">
+    <Page.Resources>
+        <converters:IntToGridLengthConverter x:Key="IntToGridLengthConverter" />
+        <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
+            <CommandBarFlyout.PrimaryCommands>
+                <AppBarButton Label="导出">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE72D;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+
+                <AppBarButton Label="打开目录"
+                          Command="{x:Bind ViewModel.OpenFolderCommand}" 
+                          CommandParameter="{Binding FolderPath}">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE838;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+
+                <AppBarButton Label="删除" Foreground="{ThemeResource SystemControlErrorTextForegroundBrush}"
+                              Command="{x:Bind DeleteWallpaperCommand}"
+                              CommandParameter="{Binding}">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE74D;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+            </CommandBarFlyout.PrimaryCommands>
+            <CommandBarFlyout.SecondaryCommands>
+                <AppBarButton Label="全选" Click="SelectAllWallpapers_Click_ByCommandBarFlyout"/>
+                <AppBarButton Label="反选" Click="InvertSelection_CLick_ByCommandBarFlyout"/>
+                <AppBarSeparator/>
+                <AppBarButton Label="属性"/>
+            </CommandBarFlyout.SecondaryCommands>
+        </CommandBarFlyout>
+    </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="50"/>
+            <RowDefinition Height="{Binding ViewModel.BottomBarHeight, Mode=OneWay, Converter={StaticResource IntToGridLengthConverter}}"/>
         </Grid.RowDefinitions>
 
         <Button x:Name="LeftToggleFilterButton" Height="35" Grid.Row="0" HorizontalAlignment="Left" Margin="211,0,0,0" Click="LeftToggleFilterButton_Click" Style="{StaticResource AccentButtonStyle}" ToolTipService.ToolTip="侧边栏">
             <Button.Content>
                 <StackPanel Orientation="Horizontal">
                     <FontIcon Glyph="&#xE71D;" Margin="0,0,5,0"/>
-                    <TextBlock Text="筛选结果"/>
+                    <TextBlock x:Uid="FilterResults"/>
                 </StackPanel>
             </Button.Content>
         </Button>
-        <AutoSuggestBox Grid.Row="0" Height="35" Width="208" QueryIcon="Find" PlaceholderText="在这里搜索" HorizontalAlignment="Left" Margin="2,0,0,0" FontSize="16" FontWeight="Light" VerticalAlignment="Center"/>
+
+        <AutoSuggestBox Grid.Row="0" 
+                        Height="35"
+                        Width="208" 
+                        QueryIcon="Find"
+                        x:Uid="SearchBox"
+                        HorizontalAlignment="Left"
+                        Margin="2,0,0,0" 
+                        FontSize="16" 
+                        FontWeight="Light"
+                        VerticalAlignment="Center"
+                        TextChanged="WallpaperSearchBox_TextChanged"/>
 
         <StackPanel Grid.Row="0" HorizontalAlignment="Right" Orientation="Horizontal" Margin="10,0,120,0">
             <DropDownButton Width="140" Height="35" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right">
@@ -38,22 +86,22 @@
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
                     <MenuFlyout Placement="Bottom">
-                        <MenuFlyoutItem Text="按名称排序" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" FontWeight="Bold" Width="140">
+                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Width="140">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE8D2;"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem Text="按订阅时间" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" FontWeight="Bold" Width="140">
+                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Width="140">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xED0E;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem Text="按更新时间" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2" FontWeight="Bold" Width="140">
+                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2"  Width="140">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xF738;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem Text="按大小排序" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" FontWeight="Bold" Width="140">
+                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Width="140">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xEDA2;" />
                             </MenuFlyoutItem.Icon>
@@ -67,11 +115,16 @@
                 </ToggleButton.Content>
             </ToggleButton>
         </StackPanel>
-        <Button x:Name="RightToggleFilterButton" Grid.Row="0" HorizontalAlignment="Right" Click="RightToggleFilterButton_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="详情面板">
+        <Button x:Name="RightToggleFilterButton"
+                Grid.Row="0"
+                HorizontalAlignment="Right"
+                Click="RightToggleFilterButton_Click" 
+                Style="{StaticResource SubtleButtonStyle}"
+                Width="118">
             <Button.Content>
                 <StackPanel Orientation="Horizontal">
-                    <FontIcon Glyph="&#xE712;" Margin="5,0,5,0"/>
-                    <TextBlock Text="详情面板" Margin="5,0,5,0"/>
+                    <FontIcon Glyph="&#xE712;" Margin="0,0,5,0"/>
+                    <TextBlock x:Uid="DetailsPanel" Margin="5,0,5,0"/>
                 </StackPanel>
             </Button.Content>
         </Button>
@@ -81,28 +134,109 @@
                 OpenPaneLength="304" 
                 DisplayMode="Inline"
                 Grid.Row="1"
-            IsPaneOpen="{x:Bind ViewModel.RightSplitViewPaneOpen, Mode=TwoWay}">
+                IsPaneOpen="{x:Bind ViewModel.RightSplitViewPaneOpen, Mode=TwoWay}">
             <SplitView.Pane>
                 <ScrollViewer>
-                    <Grid Padding="20" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
-                        <StackPanel  Spacing="15">
-                            <Image Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay}"/>
-                            <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay}" IsTextSelectionEnabled="True" Style="{StaticResource TitleTextBlockStyle}" TextWrapping="Wrap"/>
-                            <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="Gray" TextWrapping="Wrap"/>
-                            <ItemsControl ItemsSource="{x:Bind ViewModel.SelectedWallpaper.Tags, Mode=OneWay}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#20808080" CornerRadius="4" Padding="6,2" Margin="0,4,4,0">
-                                            <TextBlock Text="{Binding}" FontSize="12"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapGrid Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                            </ItemsControl>
+                    <Grid Padding="15,15,15,15" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
+                        <StackPanel Spacing="15">
+
+                            <Grid x:Name="PreviewImageContainer" Height="250" Width="250" HorizontalAlignment="Center">
+                                <Border x:Name="SinglePreviewBorder" Width="250" Height="250" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                    <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
+                                        <Image.RenderTransform>
+                                            <ScaleTransform x:Name="ImageScale" />
+                                        </Image.RenderTransform>
+                                    </Image>
+                                </Border>
+
+                                <ItemsControl x:Name="StackedImagesControl" ItemsSource="{x:Bind DisplayedSelectedWallpapers}" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Grid/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="models:WallpaperItem">
+                                            <Border Height="150" Width="150" CornerRadius="8" Loaded="StackedImage_Loaded" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                                <Border.Background>
+                                                    <ImageBrush ImageSource="{x:Bind Preview}" Stretch="UniformToFill"/>
+                                                </Border.Background>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+
+                            <StackPanel x:Name="SingleSelectionInfoPanel" Spacing="15">
+                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay}" 
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}" 
+                                           Style="{StaticResource TitleTextBlockStyle}" 
+                                           TextWrapping="Wrap"
+                                           FontSize="20"
+                                           Margin="10,0,0,0"/>
+                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay}" 
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="Gray" 
+                                           TextWrapping="Wrap"
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"
+                                           Margin="10,0,0,0"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSizeString, Mode=OneWay}"
+                                               Style="{StaticResource CaptionTextBlockStyle}"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Margin="10,0,4,0"
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.DisplaySource, Mode=OneWay}" 
+                                               Style="{StaticResource CaptionTextBlockStyle}" 
+                                               FontWeight="SemiBold"
+                                               Margin="4,0,4,0"
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.DisplayType, Mode=OneWay}" 
+                                               Style="{StaticResource CaptionTextBlockStyle}" 
+                                               FontWeight="SemiBold"
+                                               Margin="4,0,4,0"
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.DisplayRating, Mode=OneWay}" 
+                                               Style="{StaticResource CaptionTextBlockStyle}" 
+                                               FontWeight="SemiBold"
+                                               Margin="4,0,4,0"
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                </StackPanel>
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.SelectedWallpaper.DisplayTags, Mode=OneWay}"
+                                              Margin="10,0,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <Border Background="#20808080" CornerRadius="4" Padding="6,2" Margin="0,4,4,0">
+                                                <TextBlock Text="{x:Bind}" 
+                                                           FontSize="12"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapGrid Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Description, Mode=OneWay}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" 
+                                           TextWrapping="Wrap"
+                                           MaxHeight="150"
+                                           TextTrimming="CharacterEllipsis"
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"
+                                           Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
+                                           Margin="10,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel x:Name="MultiSelectionInfoPanel" Spacing="10" Visibility="Collapsed" HorizontalAlignment="Stretch">
+                                <TextBlock x:Name="MultiSelectCountText" Text="已选择 0 项" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="全选" Click="SelectAllWallpapers_Click" Width="127" Margin="0,0,4,0" HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"/>
+                                    <Button Content="反选" Click="InvertSelection_CLick" Width="127" Margin="4,0,0,0" HorizontalAlignment="Stretch" />
+                                </StackPanel>
+                                <Button Content="取消多选" Click="CancelMultiSelect_Click" HorizontalAlignment="Stretch" Style="{StaticResource DefaultButtonStyle}"/>
+                            </StackPanel>
+
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>
@@ -123,71 +257,72 @@
                                             <Button.Content>
                                                 <StackPanel Orientation="Horizontal">
                                                     <FontIcon Glyph="&#xE895;" Margin="10,0,10,0"/>
-                                                    <TextBlock Text="重置过滤器"/>
+                                                    <TextBlock x:Uid="ResetFilters"/>
                                                 </StackPanel>
                                             </Button.Content>
                                         </Button>
-                                        <Expander Header="类型" x:Name="TypeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.TypeExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Type" x:Name="TypeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.TypeExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="TypeFilterPanel">
-                                                <CheckBox Content="场景" Tag="Scene" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="视频" Tag="Video" IsChecked="{x:Bind ViewModel.Video, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="网页" Tag="Web" IsChecked="{x:Bind ViewModel.Web, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="应用程序" Tag="Application" IsChecked="{x:Bind ViewModel.Application, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="未知类型" Tag="Unknow" IsChecked="{x:Bind ViewModel.Unknown, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="预设和未检测到类型的壁纸都会归为未知壁纸"/>
+                                                <CheckBox x:Uid="Type_Scene" Tag="Scene" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Video" Tag="Video" IsChecked="{x:Bind ViewModel.Video, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Web" Tag="Web" IsChecked="{x:Bind ViewModel.Web, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Application" Tag="Application" IsChecked="{x:Bind ViewModel.Application, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Preset" Tag="Preset" IsChecked="{x:Bind ViewModel.Preset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Unknown" Tag="Unknow" IsChecked="{x:Bind ViewModel.Unknown, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
-                                        
-                                        <Expander Header="年龄分级" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+
+                                        <Expander x:Uid="Rating" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="AgeRatingFilterPanel">
-                                                <CheckBox Content="大众级(G)" Tag="G" IsChecked="{x:Bind ViewModel.G, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="家长指导(PG-13)" Tag="PG" IsChecked="{x:Bind ViewModel.PG, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="限制级/成人级(R-18)" Tag="R" IsChecked="{x:Bind ViewModel.R, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Rating_Everyone" Tag="G" IsChecked="{x:Bind ViewModel.G, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Rating_Questionable" Tag="PG" IsChecked="{x:Bind ViewModel.PG, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Rating_Mature" Tag="R" IsChecked="{x:Bind ViewModel.R, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander Header="来源" x:Name="SourceExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.SourceExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Source" x:Name="SourceExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.SourceExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="SourceFilterPanel">
-                                                <CheckBox Content="官方" Tag="Official" IsChecked="{x:Bind ViewModel.Official, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="创意工坊" Tag="Workshop" IsChecked="{x:Bind ViewModel.Workshop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="我的壁纸" Tag="Mine" IsChecked="{x:Bind ViewModel.Mine, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Source_Official" Tag="Official" IsChecked="{x:Bind ViewModel.Official, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Source_Workshop" Tag="Workshop" IsChecked="{x:Bind ViewModel.Workshop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Source_Mine" Tag="Mine" IsChecked="{x:Bind ViewModel.Mine, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander Header="标签" x:Name="TagsExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.TagsExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Tag" x:Name="TagsExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.TagsExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="TagsContainer">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
-                                                    <Button Content="所有" Click="SelectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
-                                                    <Button Content="无" Click="DeselectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
+                                                    <Button x:Uid="All" Click="SelectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
+                                                    <Button x:Uid="None" Click="DeselectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
                                                 </Grid>
-                                                <CheckBox Content="抽象" Tag="Abstract" IsChecked="{x:Bind ViewModel.Abstract, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="动物" Tag="Animal" IsChecked="{x:Bind ViewModel.Animal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                <CheckBox Content="动漫" Tag="Anime" IsChecked="{x:Bind ViewModel.Anime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="卡通" Tag="Cartoon" IsChecked="{x:Bind ViewModel.Cartoon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="CGI" Tag="CGI" IsChecked="{x:Bind ViewModel.CGI, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="网络朋克" Tag="Cyberpunk" IsChecked="{x:Bind ViewModel.Cyberpunk, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="幻想" Tag="Fantasy" IsChecked="{x:Bind ViewModel.Fantasy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="游戏" Tag="Game" IsChecked="{x:Bind ViewModel.Game, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="女性" Tag="Girls" IsChecked="{x:Bind ViewModel.Girls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="男性" Tag="Guys" IsChecked="{x:Bind ViewModel.Guys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="风景" Tag="Landscape" IsChecked="{x:Bind ViewModel.Landscape, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="中世纪" Tag="Medieval" IsChecked="{x:Bind ViewModel.Medieval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="网红事物" Tag="Memes" IsChecked="{x:Bind ViewModel.Memes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="MMD" Tag="MMD" IsChecked="{x:Bind ViewModel.MMD, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="音乐" Tag="Music" IsChecked="{x:Bind ViewModel.Music, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="自然" Tag="Nature" IsChecked="{x:Bind ViewModel.Nature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="像素艺术" Tag="Pixelart" IsChecked="{x:Bind ViewModel.Pixelart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="轻松" Tag="Relaxing" IsChecked="{x:Bind ViewModel.Relaxing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="复古" Tag="Retro" IsChecked="{x:Bind ViewModel.Retro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="科幻" Tag="SciFi" IsChecked="{x:Bind ViewModel.SciFi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="运动" Tag="Sports" IsChecked="{x:Bind ViewModel.Sports, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="科技" Tag="Technology" IsChecked="{x:Bind ViewModel.Technology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="电视节目" Tag="Television" IsChecked="{x:Bind ViewModel.Television, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="汽车" Tag="Vehicle" IsChecked="{x:Bind ViewModel.Vehicle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox Content="未指定样式" Tag="Unspecified" IsChecked="{x:Bind ViewModel.Unspecified, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Abstract" Tag="Abstract" IsChecked="{x:Bind ViewModel.Abstract, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Animal" Tag="Animal" IsChecked="{x:Bind ViewModel.Animal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <CheckBox x:Uid="Tag_Anime" Tag="Anime" IsChecked="{x:Bind ViewModel.Anime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Cartoon" Tag="Cartoon" IsChecked="{x:Bind ViewModel.Cartoon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_CGI" Tag="CGI" IsChecked="{x:Bind ViewModel.CGI, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Cyberpunk" Tag="Cyberpunk" IsChecked="{x:Bind ViewModel.Cyberpunk, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Fantasy" Tag="Fantasy" IsChecked="{x:Bind ViewModel.Fantasy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Game" Tag="Game" IsChecked="{x:Bind ViewModel.Game, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Girls" Tag="Girls" IsChecked="{x:Bind ViewModel.Girls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Guys" Tag="Guys" IsChecked="{x:Bind ViewModel.Guys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Landscape" Tag="Landscape" IsChecked="{x:Bind ViewModel.Landscape, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Medieval" Tag="Medieval" IsChecked="{x:Bind ViewModel.Medieval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Memes" Tag="Memes" IsChecked="{x:Bind ViewModel.Memes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_MMD" Tag="MMD" IsChecked="{x:Bind ViewModel.MMD, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Music" Tag="Music" IsChecked="{x:Bind ViewModel.Music, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Nature" Tag="Nature" IsChecked="{x:Bind ViewModel.Nature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Pixelart" Tag="Pixelart" IsChecked="{x:Bind ViewModel.Pixelart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Relaxing" Tag="Relaxing" IsChecked="{x:Bind ViewModel.Relaxing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Retro" Tag="Retro" IsChecked="{x:Bind ViewModel.Retro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_SciFi" Tag="SciFi" IsChecked="{x:Bind ViewModel.SciFi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Sports" Tag="Sports" IsChecked="{x:Bind ViewModel.Sports, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Technology" Tag="Technology" IsChecked="{x:Bind ViewModel.Technology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Television" Tag="Television" IsChecked="{x:Bind ViewModel.Television, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Vehicle" Tag="Vehicle" IsChecked="{x:Bind ViewModel.Vehicle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Unspecified" Tag="Unspecified" IsChecked="{x:Bind ViewModel.Unspecified, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
                                     </StackPanel>
@@ -197,87 +332,113 @@
 
                         <SplitView.Content>
                             <ScrollViewer Grid.Row="1" HorizontalAnchorRatio="0.5" VerticalAnchorRatio="0.5">
-                                <ItemsRepeater ItemsSource="{x:Bind Wallpapers}" Margin="8,0,8,0" x:Name="WallpapersRepeater">
-                                    <ItemsRepeater.Layout>
-                                        <UniformGridLayout MinItemWidth="150" 
-                                                           MinColumnSpacing="8" 
-                                                           MinRowSpacing="8" 
-                                                           ItemsStretch="Fill" 
-                                                           Orientation="Horizontal"/>
-                                    </ItemsRepeater.Layout>
+                                <StackPanel>
+                                    <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,120,0,0">
+                                        <TextBlock x:Uid="NoResultTip1"
+                                                   Style="{StaticResource TitleTextBlockStyle}" 
+                                                   TextWrapping="Wrap"
+                                                   FontSize="20"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock x:Uid="NoResultTip2"
+                                                   Style="{StaticResource TitleTextBlockStyle}" 
+                                                   TextWrapping="Wrap"
+                                                   FontSize="20"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock x:Uid="NoResultTip3"
+                                                   Style="{StaticResource TitleTextBlockStyle}" 
+                                                   TextWrapping="Wrap"
+                                                   FontSize="20"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <ItemsRepeater ItemsSource="{x:Bind Wallpapers}" 
+                                               Margin="8,0,8,0"
+                                               x:Name="WallpapersRepeater"
+                                               ContextFlyout="{StaticResource WallpaperContextMenu}">
+                                        <ItemsRepeater.Layout>
+                                            <UniformGridLayout
+                                            MinItemWidth="{x:Bind ViewModel.WallpaperListMinWidth, Mode=OneWay}" 
+                                            MinColumnSpacing="10" 
+                                            MinRowSpacing="10" 
+                                            ItemsStretch="Fill" 
+                                            Orientation="Horizontal"/>
+                                        </ItemsRepeater.Layout>
 
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate x:DataType="models:WallpaperItem">
-                                            <Grid x:Name="ItemContainer">
-                                                <Grid.Resources>
-                                                    <ThemeShadow x:Name="SharedShadow"/>
-                                                </Grid.Resources>
-                                                <Grid x:Name="ShadowCastGrid" Background="Transparent" />
-                                                <Grid CornerRadius="8" 
-                                                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                  PointerEntered="Item_PointerEntered"
-                                                  PointerExited="Item_PointerExited"
-                                                  PointerReleased="Item_PointerReleased"
-                                                  PointerPressed="Item_PointerPressed"
-                                                  RenderTransformOrigin="0.5,0.5"
-                                                  x:Name="ItemRootGrid"
-                                                  DataContext="{x:Bind}"
-                                                  Translation="0,0,64"
-                                                  Loaded="ShadowRect_Loaded"
-                                                  Shadow="{StaticResource SharedShadow}">
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="models:WallpaperItem">
+                                                <Grid x:Name="ItemContainer">
+                                                    <Grid.Resources>
+                                                        <ThemeShadow x:Name="SharedShadow"/>
+                                                    </Grid.Resources>
+                                                    <ProgressRing IsActive="True" Background="Transparent"/>
+                                                    <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
+                                                    <Grid CornerRadius="8"
+                                                      Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                      PointerEntered="Item_PointerEntered"
+                                                      PointerExited="Item_PointerExited"
+                                                      PointerReleased="Item_PointerReleased"
+                                                      PointerPressed="Item_PointerPressed"
+                                                      RenderTransformOrigin="0.5,0.5"
+                                                      x:Name="ItemRootGrid"
+                                                      DataContext="{x:Bind}"
+                                                      Translation="0,0,64"
+                                                      Loaded="ShadowRect_Loaded"
+                                                      Shadow="{StaticResource SharedShadow}"
+                                                      ContextFlyout="{StaticResource WallpaperContextMenu}">
 
-                                                    <Viewbox Stretch="Uniform" VerticalAlignment="Top">
-                                                        <Canvas Width="100" Height="100"/>
-                                                    </Viewbox>
+                                                        <Viewbox Stretch="Uniform" VerticalAlignment="Top">
+                                                            <Canvas Width="100" Height="100"/>
+                                                        </Viewbox>
 
-                                                    <Image Source="{x:Bind Preview}" 
-                                                       Stretch="UniformToFill" 
-                                                       x:Phase="1"/>
+                                                        <Image Stretch="UniformToFill">
+                                                            <Image.Source>
+                                                                <BitmapImage UriSource="{x:Bind Preview}" 
+                                                                         AutoPlay="{Binding DataContext.ViewModel.AutoPlayGif, ElementName=PageRoot,Mode=OneWay}"/>
+                                                            </Image.Source>
+                                                        </Image>
 
-                                                    <Grid VerticalAlignment="Bottom" Height="45">
-                                                        <Grid.Background>
-                                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                                <GradientStop Color="Transparent" Offset="0"/>
-                                                                <GradientStop Color="#CC000000" Offset="1"/>
-                                                            </LinearGradientBrush>
-                                                        </Grid.Background>
-                                                        <TextBlock Text="{x:Bind Title}" 
+                                                        <Grid VerticalAlignment="Bottom" Height="45">
+                                                            <Grid.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                    <GradientStop Color="Transparent" Offset="0"/>
+                                                                    <GradientStop Color="#CC000000" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Grid.Background>
+                                                            <TextBlock Text="{x:Bind Title}" 
                                                                    Foreground="White" 
                                                                    FontSize="12" 
                                                                    VerticalAlignment="Bottom"
                                                                    Margin="10,0,10,8" 
                                                                    TextTrimming="CharacterEllipsis"/>
-                                                    </Grid>
-                                                    <CheckBox x:Name="SelectionCheckBox"
+                                                        </Grid>
+                                                        <CheckBox x:Name="SelectionCheckBox"
                                                               IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                              Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
                                                               VerticalAlignment="Top"
                                                               HorizontalAlignment="Left"
                                                               Margin="8,8,0,0"
                                                               Click="SelectionCheckBox_Click"
                                                               CornerRadius="6"
-                                                              Opacity="0"
                                                               MinWidth="0" MinHeight="0" Padding="0" Width="21" Height="21" Content="{x:Null}">
-                                                        <CheckBox.Resources>
-                                                            <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" ResourceKey="SystemControlBackgroundBaseLowBrush" />
-
-                                                            <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" ResourceKey="SystemControlBackgroundBaseMediumLowBrush" />
-
-                                                            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="RoyalBlue" />
-
-                                                            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="DodgerBlue" />
-                                                        </CheckBox.Resources>
-                                                    </CheckBox>
+                                                            <CheckBox.Resources>
+                                                                <!-- 未选中状态 -->
+                                                                <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" 
+                                                                            ResourceKey="SystemControlBackgroundChromeWhiteBrush" />
+                                                                <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" 
+                                                                            ResourceKey="SystemControlBackgroundChromeWhiteBrush" />
+                                                            </CheckBox.Resources>
+                                                        </CheckBox>
+                                                    </Grid>
                                                 </Grid>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </StackPanel>
                             </ScrollViewer>
                         </SplitView.Content>
                     </SplitView>
                 </Grid>
             </SplitView.Content>
-            </SplitView>
+        </SplitView>
 
         <Grid Grid.Row="2" MinWidth="300" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
@@ -286,18 +447,21 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal">
-                <FontIcon Glyph="&#xE74E;" Margin="12,0,4,0"/>
-                <TextBlock Text="导出目录" Margin="4,0,0,0" VerticalAlignment="Center"/>
-                <Button Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Margin="0,5,0,0">
+                <FontIcon Glyph="&#xE74E;" Margin="15,0,0,0"/>
+                <TextBlock x:Uid="ExportDirectory" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                <Button Style="{StaticResource SubtleButtonStyle}"
+                        VerticalAlignment="Center"
+                        Margin="0,5,0,0"
+                        Command="{x:Bind ViewModel.AutoDetectDownloadPathCommand}">
                     <Button.Content>
                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                     </Button.Content>
                 </Button>
             </StackPanel>
-            <TextBox Grid.Column="1" PlaceholderText="输入或选择路径" Text="{x:Bind ViewModel.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+            <TextBox Grid.Column="1" x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
             <StackPanel VerticalAlignment="Center" Grid.Column="2" Orientation="Horizontal">
-                <Button Margin="0,0,0,0" Content="设定目录" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                <Button Margin="4,0,8,0" Content="打开目录" Command="{x:Bind ViewModel.OpenFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                <Button Margin="0,0,0,0" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                <Button Margin="4,0,8,0" x:Uid="OpenFolder" Command="{x:Bind ViewModel.OpenFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
     </Grid>

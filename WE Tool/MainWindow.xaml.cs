@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -12,7 +13,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
+using WE_Tool.Helper;
+using WE_Tool.Models;
 using WE_Tool.Service;
+using WE_Tool.ViewModels;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using WinUIEx;
@@ -27,18 +32,21 @@ namespace WE_Tool
     /// </summary>
     public sealed partial class MainWindow : WindowEx
     {
+        public SettingsViewModel ViewModel { get; }
         private readonly IConfigService _configService = new ConfigService();
+        public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = new List<WallpaperItem>();
+        public static Task ScanTask { get; private set; }
+        public static event EventHandler? ScanCompleted;
         public MainWindow()
         {
+            ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
             InitializeComponent();
             this.ExtendsContentIntoTitleBar = true;
             this.Activated += MainWindow_Activated;
         }
-
         private async void MainWindow_Activated(object? sender, WindowActivatedEventArgs e)
         {
             this.Activated -= MainWindow_Activated;
-
             try
             {
                 var settings = await _configService.LoadAsync();
@@ -61,10 +69,9 @@ namespace WE_Tool
             }
             catch (Exception ex)
             {
-                Log.Error(ex,"初始化失败。");
+                Log.Error(ex, "初始化失败。");
             }
         }
-
         private NavigationViewItem? FindNavItemByTag(IEnumerable items, string tag)
         {
             foreach (var obj in items)

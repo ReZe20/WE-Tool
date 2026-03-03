@@ -12,8 +12,12 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
+
+	  <WindowsPackageType>None</WindowsPackageType>
+	  
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Assets\noPreview.png" />
     <None Remove="LoadPapers.xaml" />
     <None Remove="Pages\Info.xaml" />
     <None Remove="Papers.xaml" />
@@ -91,5 +95,25 @@
     <AssemblyName>WE_Tool</AssemblyName>
     <AssemblyTitle>WE_Tool</AssemblyTitle>
     <StartupObject>WE_Tool.Program</StartupObject>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <AppxBundle>Never</AppxBundle>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+    <DefaultLanguage>zh-CN</DefaultLanguage>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <PRIResource Update="Strings\zh-CN\Resources.resw">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </PRIResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Strings\**\*.resw">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

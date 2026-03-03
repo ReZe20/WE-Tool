@@ -1,8 +1,9 @@
-﻿using Serilog;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -22,6 +23,7 @@ namespace WE_Tool.ViewModels
 
         [ObservableProperty]
         private WallpaperItem _selectedWallpaper;
+        private string _appLanguage;
 
         private readonly IConfigService _configService;
         private readonly IPickerService _pickerService;
@@ -29,8 +31,13 @@ namespace WE_Tool.ViewModels
 
         private string _startPageTag = "Papers";
 
+        public int _bottomBarHeight;
+        public bool _isBottomBarOpen;
+        public bool _autoPlayGif;
+        public int _wallpaperListMinWidth;
         public bool _leftSplitViewPaneOpen;
         public bool _rightSplitViewPaneOpen;
+        public bool _detailSelectionEnabled;
 
         private int _sortOrder;
         private string _sortGlyph = "\uE8D2";
@@ -44,6 +51,7 @@ namespace WE_Tool.ViewModels
         public bool _video;
         public bool _web;
         public bool _application;
+        public bool _preset;
         public bool _unknown;
 
         public bool _ratingExpander;
@@ -87,6 +95,7 @@ namespace WE_Tool.ViewModels
         private string _workshopPath;
         private string _projectPath;
         private string _acfPath;
+        private string _officialPath;
         private bool _ignoreExtension;
         private string _ignoreExtensionList;
         private bool _onlyExtension;
@@ -107,6 +116,7 @@ namespace WE_Tool.ViewModels
         public IAsyncRelayCommand<object> BrowseFileCommand { get; }
         public IAsyncRelayCommand<object> OpenFolderCommand { get; }
         public IAsyncRelayCommand<string> AutoDetectWorkshopPathCommand { get; }
+        public IAsyncRelayCommand AutoDetectDownloadPathCommand { get; }
         public SettingsViewModel(IConfigService configService, IPickerService pickerService)
         {
             _configService = configService;
@@ -119,6 +129,7 @@ namespace WE_Tool.ViewModels
             OpenFolderCommand = new AsyncRelayCommand<object>(OpenFolderAsync);
 
             AutoDetectWorkshopPathCommand = new AsyncRelayCommand<string>(AutoDetectWorkshopPathAsync);
+            AutoDetectDownloadPathCommand = new AsyncRelayCommand(AutoDetectDownloadPathAsync);
         }
         public void ExecuteChangeSort(string? parameter)
         {
@@ -133,19 +144,19 @@ namespace WE_Tool.ViewModels
             {
                 case 0:
                     SortGlyph = "\uE8D2";
-                    SortText = "按名称排序";
+                    SortText = LanguageHelper.GetResource("SortByName.Text");
                     break;
                 case 1:
                     SortGlyph = "\uED0E";
-                    SortText = "按订阅时间";
+                    SortText = LanguageHelper.GetResource("SortBySubTime.Text");
                     break;
                 case 2:
                     SortGlyph = "\uF738";
-                    SortText = "按更新时间";
+                    SortText = LanguageHelper.GetResource("SortByLastTime.Text");
                     break;
                 case 3:
                     SortGlyph = "\uEDA2";
-                    SortText = "按大小排序";
+                    SortText = LanguageHelper.GetResource("SortByFileSize.Text");
                     break;
             }
         }
@@ -156,11 +167,17 @@ namespace WE_Tool.ViewModels
 
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
+            AppLanguage = _settings.AppLanguage ?? "default";
             _startPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
 
+            BottomBarHeight = _settings.Papers.BottomBarHeight;
+            IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
+            AutoPlayGif = _settings.Papers.AutoPlayGif;
+            WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
             LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
             RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
 
+            DetailSelectionEnabled = _settings.Papers.DetailSelectionEnabled;
             _isSortAscending = _settings.Papers.IsSortAscending;
             SortDirectionGlyph = _isSortAscending ? "\uE70E" : "\uE70D";
             OnPropertyChanged(nameof(IsSortAscending));
@@ -173,6 +190,7 @@ namespace WE_Tool.ViewModels
             Video = _settings.Expander.Video;
             Web = _settings.Expander.Web;
             Application = _settings.Expander.Application;
+            _preset = _settings.Expander.Preset;
             Unknown = _settings.Expander.Unknown;
 
             RatingExpander = _settings.Expander.RatingExpander;
@@ -213,24 +231,23 @@ namespace WE_Tool.ViewModels
             Unspecified = _settings.Expander.Unspecified;
 
             DownloadPath = _settings.Path.DownloadPath;
-            string mode = "000";
+            if (string.IsNullOrEmpty(DownloadPath))
+                await AutoDetectDownloadPathAsync();
+            string mode = "0000";
             WorkshopPath = _settings.Path.WorkshopPath;
             ProjectPath = _settings.Path.ProjectPath;
             AcfPath = _settings.Path.AcfPath;
+            OfficialPath = _settings.Path.OfficialPath;
             if (string.IsNullOrEmpty(WorkshopPath))
                 mode = mode.Remove(0, 1).Insert(0, "1");
             if (string.IsNullOrEmpty(ProjectPath))
                 mode = mode.Remove(1, 1).Insert(1, "1");
             if (string.IsNullOrEmpty(AcfPath))
                 mode = mode.Remove(2, 1).Insert(2, "1");
-            foreach (var c in mode)
-            {
-                if (c == '1')
-                {
-                    await AutoDetectWorkshopPathAsync(mode);
-                    break;
-                }
-            }
+            if (string.IsNullOrEmpty(OfficialPath))
+                mode = mode.Remove(3, 1).Insert(3, "1");
+            if (mode.Contains('1'))
+                await AutoDetectWorkshopPathAsync(mode);
 
             IgnoreExtension = _settings.Extract.IgnoreExtension;
             IgnoreExtensionList = _settings.Extract.IgnoreExtensionList;
@@ -246,7 +263,15 @@ namespace WE_Tool.ViewModels
             _isBatchUpdating = false;
             OnPropertyChanged(string.Empty);
         }
-
+        public string AppLanguage
+        {
+            get => _appLanguage;
+            set
+            {
+                if (SetProperty(ref _appLanguage, value))
+                    OnAppLanguageChanged(AppLanguage);
+            }
+        }
         public int SortOrder
         {
             get => _sortOrder;
@@ -286,6 +311,7 @@ namespace WE_Tool.ViewModels
                 }
             }
         }
+        
         public string StartPageTag
         {
             get => _startPageTag;
@@ -295,7 +321,56 @@ namespace WE_Tool.ViewModels
                     DebounceSave();
             }
         }
-
+        public int BottomBarHeight
+        {
+            get => _bottomBarHeight;
+            set
+            {
+                if (SetProperty(ref _bottomBarHeight, value))
+                    DebounceSave();
+            }
+        }
+        public bool IsBottomBarOpen
+        {
+            get => _isBottomBarOpen;
+            set
+            {
+                if (SetProperty(ref _isBottomBarOpen, value))
+                {
+                    BottomBarHeight = IsBottomBarOpen == true ? 50 : 0;
+                }
+            }
+        }
+        public bool AutoPlayGif
+        {
+            get => _autoPlayGif;
+            set
+            {
+                if (SetProperty(ref _autoPlayGif, value))
+                    DebounceSave();
+            }
+        }
+        public bool DetailSelectionEnabled
+        {
+            get => _detailSelectionEnabled;
+            set
+            {
+                if (SetProperty(ref _detailSelectionEnabled, value))
+                    DebounceSave();
+            }
+        }
+        public int WallpaperListMinWidth
+        {
+            get => _wallpaperListMinWidth;
+            set
+            {
+                if (SetProperty(ref _wallpaperListMinWidth, value))
+                {
+                    UpdateSortUI();
+                    DebounceSave();
+                }
+            }
+        }
         public bool LeftSplitViewPaneOpen
         {
             get => _leftSplitViewPaneOpen;
@@ -315,7 +390,6 @@ namespace WE_Tool.ViewModels
                     DebounceSave();
             }
         }
-
         public bool TypeExpander
         {
             get => _typeExpander;
@@ -358,6 +432,15 @@ namespace WE_Tool.ViewModels
             set
             {
                 if (SetProperty(ref _application, value))
+                    DebounceSave();
+            }
+        }
+        public bool Preset
+        {
+            get => _preset;
+            set
+            {
+                if (SetProperty(ref _preset, value))
                     DebounceSave();
             }
         }
@@ -719,7 +802,26 @@ namespace WE_Tool.ViewModels
                     DebounceSave();
             }
         }
-
+        public string ConfigPath
+        {
+            get => System.IO.Path.Combine(App.GetAppDataRoot());
+            set
+            { }
+        }
+        public string LogPath
+        {
+            get => System.IO.Path.Combine(App.GetAppDataRoot(), "logs");
+            set { }
+        }
+        public string OfficialPath
+        {
+            get => _officialPath;
+            set
+            {
+                if (SetProperty(ref _officialPath, value))
+                    DebounceSave();
+            }
+        }
         public bool IgnoreExtension
         {
             get => _ignoreExtension;
@@ -925,20 +1027,27 @@ namespace WE_Tool.ViewModels
             await _saveSemaphore.WaitAsync();
             try
             {
+                _settings.AppLanguage = AppLanguage ?? "";
+
                 _settings.StartPageTag = StartPageTag;
 
+                _settings.Papers.BottomBarHeight = BottomBarHeight;
+                _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
+                _settings.Papers.AutoPlayGif = AutoPlayGif;
+                _settings.Papers.WallpaperListMinWidth = WallpaperListMinWidth;
                 _settings.Papers.LeftSplitViewPaneOpen = LeftSplitViewPaneOpen;
                 _settings.Papers.RightSplitViewPaneOpen = RightSplitViewPaneOpen;
 
                 _settings.Papers.IsSortAscending = IsSortAscending;
                 _settings.Papers.SortOrder = SortOrder;
-
+                _settings.Papers.DetailSelectionEnabled = DetailSelectionEnabled;
                 // 类型相关
                 _settings.Expander.TypeExpander = TypeExpander;
                 _settings.Expander.Scene = Scene;
                 _settings.Expander.Video = Video;
                 _settings.Expander.Web = Web;
                 _settings.Expander.Application = Application;
+                _settings.Expander.Preset = Preset;
                 _settings.Expander.Unknown = Unknown;
 
                 // 分级相关
@@ -984,6 +1093,7 @@ namespace WE_Tool.ViewModels
                 _settings.Path.DownloadPath = DownloadPath;
                 _settings.Path.WorkshopPath = WorkshopPath;
                 _settings.Path.ProjectPath = ProjectPath;
+                _settings.Path.OfficialPath = OfficialPath;
                 _settings.Path.AcfPath = AcfPath;
 
                 _settings.Extract.IgnoreExtension = IgnoreExtension;
@@ -1032,6 +1142,9 @@ namespace WE_Tool.ViewModels
                     case "AcfPath":
                         AcfPath = path;
                         break;
+                    case "OfficialPath":
+                        OfficialPath = path;
+                        break;
                     default:
                         DownloadPath = path;
                         break;
@@ -1052,8 +1165,16 @@ namespace WE_Tool.ViewModels
                     targetPath = ProjectPath;
                     break;
                 case "DownloadPath":
-                default:
                     targetPath = DownloadPath;
+                    break;
+                case "ConfigPath":
+                    targetPath = ConfigPath;
+                    break;
+                case "LogPath":
+                    targetPath = LogPath;
+                    break;
+                default:
+                    targetPath = key;
                     break;
             }
             if (!string.IsNullOrEmpty(targetPath) && !System.IO.Directory.Exists(targetPath))
@@ -1077,9 +1198,34 @@ namespace WE_Tool.ViewModels
             }
             await _pickerService.OpenFolderAsync(targetPath);
         }
+        public async Task RemoveWorkshopKeyFromAcfAsync(string workshopID, string acfPath)
+        {
+            if (string.IsNullOrEmpty(workshopID) || !File.Exists(acfPath)) return;
 
+            await Task.Run(() =>
+            {
+                try
+                {
+                    string content = File.ReadAllText(acfPath);
+                    string pattern = $@"\s*""{workshopID}""\s*\{{[\s\S]*?\}}";
+
+                    if (System.Text.RegularExpressions.Regex.IsMatch(content, pattern))
+                    {
+                        string newContent = System.Text.RegularExpressions.Regex.Replace(content, pattern, string.Empty);
+                        File.WriteAllText(acfPath, newContent);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"[ViewModel] 清理 ACF 键值失败: {workshopID}");
+                }
+            });
+        }
+        
         public async Task AutoDetectWorkshopPathAsync(string mode)
         {
+            if (mode == "0000") return;
+
             var result = await Task.Run(() =>
             {
                 string? foundBaseDir = null;
@@ -1110,7 +1256,6 @@ namespace WE_Tool.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"读取注册表失败: {ex.Message}");
                     Log.Warning(ex,"读取WallpaperEngine注册表出现异常。");
                 }
                 return foundBaseDir;
@@ -1124,6 +1269,56 @@ namespace WE_Tool.ViewModels
                     ProjectPath = result + @"\common\wallpaper_engine\projects\myprojects";
                 if (mode[2] == '1')
                     AcfPath = result + @"\workshop\appworkshop_431960.acf";
+                if (mode[3] == '1')
+                    OfficialPath = result + @"\common\wallpaper_engine\projects\defaultprojects";
+            }
+        }
+        public async Task AutoDetectDownloadPathAsync()
+        {
+            try
+            {
+                // 获取当前用户的桌面路径
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+                if (!string.IsNullOrEmpty(desktopPath))
+                {
+                    DownloadPath = desktopPath + "\\WE_OutPut";
+                    // 赋值后会自动触发 DebounceSave 逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "设置桌面路径为保存路径时出现异常。");
+            }
+            await Task.CompletedTask;
+        }
+        private void OnAppLanguageChanged(string value)
+        {
+            if (_isBatchUpdating) return;
+
+            _settings.AppLanguage = value ?? "default";
+            DebounceSave();
+
+            _ = ShowRestartDialog();
+        }
+        private async Task ShowRestartDialog()
+        {
+            ContentDialog dialog = new()
+            {
+                Title = "需要重启",
+                Content = "更改语言设置后需要重启应用程序才能完全生效。是否现在重启？",
+                PrimaryButtonText = "立即重启",
+                CloseButtonText = "稍后重启",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = App.MainWindowInstance.Content.XamlRoot
+            };
+
+            var result = await dialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                // 3. 执行重启逻辑
+                Microsoft.Windows.AppLifecycle.AppInstance.Restart("");
             }
         }
     }

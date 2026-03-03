@@ -1,0 +1,327 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Rating_Everyone.Content" xml:space="preserve">
+    <value>大众级(G)</value>
+  </data>
+  <data name="Rating_Questionable.Content" xml:space="preserve">
+    <value>家长指导级    (PG-13)</value>
+  </data>
+  <data name="Rating_Mature.Content" xml:space="preserve">
+    <value>限制级/成人级    (R-18)</value>
+  </data>
+  <data name="Source.Header" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="Source_Official.Content" xml:space="preserve">
+    <value>官方</value>
+  </data>
+  <data name="Source_Mine.Content" xml:space="preserve">
+    <value>我的壁纸</value>
+  </data>
+  <data name="Source_Workshop.Content" xml:space="preserve">
+    <value>创意工坊</value>
+  </data>
+  <data name="Tag.Header" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="Tag_Abstract.Content" xml:space="preserve">
+    <value>抽象</value>
+  </data>
+  <data name="Tag_Animal.Content" xml:space="preserve">
+    <value>动物</value>
+  </data>
+  <data name="Tag_Anime.Content" xml:space="preserve">
+    <value>动漫</value>
+  </data>
+  <data name="Tag_Cartoon.Content" xml:space="preserve">
+    <value>卡通</value>
+  </data>
+  <data name="Tag_CGI.Content" xml:space="preserve">
+    <value>CGI</value>
+  </data>
+  <data name="Tag_Cyberpunk.Content" xml:space="preserve">
+    <value>网络朋克</value>
+  </data>
+  <data name="Tag_Fantasy.Content" xml:space="preserve">
+    <value>幻想</value>
+  </data>
+  <data name="Tag_Game.Content" xml:space="preserve">
+    <value>游戏</value>
+  </data>
+  <data name="Tag_Girls.Content" xml:space="preserve">
+    <value>女性</value>
+  </data>
+  <data name="Tag_Guys.Content" xml:space="preserve">
+    <value>男性</value>
+  </data>
+  <data name="Tag_Landscape.Content" xml:space="preserve">
+    <value>风景</value>
+  </data>
+  <data name="Tag_Medieval.Content" xml:space="preserve">
+    <value>中世纪</value>
+  </data>
+  <data name="Tag_Memes.Content" xml:space="preserve">
+    <value>网红事物</value>
+  </data>
+  <data name="Tag_MMD.Content" xml:space="preserve">
+    <value>MMD</value>
+  </data>
+  <data name="Tag_Music.Content" xml:space="preserve">
+    <value>音乐</value>
+  </data>
+  <data name="Tag_Nature.Content" xml:space="preserve">
+    <value>自然</value>
+  </data>
+  <data name="Tag_Pixelart.Content" xml:space="preserve">
+    <value>像素艺术</value>
+  </data>
+  <data name="Tag_Relaxing.Content" xml:space="preserve">
+    <value>轻松</value>
+  </data>
+  <data name="Tag_Retro.Content" xml:space="preserve">
+    <value>复古</value>
+  </data>
+  <data name="Tag_SciFi.Content" xml:space="preserve">
+    <value>科幻</value>
+  </data>
+  <data name="Tag_Sports.Content" xml:space="preserve">
+    <value>运动</value>
+  </data>
+  <data name="Tag_Technology.Content" xml:space="preserve">
+    <value>科技</value>
+  </data>
+  <data name="Tag_Television.Content" xml:space="preserve">
+    <value>电视节目</value>
+  </data>
+  <data name="Tag_Unspecified.Content" xml:space="preserve">
+    <value>未指定样式</value>
+  </data>
+  <data name="Tag_Vehicle.Content" xml:space="preserve">
+    <value>汽车</value>
+  </data>
+  <data name="Type.Header" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="Type_Application.Content" xml:space="preserve">
+    <value>应用程序</value>
+  </data>
+  <data name="Type_Scene.Content" xml:space="preserve">
+    <value>场景</value>
+  </data>
+  <data name="Type_Unknown.Content" xml:space="preserve">
+    <value>未知类型</value>
+  </data>
+  <data name="Type_Video.Content" xml:space="preserve">
+    <value>视频</value>
+  </data>
+  <data name="Type_Web.Content" xml:space="preserve">
+    <value>网页</value>
+  </data>
+  <data name="Rating.Header" xml:space="preserve">
+    <value>年龄分级</value>
+  </data>
+  <data name="ResetFilters.Text" xml:space="preserve">
+    <value>重置过滤器</value>
+  </data>
+  <data name="All.Content" xml:space="preserve">
+    <value>所有</value>
+  </data>
+  <data name="None.Content" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="FilterResults.Text" xml:space="preserve">
+    <value>筛选结果</value>
+  </data>
+  <data name="SortByName.Text" xml:space="preserve">
+    <value>按名称排序</value>
+  </data>
+  <data name="SortByLastTime.Text" xml:space="preserve">
+    <value>按更新时间</value>
+  </data>
+  <data name="SortByFileSize.Text" xml:space="preserve">
+    <value>按大小排序</value>
+  </data>
+  <data name="SortBySubTime.Text" xml:space="preserve">
+    <value>按订阅时间</value>
+  </data>
+  <data name="DetailsPanel.Text" xml:space="preserve">
+    <value>详情面板</value>
+  </data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve">
+    <value>在这里搜索</value>
+  </data>
+  <data name="ExportDirectory.Text" xml:space="preserve">
+    <value>导出目录</value>
+  </data>
+  <data name="SelectFolder.Content" xml:space="preserve">
+    <value>浏览</value>
+  </data>
+  <data name="OpenFolder.Content" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="Nodescription" xml:space="preserve">
+    <value>无描述</value>
+  </data>
+  <data name="Settings.Text" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Start.Text" xml:space="preserve">
+    <value>启动</value>
+  </data>
+  <data name="StartPage.Description" xml:space="preserve">
+    <value>选择启动WE Tool时的显示页面</value>
+  </data>
+  <data name="StartPage.Header" xml:space="preserve">
+    <value>启动页面</value>
+  </data>
+  <data name="InstalledWallpapers.Content" xml:space="preserve">
+    <value>已安装壁纸</value>
+  </data>
+  <data name="InstalledWallpapersPage.Content" xml:space="preserve">
+    <value>已安装壁纸</value>
+  </data>
+  <data name="ImportWallpapers.Content" xml:space="preserve">
+    <value>导入壁纸</value>
+  </data>
+  <data name="ImportWallpapersPage.Content" xml:space="preserve">
+    <value>导入壁纸</value>
+  </data>
+  <data name="AboutPage.Content" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="SettingsPage.Content" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
+    <value>输入或选择路径</value>
+  </data>
+  <data name="Type_Preset.Content" xml:space="preserve">
+    <value>预设</value>
+  </data>
+  <data name="NoResultTip1.Text" xml:space="preserve">
+    <value>未找到任何壁纸</value>
+  </data>
+  <data name="NoResultTip3.Text" xml:space="preserve">
+    <value>或是检查设置中路径是否正确</value>
+  </data>
+  <data name="NoResultTip2.Text" xml:space="preserve">
+    <value>请选择筛选器中其它栏目，搜索其它关键词</value>
+  </data>
+</root>

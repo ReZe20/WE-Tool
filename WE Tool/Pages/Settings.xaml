@@ -9,7 +9,6 @@
     mc:Ignorable="d"
     NavigationCacheMode="Required"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:viewmodels="using:WE_Tool.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}">
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="35"/>
@@ -20,12 +19,12 @@
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Text="设置" FontSize="25" VerticalAlignment="Center" Margin="30,0,0,0"/>
+            <TextBlock Grid.Row="0" x:Uid="Settings" FontSize="25" VerticalAlignment="Center" Margin="30,0,0,0"/>
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <StackPanel  Margin="25,10,25,0">
-                    
-                    <TextBlock Text="启动" Margin="5,10,0,10"/>
-                    <controls:SettingsCard Header="启动页面" Description="选择启动WE Tool时的显示页面">
+
+                    <TextBlock x:Uid="Start" Margin="5,10,0,10"/>
+                    <controls:SettingsCard x:Uid="StartPage">
                         <controls:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE8A1;"/>
                         </controls:SettingsCard.HeaderIcon>
@@ -35,30 +34,64 @@
                         </ComboBox>
                     </controls:SettingsCard>
 
+                    <TextBlock Text="语言" Margin="5,10,0,10"/>
+                    <controls:SettingsCard Header="程序语言" 
+                                           Description="选择WE Tool的显示语言，更换语言后需要重启程序">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xF2B7;"/>
+                        </controls:SettingsCard.HeaderIcon>
+                        <ComboBox SelectedValuePath="Tag"
+                                  SelectedIndex="0"
+                                  MinWidth="150" 
+                                  SelectedValue="{x:Bind ViewModel.AppLanguage, Mode=TwoWay}">
+                            <ComboBoxItem Tag="en-US" Content="English"/>
+                            <ComboBoxItem Tag="zh-CN" Content="简体中文"/>
+                            <ComboBoxItem Tag="default" Content="跟随系统"/>
+                        </ComboBox>
+                    </controls:SettingsCard>
+                    
                     <TextBlock Text="页面" Margin="5,10,0,10"/>
                     <controls:SettingsExpander Header="已有壁纸页面设置" Description="设置已有壁纸页面中的具体内容">
                         <controls:SettingsExpander.HeaderIcon>
-                            <FontIcon Glyph="&#xE756;"/>
+                            <FontIcon Glyph="&#xE8B9;"/>
                         </controls:SettingsExpander.HeaderIcon>
                         <controls:SettingsExpander.Items>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <CheckBox Content="启用底部路径栏" 
+                                              IsChecked="{x:Bind ViewModel.IsBottomBarOpen, Mode=TwoWay}"/>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
 
-                            <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                            <CheckBox Content="在壁纸图像右上角显示壁纸类型" IsChecked="{x:Bind ViewModel.ConvertTEX, Mode=TwoWay}" Margin="65,10,0,10"/>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <CheckBox Content="为详情面板启用文字选择功能"
+                                              IsChecked="{x:Bind ViewModel.DetailSelectionEnabled, Mode=TwoWay}"/>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
 
-                            <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                            <CheckBox Content="" IsChecked="{x:Bind ViewModel.OneFolder, Mode=TwoWay}" Margin="65,10,0,10"/>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox Content="壁纸列表播放动图" 
+                                                  IsChecked="{x:Bind ViewModel.AutoPlayGif, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
 
-                            <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                            <CheckBox Content="同时将project.json与预览图导出至输出文件夹内" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" Margin="65,10,0,10"/>
-
-                            <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                            <CheckBox Content="使用项目project.json中的名称作为项目子目录的名称，而非创意工坊ID" IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}" Margin="65,10,0,10"/>
-
-                            <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                            <CheckBox Content="在提取 PKG 时不将 TEX 文件转换为图像" IsChecked="{x:Bind ViewModel.DontConvertTEX, Mode=TwoWay}" Margin="65,10,0,10"/>
-
-                            <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                            <CheckBox Content="覆盖所有已存在的文件" IsChecked="{x:Bind ViewModel.CoverAllFiles, Mode=TwoWay}" Margin="65,10,0,10"/>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="壁纸最小像素" Margin="28,0,12,0" VerticalAlignment="Center"/>
+                                        <NumberBox Value="{x:Bind ViewModel.WallpaperListMinWidth, Mode=TwoWay}"
+                                                   SpinButtonPlacementMode="Inline"
+                                                   SmallChange="10"
+                                                   Maximum="300"
+                                                   Minimum="100"/>
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                            
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
 
@@ -70,35 +103,44 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="导出目录"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}">
+                                <Button Style="{StaticResource SubtleButtonStyle}" 
+                                        Command="{x:Bind ViewModel.AutoDetectDownloadPathCommand}">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
                                 </Button>
                             </StackPanel>
                         </controls:SettingsCard.Header>
-                        <Grid ColumnDefinitions="*, Auto" MinWidth="300" ColumnSpacing="8">
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
                             <TextBox PlaceholderText="输入或选择路径" Text="{x:Bind ViewModel.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" Content="浏览" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
-                    <controls:SettingsCard Description="选择保存创意工坊壁纸的位置" Margin="0,0,0,10">
+                    <controls:SettingsCard Description="选择创意工坊壁纸的位置" Margin="0,0,0,10">
                         <controls:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE774;"/>
                         </controls:SettingsCard.HeaderIcon>
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="创意工坊壁纸路径"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="100">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="1000">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
                                 </Button>
                             </StackPanel>
                         </controls:SettingsCard.Header>
-                        <Grid ColumnDefinitions="*, Auto" MinWidth="300" ColumnSpacing="8">
-                            <TextBox PlaceholderText="输入或选择路径" Text="{x:Bind ViewModel.WorkshopPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" Content="浏览" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="WorkshopPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox PlaceholderText="输入或选择路径" Text="{x:Bind ViewModel.WorkshopPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="WorkshopPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <controls:SettingsCard Description="选择壁纸编辑器的项目位置" Margin="0,0,0,10">
@@ -108,35 +150,102 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="项目路径"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="010">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="0100">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
                                 </Button>
                             </StackPanel>
                         </controls:SettingsCard.Header>
-                        <Grid ColumnDefinitions="*, Auto" MinWidth="300" ColumnSpacing="8">
-                            <TextBox PlaceholderText="输入或选择路径" Text="{x:Bind ViewModel.ProjectPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" Content="浏览" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="ProjectPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox PlaceholderText="输入或选择路径" Text="{x:Bind ViewModel.ProjectPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="ProjectPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
-                    <controls:SettingsCard Description="用于存储创意工坊订阅信息的文件" Margin="0,0,0,10">
+                    <controls:SettingsCard Description="官方壁纸路径" Margin="0,0,0,10">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE9F5;" />
+                        </controls:SettingsCard.HeaderIcon>
+                        <controls:SettingsCard.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="官方壁纸路径"/>
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="0001">
+                                    <Button.Content>
+                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                    </Button.Content>
+                                </Button>
+                            </StackPanel>
+                        </controls:SettingsCard.Header>
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox PlaceholderText="输入或选择路径" Text="{x:Bind ViewModel.OfficialPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="OfficialPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </controls:SettingsCard>
+                    <controls:SettingsCard Description="存储创意工坊订阅信息的文件" Margin="0,0,0,10">
                         <controls:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE8A5;" />
                         </controls:SettingsCard.HeaderIcon>
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="ACF文件路径"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="001">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="0010">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
                                 </Button>
                             </StackPanel>
                         </controls:SettingsCard.Header>
-                        <Grid ColumnDefinitions="*, Auto" MinWidth="300" ColumnSpacing="8">
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
                             <TextBox PlaceholderText="输入或选择路径" Text="{x:Bind ViewModel.AcfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" Content="浏览" Command="{x:Bind ViewModel.BrowseFileCommand}" CommandParameter="AcfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFileCommand}" CommandParameter="AcfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </controls:SettingsCard>
+                    <controls:SettingsCard Description="存储程序设置的文件路径" Margin="0,0,0,10">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xF259;" />
+                        </controls:SettingsCard.HeaderIcon>
+                        <controls:SettingsCard.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="配置文件路径"/>
+                            </StackPanel>
+                        </controls:SettingsCard.Header>
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox PlaceholderText="输入或选择路径" IsEnabled="False" Text="{x:Bind ViewModel.ConfigPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.OpenFolderCommand}" CommandParameter="ConfigPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </controls:SettingsCard>
+                    <controls:SettingsCard Description="存储程序日志的文件路径" Margin="0,0,0,10">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xF738;" />
+                        </controls:SettingsCard.HeaderIcon>
+                        <controls:SettingsCard.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="日志文件路径"/>
+                            </StackPanel>
+                        </controls:SettingsCard.Header>
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox PlaceholderText="输入或选择路径" IsEnabled="False" Text="{x:Bind ViewModel.LogPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.OpenFolderCommand}" CommandParameter="LogPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <TextBlock Text="提取" Margin="5,10,0,10"/>
@@ -146,34 +255,55 @@
                                 <FontIcon Glyph="&#xE756;"/>
                             </controls:SettingsExpander.HeaderIcon>
                             <controls:SettingsExpander.Items>
-                                <Grid Margin="65,10,0,10">
-                                    <CheckBox Content="忽略扩展名" x:Name="IgnoreExtension" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="不提取具有指定扩展名的文件"/>
-                                    <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}" Margin="125,0,20,0" ToolTipService.ToolTip="请使用英文逗号 &quot;,&quot; 做分隔符"/>
-                                </Grid>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <Grid>
+                                            <CheckBox Content="忽略扩展名" x:Name="IgnoreExtension" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="不提取具有指定扩展名的文件"/>
+                                            <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}" Margin="125,0,20,0" ToolTipService.ToolTip="请使用英文逗号 &quot;,&quot; 做分隔符"/>
+                                        </Grid>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
-                                <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                                <Grid Margin="65,10,0,10">
-                                    <CheckBox Content="仅提取扩展名"  x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" ToolTipService.ToolTip="仅提取具有指定扩展名的文件"/>
-                                    <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="125,0,20,0" ToolTipService.ToolTip="请使用英文逗号 &quot;,&quot; 做分隔符"/>
-                                </Grid>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <Grid>
+                                            <CheckBox Content="仅提取扩展名"  x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" ToolTipService.ToolTip="仅提取具有指定扩展名的文件"/>
+                                            <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="125,0,20,0" ToolTipService.ToolTip="请使用英文逗号 &quot;,&quot; 做分隔符"/>
+                                        </Grid>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
-                                <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                                <CheckBox Content="将输入目录中所有 TEX 文件转换为图像" IsChecked="{x:Bind ViewModel.ConvertTEX, Mode=TwoWay}" Margin="65,10,0,10"/>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="将输入目录中所有 TEX 文件转换为图像" IsChecked="{x:Bind ViewModel.ConvertTEX, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
-                                <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                                <CheckBox Content="将所有提取的文件应放入一个目录中，不用子文件夹分别存储" IsChecked="{x:Bind ViewModel.OneFolder, Mode=TwoWay}" Margin="65,10,0,10"/>
-
-                                <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                                <CheckBox Content="同时将project.json与预览图导出至输出文件夹内" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" Margin="65,10,0,10"/>
-
-                                <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                                <CheckBox Content="使用项目project.json中的名称作为项目子目录的名称，而非创意工坊ID" IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}" Margin="65,10,0,10"/>
-
-                                <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                                <CheckBox Content="在提取 PKG 时不将 TEX 文件转换为图像" IsChecked="{x:Bind ViewModel.DontConvertTEX, Mode=TwoWay}" Margin="65,10,0,10"/>
-
-                                <Border BorderBrush="#E0E0E0" VerticalAlignment="Stretch" BorderThickness="1" Background="{ThemeResource SystemControlForegroundBaseLowBrush}"/>
-                                <CheckBox Content="覆盖所有已存在的文件" IsChecked="{x:Bind ViewModel.CoverAllFiles, Mode=TwoWay}" Margin="65,10,0,10"/>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="将所有提取的文件应放入一个目录中，不用子文件夹分别存储" IsChecked="{x:Bind ViewModel.OneFolder, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="同时将project.json与预览图导出至输出文件夹内" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                    </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="使用项目project.json中的名称作为项目子目录的名称，而非创意工坊ID" IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="在提取 PKG 时不将 TEX 文件转换为图像" IsChecked="{x:Bind ViewModel.DontConvertTEX, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="覆盖所有已存在的文件" IsChecked="{x:Bind ViewModel.CoverAllFiles, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
                             </controls:SettingsExpander.Items>
                         </controls:SettingsExpander>
                     </StackPanel>

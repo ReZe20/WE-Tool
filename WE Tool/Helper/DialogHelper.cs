@@ -24,5 +24,25 @@ namespace WE_Tool.Helper
             };
             await dialog.ShowAsync();
         }
+
+        public static async Task<bool> ShowConfirmDialogAsync(string title, string content, string primaryText = "确定", string closeText = "取消")
+        {
+            var xamlRoot = App.MainWindowInstance?.Content?.XamlRoot;
+
+            if (xamlRoot == null) return false;
+
+            ContentDialog dialog = new ContentDialog
+            {
+                Title = title,
+                Content = content,
+                PrimaryButtonText = primaryText,
+                CloseButtonText = closeText,
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = xamlRoot
+            };
+
+            var result = await dialog.ShowAsync();
+            return result == ContentDialogResult.Primary;
+        }
     }
 }

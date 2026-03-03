@@ -6,23 +6,25 @@ namespace WE_Tool.Models
     public class AppSettings
     {
         public int Version { get; set; } = 1;
-
+        public string AppLanguage { get; set; } = "default";
+        public string StartPageTag { get; set; } = "Papers";
         public PapersConfig Papers { get; set; } = new PapersConfig();
         public PapersConfig.Expander Expander { get; set; } = new PapersConfig.Expander();
-        public string StartPageTag { get; set; } = "Papers";
-
         public PathConfig Path { get; set; } = new PathConfig();
         public ExtractSettings Extract { get; set; } = new ExtractSettings();
     }
 
     public class PapersConfig
     {
+        public int BottomBarHeight { get; set; } = 50;
+        public bool IsBottomBarOpen { get; set; } = true;
+        public bool AutoPlayGif { get; set; } = true;
+        public int WallpaperListMinWidth { get; set; } = 180;
         public bool LeftSplitViewPaneOpen { get; set; } = true;
         public bool RightSplitViewPaneOpen { get; set; } = true;
         public int SortOrder { get; set; } = 0;
         public bool IsSortAscending { get; set; } = true;
-
-
+        public bool DetailSelectionEnabled { get; set; } = true;
         public class Expander
         {
             public bool TypeExpander { get; set; } = true;
@@ -30,6 +32,7 @@ namespace WE_Tool.Models
             public bool Video { get; set; } = true;
             public bool Web { get; set; } = true;
             public bool Application { get; set; } = true;
+            public bool Preset { get; set; } = true;
             public bool Unknown { get; set; } = true;
 
             public bool RatingExpander { get; set; } = true;
@@ -76,6 +79,7 @@ namespace WE_Tool.Models
         public string DownloadPath { get; set; } = "";
         public string WorkshopPath { get; set; } = "";
         public string ProjectPath { get; set; } = "";
+        public string OfficialPath { get; set; } = "";
         public string AcfPath { get; set; } = "";
     }
 

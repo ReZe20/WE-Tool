@@ -14,8 +14,7 @@
     <winuiex:WindowEx.SystemBackdrop>
         <DesktopAcrylicBackdrop/>
     </winuiex:WindowEx.SystemBackdrop>
-
-    <Grid>
+    <Grid Background="Transparent" >
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
@@ -25,25 +24,29 @@
         </Grid>
         <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="nvSample_ItemInvoked" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="False">
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="已安装壁纸" Tag="Papers">
+                <NavigationViewItem x:Uid="InstalledWallpapersPage" Tag="Papers">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8B9;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItem Content="导入壁纸" Tag="LoadPapers">
+                <NavigationViewItem x:Uid="ImportWallpapersPage" Tag="LoadPapers">
                     <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Import"/>
+                        <FontIcon Glyph="&#xE8B5;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem Content="关于" Tag="Info">
+                <NavigationViewItem x:Uid="AboutPage" Tag="Info">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="设置" Icon="Setting" Tag="Settings"/>
+                <NavigationViewItem x:Uid="SettingsPage" Tag="Settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.FooterMenuItems>
             <Frame x:Name="contentFrame">
                 <Frame.ContentTransitions>
