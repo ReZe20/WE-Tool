@@ -15,6 +15,12 @@
     NavigationCacheMode="Required">
     <Page.Resources>
         <converters:IntToGridLengthConverter x:Key="IntToGridLengthConverter" />
+        <converters:FileSizeToString x:Key="FileSizeToString"/>
+        <converters:TypeToDisplay x:Key="TypeToDisplay"/>
+        <converters:SourceToDisplay x:Key="SourceToDisplay"/>
+        <converters:RatingToDisplay x:Key="RatingToDisplay"/>
+        <converters:TagToDisplay x:Key="TagToDisplay"/>
+        <converters:DescriptionToDisplay x:Key="DescriptionToDisplay"/>
         <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
             <CommandBarFlyout.PrimaryCommands>
                 <AppBarButton Label="导出">
@@ -181,35 +187,34 @@
                                            IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"
                                            Margin="10,0,0,0"/>
                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSizeString, Mode=OneWay}"
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}}"
                                                Style="{StaticResource CaptionTextBlockStyle}"
                                                FontWeight="SemiBold"
                                                VerticalAlignment="Center"
                                                Margin="10,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.DisplaySource, Mode=OneWay}" 
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Source, Mode=OneWay, Converter={StaticResource SourceToDisplay}}" 
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.DisplayType, Mode=OneWay}" 
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Type, Mode=OneWay, Converter={StaticResource TypeToDisplay}}"
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.DisplayRating, Mode=OneWay}" 
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}}" 
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
                                 </StackPanel>
-                                <ItemsControl ItemsSource="{x:Bind ViewModel.SelectedWallpaper.DisplayTags, Mode=OneWay}"
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.SelectedWallpaper.Tags, Mode=OneWay}"
                                               Margin="10,0,0,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="x:String">
                                             <Border Background="#20808080" CornerRadius="4" Padding="6,2" Margin="0,4,4,0">
-                                                <TextBlock Text="{x:Bind}" 
-                                                           FontSize="12"/>
+                                                <TextBlock Text="{x:Bind Mode=OneWay, Converter={StaticResource TagToDisplay}}" FontSize="12"/>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -219,7 +224,7 @@
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                 </ItemsControl>
-                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Description, Mode=OneWay}" 
+                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Description, Mode=OneWay, Converter={StaticResource DescriptionToDisplay}}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"
                                            MaxHeight="150"
@@ -229,7 +234,7 @@
                                            Margin="10,0,0,0"/>
                             </StackPanel>
                             <StackPanel x:Name="MultiSelectionInfoPanel" Spacing="10" Visibility="Collapsed" HorizontalAlignment="Stretch">
-                                <TextBlock x:Name="MultiSelectCountText" Text="已选择 0 项" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                <TextBlock x:Name="MultiSelectCountText" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                                 <StackPanel Orientation="Horizontal">
                                     <Button Content="全选" Click="SelectAllWallpapers_Click" Width="127" Margin="0,0,4,0" HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"/>
                                     <Button Content="反选" Click="InvertSelection_CLick" Width="127" Margin="4,0,0,0" HorizontalAlignment="Stretch" />
@@ -372,18 +377,18 @@
                                                     <ProgressRing IsActive="True" Background="Transparent"/>
                                                     <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
                                                     <Grid CornerRadius="8"
-                                                      Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                      PointerEntered="Item_PointerEntered"
-                                                      PointerExited="Item_PointerExited"
-                                                      PointerReleased="Item_PointerReleased"
-                                                      PointerPressed="Item_PointerPressed"
-                                                      RenderTransformOrigin="0.5,0.5"
-                                                      x:Name="ItemRootGrid"
-                                                      DataContext="{x:Bind}"
-                                                      Translation="0,0,64"
-                                                      Loaded="ShadowRect_Loaded"
-                                                      Shadow="{StaticResource SharedShadow}"
-                                                      ContextFlyout="{StaticResource WallpaperContextMenu}">
+                                                          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                          PointerEntered="Item_PointerEntered"
+                                                          PointerExited="Item_PointerExited"
+                                                          PointerReleased="Item_PointerReleased"
+                                                          PointerPressed="Item_PointerPressed"
+                                                          RenderTransformOrigin="0.5,0.5"
+                                                          x:Name="ItemRootGrid"
+                                                          DataContext="{x:Bind}"
+                                                          Translation="0,0,64"
+                                                          Loaded="ShadowRect_Loaded"
+                                                          Shadow="{StaticResource SharedShadow}"
+                                                          ContextFlyout="{StaticResource WallpaperContextMenu}">
 
                                                         <Viewbox Stretch="Uniform" VerticalAlignment="Top">
                                                             <Canvas Width="100" Height="100"/>

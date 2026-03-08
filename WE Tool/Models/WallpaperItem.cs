@@ -15,35 +15,14 @@ namespace WE_Tool.Models
         public string FolderPath { get; set; }
         public string Preview { get; set; }
         public string ContentRating { get; set; }
-        public string DisplayRating { get; set; }
         public string Type { get; set; }
-        public string DisplayType { get; set; }
         public string Description { get; set; }
         public List<string> Tags { get; set; }
-        public List<string> DisplayTags { get; set; } = [];
         public string Source { get; set; }
         public string Dependency { get; set; }
-        public string DisplaySource { get; set; }
         public DateTime CreationTime { get; set; }
         public DateTime UpdateTime { get; set; }
         public long FileSize { get; set; }
-        public string FileSizeString
-        {
-            get
-            {
-                string[] units = ["B", "KB", "MB", "GB", "TB"];
-                double size = FileSize;
-                int unitIndex = 0;
-
-                while (size >= 1024 && unitIndex < units.Length - 1)
-                {
-                    size /= 1024;
-                    unitIndex++;
-                }
-
-                return $"{size:F2} {units[unitIndex]}";
-            }
-        }
 
         private bool _isSelected;
         public bool IsSelected

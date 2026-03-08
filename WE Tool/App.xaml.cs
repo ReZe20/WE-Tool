@@ -40,13 +40,14 @@ namespace WE_Tool
         /// </summary>
         public SettingsViewModel ViewModel { get; }
         private readonly IConfigService _configService = new ConfigService();
-        public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = new List<WallpaperItem>();
-        public static Task ScanTask { get; private set; }
+        public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = [];
+        public static Task ScanTask { get; private set; } = Task.CompletedTask;
         public static event EventHandler? ScanCompleted;
         public static Window? MainWindowInstance { get; private set; }
 
         public App()
         {
+            ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
             LoadInitialLanguage();
             this.InitializeComponent();
             string appDataRoot = GetAppDataRoot();
@@ -107,8 +108,8 @@ namespace WE_Tool
                 try
                 {
                     var workShopList = await WallpaperScanner.ScanWallpapers(workShopPath ?? "", "workshop", acfPath);
-                    var officialList = await WallpaperScanner.ScanWallpapers(officialPath ?? "", "official", null);
-                    var projectList = await WallpaperScanner.ScanWallpapers(projectPath ?? "", "mine", null);
+                    var officialList = await WallpaperScanner.ScanWallpapers(officialPath ?? "", "official", "");
+                    var projectList = await WallpaperScanner.ScanWallpapers(projectPath ?? "", "mine", "");
 
                     GlobalAllWallpapers = workShopList.Concat(officialList).Concat(projectList).ToList();
                     ScanCompleted?.Invoke(null, EventArgs.Empty);

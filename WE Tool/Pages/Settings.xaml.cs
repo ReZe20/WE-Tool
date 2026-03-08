@@ -33,7 +33,7 @@ public sealed partial class Settings : Page
 {
     public SettingsViewModel ViewModel { get; }
     private CancellationTokenSource? _pathChangedCts;
-    static bool firstClickSettingsPage = true;
+    static int firstClickSettingsPage = 0;
 
     public Settings()
     {
@@ -48,9 +48,9 @@ public sealed partial class Settings : Page
 
     private async void WallpapersPath_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (firstClickSettingsPage == true)
+        if (firstClickSettingsPage < 3)
         {
-            firstClickSettingsPage = false;
+            firstClickSettingsPage += 1;
             return;
         }
         _pathChangedCts?.Cancel();

@@ -160,25 +160,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _allWallpapers = App.GlobalAllWallpapers.ToList();
         }
 
-        await Task.Run(() =>
-        {
-            foreach (var item in _allWallpapers)
-            {
-                // 避免重复翻译消耗性能
-                if (item.DisplayTags == null || item.DisplayTags.Count == 0)
-                {
-                    if (item.Tags != null)
-                    {
-                        item.DisplayTags = item.Tags.Select(t => LanguageHelper.GetString("Tag", t)).ToList();
-                    }
-
-                    item.DisplayType = LanguageHelper.GetString("Type", item.Type);
-                    item.DisplaySource = LanguageHelper.GetString("Source", item.Source);
-                    item.DisplayRating = LanguageHelper.GetString("Rating", item.ContentRating);
-                }
-            }
-        });
-
         await ApplyFilters();
     }
 

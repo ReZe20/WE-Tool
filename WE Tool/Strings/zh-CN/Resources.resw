@@ -277,7 +277,7 @@
     <value>打开</value>
   </data>
   <data name="Nodescription" xml:space="preserve">
-    <value>无描述</value>
+    <value>（无描述）</value>
   </data>
   <data name="Settings.Text" xml:space="preserve">
     <value>设置</value>
