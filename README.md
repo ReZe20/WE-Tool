@@ -1,1 +1,1 @@
-# Tool for WallpaperEngine
+# WE Tool
