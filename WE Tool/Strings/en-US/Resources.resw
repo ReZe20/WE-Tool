@@ -282,17 +282,20 @@
   <data name="Settings.Text" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="Start.Text" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="StartPage.Description" xml:space="preserve">
+    <value>Choose the page displayed when launching WE Tool.</value>
+  </data>
+  <data name="StartPage.Header" xml:space="preserve">
+    <value>Startup Page</value>
+  </data>
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>Installed Wallpapers</value>
   </data>
-  <data name="InstalledWallpapersPage.Content" xml:space="preserve">
-    <value>Installed Wallpapers</value>
-  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>ImportWallpapers</value>
-  </data>
-  <data name="ImportWallpapersPage.Content" xml:space="preserve">
-    <value>ImportWallpapers</value>
+    <value>Import Wallpapers</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>About</value>
@@ -300,7 +303,118 @@
   <data name="SettingsPage.Content" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
+    <value>Enter or Select Path</value>
+  </data>
   <data name="Type_Preset.Content" xml:space="preserve">
     <value>Preset</value>
+  </data>
+  <data name="NoResultTip1.Text" xml:space="preserve">
+    <value>No wallpapers found</value>
+  </data>
+  <data name="NoResultTip3.Text" xml:space="preserve">
+    <value>Or check if the path in settings is correct</value>
+  </data>
+  <data name="NoResultTip2.Text" xml:space="preserve">
+    <value>Please select other categories in the filter and search other keywords</value>
+  </data>
+  <data name="Programming_Language.Header" xml:space="preserve">
+    <value>Programming Language</value>
+  </data>
+  <data name="Programming_Language.Description" xml:space="preserve">
+    <value>Select display language for WE Tool. Restart the program after changing language.</value>
+  </data>
+  <data name="Language_Related.Content" xml:space="preserve">
+    <value>Follow System</value>
+  </data>
+  <data name="Language.Text" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Page.Text" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="PapersSetting.Header" xml:space="preserve">
+    <value>Existing Wallpaper Page Settings</value>
+  </data>
+  <data name="PapersSetting.Description" xml:space="preserve">
+    <value>Set Specific Content in Existing Wallpaper Page</value>
+  </data>
+  <data name="PapersSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>Enable Bottom Path Bar</value>
+  </data>
+  <data name="PapersSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>Enable Text Selection for Details Panel</value>
+  </data>
+  <data name="PapersSetting_WallpaperAutoPlay.Content" xml:space="preserve">
+    <value>Play GIFs in Wallpaper List</value>
+  </data>
+  <data name="PapersSetting_MinimumPixelsForWallpaper.Text" xml:space="preserve">
+    <value>Minimum Wallpaper Pixels</value>
+  </data>
+  <data name="Path.Text" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="ChooseWorkshopPath.Description" xml:space="preserve">
+    <value>Select Location for Workshop Wallpapers</value>
+  </data>
+  <data name="WorkShopPath.Text" xml:space="preserve">
+    <value>Workshop wallpaper path</value>
+  </data>
+  <data name="ChooseWallpaperExportPath.Description" xml:space="preserve">
+    <value>Select Wallpaper Export Location</value>
+  </data>
+  <data name="ChooseProjectPath.Description" xml:space="preserve">
+    <value>Select Project Location for Wallpaper Editor</value>
+  </data>
+  <data name="ProjectPath.Text" xml:space="preserve">
+    <value>Project Path</value>
+  </data>
+  <data name="OfficialWallpaperPath_TextBlock.Text" xml:space="preserve">
+    <value>Official Wallpaper Path</value>
+  </data>
+  <data name="OfficialWallpaperPath.Description" xml:space="preserve">
+    <value>Or check if the path in settings is correct</value>
+  </data>
+  <data name="AcfPath.Description" xml:space="preserve">
+    <value>File for Storing Workshop Subscription Info</value>
+  </data>
+  <data name="AcfPath_TextBlock.Text" xml:space="preserve">
+    <value>ACF file path</value>
+  </data>
+  <data name="SettingPath.Description" xml:space="preserve">
+    <value>File Path for Storing Program Settings</value>
+  </data>
+  <data name="SettingPath_TextBlock.Text" xml:space="preserve">
+    <value>Config File Path</value>
+  </data>
+  <data name="LogPath.Description" xml:space="preserve">
+    <value>File Path for Storing Program Logs</value>
+  </data>
+  <data name="LogPath_TextBlock.Text" xml:space="preserve">
+    <value>Log File Path</value>
+  </data>
+  <data name="Extract.Text" xml:space="preserve">
+    <value>Extract</value>
+  </data>
+  <data name="ScanningTip.Text" xml:space="preserve">
+    <value>Loading wallpapers</value>
+  </data>
+  <data name="AppBarButton_OpenDirectory.Label" xml:space="preserve">
+    <value>Open Directory</value>
+  </data>
+  <data name="AppBarButton_Delete.Label" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
+    <value>InvertSelection</value>
+  </data>
+  <data name="AppBarButton_Properties.Label" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="AppBarButton_Extract.Label" xml:space="preserve">
+    <value>Extract</value>
   </data>
 </root>

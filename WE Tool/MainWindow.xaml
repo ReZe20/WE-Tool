@@ -24,13 +24,13 @@
         </Grid>
         <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="nvSample_ItemInvoked" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="False">
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Uid="InstalledWallpapersPage" Tag="Papers">
+                <NavigationViewItem x:Uid="InstalledWallpapers" Tag="Papers">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8B9;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItem x:Uid="ImportWallpapersPage" Tag="LoadPapers">
+                <NavigationViewItem x:Uid="ImportWallpapers" Tag="LoadPapers">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8B5;" />
                     </NavigationViewItem.Icon>

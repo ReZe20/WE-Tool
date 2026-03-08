@@ -49,6 +49,28 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
     private bool _isMultiSelectMode = false;
+    private bool _isScanning = false;
+    public  bool IsScanning
+    {
+        get => _isScanning;
+        set
+        {
+            if (_isScanning == value) return;
+            _isScanning = value;
+            OnPropertyChanged();
+
+            // 在 UI 线程上更新覆盖层显示与交互拦截
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (ScanOverlay != null && BackgroundProgressRing != null)
+                {
+                    ScanOverlay.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                    ScanOverlay.IsHitTestVisible = value; // 扫描时拦截点击，非扫描时允许交互
+                    BackgroundProgressRing.IsActive = value;
+                }
+            });
+        }
+    }
     public static double GetCheckBoxOpacity(bool isSelected, bool isMultiSelectMode)
     {
         return (isMultiSelectMode || isSelected) ? 1.0 : 0.0;
@@ -148,6 +170,14 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     public async Task RefreshWallpaperList()
     {
+        bool scanRunning = App.ScanTask != null && !App.ScanTask.IsCompleted;
+    if (scanRunning)
+    {
+        IsScanning = true;
+    }
+
+    try
+    {
         if (App.ScanTask != null)
         {
             await App.ScanTask;
@@ -161,6 +191,14 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
 
         await ApplyFilters();
+    }
+    finally
+    {
+        if (scanRunning)
+        {
+            IsScanning = false;
+        }
+    }
     }
 
     private static bool IsListEqual(ObservableCollection<WallpaperItem> current, List<WallpaperItem> next)

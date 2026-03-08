@@ -27,22 +27,17 @@ using Windows.Foundation.Collections;
 
 namespace WE_Tool
 {
-    /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
-    /// </summary>
     public partial class App : Application
     {
         private Window? _window;
 
-        /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
-        /// </summary>
         public SettingsViewModel ViewModel { get; }
         private readonly IConfigService _configService = new ConfigService();
         public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = [];
         public static Task ScanTask { get; private set; } = Task.CompletedTask;
         public static event EventHandler? ScanCompleted;
+        // 全局扫描进度事件（0-100）
+        public static event EventHandler<int>? ScanProgressChanged;
         public static Window? MainWindowInstance { get; private set; }
 
         public App()
@@ -58,15 +53,11 @@ namespace WE_Tool
                 .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
-            Log.Information($"应用程序已启动。路径：{appDataRoot}", appDataRoot);
+            Log.Information($"====应用程序已启动。路径：{appDataRoot}====", appDataRoot);
 
             LoadInitialLanguage();
         }
 
-        /// <summary>
-        /// Invoked when the application is launched.
-        /// </summary>
-        /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             _window = new MainWindow();
@@ -103,21 +94,47 @@ namespace WE_Tool
         }
         public static void StartBackgroundScan(string workShopPath, string officialPath, string projectPath, string acfPath)
         {
+            // 每次启动新的扫描时确保总进度为 0
+            ScanProgressChanged?.Invoke(null, 0);
+
             ScanTask = Task.Run(async () =>
             {
                 try
                 {
-                    var workShopList = await WallpaperScanner.ScanWallpapers(workShopPath ?? "", "workshop", acfPath);
-                    var officialList = await WallpaperScanner.ScanWallpapers(officialPath ?? "", "official", "");
-                    var projectList = await WallpaperScanner.ScanWallpapers(projectPath ?? "", "mine", "");
+                    // 三个源，按等权重合成总进度
+                    int sources = 3;
+                    // helper: create per-source progress that maps to global
+                    EventHandler<int>? handler = ScanProgressChanged;
+                    IProgress<int> makeProgress(int index)
+                    {
+                        int baseOffset = (int)Math.Round(index * (100.0 / sources));
+                        return new Progress<int>(val =>
+                        {
+                            // val: 0..100 -> map to baseOffset .. baseOffset + 100/sources
+                            double slot = 100.0 / sources;
+                            int overall = Math.Min(100, (int)Math.Round(baseOffset + (val / 100.0) * slot));
+                            handler?.Invoke(null, overall);
+                        });
+                    }
+
+                    var workShopListTask = WallpaperScanner.ScanWallpapers(workShopPath ?? "", "workshop", acfPath, makeProgress(0));
+                    var officialListTask = WallpaperScanner.ScanWallpapers(officialPath ?? "", "official", "", makeProgress(1));
+                    var projectListTask = WallpaperScanner.ScanWallpapers(projectPath ?? "", "mine", "", makeProgress(2));
+
+                    var workShopList = await workShopListTask;
+                    var officialList = await officialListTask;
+                    var projectList = await projectListTask;
 
                     GlobalAllWallpapers = workShopList.Concat(officialList).Concat(projectList).ToList();
+                    // 确保最终为 100%
+                    ScanProgressChanged?.Invoke(null, 100);
                     ScanCompleted?.Invoke(null, EventArgs.Empty);
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "后台全局扫描壁纸失败。");
                     GlobalAllWallpapers = [];
+                    ScanProgressChanged?.Invoke(null, 100);
                 }
             });
         }

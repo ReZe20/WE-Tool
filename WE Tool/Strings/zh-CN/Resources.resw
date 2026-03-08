@@ -294,13 +294,7 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>已安装壁纸</value>
   </data>
-  <data name="InstalledWallpapersPage.Content" xml:space="preserve">
-    <value>已安装壁纸</value>
-  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>导入壁纸</value>
-  </data>
-  <data name="ImportWallpapersPage.Content" xml:space="preserve">
     <value>导入壁纸</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -323,5 +317,104 @@
   </data>
   <data name="NoResultTip2.Text" xml:space="preserve">
     <value>请选择筛选器中其它栏目，搜索其它关键词</value>
+  </data>
+  <data name="Programming_Language.Header" xml:space="preserve">
+    <value>程序语言</value>
+  </data>
+  <data name="Programming_Language.Description" xml:space="preserve">
+    <value>选择WE Tool的显示语言，更换语言后需要重启程序</value>
+  </data>
+  <data name="Language_Related.Content" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="Language.Text" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Page.Text" xml:space="preserve">
+    <value>页面</value>
+  </data>
+  <data name="PapersSetting.Header" xml:space="preserve">
+    <value>已有壁纸页面设置</value>
+  </data>
+  <data name="PapersSetting.Description" xml:space="preserve">
+    <value>设置已有壁纸页面中的具体内容</value>
+  </data>
+  <data name="PapersSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>启用底部路径栏</value>
+  </data>
+  <data name="PapersSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>为详情面板启用文字选择功能</value>
+  </data>
+  <data name="PapersSetting_WallpaperAutoPlay.Content" xml:space="preserve">
+    <value>壁纸列表播放动图</value>
+  </data>
+  <data name="PapersSetting_MinimumPixelsForWallpaper.Text" xml:space="preserve">
+    <value>壁纸最小像素</value>
+  </data>
+  <data name="Path.Text" xml:space="preserve">
+    <value>路径</value>
+  </data>
+  <data name="ChooseWorkshopPath.Description" xml:space="preserve">
+    <value>选择创意工坊壁纸的位置</value>
+  </data>
+  <data name="WorkShopPath.Text" xml:space="preserve">
+    <value>创意工坊壁纸路径</value>
+  </data>
+  <data name="ChooseWallpaperExportPath.Description" xml:space="preserve">
+    <value>选择壁纸导出位置</value>
+  </data>
+  <data name="ChooseProjectPath.Description" xml:space="preserve">
+    <value>选择壁纸编辑器的项目位置</value>
+  </data>
+  <data name="ProjectPath.Text" xml:space="preserve">
+    <value>项目路径</value>
+  </data>
+  <data name="OfficialWallpaperPath_TextBlock.Text" xml:space="preserve">
+    <value>官方壁纸路径</value>
+  </data>
+  <data name="OfficialWallpaperPath.Description" xml:space="preserve">
+    <value>官方壁纸路径</value>
+  </data>
+  <data name="AcfPath.Description" xml:space="preserve">
+    <value>存储创意工坊订阅信息的文件</value>
+  </data>
+  <data name="AcfPath_TextBlock.Text" xml:space="preserve">
+    <value>ACF文件路径</value>
+  </data>
+  <data name="SettingPath.Description" xml:space="preserve">
+    <value>存储程序设置的文件路径</value>
+  </data>
+  <data name="SettingPath_TextBlock.Text" xml:space="preserve">
+    <value>配置文件路径</value>
+  </data>
+  <data name="LogPath.Description" xml:space="preserve">
+    <value>存储程序日志的文件路径</value>
+  </data>
+  <data name="LogPath_TextBlock.Text" xml:space="preserve">
+    <value>日志文件路径</value>
+  </data>
+  <data name="Extract.Text" xml:space="preserve">
+    <value>提取</value>
+  </data>
+  <data name="ScanningTip.Text" xml:space="preserve">
+    <value>正在加载壁纸...</value>
+  </data>
+  <data name="AppBarButton_OpenDirectory.Label" xml:space="preserve">
+    <value>打开目录</value>
+  </data>
+  <data name="AppBarButton_Delete.Label" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
+    <value>反选</value>
+  </data>
+  <data name="AppBarButton_Properties.Label" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="AppBarButton_Extract.Label" xml:space="preserve">
+    <value>提取</value>
   </data>
 </root>
