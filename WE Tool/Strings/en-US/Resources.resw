@@ -409,7 +409,7 @@
     <value>Select All</value>
   </data>
   <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
-    <value>InvertSelection</value>
+    <value>Invert Selection</value>
   </data>
   <data name="AppBarButton_Properties.Label" xml:space="preserve">
     <value>Properties</value>

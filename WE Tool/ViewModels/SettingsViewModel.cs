@@ -1,19 +1,28 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿#nullable enable
+
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Shapes;
 using Microsoft.Win32;
-using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Collections.ObjectModel;
+using System.Diagnostics.Metrics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using System.ComponentModel;
 using WE_Tool.Helper;
 using WE_Tool.Models;
 using WE_Tool.Service;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace WE_Tool.ViewModels
 {
@@ -21,102 +30,233 @@ namespace WE_Tool.ViewModels
     {
         public bool _isBatchUpdating = false;
 
-        [ObservableProperty]
-        private WallpaperItem _selectedWallpaper;
-        private string _appLanguage;
+        public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
 
         private readonly IConfigService _configService;
         private readonly IPickerService _pickerService;
-        private AppSettings _settings = new AppSettings();
-
-        private string _startPageTag = "Papers";
-
-        public int _bottomBarHeight;
-        public bool _isBottomBarOpen;
-        public bool _autoPlayGif;
-        public int _wallpaperListMinWidth;
-        public bool _leftSplitViewPaneOpen;
-        public bool _rightSplitViewPaneOpen;
-        public bool _detailSelectionEnabled;
-
-        private int _sortOrder;
-        private string _sortGlyph = "\uE8D2";
-        private string _sortText = "按名称排序";
-        private string _sortDirectionGlyph;
-        private bool _isSortAscending = false;
-        public IRelayCommand<string> ChangeSortCommand { get; }
-
-        public bool _typeExpander;
-        public bool _scene;
-        public bool _video;
-        public bool _web;
-        public bool _application;
-        public bool _preset;
-        public bool _unknown;
-
-        public bool _ratingExpander;
-        public bool _g;
-        public bool _pg;
-        public bool _r;
-
-        public bool _sourceExpander;
-        public bool _official;
-        public bool _workshop;
-        public bool _mine;
-
-        public bool _tagsExpander;
-        public bool _abstract;
-        public bool _animal;
-        public bool _anime;
-        public bool _cartoon;
-        public bool _cgi;
-        public bool _cyberpunk;
-        public bool _fantasy;
-        public bool _game;
-        public bool _girls;
-        public bool _guys;
-        public bool _landscape;
-        public bool _medieval;
-        public bool _memes;
-        public bool _mmd;
-        public bool _music;
-        public bool _nature;
-        public bool _pixelart;
-        public bool _relaxing;
-        public bool _retro;
-        public bool _sciFi;
-        public bool _sports;
-        public bool _technology;
-        public bool _television;
-        public bool _vehicle;
-        public bool _unspecified;
-
-        private string _downloadPath;
-        private string _workshopPath;
-        private string _projectPath;
-        private string _acfPath;
-        private string _officialPath;
-        private bool _ignoreExtension;
-        private string _ignoreExtensionList;
-        private bool _onlyExtension;
-        private string _onlyExtensionList;
-        private bool _convertTEX;
-        private bool _oneFolder;
-        private bool _outProjectJSON;
-        private bool _useProjectName;
-        private bool _dontConvertTEX;
-        private bool _coverAllFiles;
-
+        private AppSettings _settings = new();
         private CancellationTokenSource? _saveCts;
         private readonly TimeSpan _saveDelay = TimeSpan.FromMilliseconds(500);
-        private readonly SemaphoreSlim _saveSemaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
 
+        public IRelayCommand<string> ChangeSortCommand { get; }
         public IAsyncRelayCommand SaveCommand { get; }
         public IAsyncRelayCommand<object> BrowseFolderCommand { get; }
         public IAsyncRelayCommand<object> BrowseFileCommand { get; }
         public IAsyncRelayCommand<object> OpenFolderCommand { get; }
         public IAsyncRelayCommand<string> AutoDetectWorkshopPathCommand { get; }
         public IAsyncRelayCommand AutoDetectDownloadPathCommand { get; }
+
+        [ObservableProperty]
+        public partial WallpaperItem? SelectedWallpaper { get; set; }
+
+        [ObservableProperty]
+        public partial string AppLanguage { get; set; }
+
+        [ObservableProperty]
+        public partial string StartPageTag { get; set; }
+
+        [ObservableProperty]
+        public partial int BottomBarHeight { get; set; }
+
+        [ObservableProperty]
+        public partial bool IsBottomBarOpen { get; set; }
+
+        [ObservableProperty]
+        public partial bool AutoPlayGif { get; set; }
+
+        [ObservableProperty]
+        public partial int WallpaperListMinWidth { get; set; }
+
+        [ObservableProperty]
+        public partial bool LeftSplitViewPaneOpen { get; set; }
+
+        [ObservableProperty]
+        public partial bool RightSplitViewPaneOpen { get; set; }
+
+        [ObservableProperty]
+        public partial bool DetailSelectionEnabled { get; set; }
+
+        [ObservableProperty]
+        public partial int SortOrder { get; set; }
+
+        [ObservableProperty]
+        public partial string SortGlyph { get; set; } 
+
+        [ObservableProperty]
+        public partial string SortText { get; set; }
+
+        [ObservableProperty]
+        public partial bool IsSortAscending { get; set; }
+
+        [ObservableProperty]
+        public partial bool TypeExpander { get; set; }
+
+        [ObservableProperty]
+        public partial bool Scene { get; set; }
+
+        [ObservableProperty]
+        public partial bool Video { get; set; }
+
+        [ObservableProperty]
+        public partial bool Web { get; set; }
+
+        [ObservableProperty]
+        public partial bool Application { get; set; }
+
+        [ObservableProperty]
+        public partial bool Preset { get; set; }
+
+        [ObservableProperty]
+        public partial bool Unknown { get; set; }
+
+        [ObservableProperty]
+        public partial bool RatingExpander { get; set; }
+
+        [ObservableProperty]
+        public partial bool G { get; set; }
+
+        [ObservableProperty]
+        public partial bool Pg { get; set; }
+
+        [ObservableProperty]
+        public partial bool R { get; set; }
+
+        [ObservableProperty]
+        public partial bool SourceExpander { get; set; }
+
+        [ObservableProperty]
+        public partial bool Official { get; set; }
+
+        [ObservableProperty]
+        public partial bool Workshop { get; set; }
+
+        [ObservableProperty]
+        public partial bool Mine { get; set; }
+
+        [ObservableProperty]
+        public partial bool TagsExpander { get; set; }
+
+        [ObservableProperty]
+        public partial bool Abstract { get; set; }
+
+        [ObservableProperty]
+        public partial bool Animal { get; set; }
+
+        [ObservableProperty]
+        public partial bool Anime { get; set; }
+
+        [ObservableProperty]
+        public partial bool Cartoon { get; set; }
+
+        [ObservableProperty]
+        public partial bool Cgi { get; set; }
+
+        [ObservableProperty]
+        public partial bool Cyberpunk { get; set; }
+
+        [ObservableProperty]
+        public partial bool Fantasy { get; set; }
+
+        [ObservableProperty]
+        public partial bool Game { get; set; }
+
+        [ObservableProperty]
+        public partial bool Girls { get; set; }
+
+        [ObservableProperty]
+        public partial bool Guys { get; set; }
+
+        [ObservableProperty]
+        public partial bool Landscape { get; set; }
+
+        [ObservableProperty]
+        public partial bool Medieval { get; set; }
+
+        [ObservableProperty]
+        public partial bool Memes { get; set; }
+
+        [ObservableProperty]
+        public partial bool Mmd { get; set; }
+
+        [ObservableProperty]
+        public partial bool Music { get; set; }
+
+        [ObservableProperty]
+        public partial bool Nature { get; set; }
+
+        [ObservableProperty]
+        public partial bool Pixelart { get; set; }
+
+        [ObservableProperty]
+        public partial bool Relaxing { get; set; }
+
+        [ObservableProperty]
+        public partial bool Retro { get; set; }
+
+        [ObservableProperty]
+        public partial bool SciFi { get; set; }
+
+        [ObservableProperty]
+        public partial bool Sports { get; set; }
+
+        [ObservableProperty]
+        public partial bool Technology { get; set; }
+
+        [ObservableProperty]
+        public partial bool Television { get; set; }
+
+        [ObservableProperty]
+        public partial bool Vehicle { get; set; }
+
+        [ObservableProperty]
+        public partial bool Unspecified { get; set; }
+
+        [ObservableProperty]
+        public partial string DownloadPath { get; set; } 
+
+        [ObservableProperty]
+        public partial string WorkshopPath { get; set; } 
+
+        [ObservableProperty]
+        public partial string ProjectPath { get; set; } 
+
+        [ObservableProperty]
+        public partial string AcfPath { get; set; } 
+
+        [ObservableProperty]
+        public partial string OfficialPath { get; set; } 
+
+        [ObservableProperty]
+        public partial bool IgnoreExtension { get; set; }
+
+        [ObservableProperty]
+        public partial string IgnoreExtensionList { get; set; }
+
+        [ObservableProperty]
+        public partial bool OnlyExtension { get; set; }
+
+        [ObservableProperty]
+        public partial string OnlyExtensionList { get; set; }
+
+        [ObservableProperty]
+        public partial bool ConvertTEX { get; set; }
+
+        [ObservableProperty]
+        public partial bool OneFolder { get; set; }
+
+        [ObservableProperty]
+        public partial bool OutProjectJSON { get; set; }
+
+        [ObservableProperty]
+        public partial bool UseProjectName { get; set; }
+
+        [ObservableProperty]
+        public partial bool DontConvertTEX { get; set; }
+
+        [ObservableProperty]
+        public partial bool CoverAllFiles { get; set; }
+
         public SettingsViewModel(IConfigService configService, IPickerService pickerService)
         {
             _configService = configService;
@@ -127,10 +267,10 @@ namespace WE_Tool.ViewModels
             BrowseFolderCommand = new AsyncRelayCommand<object>(BrowseFolderAsync);
             BrowseFileCommand = new AsyncRelayCommand<object>(BrowseFileAsync);
             OpenFolderCommand = new AsyncRelayCommand<object>(OpenFolderAsync);
-
             AutoDetectWorkshopPathCommand = new AsyncRelayCommand<string>(AutoDetectWorkshopPathAsync);
             AutoDetectDownloadPathCommand = new AsyncRelayCommand(AutoDetectDownloadPathAsync);
         }
+
         public void ExecuteChangeSort(string? parameter)
         {
             if (int.TryParse(parameter, out int newOrder))
@@ -138,6 +278,7 @@ namespace WE_Tool.ViewModels
                 SortOrder = newOrder;
             }
         }
+
         private void UpdateSortUI()
         {
             switch (SortOrder)
@@ -161,6 +302,50 @@ namespace WE_Tool.ViewModels
             }
         }
 
+
+        partial void OnAppLanguageChanged(string value)
+        {
+            if (_isBatchUpdating) return;
+
+            _settings.AppLanguage = value ?? "default";
+            _ = ShowRestartDialog();
+        }
+
+        partial void OnSortOrderChanged(int value)
+        {
+            UpdateSortUI();
+        }
+
+        partial void OnIsSortAscendingChanged(bool value)
+        {
+            OnPropertyChanged(nameof(SortDirectionGlyph));
+        }
+
+        partial void OnIsBottomBarOpenChanged(bool value)
+        {
+            BottomBarHeight = value ? 50 : 0;
+        }
+
+        public string SortDirectionGlyph => IsSortAscending ? "\uE70D" : "\uE70E";
+
+        public string ConfigPath
+        {
+            get
+            {
+                return System.IO.Path.Combine(App.GetAppDataRoot());
+            }
+            set { }
+        }
+
+        public string LogPath
+        {
+            get
+            {
+                return System.IO.Path.Combine(App.GetAppDataRoot(), "logs");
+            }
+            set { }
+        }
+
         public async Task InitializeAsync()
         {
             _isBatchUpdating = true;
@@ -168,7 +353,7 @@ namespace WE_Tool.ViewModels
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
             AppLanguage = _settings.AppLanguage ?? "default";
-            _startPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
+            StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
 
             BottomBarHeight = _settings.Papers.BottomBarHeight;
             IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
@@ -176,26 +361,22 @@ namespace WE_Tool.ViewModels
             WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
             LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
             RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
-
             DetailSelectionEnabled = _settings.Papers.DetailSelectionEnabled;
-            _isSortAscending = _settings.Papers.IsSortAscending;
-            SortDirectionGlyph = _isSortAscending ? "\uE70E" : "\uE70D";
-            OnPropertyChanged(nameof(IsSortAscending));
-            OnPropertyChanged(nameof(SortDirectionGlyph));
+
+            IsSortAscending = _settings.Papers.IsSortAscending;
             SortOrder = _settings.Papers.SortOrder;
-            UpdateSortUI();
 
             TypeExpander = _settings.Expander.TypeExpander;
             Scene = _settings.Expander.Scene;
             Video = _settings.Expander.Video;
             Web = _settings.Expander.Web;
             Application = _settings.Expander.Application;
-            _preset = _settings.Expander.Preset;
+            Preset = _settings.Expander.Preset;
             Unknown = _settings.Expander.Unknown;
 
             RatingExpander = _settings.Expander.RatingExpander;
             G = _settings.Expander.G;
-            PG = _settings.Expander.PG;
+            Pg = _settings.Expander.Pg;
             R = _settings.Expander.R;
 
             SourceExpander = _settings.Expander.SourceExpander;
@@ -208,7 +389,7 @@ namespace WE_Tool.ViewModels
             Animal = _settings.Expander.Animal;
             Anime = _settings.Expander.Anime;
             Cartoon = _settings.Expander.Cartoon;
-            CGI = _settings.Expander.CGI;
+            Cgi = _settings.Expander.Cgi;
             Cyberpunk = _settings.Expander.Cyberpunk;
             Fantasy = _settings.Expander.Fantasy;
             Game = _settings.Expander.Game;
@@ -217,7 +398,7 @@ namespace WE_Tool.ViewModels
             Landscape = _settings.Expander.Landscape;
             Medieval = _settings.Expander.Medieval;
             Memes = _settings.Expander.Memes;
-            MMD = _settings.Expander.MMD;
+            Mmd = _settings.Expander.Mmd;
             Music = _settings.Expander.Music;
             Nature = _settings.Expander.Nature;
             Pixelart = _settings.Expander.Pixelart;
@@ -233,11 +414,13 @@ namespace WE_Tool.ViewModels
             DownloadPath = _settings.Path.DownloadPath;
             if (string.IsNullOrEmpty(DownloadPath))
                 await AutoDetectDownloadPathAsync();
+
             string mode = "0000";
             WorkshopPath = _settings.Path.WorkshopPath;
             ProjectPath = _settings.Path.ProjectPath;
             AcfPath = _settings.Path.AcfPath;
             OfficialPath = _settings.Path.OfficialPath;
+
             if (string.IsNullOrEmpty(WorkshopPath))
                 mode = mode.Remove(0, 1).Insert(0, "1");
             if (string.IsNullOrEmpty(ProjectPath))
@@ -246,6 +429,7 @@ namespace WE_Tool.ViewModels
                 mode = mode.Remove(2, 1).Insert(2, "1");
             if (string.IsNullOrEmpty(OfficialPath))
                 mode = mode.Remove(3, 1).Insert(3, "1");
+
             if (mode.Contains('1'))
                 await AutoDetectWorkshopPathAsync(mode);
 
@@ -262,664 +446,6 @@ namespace WE_Tool.ViewModels
 
             _isBatchUpdating = false;
             OnPropertyChanged(string.Empty);
-        }
-        public string AppLanguage
-        {
-            get => _appLanguage;
-            set
-            {
-                if (SetProperty(ref _appLanguage, value))
-                    OnAppLanguageChanged(AppLanguage);
-            }
-        }
-        public int SortOrder
-        {
-            get => _sortOrder;
-            set 
-            {
-                if (SetProperty(ref _sortOrder, value))
-                {
-                    UpdateSortUI();
-                    DebounceSave();
-                }
-            }
-        }
-        public string SortGlyph
-        {
-            get => _sortGlyph;
-            set => SetProperty(ref _sortGlyph, value);
-        }
-        public string SortText
-        {
-            get => _sortText;
-            set => SetProperty(ref _sortText, value);
-        }
-        public string SortDirectionGlyph
-        {
-            get => SortDirectionGlyph = IsSortAscending ? "\uE70D" : "\uE70E";
-            set => SetProperty(ref _sortDirectionGlyph, value);
-        }
-        public bool IsSortAscending
-        {
-            get => _isSortAscending;
-            set
-            {
-                if (SetProperty(ref _isSortAscending, value))
-                {
-                    SortDirectionGlyph = value ? "\uE70D" : "\uE70E";
-                    DebounceSave();
-                }
-            }
-        }
-        
-        public string StartPageTag
-        {
-            get => _startPageTag;
-            set
-            {
-                if (SetProperty(ref _startPageTag, value))
-                    DebounceSave();
-            }
-        }
-        public int BottomBarHeight
-        {
-            get => _bottomBarHeight;
-            set
-            {
-                if (SetProperty(ref _bottomBarHeight, value))
-                    DebounceSave();
-            }
-        }
-        public bool IsBottomBarOpen
-        {
-            get => _isBottomBarOpen;
-            set
-            {
-                if (SetProperty(ref _isBottomBarOpen, value))
-                {
-                    BottomBarHeight = IsBottomBarOpen == true ? 50 : 0;
-                }
-            }
-        }
-        public bool AutoPlayGif
-        {
-            get => _autoPlayGif;
-            set
-            {
-                if (SetProperty(ref _autoPlayGif, value))
-                    DebounceSave();
-            }
-        }
-        public bool DetailSelectionEnabled
-        {
-            get => _detailSelectionEnabled;
-            set
-            {
-                if (SetProperty(ref _detailSelectionEnabled, value))
-                    DebounceSave();
-            }
-        }
-        public int WallpaperListMinWidth
-        {
-            get => _wallpaperListMinWidth;
-            set
-            {
-                if (SetProperty(ref _wallpaperListMinWidth, value))
-                {
-                    UpdateSortUI();
-                    DebounceSave();
-                }
-            }
-        }
-        public bool LeftSplitViewPaneOpen
-        {
-            get => _leftSplitViewPaneOpen;
-            set
-            {
-                if (SetProperty(ref _leftSplitViewPaneOpen, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool RightSplitViewPaneOpen
-        {
-            get => _rightSplitViewPaneOpen;
-            set
-            {
-                if (SetProperty(ref _rightSplitViewPaneOpen, value))
-                    DebounceSave();
-            }
-        }
-        public bool TypeExpander
-        {
-            get => _typeExpander;
-            set
-            {
-                if (SetProperty(ref _typeExpander, value))
-                    DebounceSave();
-            }
-        }
-        public bool Scene
-        {
-            get => _scene;
-            set
-            {
-                if (SetProperty(ref _scene, value))
-                    DebounceSave();
-            }
-        }
-        public bool Video
-        {
-            get => _video;
-            set
-            {
-                if (SetProperty(ref _video, value))
-                    DebounceSave();
-            }
-        }
-        public bool Web
-        {
-            get => _web;
-            set
-            {
-                if (SetProperty(ref _web, value))
-                    DebounceSave();
-            }
-        }
-        public bool Application
-        {
-            get => _application;
-            set
-            {
-                if (SetProperty(ref _application, value))
-                    DebounceSave();
-            }
-        }
-        public bool Preset
-        {
-            get => _preset;
-            set
-            {
-                if (SetProperty(ref _preset, value))
-                    DebounceSave();
-            }
-        }
-        public bool Unknown
-        {
-            get => _unknown;
-            set
-            {
-                if (SetProperty(ref _unknown, value))
-                    DebounceSave();
-            }
-        }
-        public bool RatingExpander
-        {
-            get => _ratingExpander;
-            set
-            {
-                if (SetProperty(ref _ratingExpander, value))
-                    DebounceSave();
-            }
-        }
-        public bool G
-        {
-            get => _g;
-            set
-            {
-                if (SetProperty(ref _g, value))
-                    DebounceSave();
-            }
-        }
-        public bool PG
-        {
-            get => _pg;
-            set
-            {
-                if (SetProperty(ref _pg, value))
-                    DebounceSave();
-            }
-        }
-        public bool R
-        {
-            get => _r;
-            set
-            {
-                if (SetProperty(ref _r, value))
-                    DebounceSave();
-            }
-        }
-
-        // Source 相关属性
-        public bool SourceExpander
-        {
-            get => _sourceExpander;
-            set
-            {
-                if (SetProperty(ref _sourceExpander, value))
-                    DebounceSave();
-            }
-        }
-        public bool Official
-        {
-            get => _official;
-            set
-            {
-                if (SetProperty(ref _official, value))
-                    DebounceSave();
-            }
-        }
-        public bool Workshop
-        {
-            get => _workshop;
-            set
-            {
-                if (SetProperty(ref _workshop, value))
-                    DebounceSave();
-            }
-        }
-        public bool Mine
-        {
-            get => _mine;
-            set
-            {
-                if (SetProperty(ref _mine, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool TagsExpander
-        {
-            get => _tagsExpander;
-            set
-            {
-                if (SetProperty(ref _tagsExpander, value))
-                    DebounceSave();
-            }
-        }
-        public bool Abstract
-        {
-            get => _abstract;
-            set
-            {
-                if (SetProperty(ref _abstract, value))
-                    DebounceSave();
-            }
-        }
-        public bool Animal
-        {
-            get => _animal;
-            set
-            {
-                if (SetProperty(ref _animal, value))
-                    DebounceSave();
-            }
-        }
-        public bool Anime
-        {
-            get => _anime;
-            set
-            {
-                if (SetProperty(ref _anime, value))
-                    DebounceSave();
-            }
-        }
-        public bool Cartoon
-        {
-            get => _cartoon;
-            set
-            {
-                if (SetProperty(ref _cartoon, value))
-                    DebounceSave();
-            }
-        }
-        public bool CGI
-        {
-            get => _cgi;
-            set
-            {
-                if (SetProperty(ref _cgi, value))
-                    DebounceSave();
-            }
-        }
-        public bool Cyberpunk
-        {
-            get => _cyberpunk;
-            set
-            {
-                if (SetProperty(ref _cyberpunk, value))
-                    DebounceSave();
-            }
-        }
-        public bool Fantasy
-        {
-            get => _fantasy;
-            set
-            {
-                if (SetProperty(ref _fantasy, value))
-                    DebounceSave();
-            }
-        }
-        public bool Game
-        {
-            get => _game;
-            set
-            {
-                if (SetProperty(ref _game, value))
-                    DebounceSave();
-            }
-        }
-        public bool Girls
-        {
-            get => _girls;
-            set
-            {
-                if (SetProperty(ref _girls, value))
-                    DebounceSave();
-            }
-        }
-        public bool Guys
-        {
-            get => _guys;
-            set
-            {
-                if (SetProperty(ref _guys, value))
-                    DebounceSave();
-            }
-        }
-        public bool Landscape
-        {
-            get => _landscape;
-            set
-            {
-                if (SetProperty(ref _landscape, value))
-                    DebounceSave();
-            }
-        }
-        public bool Medieval
-        {
-            get => _medieval;
-            set
-            {
-                if (SetProperty(ref _medieval, value))
-                    DebounceSave();
-            }
-        }
-        public bool Memes
-        {
-            get => _memes;
-            set
-            {
-                if (SetProperty(ref _memes, value))
-                    DebounceSave();
-            }
-        }
-        public bool MMD
-        {
-            get => _mmd;
-            set
-            {
-                if (SetProperty(ref _mmd, value))
-                    DebounceSave();
-            }
-        }
-        public bool Music
-        {
-            get => _music;
-            set
-            {
-                if (SetProperty(ref _music, value))
-                    DebounceSave();
-            }
-        }
-        public bool Nature
-        {
-            get => _nature;
-            set
-            {
-                if (SetProperty(ref _nature, value))
-                    DebounceSave();
-            }
-        }
-        public bool Pixelart
-        {
-            get => _pixelart;
-            set
-            {
-                if (SetProperty(ref _pixelart, value))
-                    DebounceSave();
-            }
-        }
-        public bool Relaxing
-        {
-            get => _relaxing;
-            set
-            {
-                if (SetProperty(ref _relaxing, value))
-                    DebounceSave();
-            }
-        }
-        public bool Retro
-        {
-            get => _retro;
-            set
-            {
-                if (SetProperty(ref _retro, value))
-                    DebounceSave();
-            }
-        }
-        public bool SciFi
-        {
-            get => _sciFi;
-            set
-            {
-                if (SetProperty(ref _sciFi, value))
-                    DebounceSave();
-            }
-        }
-        public bool Sports
-        {
-            get => _sports;
-            set
-            {
-                if (SetProperty(ref _sports, value))
-                    DebounceSave();
-            }
-        }
-        public bool Technology
-        {
-            get => _technology;
-            set
-            {
-                if (SetProperty(ref _technology, value))
-                    DebounceSave();
-            }
-        }
-        public bool Television
-        {
-            get => _television;
-            set
-            {
-                if (SetProperty(ref _television, value))
-                    DebounceSave();
-            }
-        }
-        public bool Vehicle
-        {
-            get => _vehicle;
-            set
-            {
-                if (SetProperty(ref _vehicle, value))
-                    DebounceSave();
-            }
-        }
-        public bool Unspecified
-        {
-            get => _unspecified;
-            set
-            {
-                if (SetProperty(ref _unspecified, value))
-                    DebounceSave();
-            }
-        }
-
-        public string DownloadPath
-        {
-            get => _downloadPath;
-            set
-            {
-                if (SetProperty(ref _downloadPath, value))
-                    DebounceSave();
-            }
-        }
-
-        public string WorkshopPath
-        {
-            get => _workshopPath;
-            set
-            {
-                if (SetProperty(ref _workshopPath, value))
-                    DebounceSave();
-            }
-        }
-
-        public string ProjectPath
-        {
-            get => _projectPath;
-            set
-            {
-                if (SetProperty(ref _projectPath, value))
-                    DebounceSave();
-            }
-        }
-
-        public string AcfPath
-        {
-            get => _acfPath;
-            set
-            {
-                if (SetProperty(ref _acfPath, value))
-                    DebounceSave();
-            }
-        }
-        public string ConfigPath
-        {
-            get => System.IO.Path.Combine(App.GetAppDataRoot());
-            set
-            { }
-        }
-        public string LogPath
-        {
-            get => System.IO.Path.Combine(App.GetAppDataRoot(), "logs");
-            set { }
-        }
-        public string OfficialPath
-        {
-            get => _officialPath;
-            set
-            {
-                if (SetProperty(ref _officialPath, value))
-                    DebounceSave();
-            }
-        }
-        public bool IgnoreExtension
-        {
-            get => _ignoreExtension;
-            set
-            {
-                if (SetProperty(ref _ignoreExtension, value))
-                    DebounceSave();
-            }
-        }
-
-        public string IgnoreExtensionList
-        {
-            get => _ignoreExtensionList;
-            set
-            {
-                if (SetProperty(ref _ignoreExtensionList, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool OnlyExtension
-        {
-            get => _onlyExtension;
-            set
-            {
-                if (SetProperty(ref _onlyExtension, value))
-                    DebounceSave();
-            }
-        }
-
-        public string OnlyExtensionList
-        {
-            get => _onlyExtensionList;
-            set
-            {
-                if (SetProperty(ref _onlyExtensionList, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool ConvertTEX
-        {
-            get => _convertTEX;
-            set
-            {
-                if (SetProperty(ref _convertTEX, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool OneFolder
-        {
-            get => _oneFolder;
-            set
-            {
-                if (SetProperty(ref _oneFolder, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool OutProjectJSON
-        {
-            get => _outProjectJSON;
-            set
-            {
-                if (SetProperty(ref _outProjectJSON, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool UseProjectName
-        {
-            get => _useProjectName;
-            set
-            {
-                if (SetProperty(ref _useProjectName, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool DontConvertTEX
-        {
-            get => _dontConvertTEX;
-            set
-            {
-                if (SetProperty(ref _dontConvertTEX, value))
-                    DebounceSave();
-            }
-        }
-
-        public bool CoverAllFiles
-        {
-            get => _coverAllFiles;
-            set
-            {
-                if (SetProperty(ref _coverAllFiles, value))
-                    DebounceSave();
-            }
         }
 
         public async Task ResetFiltersAsync(int mode, bool selectmode)
@@ -939,11 +465,9 @@ namespace WE_Tool.ViewModels
                         () => Web = selectmode,
                         () => Application = selectmode,
                         () => Unknown = selectmode,
-
                         () => G = selectmode,
-                        () => PG = selectmode,
+                        () => Pg = selectmode,
                         () => R = selectmode,
-
                         () => Official = selectmode,
                         () => Workshop = selectmode,
                         () => Mine = selectmode,
@@ -961,7 +485,7 @@ namespace WE_Tool.ViewModels
                         () => Animal = selectmode,
                         () => Anime = selectmode,
                         () => Cartoon = selectmode,
-                        () => CGI = selectmode,
+                        () => Cgi = selectmode,
                         () => Cyberpunk = selectmode,
                         () => Fantasy = selectmode,
                         () => Game = selectmode,
@@ -970,7 +494,7 @@ namespace WE_Tool.ViewModels
                         () => Landscape = selectmode,
                         () => Medieval = selectmode,
                         () => Memes = selectmode,
-                        () => MMD = selectmode,
+                        () => Mmd = selectmode,
                         () => Music = selectmode,
                         () => Nature = selectmode,
                         () => Pixelart = selectmode,
@@ -996,33 +520,26 @@ namespace WE_Tool.ViewModels
                 await SaveAsync();
             }
         }
-
-        private void DebounceSave()
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
+            base.OnPropertyChanged(e);
+
             if (_isBatchUpdating) return;
-            _saveCts?.Cancel();
-            _saveCts = new CancellationTokenSource();
-            var ct = _saveCts.Token;
 
-            _ = Task.Run(async () =>
+            if (e.PropertyName == nameof(SelectedWallpaper) ||
+                string.IsNullOrEmpty(e.PropertyName))
             {
-                try
-                {
-                    await Task.Delay(_saveDelay, ct);
-                    if (!ct.IsCancellationRequested)
-                        await SaveAsync();
-                }
-                catch (TaskCanceledException) { }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "保存设置时出现异常。");
-                }
-            }, ct);
-        }
+                return;
+            }
 
+            _ = SaveAsync();
+        }
         private async Task SaveAsync()
         {
             if (_isBatchUpdating) return;
+
+            _saveCts?.Cancel();
+            _saveCts = new CancellationTokenSource();
 
             await _saveSemaphore.WaitAsync();
             try
@@ -1041,6 +558,7 @@ namespace WE_Tool.ViewModels
                 _settings.Papers.IsSortAscending = IsSortAscending;
                 _settings.Papers.SortOrder = SortOrder;
                 _settings.Papers.DetailSelectionEnabled = DetailSelectionEnabled;
+
                 // 类型相关
                 _settings.Expander.TypeExpander = TypeExpander;
                 _settings.Expander.Scene = Scene;
@@ -1053,7 +571,7 @@ namespace WE_Tool.ViewModels
                 // 分级相关
                 _settings.Expander.RatingExpander = RatingExpander;
                 _settings.Expander.G = G;
-                _settings.Expander.PG = PG;
+                _settings.Expander.Pg = Pg;
                 _settings.Expander.R = R;
 
                 // 来源相关
@@ -1068,7 +586,7 @@ namespace WE_Tool.ViewModels
                 _settings.Expander.Animal = Animal;
                 _settings.Expander.Anime = Anime;
                 _settings.Expander.Cartoon = Cartoon;
-                _settings.Expander.CGI = CGI;
+                _settings.Expander.Cgi = Cgi;
                 _settings.Expander.Cyberpunk = Cyberpunk;
                 _settings.Expander.Fantasy = Fantasy;
                 _settings.Expander.Game = Game;
@@ -1077,7 +595,7 @@ namespace WE_Tool.ViewModels
                 _settings.Expander.Landscape = Landscape;
                 _settings.Expander.Medieval = Medieval;
                 _settings.Expander.Memes = Memes;
-                _settings.Expander.MMD = MMD;
+                _settings.Expander.Mmd = Mmd;
                 _settings.Expander.Music = Music;
                 _settings.Expander.Nature = Nature;
                 _settings.Expander.Pixelart = Pixelart;
@@ -1114,6 +632,7 @@ namespace WE_Tool.ViewModels
                 _saveSemaphore.Release();
             }
         }
+
         private async Task BrowseFileAsync(object? parameter)
         {
             var filePath = await _pickerService.PickFileAsync();
@@ -1121,10 +640,10 @@ namespace WE_Tool.ViewModels
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath) && parameter != null)
             {
                 AcfPath = filePath;
-
                 await SaveAsync();
             }
         }
+
         private async Task BrowseFolderAsync(object? parameter)
         {
             var path = await _pickerService.PickFolderAsync();
@@ -1151,53 +670,63 @@ namespace WE_Tool.ViewModels
                 }
             }
         }
+
         private async Task OpenFolderAsync(object? parameter)
         {
-            string? targetPath = null;
             var key = (parameter as string) ?? "DownloadPath";
 
-            switch (key)
+            if (key == "OpenSelectedWallpapers")
             {
-                case "WorkshopPath":
-                    targetPath = WorkshopPath;
-                    break;
-                case "ProjectPath":
-                    targetPath = ProjectPath;
-                    break;
-                case "DownloadPath":
-                    targetPath = DownloadPath;
-                    break;
-                case "ConfigPath":
-                    targetPath = ConfigPath;
-                    break;
-                case "LogPath":
-                    targetPath = LogPath;
-                    break;
-                default:
-                    targetPath = key;
-                    break;
+                var itemToOpen = SelectedWallpapers.Count > 0
+                    ? SelectedWallpapers.ToList()
+                    : SelectedWallpaper is { FolderPath: not null }
+                    ? [SelectedWallpaper]
+                    : [];
+
+                await ParallelOpenFoldersAsync(itemToOpen);
+                return;
             }
-            if (!string.IsNullOrEmpty(targetPath) && !System.IO.Directory.Exists(targetPath))
+
+            string? targetPath = key switch
+            {
+                "WorkshopPath" => WorkshopPath,
+                "ProjectPath" => ProjectPath,
+                "AcfPath" => AcfPath,
+                "OfficialPath" => OfficialPath,
+                "ConfigPath" => ConfigPath,
+                "LogPath" => LogPath,
+                _ => key
+            };
+
+            if (!string.IsNullOrEmpty(targetPath) && !Directory.Exists(targetPath))
             {
                 try
                 {
-                    System.IO.Directory.CreateDirectory(targetPath);
+                    Directory.CreateDirectory(targetPath);
                 }
                 catch (Exception ex)
                 {
-                    await DialogHelper.ShowMessageAsync("错误",$"打开目录不存在，程序在创建目录时失败: {ex.Message}");
+                    await DialogHelper.ShowMessageAsync("错误", $"打开目录不存在，程序在创建目录时失败: {ex.Message}");
                     Log.Error(ex, "创建目录时出现异常。");
                     return;
                 }
             }
+
             if (string.IsNullOrEmpty(targetPath))
             {
                 await DialogHelper.ShowMessageAsync("错误", "打开目录为空，请先选择目录。");
                 Log.Warning("用户尝试打开空目录。");
                 return;
             }
+
             await _pickerService.OpenFolderAsync(targetPath);
         }
+
+        public async Task OpenSelectedWallpapersFoldersAsync()
+        {
+            await OpenFolderAsync("OpenSelectedWallpapers");
+        }
+
         public async Task RemoveWorkshopKeyFromAcfAsync(string workshopID, string acfPath)
         {
             if (string.IsNullOrEmpty(workshopID) || !File.Exists(acfPath)) return;
@@ -1221,7 +750,43 @@ namespace WE_Tool.ViewModels
                 }
             });
         }
-        
+
+        private async Task ParallelOpenFoldersAsync(IReadOnlyList<WallpaperItem> items)
+        {
+            if (items.Count > 5)
+            {
+                bool isConfirmed = await DialogHelper.ShowConfirmDialogAsync(
+                    "确认打开",
+                    $"这将打开 {items.Count} 个文件资源管理器，是否继续打开？",
+                    "确定",
+                    "取消");
+                if (!isConfirmed) return;
+            }
+
+            foreach (var item in items)
+            {
+                if (string.IsNullOrWhiteSpace(item.FolderPath)) continue;
+                await OpenSingleFolderAsync(item.FolderPath);
+            }
+        }
+
+        private async Task OpenSingleFolderAsync(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                try
+                {
+                    Directory.CreateDirectory(path);
+                }
+                catch (Exception ex)
+                {
+                    await DialogHelper.ShowMessageAsync("错误", $"尝试打开目录时发现目录不存在，尝试创建目录失败：{ex.Message}");
+                }
+            }
+
+            await _pickerService.OpenFolderAsync(path);
+        }
+
         public async Task AutoDetectWorkshopPathAsync(string mode)
         {
             if (mode == "0000") return;
@@ -1236,10 +801,10 @@ namespace WE_Tool.ViewModels
                         string[] possibleSubKeys = { @"Software\WallpaperEngine", @"Software\Wallpaper Engine" };
                         foreach (var subKey in possibleSubKeys)
                         {
-                            using (RegistryKey weKey = rootKey.OpenSubKey(subKey))
+                            using (RegistryKey? weKey = rootKey.OpenSubKey(subKey))
                             {
                                 if (weKey == null) continue;
-                                object installPath = weKey.GetValue("installPath");
+                                object? installPath = weKey.GetValue("installPath");
                                 if (installPath is string pathStr)
                                 {
                                     string targetSuffix = @"\common\wallpaper_engine";
@@ -1256,7 +821,7 @@ namespace WE_Tool.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning(ex,"读取WallpaperEngine注册表出现异常。");
+                    Log.Warning(ex, "读取WallpaperEngine注册表出现异常。");
                 }
                 return foundBaseDir;
             });
@@ -1273,34 +838,23 @@ namespace WE_Tool.ViewModels
                     OfficialPath = result + @"\common\wallpaper_engine\projects\defaultprojects";
             }
         }
+
         public async Task AutoDetectDownloadPathAsync()
         {
             try
             {
-                // 获取当前用户的桌面路径
                 string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-
                 if (!string.IsNullOrEmpty(desktopPath))
                 {
                     DownloadPath = desktopPath + "\\WE_OutPut";
-                    // 赋值后会自动触发 DebounceSave 逻辑
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "设置桌面路径为保存路径时出现异常。");
             }
-            await Task.CompletedTask;
         }
-        private void OnAppLanguageChanged(string value)
-        {
-            if (_isBatchUpdating) return;
 
-            _settings.AppLanguage = value ?? "default";
-            DebounceSave();
-
-            _ = ShowRestartDialog();
-        }
         private async Task ShowRestartDialog()
         {
             ContentDialog dialog = new()
@@ -1317,7 +871,6 @@ namespace WE_Tool.ViewModels
 
             if (result == ContentDialogResult.Primary)
             {
-                // 3. 执行重启逻辑
                 Microsoft.Windows.AppLifecycle.AppInstance.Restart("");
             }
         }

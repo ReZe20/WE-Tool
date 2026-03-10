@@ -37,7 +37,7 @@ namespace WE_Tool.Models
 
             public bool RatingExpander { get; set; } = true;
             public bool G { get; set; } = true;
-            public bool PG { get; set; } = true;
+            public bool Pg { get; set; } = true;
             public bool R { get; set; } = true;
 
             public bool SourceExpander { get; set; } = true;
@@ -50,7 +50,7 @@ namespace WE_Tool.Models
             public bool Animal { get; set; } = true;
             public bool Anime { get; set; } = true;
             public bool Cartoon { get; set; } = true;
-            public bool CGI { get; set; } = true;
+            public bool Cgi { get; set; } = true;
             public bool Cyberpunk { get; set; } = true;
             public bool Fantasy { get; set; } = true;
             public bool Game { get; set; } = true;
@@ -59,7 +59,7 @@ namespace WE_Tool.Models
             public bool Landscape { get; set; } = true;
             public bool Medieval { get; set; } = true;
             public bool Memes { get; set; } = true;
-            public bool MMD { get; set; } = true;
+            public bool Mmd { get; set; } = true;
             public bool Music { get; set; } = true;
             public bool Nature { get; set; } = true;
             public bool Pixelart { get; set; } = true;

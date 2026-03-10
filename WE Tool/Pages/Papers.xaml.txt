@@ -279,7 +279,7 @@
                                         <Expander x:Uid="Rating" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="AgeRatingFilterPanel">
                                                 <CheckBox x:Uid="Rating_Everyone" Tag="G" IsChecked="{x:Bind ViewModel.G, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Rating_Questionable" Tag="PG" IsChecked="{x:Bind ViewModel.Pg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Rating_Questionable" Tag="PG" IsChecked="{x:Bind ViewModel.PG, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Rating_Mature" Tag="R" IsChecked="{x:Bind ViewModel.R, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
@@ -306,7 +306,7 @@
                                                 <CheckBox x:Uid="Tag_Animal" Tag="Animal" IsChecked="{x:Bind ViewModel.Animal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                                 <CheckBox x:Uid="Tag_Anime" Tag="Anime" IsChecked="{x:Bind ViewModel.Anime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Cartoon" Tag="Cartoon" IsChecked="{x:Bind ViewModel.Cartoon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_CGI" Tag="CGI" IsChecked="{x:Bind ViewModel.Cgi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_CGI" Tag="CGI" IsChecked="{x:Bind ViewModel.CGI, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Cyberpunk" Tag="Cyberpunk" IsChecked="{x:Bind ViewModel.Cyberpunk, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Fantasy" Tag="Fantasy" IsChecked="{x:Bind ViewModel.Fantasy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Game" Tag="Game" IsChecked="{x:Bind ViewModel.Game, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -315,7 +315,7 @@
                                                 <CheckBox x:Uid="Tag_Landscape" Tag="Landscape" IsChecked="{x:Bind ViewModel.Landscape, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Medieval" Tag="Medieval" IsChecked="{x:Bind ViewModel.Medieval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Memes" Tag="Memes" IsChecked="{x:Bind ViewModel.Memes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_MMD" Tag="MMD" IsChecked="{x:Bind ViewModel.Mmd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_MMD" Tag="MMD" IsChecked="{x:Bind ViewModel.MMD, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Music" Tag="Music" IsChecked="{x:Bind ViewModel.Music, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Nature" Tag="Nature" IsChecked="{x:Bind ViewModel.Nature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Tag_Pixelart" Tag="Pixelart" IsChecked="{x:Bind ViewModel.Pixelart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Composition;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -27,6 +28,8 @@ using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
+using Windows.UI.Core;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -45,7 +48,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
     public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
     private CancellationTokenSource? _filterCts;
-
+    public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
+    public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
     private bool _isMultiSelectMode = false;
@@ -79,6 +83,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public Papers()
     {
         ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
+        ViewModel.SelectedWallpapers = SelectedWallpapers;
 
         this.InitializeComponent();
         this.DataContext = this;
@@ -111,8 +116,33 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             await ViewModel.InitializeAsync();
             await RefreshWallpaperList();
         };
+
+        OpenSelectedFoldersCommand = new AsyncRelayCommand(async () =>
+        {
+            HideWallpaperContextMenu();
+            await ViewModel.OpenSelectedWallpapersFoldersAsync();
+        });
+        DeleteSelectedCommand = new AsyncRelayCommand<WallpaperItem?>(async item =>
+        {
+            HideWallpaperContextMenu();
+
+            var itemsToDelete = SelectedWallpapers.Count > 0
+            ? SelectedWallpapers.ToList()
+            : item is not null ? [item] : [];
+
+            if (itemsToDelete.Count == 0) return;
+            bool confirmed = await DialogHelper.ShowConfirmDialogAsync("删除",
+                $"确定要删除选中的 {itemsToDelete.Count} 个壁纸吗？\n\n可在日志中查看已删除标题。",
+                "全部删除",
+                "取消");
+            if (!confirmed) return;
+
+            foreach (var toDelete in itemsToDelete)
+            {
+                await DeleteItemAsync(toDelete, skipConfirm: itemsToDelete.Count > 1);
+            }
+        });
         _pickerService = new PickerService();
-        DeleteWallpaperCommand = new AsyncRelayCommand<WallpaperItem>(ExecuteDeleteWallpaper);
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
     }
     private async void MainWindow_ScanCompleted(object? sender, EventArgs e)
@@ -171,34 +201,34 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public async Task RefreshWallpaperList()
     {
         bool scanRunning = App.ScanTask != null && !App.ScanTask.IsCompleted;
-    if (scanRunning)
-    {
-        IsScanning = true;
-    }
-
-    try
-    {
-        if (App.ScanTask != null)
-        {
-            await App.ScanTask;
-            _allWallpapers = App.GlobalAllWallpapers.ToList();
-        }
-        else
-        {
-            App.StartBackgroundScan(ViewModel.WorkshopPath, ViewModel.OfficialPath, ViewModel.ProjectPath, ViewModel.AcfPath);
-            await App.ScanTask;
-            _allWallpapers = App.GlobalAllWallpapers.ToList();
-        }
-
-        await ApplyFilters();
-    }
-    finally
-    {
         if (scanRunning)
         {
-            IsScanning = false;
+            IsScanning = true;
         }
-    }
+
+        try
+        {
+            if (App.ScanTask != null)
+            {
+                await App.ScanTask;
+                _allWallpapers = App.GlobalAllWallpapers.ToList();
+            }
+            else
+            {
+                App.StartBackgroundScan(ViewModel.WorkshopPath, ViewModel.OfficialPath, ViewModel.ProjectPath, ViewModel.AcfPath);
+                await App.ScanTask;
+                _allWallpapers = App.GlobalAllWallpapers.ToList();
+            }
+
+            await ApplyFilters();
+        }
+        finally
+        {
+            if (scanRunning)
+            {
+                IsScanning = false;
+            }
+        }
     }
 
     private static bool IsListEqual(ObservableCollection<WallpaperItem> current, List<WallpaperItem> next)
@@ -216,9 +246,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         string[] tagPropertyNames = 
         {
-            "Abstract", "Animal", "Anime", "Cartoon", "CGI", "Cyberpunk",
+            "Abstract", "Animal", "Anime", "Cartoon", "Cgi", "Cyberpunk",
             "Fantasy", "Game", "Girls", "Guys", "Landscape", "Medieval",
-            "Memes", "MMD", "Music", "Nature", "Pixelart", "Relaxing", 
+            "Memes", "Mmd", "Music", "Nature", "Pixelart", "Relaxing", 
             "Retro", "SciFi", "Sports", "Technology", "Television", 
             "Vehicle", "Unspecified"
         };
@@ -282,7 +312,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     bool ratingMatch = false;
                     string r = w.ContentRating?.ToLower();
                     if (ViewModel.G && r == "everyone") ratingMatch = true;
-                    if (ViewModel.PG && r == "questionable") ratingMatch = true;
+                    if (ViewModel.Pg && r == "questionable") ratingMatch = true;
                     if (ViewModel.R && r == "mature") ratingMatch = true;
 
                     bool source = false;
@@ -691,6 +721,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             (float)grid.ActualHeight / 2,
             0f);
 
+            var parent = VisualTreeHelper.GetParent(grid) as UIElement;
+            if (parent != null)
+            {
+                Canvas.SetZIndex(parent, 10000);
+            }
+
             if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
                 Item_PointerPressed(sender,e);
@@ -713,12 +749,17 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             var scaleAnimation = compositor.CreateSpringVector3Animation();
             scaleAnimation.Target = "Scale";
-            scaleAnimation.FinalValue = new Vector3(1.1f, 1.1f, 1.1f);
+            scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
             scaleAnimation.DampingRatio = 0.6f;
             scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
             visual.StartAnimation("Scale", scaleAnimation);
 
-            Canvas.SetZIndex(grid, 1000);
+            Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
+            if (itemVisual?.Parent is ContainerVisual parentVisual)
+            {
+                parentVisual.Children.Remove(itemVisual);
+                parentVisual.Children.InsertAtTop(itemVisual);
+            }
         }
     }
     private void Item_PointerExited(object sender, PointerRoutedEventArgs e)
@@ -736,13 +777,25 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             scaleAnimation.FinalValue = new Vector3(1.0f, 1.0f, 1.0f);
             scaleAnimation.DampingRatio = 0.6f;
             scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
+
+            var capturedParent = VisualTreeHelper.GetParent(grid) as UIElement;
+
             visual.StartAnimation("Scale", scaleAnimation);
 
-            Canvas.SetZIndex(grid, 0);
+            DispatcherQueue.TryEnqueue(async () =>
+            {
+                await Task.Delay(20);
+
+                Canvas.SetZIndex(grid, 0);
+                if (capturedParent != null)
+                {
+                    Canvas.SetZIndex(capturedParent, 0);
+                }
+                grid.Translation = new System.Numerics.Vector3(0f, 0f, 64f);
+            });
 
             var pointerPoint = e.GetCurrentPoint(sender as UIElement);
             var properties = pointerPoint.Properties;
-
         }
     }
     private void Item_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -756,8 +809,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             var scaleAnimation = compositor.CreateSpringVector3Animation();
             scaleAnimation.Target = "Scale";
 
-            // 如果松开时鼠标还在范围内，恢复到 1.1f (悬停态)，否则恢复到 1.0f
-            scaleAnimation.FinalValue = new Vector3(1.1f, 1.1f, 1.1f);
+            // 如果松开时鼠标还在范围内，恢复到 1.15f (悬停态)，否则恢复到 1.0f
+            scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
             scaleAnimation.DampingRatio = 0.6f;
             scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
 
@@ -783,7 +836,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
         }
     }
-    
+
     private void Item_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         if (sender is Grid grid)
@@ -809,6 +862,17 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
                 {
+                    var modifiers = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+                    if (modifiers && !_isMultiSelectMode)
+                    {
+                        ViewModel.SelectedWallpaper = item;
+                        IsMultiSelectMode = true;
+                        item.IsSelected = !item.IsSelected;
+
+                        if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                            SelectedWallpapers.Add(item);
+                    }
+
                     if (_isMultiSelectMode)
                     {
                         ViewModel.SelectedWallpaper = item;
@@ -826,9 +890,28 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                             var cb = g.Children.OfType<CheckBox>().FirstOrDefault();
                             if (cb != null) cb.Opacity = 1;
                         }
+                        return;
                     }
                 }
             }
+        }
+    }
+    private void WallpaperItem_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
+        {
+            if (!_isMultiSelectMode)
+            {
+                if (ViewModel.SelectedWallpaper != item)
+                {
+                    ViewModel.SelectedWallpaper = item;
+                    PlayDrillInAnimation();
+                }
+            }
+
+            RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+            UpdateMultiSelectCount();
+            ViewModel.SelectedWallpaper = item;
         }
     }
     private static void ApplyScaleAnimation(FrameworkElement fe, float targetScale)
@@ -950,46 +1033,29 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         IsMultiSelectMode = false;
     }
-    private async Task ExecuteDeleteWallpaper(WallpaperItem item)
+    public void HideWallpaperContextMenu()
     {
         WallpaperContextMenu?.Hide();
-
+    }
+    private async Task DeleteItemAsync(WallpaperItem item, bool skipConfirm = false)
+    {
         if (item == null) return;
-
-        bool isConfirmed = await DialogHelper.ShowConfirmDialogAsync(
-            "确认删除",
-            $"确定要删除壁纸“{item.Title}”吗？可在日志中查看已删除壁纸标题",
-            "删除",
-            "取消");
-
-        if (!isConfirmed) return;
 
         await ViewModel.RemoveWorkshopKeyFromAcfAsync(item.WorkshopID, ViewModel.AcfPath);
         bool isFolderDeleted = await _pickerService.DeleteFolderAsync(item.FolderPath);
 
         if (isFolderDeleted)
         {
-            if (MainWindow.GlobalAllWallpapers.Contains(item))
-            {
-                MainWindow.GlobalAllWallpapers.Remove(item);
-            }
-            if (_allWallpapers.Contains(item))
-            {
-                _allWallpapers.Remove(item);
-            }
-            if (Wallpapers.Contains(item))
-            {
-                Wallpapers.Remove(item);
-            }
-            if (SelectedWallpapers.Contains(item))
-            {
-                SelectedWallpapers.Remove(item);
-            }
+            App.GlobalAllWallpapers.Remove(item);
+            _allWallpapers.Remove(item);
+            Wallpapers.Remove(item);
+            SelectedWallpapers.Remove(item);
 
             UpdateMultiSelectCount();
             Log.Information($"壁纸 {item.Title} 已从列表和磁盘中彻底移除。");
         }
     }
+
     // ... INotifyPropertyChanged 标准实现 ...
     public event PropertyChangedEventHandler PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
