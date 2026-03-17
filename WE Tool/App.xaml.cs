@@ -58,10 +58,13 @@ namespace WE_Tool
             LoadInitialLanguage();
         }
 
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             _window = new MainWindow();
             MainWindowInstance = _window;
+
+            await ViewModel.InitializeAsync();
+
             _window.Activate();
             ScanWallpaperWhenStart();
         }
