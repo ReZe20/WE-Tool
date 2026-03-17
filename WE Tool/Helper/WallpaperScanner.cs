@@ -174,7 +174,7 @@ internal class WallpaperScanner
         string source,
         string acfPath,
         IProgress<int>? progress = null,
-        string? cacheDbPath = null,           // ← 新增参数（传 null 使用默认路径）
+        string? cacheDbPath = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
@@ -186,7 +186,7 @@ internal class WallpaperScanner
 
         var installedIDs = GetInstalledWorkshopIDs(acfPath);
         var resultsBag = new ConcurrentBag<WallpaperItem>();
-        var parsedItems = new ConcurrentBag<WallpaperItem>();   // 只存需要写入缓存的
+        var parsedItems = new ConcurrentBag<WallpaperItem>();
         var sw = Stopwatch.StartNew();
 
         Log.Information($"开始扫描源 {source}... 根目录: {rootPath}");

@@ -14,6 +14,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Frozen;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -54,6 +55,34 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private bool _isLeftMouseButtonPressed = false;
     private bool _isMultiSelectMode = false;
     private bool _isScanning = false;
+    private static readonly FrozenDictionary<string, Func<SettingsViewModel, bool>> _tagGetters = new Dictionary<string, Func<SettingsViewModel, bool>>
+    {
+        ["Abstract"] = vm => vm.Abstract,
+        ["Animal"] = vm => vm.Animal,
+        ["Anime"] = vm => vm.Anime,
+        ["Cartoon"] = vm => vm.Cartoon,
+        ["Cgi"] = vm => vm.Cgi,
+        ["Cyberpunk"] = vm => vm.Cyberpunk,
+        ["Fantasy"] = vm => vm.Fantasy,
+        ["Game"] = vm => vm.Game,
+        ["Girls"] = vm => vm.Girls,
+        ["Guys"] = vm => vm.Guys,
+        ["Landscape"] = vm => vm.Landscape,
+        ["Medieval"] = vm => vm.Medieval,
+        ["Memes"] = vm => vm.Memes,
+        ["Mmd"] = vm => vm.Mmd,
+        ["Music"] = vm => vm.Music,
+        ["Nature"] = vm => vm.Nature,
+        ["Pixelart"] = vm => vm.Pixelart,
+        ["Relaxing"] = vm => vm.Relaxing,
+        ["Retro"] = vm => vm.Retro,
+        ["SciFi"] = vm => vm.SciFi,
+        ["Sports"] = vm => vm.Sports,
+        ["Technology"] = vm => vm.Technology,
+        ["Television"] = vm => vm.Television,
+        ["Vehicle"] = vm => vm.Vehicle,
+        ["Unspecified"] = vm => vm.Unspecified,
+    }.ToFrozenDictionary();
     public  bool IsScanning
     {
         get => _isScanning;
@@ -82,16 +111,18 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public IAsyncRelayCommand<WallpaperItem> DeleteWallpaperCommand { get; }
     public Papers()
     {
-        ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
-        ViewModel.SelectedWallpapers = SelectedWallpapers;
+        ViewModel = new SettingsViewModel(new ConfigService(), new PickerService())
+        {
+            SelectedWallpapers = SelectedWallpapers
+        };
 
         this.InitializeComponent();
         this.DataContext = this;
 
-        MainWindow.ScanCompleted += MainWindow_ScanCompleted;
+        App.ScanCompleted += App_ScanCompleted;
 
         this.Unloaded += (s, e) => {
-            MainWindow.ScanCompleted -= MainWindow_ScanCompleted;
+            App.ScanCompleted -= App_ScanCompleted;
         };
 
         this.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(Global_PointerPressed), true);
@@ -102,8 +133,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (ViewModel._isBatchUpdating) return;
 
             if (e.PropertyName == "SteamWorkshopPath" 
-                || e.PropertyName.EndsWith("Expander")
-                || e.PropertyName.Contains("Pane")
+                || e.PropertyName?.EndsWith("Expander") == true
+                || e.PropertyName?.Contains("Pane") == true
                 || e.PropertyName == "SortIndex"
                 || e.PropertyName == nameof(ViewModel.SelectedWallpaper))
                 return;
@@ -137,6 +168,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 "取消");
             if (!confirmed) return;
 
+            if (item != null)
+            {
+                await DeleteItemAsync(item);
+            }
+
             foreach (var toDelete in itemsToDelete)
             {
                 await DeleteItemAsync(toDelete, skipConfirm: itemsToDelete.Count > 1);
@@ -145,14 +181,14 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         _pickerService = new PickerService();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
     }
-    private async void MainWindow_ScanCompleted(object? sender, EventArgs e)
+    private async void App_ScanCompleted(object? sender, EventArgs e)
     {
         await DispatcherQueue.EnqueueAsync(async () =>
         {
             await RefreshWallpaperList();
         });
     }
-    private void SelectedWallpapers_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void SelectedWallpapers_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         RefreshDisplayedSelectedWallpapers();
         UpdateStackVisuals();
@@ -211,13 +247,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (App.ScanTask != null)
             {
                 await App.ScanTask;
-                _allWallpapers = App.GlobalAllWallpapers.ToList();
+                _allWallpapers = [.. App.GlobalAllWallpapers];
             }
             else
             {
                 App.StartBackgroundScan(ViewModel.WorkshopPath, ViewModel.OfficialPath, ViewModel.ProjectPath, ViewModel.AcfPath);
                 await App.ScanTask;
-                _allWallpapers = App.GlobalAllWallpapers.ToList();
+                _allWallpapers = [.. App.GlobalAllWallpapers];
             }
 
             await ApplyFilters();
@@ -244,28 +280,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         var selectedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        string[] tagPropertyNames = 
-        {
-            "Abstract", "Animal", "Anime", "Cartoon", "Cgi", "Cyberpunk",
-            "Fantasy", "Game", "Girls", "Guys", "Landscape", "Medieval",
-            "Memes", "Mmd", "Music", "Nature", "Pixelart", "Relaxing", 
-            "Retro", "SciFi", "Sports", "Technology", "Television", 
-            "Vehicle", "Unspecified"
-        };
-
-        foreach (var propName in tagPropertyNames)
-        {
-            var prop = ViewModel.GetType().GetProperty(propName);
-            if (prop != null && prop.PropertyType == typeof(bool))
-            {
-                bool isChecked = (bool)prop.GetValue(ViewModel);
-                if (isChecked)
-                {
-                    selectedTags.Add(propName);
-                }
-            }
-        }
-        return selectedTags;
+        return _tagGetters
+            .Where(kvp => kvp.Value(ViewModel))
+            .Select(kvp => kvp.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
     private void WallpaperSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
@@ -290,7 +308,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         try
         {
-            await Task.Delay(1000, token);
+            await Task.Delay(ViewModel.FilterResultResponseDelay, token);
 
             var selectedTags = GetSelectedTags();
             int sortIndex = ViewModel.SortOrder;
@@ -301,7 +319,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 var query = _allWallpapers.Where(w =>
                 {
                     bool typeMatch = false;
-                    string t = w.Type?.ToLower();
+                    string t = w.Type?.ToLower() ?? string.Empty;
                     if (ViewModel.Scene && t == "scene") typeMatch = true;
                     if (ViewModel.Video && t == "video") typeMatch = true;
                     if (ViewModel.Web && t == "web") typeMatch = true;
@@ -310,20 +328,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     if (ViewModel.Unknown && t == "unknown") typeMatch = true;
 
                     bool ratingMatch = false;
-                    string r = w.ContentRating?.ToLower();
+                    string r = w.ContentRating?.ToLower() ?? string.Empty;
                     if (ViewModel.G && r == "everyone") ratingMatch = true;
                     if (ViewModel.Pg && r == "questionable") ratingMatch = true;
                     if (ViewModel.R && r == "mature") ratingMatch = true;
 
                     bool source = false;
-                    string s = w.Source?.ToLower();
+                    string s = w.Source?.ToLower() ?? string.Empty;
                     if (ViewModel.Official && s == "official") source = true;
                     if (ViewModel.Workshop && s == "workshop") source = true;
                     if (ViewModel.Mine && s == "mine") source = true;
 
-                    bool tagsMatch = w.Tags.Any(t => selectedTags.Contains(t.Replace(" ", "").Replace("-", "")));
+                    bool tagsMatch = w.Tags.Any(t => selectedTags.Contains(t?.Replace(" ", "").Replace("-", "") ?? ""));
                     bool searchMatch = string.IsNullOrWhiteSpace(_searchText) ||
-                                        w.Title.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
+                                        (w.Title?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false);
 
                     return typeMatch && ratingMatch && tagsMatch && source && searchMatch;
                 });
@@ -1039,7 +1057,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private async Task DeleteItemAsync(WallpaperItem item, bool skipConfirm = false)
     {
-        if (item == null) return;
+        if (item == null || item.WorkshopID == null || item.FolderPath == null) return;
 
         await ViewModel.RemoveWorkshopKeyFromAcfAsync(item.WorkshopID, ViewModel.AcfPath);
         bool isFolderDeleted = await _pickerService.DeleteFolderAsync(item.FolderPath);
@@ -1057,8 +1075,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
 
     // ... INotifyPropertyChanged 标准实现 ...
-    public event PropertyChangedEventHandler PropertyChanged;
-    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

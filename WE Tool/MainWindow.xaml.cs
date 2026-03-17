@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+锘縰sing CommunityToolkit.Mvvm.Messaging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -22,7 +22,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using WinUIEx;
 
-// To learn more about WinUI, the WinUI project structure,
+// To learndata:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB0PSIxNTgxNDkxOTQyMjQzIiBjbGFzcz0iaWNvbiIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHAtaWQ9IjQ1NzUiIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMzIiIGhlaWdodD0iMzIiPjxkZWZzPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+PC9zdHlsZT48L2RlZnM+PHBhdGggZD0iTTU4My4xNjggNTIzLjc3Nkw5NTguNDY0IDE0OC40OGMxOC45NDQtMTguOTQ0IDE4Ljk0NC01MC4xNzYgMC02OS4xMmwtMi4wNDgtMi4wNDhjLTE4Ljk0NC0xOC45NDQtNTAuMTc2LTE4Ljk0NC02OS4xMiAwTDUxMiA0NTMuMTIgMTM2LjcwNCA3Ny4zMTJjLTE4Ljk0NC0xOC45NDQtNTAuMTc2LTE4Ljk0NC02OS4xMiAwbC0yLjA0OCAyLjA0OGMtMTkuNDU2IDE4Ljk0NC0xOS40NTYgNTAuMTc2IDAgNjkuMTJsMzc1LjI5NiAzNzUuMjk2TDY1LjUzNiA4OTkuMDcyYy0xOC45NDQgMTguOTQ0LTE4Ljk0NCA1MC4xNzYgMCA2OS4xMmwyLjA0OCAyLjA0OGMxOC45NDQgMTguOTQ0IDUwLjE3NiAxOC45NDQgNjkuMTIgMEw1MTIgNTk0Ljk0NCA4ODcuMjk2IDk3MC4yNGMxOC45NDQgMTguOTQ0IDUwLjE3NiAxOC45NDQgNjkuMTIgMGwyLjA0OC0yLjA0OGMxOC45NDQtMTguOTQ0IDE4Ljk0NC01MC4xNzYgMC02OS4xMkw1ODMuMTY4IDUyMy43NzZ6IiBwLWlkPSI0NTc2IiBmaWxsPSIjZmZmZmZmIj48L3BhdGg+PC9zdmc+ more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace WE_Tool
@@ -34,9 +34,6 @@ namespace WE_Tool
     {
         public SettingsViewModel ViewModel { get; }
         private readonly IConfigService _configService = new ConfigService();
-        public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = new List<WallpaperItem>();
-        public static Task ScanTask { get; private set; }
-        public static event EventHandler? ScanCompleted;
         public MainWindow()
         {
             ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
@@ -52,27 +49,25 @@ namespace WE_Tool
                 var settings = await _configService.LoadAsync();
                 var tag = settings?.StartPageTag ?? "Papers";
 
-                // 找到对应的 NavigationViewItem（在 MenuItems 或 FooterMenuItems）
                 var item = FindNavItemByTag(nvSample.MenuItems, tag) ?? FindNavItemByTag(nvSample.FooterMenuItems, tag);
 
-                if (item != null)
+                if (item is not null)
                 {
-                    // 选择该项（通常会触发你已实现的导航逻辑）
                     item.IsSelected = true;
                     nvSample.SelectedItem = item;
 
-                    // 如果你需要直接导航到页面（保证页面类型存在），也可用下面方式：
-                    var pageType = MapTagToPageType(tag);
-                    if (pageType != null)
+                    if (MapTagToPageType(tag) is { } pageType)
+                    {
                         contentFrame.Navigate(pageType);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "初始化失败。");
+                Log.Error(ex, $"鍒濆鍖栧け璐ャ�俆ag: {ViewModel?.StartPageTag}");
             }
         }
-        private NavigationViewItem? FindNavItemByTag(IEnumerable items, string tag)
+        private static NavigationViewItem? FindNavItemByTag(IEnumerable items, string tag)
         {
             foreach (var obj in items)
             {
@@ -81,7 +76,6 @@ namespace WE_Tool
                     if ((nvi.Tag?.ToString() ?? "") == tag)
                         return nvi;
 
-                    // 递归检查子项（如果存在）
                     if (nvi.MenuItems?.Count > 0)
                     {
                         var found = FindNavItemByTag(nvi.MenuItems, tag);
@@ -92,7 +86,7 @@ namespace WE_Tool
             return null;
         }
 
-        private Type? MapTagToPageType(string tag) =>
+        private static Type? MapTagToPageType(string tag) =>
             tag switch
             {
                 "Papers" => typeof(Papers),
@@ -102,25 +96,21 @@ namespace WE_Tool
                 _ => typeof(Papers)
             };
 
-        private void nvSample_ItemInvoked(NavigationView sneder, NavigationViewItemInvokedEventArgs args)
+        private void NvSample_ItemInvoked(NavigationView sneder, NavigationViewItemInvokedEventArgs args)
         {
-            string tag = args.InvokedItemContainer.Tag.ToString();
+            if (args.InvokedItemContainer == null)
+                return;
 
-            switch (tag)
+            string? tag = args.InvokedItemContainer.Tag.ToString();
+
+            _ = tag switch
             {
-                case "Papers":
-                    contentFrame.Navigate(typeof(Papers), null);
-                    break;
-                case "LoadPapers":
-                    contentFrame.Navigate(typeof(LoadPapers), null);
-                    break;
-                case "Info":
-                    contentFrame.Navigate(typeof(Info), null);
-                    break;
-                case "Settings":
-                    contentFrame.Navigate(typeof(Settings), null);
-                    break;
-            }
+                "Papers" => contentFrame.Navigate(typeof(Papers), null),
+                "LoadPapers" => contentFrame.Navigate(typeof(LoadPapers), null),
+                "Info" => contentFrame.Navigate(typeof(Info), null),
+                "Settings" => contentFrame.Navigate(typeof(Settings), null),
+                _ => contentFrame.Navigate(typeof(Papers), null)
+            };
         }
 
     }

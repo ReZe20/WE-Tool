@@ -1,5 +1,4 @@
 ﻿#nullable enable
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Controls;
@@ -51,10 +50,10 @@ namespace WE_Tool.ViewModels
         public partial WallpaperItem? SelectedWallpaper { get; set; }
 
         [ObservableProperty]
-        public partial string AppLanguage { get; set; }
+        public partial string AppLanguage { get; set; } = null!;
 
         [ObservableProperty]
-        public partial string StartPageTag { get; set; }
+        public partial string StartPageTag { get; set; } = null!;
 
         [ObservableProperty]
         public partial int BottomBarHeight { get; set; }
@@ -78,13 +77,16 @@ namespace WE_Tool.ViewModels
         public partial bool DetailSelectionEnabled { get; set; }
 
         [ObservableProperty]
+        public partial int FilterResultResponseDelay { get; set; }
+
+        [ObservableProperty]
         public partial int SortOrder { get; set; }
 
         [ObservableProperty]
-        public partial string SortGlyph { get; set; } 
+        public partial string SortGlyph { get; set; } = "\uE8D2";
 
         [ObservableProperty]
-        public partial string SortText { get; set; }
+        public partial string SortText { get; set; } = LanguageHelper.GetResource("SortByName.Text");
 
         [ObservableProperty]
         public partial bool IsSortAscending { get; set; }
@@ -213,31 +215,31 @@ namespace WE_Tool.ViewModels
         public partial bool Unspecified { get; set; }
 
         [ObservableProperty]
-        public partial string DownloadPath { get; set; } 
+        public partial string DownloadPath { get; set; } = null!;
 
         [ObservableProperty]
-        public partial string WorkshopPath { get; set; } 
+        public partial string WorkshopPath { get; set; } = null!;
 
         [ObservableProperty]
-        public partial string ProjectPath { get; set; } 
+        public partial string ProjectPath { get; set; } = null!;
 
         [ObservableProperty]
-        public partial string AcfPath { get; set; } 
+        public partial string AcfPath { get; set; } = null!;
 
         [ObservableProperty]
-        public partial string OfficialPath { get; set; } 
+        public partial string OfficialPath { get; set; } = null!;
 
         [ObservableProperty]
         public partial bool IgnoreExtension { get; set; }
 
         [ObservableProperty]
-        public partial string IgnoreExtensionList { get; set; }
+        public partial string IgnoreExtensionList { get; set; } = null!;
 
         [ObservableProperty]
         public partial bool OnlyExtension { get; set; }
 
         [ObservableProperty]
-        public partial string OnlyExtensionList { get; set; }
+        public partial string OnlyExtensionList { get; set; } = null!;
 
         [ObservableProperty]
         public partial bool ConvertTEX { get; set; }
@@ -328,6 +330,7 @@ namespace WE_Tool.ViewModels
 
         public string SortDirectionGlyph => IsSortAscending ? "\uE70D" : "\uE70E";
 
+#pragma warning disable CA1822 // ConfigPath在之后需要实例访问，不标记static
         public string ConfigPath
         {
             get
@@ -337,6 +340,7 @@ namespace WE_Tool.ViewModels
             set { }
         }
 
+#pragma warning disable CA1822 // LogPath在之后需要实例访问，不标记static
         public string LogPath
         {
             get
@@ -350,6 +354,10 @@ namespace WE_Tool.ViewModels
         {
             _isBatchUpdating = true;
 
+            var loadedSettings = await _configService.LoadAsync();
+            bool isNewConfig = loadedSettings == null;
+            _settings = loadedSettings ?? new AppSettings();
+
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
             AppLanguage = _settings.AppLanguage ?? "default";
@@ -362,6 +370,7 @@ namespace WE_Tool.ViewModels
             LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
             RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
             DetailSelectionEnabled = _settings.Papers.DetailSelectionEnabled;
+            FilterResultResponseDelay = _settings.Papers.FilterResultResponseDelay;
 
             IsSortAscending = _settings.Papers.IsSortAscending;
             SortOrder = _settings.Papers.SortOrder;
@@ -444,8 +453,24 @@ namespace WE_Tool.ViewModels
             DontConvertTEX = _settings.Extract.DontConvertTEX;
             CoverAllFiles = _settings.Extract.CoverAllFiles;
 
+            if (isNewConfig || mode.Contains('1') || string.IsNullOrEmpty(_settings.Path.DownloadPath))
+            {
+                SyncPathsToSettings();
+                await _configService.SaveAsync(_settings);
+            }
+
             _isBatchUpdating = false;
+            await SaveAsync();
             OnPropertyChanged(string.Empty);
+        }
+
+        private void SyncPathsToSettings()
+        {
+            _settings.Path.DownloadPath = DownloadPath;
+            _settings.Path.WorkshopPath = WorkshopPath;
+            _settings.Path.ProjectPath = ProjectPath;
+            _settings.Path.AcfPath = AcfPath;
+            _settings.Path.OfficialPath = OfficialPath;
         }
 
         public async Task ResetFiltersAsync(int mode, bool selectmode)
@@ -558,8 +583,8 @@ namespace WE_Tool.ViewModels
                 _settings.Papers.IsSortAscending = IsSortAscending;
                 _settings.Papers.SortOrder = SortOrder;
                 _settings.Papers.DetailSelectionEnabled = DetailSelectionEnabled;
+                _settings.Papers.FilterResultResponseDelay = FilterResultResponseDelay;
 
-                // 类型相关
                 _settings.Expander.TypeExpander = TypeExpander;
                 _settings.Expander.Scene = Scene;
                 _settings.Expander.Video = Video;
@@ -568,19 +593,16 @@ namespace WE_Tool.ViewModels
                 _settings.Expander.Preset = Preset;
                 _settings.Expander.Unknown = Unknown;
 
-                // 分级相关
                 _settings.Expander.RatingExpander = RatingExpander;
                 _settings.Expander.G = G;
                 _settings.Expander.Pg = Pg;
                 _settings.Expander.R = R;
 
-                // 来源相关
                 _settings.Expander.SourceExpander = SourceExpander;
                 _settings.Expander.Official = Official;
                 _settings.Expander.Workshop = Workshop;
                 _settings.Expander.Mine = Mine;
 
-                // 标签相关
                 _settings.Expander.TagsExpander = TagsExpander;
                 _settings.Expander.Abstract = Abstract;
                 _settings.Expander.Animal = Animal;
@@ -751,7 +773,7 @@ namespace WE_Tool.ViewModels
             });
         }
 
-        private async Task ParallelOpenFoldersAsync(IReadOnlyList<WallpaperItem> items)
+        private async Task ParallelOpenFoldersAsync(List<WallpaperItem> items)
         {
             if (items.Count > 5)
             {
@@ -787,8 +809,13 @@ namespace WE_Tool.ViewModels
             await _pickerService.OpenFolderAsync(path);
         }
 
-        public async Task AutoDetectWorkshopPathAsync(string mode)
+        public async Task AutoDetectWorkshopPathAsync(string? mode)
         {
+            if (string.IsNullOrEmpty(mode))
+            {
+                return;
+            }
+
             if (mode == "0000") return;
 
             var result = await Task.Run(() =>
@@ -796,25 +823,23 @@ namespace WE_Tool.ViewModels
                 string? foundBaseDir = null;
                 try
                 {
-                    using (RegistryKey rootKey = Registry.CurrentUser)
+                    using RegistryKey rootKey = Registry.CurrentUser;
+
+                    string[] possibleSubKeys = [@"Software\WallpaperEngine", @"Software\Wallpaper Engine"];
+                    foreach (var subKey in possibleSubKeys)
                     {
-                        string[] possibleSubKeys = { @"Software\WallpaperEngine", @"Software\Wallpaper Engine" };
-                        foreach (var subKey in possibleSubKeys)
+                        using RegistryKey? weKey = rootKey.OpenSubKey(subKey);
+
+                        if (weKey == null) continue;
+                        object? installPath = weKey.GetValue("installPath");
+                        if (installPath is string pathStr)
                         {
-                            using (RegistryKey? weKey = rootKey.OpenSubKey(subKey))
+                            string targetSuffix = @"\common\wallpaper_engine";
+                            int index = pathStr.ToLower().LastIndexOf(targetSuffix);
+                            if (index != -1)
                             {
-                                if (weKey == null) continue;
-                                object? installPath = weKey.GetValue("installPath");
-                                if (installPath is string pathStr)
-                                {
-                                    string targetSuffix = @"\common\wallpaper_engine";
-                                    int index = pathStr.ToLower().LastIndexOf(targetSuffix);
-                                    if (index != -1)
-                                    {
-                                        foundBaseDir = pathStr.Substring(0, index);
-                                        break;
-                                    }
-                                }
+                                foundBaseDir = pathStr[..index];
+                                break;
                             }
                         }
                     }
@@ -855,8 +880,14 @@ namespace WE_Tool.ViewModels
             }
         }
 
-        private async Task ShowRestartDialog()
+        private static async Task ShowRestartDialog()
         {
+            var xamlRoot = App.MainWindowInstance?.Content?.XamlRoot;
+            if (xamlRoot == null)
+            {
+                Log.Warning("无法显示重启对话框：XamlRoot 为空。");
+                return;
+            }
             ContentDialog dialog = new()
             {
                 Title = "需要重启",
@@ -864,7 +895,7 @@ namespace WE_Tool.ViewModels
                 PrimaryButtonText = "立即重启",
                 CloseButtonText = "稍后重启",
                 DefaultButton = ContentDialogButton.Primary,
-                XamlRoot = App.MainWindowInstance.Content.XamlRoot
+                XamlRoot = xamlRoot
             };
 
             var result = await dialog.ShowAsync();

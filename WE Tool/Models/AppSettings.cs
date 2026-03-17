@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
+using WE_Tool.Helper;
 
 namespace WE_Tool.Models
 {
     public class AppSettings
     {
         public int Version { get; set; } = 1;
-        public string AppLanguage { get; set; } = "default";
+        public string AppLanguage { get; set; } = "zh-CN";
         public string StartPageTag { get; set; } = "Papers";
         public PapersConfig Papers { get; set; } = new PapersConfig();
         public PapersConfig.Expander Expander { get; set; } = new PapersConfig.Expander();
@@ -25,6 +26,7 @@ namespace WE_Tool.Models
         public int SortOrder { get; set; } = 0;
         public bool IsSortAscending { get; set; } = true;
         public bool DetailSelectionEnabled { get; set; } = true;
+        public int FilterResultResponseDelay { get; set; } = 1000;
         public class Expander
         {
             public bool TypeExpander { get; set; } = true;
@@ -37,8 +39,8 @@ namespace WE_Tool.Models
 
             public bool RatingExpander { get; set; } = true;
             public bool G { get; set; } = true;
-            public bool Pg { get; set; } = true;
-            public bool R { get; set; } = true;
+            public bool Pg { get; set; } = false;
+            public bool R { get; set; } = false;
 
             public bool SourceExpander { get; set; } = true;
             public bool Official { get; set; } = true;
