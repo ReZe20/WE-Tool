@@ -420,4 +420,22 @@
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
     <value>筛选结果响应延迟</value>
   </data>
+  <data name="AppBarButton_Copy.Label" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="AppBarButton_Cut.Label" xml:space="preserve">
+    <value>剪切</value>
+  </data>
+  <data name="AppBarButton_View.Label" xml:space="preserve">
+    <value>查看</value>
+  </data>
+  <data name="AppBarButton_SmallIcon.Text" xml:space="preserve">
+    <value>小图标</value>
+  </data>
+  <data name="AppBarButton_MediumIcon.Text" xml:space="preserve">
+    <value>中图标</value>
+  </data>
+  <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
+    <value>大图标</value>
+  </data>
 </root>

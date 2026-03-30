@@ -45,10 +45,47 @@
                 </AppBarButton>
             </CommandBarFlyout.PrimaryCommands>
             <CommandBarFlyout.SecondaryCommands>
-                <AppBarButton x:Uid="AppBarButton_SelectAll" Click="SelectAllWallpapers_Click_ByCommandBarFlyout"/>
-                <AppBarButton x:Uid="AppBarButton_InvertSelection" Click="InvertSelection_CLick_ByCommandBarFlyout"/>
+                <AppBarButton x:Uid="AppBarButton_Copy" Click="Copy_Click_ByCommandBarFlyout">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8C8;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton x:Uid="AppBarButton_Cut" Click="Cut_Click_ByCommandBarFlyout">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8C6;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton x:Uid="AppBarButton_Properties"/>
+                <AppBarButton x:Uid="AppBarButton_SelectAll" Click="SelectAllWallpapers_Click_ByCommandBarFlyout">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8B3;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton x:Uid="AppBarButton_InvertSelection" Click="InvertSelection_CLick_ByCommandBarFlyout">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8E6;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton x:Name="MoreOptionsButton"
+                              x:Uid="AppBarButton_View">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE890;" />
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout x:Name="SubMenuFlyout">
+                            <MenuFlyoutItem x:Uid="AppBarButton_SmallIcon"/>
+                            <MenuFlyoutItem x:Uid="AppBarButton_MediumIcon"/>
+                            <MenuFlyoutItem x:Uid="AppBarButton_LargeIcon"/>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton x:Uid="AppBarButton_Properties">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE90F;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
             </CommandBarFlyout.SecondaryCommands>
         </CommandBarFlyout>
     </Page.Resources>
@@ -415,23 +452,33 @@
                                                                    Margin="10,0,10,8" 
                                                                    TextTrimming="CharacterEllipsis"/>
                                                         </Grid>
-                                                        <CheckBox x:Name="SelectionCheckBox"
-                                                              IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
-                                                              Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
-                                                              VerticalAlignment="Top"
+                                                        <Grid x:Name="CheckBoxOverlay" 
                                                               HorizontalAlignment="Left"
-                                                              Margin="8,8,0,0"
-                                                              Click="SelectionCheckBox_Click"
-                                                              CornerRadius="6"
-                                                              MinWidth="0" MinHeight="0" Padding="0" Width="21" Height="21" Content="{x:Null}">
-                                                            <CheckBox.Resources>
-                                                                <!-- 未选中状态 -->
-                                                                <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" 
+                                                              VerticalAlignment="Top" 
+                                                              Margin="8">
+                                                            <CheckBox x:Name="SelectionCheckBox"
+                                                                  IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                                  Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
+                                                                  VerticalAlignment="Top"
+                                                                  HorizontalAlignment="Left"
+                                                                  Margin="8"
+                                                                  Click="SelectionCheckBox_Click"
+                                                                  Background="Transparent"
+                                                                  CornerRadius="6"
+                                                                  MinWidth="0" MinHeight="0" Padding="0" Width="24" Height="24"
+                                                                  UseLayoutRounding="True"
+                                                                  Content="{x:Null}" 
+                                                                  HorizontalContentAlignment="Center"
+                                                                  VerticalContentAlignment="Center">
+                                                                <CheckBox.Resources>
+                                                                    <!-- 未选中状态 -->
+                                                                    <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" 
                                                                             ResourceKey="SystemControlBackgroundChromeWhiteBrush" />
-                                                                <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" 
+                                                                    <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" 
                                                                             ResourceKey="SystemControlBackgroundChromeWhiteBrush" />
-                                                            </CheckBox.Resources>
-                                                        </CheckBox>
+                                                                </CheckBox.Resources>
+                                                            </CheckBox>
+                                                        </Grid>
                                                     </Grid>
                                                 </Grid>
                                             </DataTemplate>
