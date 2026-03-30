@@ -104,10 +104,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             });
         }
     }
-    public static double GetCheckBoxOpacity(bool isSelected, bool isMultiSelectMode)
-    {
-        return (isMultiSelectMode || isSelected) ? 1.0 : 0.0;
-    }
     public IAsyncRelayCommand<WallpaperItem> DeleteWallpaperCommand { get; }
     public Papers()
     {
@@ -475,10 +471,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (grid == null || item == null) return;
 
         var checkBox = grid.Children.OfType<CheckBox>().FirstOrDefault();
-        if (checkBox != null)
-        {
-            checkBox.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
-        }
+        checkBox?.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
     }
     private void RefreshDisplayedSelectedWallpapers(bool forceRebuild = false)
     {
@@ -690,10 +683,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void UpdateMultiSelectCount()
     {
-        if (MultiSelectCountText != null)
-        {
-            MultiSelectCountText.Text = $"已选择 {SelectedWallpapers.Count} 项";
-        }
+        MultiSelectCountText?.Text = $"已选择 {SelectedWallpapers.Count} 项";
         if (SelectedWallpapers.Count == 0)
         {
             IsMultiSelectMode = false;
@@ -724,12 +714,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         if (sender is Grid grid)
         {
-            var checkBox = grid.Children.OfType<CheckBox>().FirstOrDefault();
-
-            if (checkBox != null)
-            {
-                checkBox.Opacity = 1;
-            }
+            var checkBox = GetCheckBoxOverlay(grid);
+            checkBox?.Children.OfType<CheckBox>().First().Opacity = 1;
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -744,6 +730,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 Canvas.SetZIndex(parent, 10000);
             }
+
 
             if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
@@ -772,6 +759,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
             visual.StartAnimation("Scale", scaleAnimation);
 
+            var overlay = GetCheckBoxOverlay(grid);
+            if (overlay != null)
+            {
+                Visual overlayVisual = ElementCompositionPreview.GetElementVisual(overlay);
+                // 同样设置中心点，保证 CheckBox 在原地缩放而不会发生偏移
+                overlayVisual.CenterPoint = new Vector3((float)overlay.ActualWidth / 2, (float)overlay.ActualHeight / 2, 0f);
+                // 将同一个 scaleAnimation 派发给 CheckBoxOverlay
+                overlayVisual.StartAnimation("Scale", scaleAnimation);
+            }
+
             Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
             if (itemVisual?.Parent is ContainerVisual parentVisual)
             {
@@ -784,6 +781,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (sender is Grid grid && grid.DataContext is WallpaperItem item)
         {
+            var checkBox = GetCheckBoxOverlay(grid);
+            checkBox?.Children.OfType<CheckBox>().First().Opacity = IsMultiSelectMode? 1 : 0;
+
             ApplyScaleAnimation(grid, 1.0f);
             UpdateItemCheckBoxOpacity(grid, item);
 
@@ -906,7 +906,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                         if (sender is Grid g)
                         {
                             var cb = g.Children.OfType<CheckBox>().FirstOrDefault();
-                            if (cb != null) cb.Opacity = 1;
+                            cb?.Opacity = 1;
                         }
                         return;
                     }
@@ -914,6 +914,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
         }
     }
+    private static Grid? GetCheckBoxOverlay(Grid itemRootGrid)
+    {
+        if (VisualTreeHelper.GetParent(itemRootGrid) is Grid container)
+        {
+            return container.Children.OfType<Grid>().SingleOrDefault(c => c.Name == "ItemRootGrid")?.Children.OfType<Grid>().SingleOrDefault(g => g.Name == "CheckBoxOverlay");
+        }
+        return null;
+    }
+
     private void WallpaperItem_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
@@ -1030,13 +1039,18 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         InternalInvertSelection();
     }
+    private void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    {
+    }
+    private void Cut_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    {
+    }
     private async void SelectAllWallpapers_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
         if (!IsMultiSelectMode)
         {
             IsMultiSelectMode = true;
         }
-
         InternalSelectAllWallpapers();
     }
     private async void InvertSelection_CLick_ByCommandBarFlyout(object sender, RoutedEventArgs e)
@@ -1047,6 +1061,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
         InternalInvertSelection();
     }
+
     private void CancelMultiSelect_Click(object sender, RoutedEventArgs e)
     {
         IsMultiSelectMode = false;
