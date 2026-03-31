@@ -1045,7 +1045,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void Cut_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
     }
-    private async void SelectAllWallpapers_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    private void SelectAllWallpapers_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
         if (!IsMultiSelectMode)
         {
@@ -1053,7 +1053,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
         InternalSelectAllWallpapers();
     }
-    private async void InvertSelection_CLick_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    private void InvertSelection_CLick_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
         if (!IsMultiSelectMode)
         {
@@ -1061,7 +1061,27 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
         InternalInvertSelection();
     }
+    private void OnIconSizeChanged(object sender, RoutedEventArgs e)
+    {
+        HideWallpaperContextMenu();
 
+        if (sender is ToggleMenuFlyoutItem clickedItem && clickedItem.Tag is string tag)
+        {
+            SmallIconItem.IsChecked = false;
+            MediumIconItem.IsChecked = false;
+            LargeIconItem.IsChecked = false;
+
+            clickedItem.IsChecked = true;
+
+            ViewModel.WallpaperListMinWidth = tag switch
+            {
+                "Small" => 180,
+                "Medium" => 240,
+                "Large" => 300,
+                _ => 180
+            };
+        }
+    }
     private void CancelMultiSelect_Click(object sender, RoutedEventArgs e)
     {
         IsMultiSelectMode = false;

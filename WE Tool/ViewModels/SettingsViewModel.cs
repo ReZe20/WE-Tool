@@ -65,6 +65,34 @@ namespace WE_Tool.ViewModels
         public partial bool AutoPlayGif { get; set; }
 
         [ObservableProperty]
+        public partial int WallpaperViewIndex { get; set; }
+
+        public bool SmallIconItem
+        {
+            get => WallpaperViewIndex == 0;
+            set
+            {
+                if (value) WallpaperViewIndex = 0;
+            }
+        }
+        public bool MediumIconItem
+        {
+            get => WallpaperViewIndex == 1;
+            set
+            {
+                if (value) WallpaperViewIndex = 1;
+            }
+        }
+        public bool LargeIconItem
+        {
+            get => WallpaperViewIndex == 2;
+            set
+            {
+                if (value) WallpaperViewIndex = 2;
+            }
+        }
+
+        [ObservableProperty]
         public partial int WallpaperListMinWidth { get; set; }
 
         [ObservableProperty]
@@ -366,6 +394,7 @@ namespace WE_Tool.ViewModels
             BottomBarHeight = _settings.Papers.BottomBarHeight;
             IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             AutoPlayGif = _settings.Papers.AutoPlayGif;
+            WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
             WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
             LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
             RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
@@ -575,6 +604,7 @@ namespace WE_Tool.ViewModels
 
                 _settings.Papers.BottomBarHeight = BottomBarHeight;
                 _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
+                _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;
                 _settings.Papers.AutoPlayGif = AutoPlayGif;
                 _settings.Papers.WallpaperListMinWidth = WallpaperListMinWidth;
                 _settings.Papers.LeftSplitViewPaneOpen = LeftSplitViewPaneOpen;

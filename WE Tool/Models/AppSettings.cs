@@ -20,6 +20,7 @@ namespace WE_Tool.Models
         public int BottomBarHeight { get; set; } = 50;
         public bool IsBottomBarOpen { get; set; } = true;
         public bool AutoPlayGif { get; set; } = true;
+        public int WallpaperViewIndex { get; set; } = 0;
         public int WallpaperListMinWidth { get; set; } = 180;
         public bool LeftSplitViewPaneOpen { get; set; } = true;
         public bool RightSplitViewPaneOpen { get; set; } = true;
