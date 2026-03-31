@@ -73,10 +73,22 @@
                         <FontIcon Glyph="&#xE890;" />
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
-                        <MenuFlyout x:Name="SubMenuFlyout">
-                            <MenuFlyoutItem x:Uid="AppBarButton_SmallIcon"/>
-                            <MenuFlyoutItem x:Uid="AppBarButton_MediumIcon"/>
-                            <MenuFlyoutItem x:Uid="AppBarButton_LargeIcon"/>
+                        <MenuFlyout x:Name="SubMenuFlyout" >
+                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
+                                                  x:Name="SmallIconItem"
+                                                  Tag="Small"
+                                                  Click="OnIconSizeChanged"
+                                                  IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"/>
+                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
+                                                  x:Name="MediumIconItem"
+                                                  Tag="Medium"
+                                                  Click="OnIconSizeChanged"
+                                                  IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"/>
+                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
+                                                  x:Name="LargeIconItem"
+                                                  Tag="Large"
+                                                  Click="OnIconSizeChanged"
+                                                  IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"/>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
