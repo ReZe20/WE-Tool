@@ -28,7 +28,8 @@ namespace WE_Tool.ViewModels
     public partial class SettingsViewModel : ObservableObject
     {
         public bool _isBatchUpdating = false;
-
+        public int _wallpaperViewIndex;
+        public bool _isAnnotatedScrollBarEnabled;
         public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
 
         private readonly IConfigService _configService;
@@ -63,9 +64,50 @@ namespace WE_Tool.ViewModels
 
         [ObservableProperty]
         public partial bool AutoPlayGif { get; set; }
+        public bool IsAnnotatedScrollBarEnabled 
+        {
+            get => _isAnnotatedScrollBarEnabled;
+            set
+            {
+                SetProperty(ref _isAnnotatedScrollBarEnabled, value);
+                OnPropertyChanged(nameof(PapersScrollViewBarVisibility));
+            }
+        }
 
-        [ObservableProperty]
-        public partial int WallpaperViewIndex { get; set; }
+        public ScrollingScrollBarVisibility PapersScrollViewBarVisibility
+        {
+            get
+            {
+                return IsAnnotatedScrollBarEnabled
+                    ? ScrollingScrollBarVisibility.Hidden
+                    : ScrollingScrollBarVisibility.Visible;
+            }
+            set
+            {
+                SetProperty(ref field, value);
+            }
+        }
+
+        public int WallpaperViewIndex
+        {
+            get => _wallpaperViewIndex;
+            set
+            {
+                if (SetProperty(ref _wallpaperViewIndex, value))
+                {
+                    WallpaperListMinWidth = value switch
+                    {
+                        0 => 180,
+                        1 => 240,
+                        2 => 300,
+                        _ => 180
+                    };
+                    OnPropertyChanged(nameof(SmallIconItem));
+                    OnPropertyChanged(nameof(MediumIconItem));
+                    OnPropertyChanged(nameof(LargeIconItem));
+                }
+            }
+        }
 
         public bool SmallIconItem
         {
@@ -394,6 +436,7 @@ namespace WE_Tool.ViewModels
             BottomBarHeight = _settings.Papers.BottomBarHeight;
             IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             AutoPlayGif = _settings.Papers.AutoPlayGif;
+            IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
             WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
             WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
             LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
@@ -606,6 +649,7 @@ namespace WE_Tool.ViewModels
                 _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
                 _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;
                 _settings.Papers.AutoPlayGif = AutoPlayGif;
+                _settings.Papers.IsAnnotatedScrollBarEnabled = IsAnnotatedScrollBarEnabled;
                 _settings.Papers.WallpaperListMinWidth = WallpaperListMinWidth;
                 _settings.Papers.LeftSplitViewPaneOpen = LeftSplitViewPaneOpen;
                 _settings.Papers.RightSplitViewPaneOpen = RightSplitViewPaneOpen;

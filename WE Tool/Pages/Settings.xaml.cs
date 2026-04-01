@@ -72,4 +72,9 @@ public sealed partial class Settings : Page
     {
         App.StartBackgroundScan(ViewModel.WorkshopPath, ViewModel.OfficialPath, ViewModel.ProjectPath, ViewModel.AcfPath);
     }
+
+    private void ComboBoxItem_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+
+    }
 }
