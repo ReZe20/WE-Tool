@@ -48,6 +48,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public ObservableCollection<WallpaperItem> Wallpapers { get; set; } = [];
     public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
     public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
+    private static readonly Windows.Globalization.Collation.CharacterGroupings _zhGroupings = new Windows.Globalization.Collation.CharacterGroupings("zh-CN");
     private CancellationTokenSource? _filterCts;
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
@@ -141,6 +142,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         this.Loaded += async (s, e) =>
         {
             await ViewModel.InitializeAsync();
+
+            if (WallpapersScrollView.ScrollPresenter != null)
+            {
+                WallpapersScrollView.ScrollPresenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
+            }
+
             await RefreshWallpaperList();
         };
 
@@ -174,6 +181,14 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 await DeleteItemAsync(toDelete, skipConfirm: itemsToDelete.Count > 1);
             }
         });
+        WallpapersScrollView.SizeChanged += (s, e) =>
+        {
+            // 使用 DispatcherQueue 确保在布局计算完成后再刷新标签
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                //RefreshScrollBarLabels();
+            });
+        };
         _pickerService = new PickerService();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
     }
@@ -352,7 +367,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     _ => query.OrderByDescending(w => w.UpdateTime)
                 };
                 return sortedQuery.ToList();
-
             }, token);
 
             if (IsListEqual(Wallpapers, filteredResult)) return;
@@ -394,6 +408,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             Log.Error(ex,"筛选结果时出现异常。");
         }
+    }
+    private void Papers_AnnotatedScrollBarControl_DetailLabelRequested()
+    {
+        WallpapersScrollView.ScrollPresenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
     }
     private void ShadowRect_Loaded(object sender, RoutedEventArgs e)
     {
@@ -1064,23 +1082,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void OnIconSizeChanged(object sender, RoutedEventArgs e)
     {
         HideWallpaperContextMenu();
-
-        if (sender is ToggleMenuFlyoutItem clickedItem && clickedItem.Tag is string tag)
-        {
-            SmallIconItem.IsChecked = false;
-            MediumIconItem.IsChecked = false;
-            LargeIconItem.IsChecked = false;
-
-            clickedItem.IsChecked = true;
-
-            ViewModel.WallpaperListMinWidth = tag switch
-            {
-                "Small" => 180,
-                "Medium" => 240,
-                "Large" => 300,
-                _ => 180
-            };
-        }
+    }
+    private void ChangeAnnotatedScrollBarEnabled(object sender, RoutedEventArgs e)
+    {
+        HideWallpaperContextMenu();
     }
     private void CancelMultiSelect_Click(object sender, RoutedEventArgs e)
     {
@@ -1108,11 +1113,124 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             Log.Information($"壁纸 {item.Title} 已从列表和磁盘中彻底移除。");
         }
     }
+    private void RefreshScrollBarLabels()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            // 1. 彻底清空现有标签
+            Papers_AnnotatedScrollBarControl.Labels.Clear();
+
+            if (Wallpapers == null || Wallpapers.Count == 0) return;
+
+            var presenter = WallpapersScrollView.ScrollPresenter;
+            // 关键：如果内容高度还没计算出来，标签无法定位，必须跳过
+            if (presenter == null || presenter.ExtentHeight <= 0) return;
+
+            // 计算可滚动的总行程
+            double maxScroll = presenter.ExtentHeight - presenter.ViewportHeight;
+            if (maxScroll <= 0) return;
+
+            var labelGroups = new Dictionary<string, int>();
+
+            for (int i = 0; i < Wallpapers.Count; i++)
+            {
+                var item = Wallpapers[i];
+                string labelText = "#";
+
+                switch (ViewModel.SortOrder)
+                {
+                    case 0: // 拼音/英文逻辑
+                        string group = _zhGroupings.Lookup(item.Title ?? "");
+                        char letter = group.FirstOrDefault(c => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+                        labelText = letter != default(char) ? char.ToUpper(letter).ToString() : "#";
+                        break;
+                    case 1:
+                        labelText = item.CreationTime.ToString("yyyy/MM");
+                        break;
+                    case 2:
+                        labelText = item.UpdateTime.ToString("yyyy/MM");
+                        break;
+                    default:
+                        continue;
+                }
+
+                if (!labelGroups.ContainsKey(labelText))
+                {
+                    labelGroups[labelText] = i;
+                }
+            }
+
+            // 2. 批量添加标签
+            foreach (var kvp in labelGroups)
+            {
+                double ratio = (double)kvp.Value / Wallpapers.Count;
+                double offset = ratio * maxScroll;
+
+                // 使用构造函数初始化只读属性
+                Papers_AnnotatedScrollBarControl.Labels.Add(new AnnotatedScrollBarLabel(kvp.Key, offset));
+            }
+        });
+    }
+
+    private void Papers_AnnotatedScrollBarControl_DetailLabelRequested(AnnotatedScrollBar sender, AnnotatedScrollBarDetailLabelRequestedEventArgs args)
+    {
+        // 如果列表为空，直接返回
+        if (Wallpapers == null || Wallpapers.Count == 0) return;
+
+        var presenter = WallpapersScrollView.ScrollPresenter;
+        if (presenter == null) return;
+
+        // 计算总可滚动高度 (总内容高度 - 视口可见高度)
+        double maxOffset = presenter.ExtentHeight - presenter.ViewportHeight;
+        if (maxOffset <= 0) return;
+
+        // 计算当前滚动的百分比进度
+        double fraction = args.ScrollOffset / maxOffset;
+
+        // 严谨处理：限制比例在 0 到 1 之间，防止越界计算
+        fraction = Math.Clamp(fraction, 0.0, 1.0);
+
+        // 根据百分比映射到当前数据集合的 Index
+        int index = (int)(fraction * (Wallpapers.Count - 1));
+        index = Math.Clamp(index, 0, Wallpapers.Count - 1);
+
+        var item = Wallpapers[index];
+
+        // 根据当前的排序方式（SortOrder），动态决定悬浮标签应该显示什么内容
+        string label = string.Empty;
+        switch (ViewModel.SortOrder)
+        {
+            case 0: // 按名称排序
+                label = string.IsNullOrWhiteSpace(item.Title) ? "#" : item.Title.Substring(0, 1).ToUpper();
+                break;
+            case 1: // 按订阅/创建时间排序
+                label = item.CreationTime.ToString("yyyy/MM");
+                break;
+            case 2: // 按最后更新时间排序
+                label = item.UpdateTime.ToString("yyyy/MM");
+                break;
+            case 3: // 按文件大小排序 (转换为 MB 显示)
+                double mbSize = item.FileSize / 1048576.0;
+                label = mbSize > 1024 ? $"{mbSize / 1024:F1} GB" : $"{mbSize:F0} MB";
+                break;
+            default:
+                label = "•";
+                break;
+        }
+
+        // 将计算好的标签赋值给事件参数
+        args.Content = label;
+    }
 
     // ... INotifyPropertyChanged 标准实现 ...
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private void AnnotatedScrollBarControl_DetailLabelRequested(AnnotatedScrollBar sender, AnnotatedScrollBarDetailLabelRequestedEventArgs args)
+    {
+
     }
 }

@@ -70,7 +70,7 @@
                 <AppBarButton x:Name="MoreOptionsButton"
                               x:Uid="AppBarButton_View">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE890;" />
+                        <FontIcon Glyph="&#xE890;"/>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
                         <MenuFlyout x:Name="SubMenuFlyout" >
@@ -89,6 +89,10 @@
                                                   Tag="Large"
                                                   Click="OnIconSizeChanged"
                                                   IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"/>
+                            <MenuFlyoutSeparator/>
+                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
+                                                  IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                                                  Click="ChangeAnnotatedScrollBarEnabled"/>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
@@ -384,47 +388,52 @@
                         </SplitView.Pane>
 
                         <SplitView.Content>
-                            <ScrollViewer Grid.Row="1" HorizontalAnchorRatio="0.5" VerticalAnchorRatio="0.5">
-                                <StackPanel>
-                                    <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,120,0,0">
-                                        <TextBlock x:Uid="NoResultTip1"
+                            <Grid>
+                                <ScrollView HorizontalAnchorRatio="0.5" 
+                                            VerticalAnchorRatio="0.5"
+                                            x:Name="WallpapersScrollView"
+                                            VerticalScrollBarVisibility="{x:Bind ViewModel.PapersScrollViewBarVisibility,Mode=OneWay}"
+                                            Grid.Column="0">
+                                    <StackPanel>
+                                        <StackPanel x:Name="NoResultTip" Visibility="Collapsed">
+                                            <TextBlock x:Uid="NoResultTip1"
                                                    Style="{StaticResource TitleTextBlockStyle}" 
                                                    TextWrapping="Wrap"
                                                    FontSize="20"
                                                    HorizontalAlignment="Center"/>
-                                        <TextBlock x:Uid="NoResultTip2"
+                                            <TextBlock x:Uid="NoResultTip2"
                                                    Style="{StaticResource TitleTextBlockStyle}" 
                                                    TextWrapping="Wrap"
                                                    FontSize="20"
                                                    HorizontalAlignment="Center"/>
-                                        <TextBlock x:Uid="NoResultTip3"
+                                            <TextBlock x:Uid="NoResultTip3"
                                                    Style="{StaticResource TitleTextBlockStyle}" 
                                                    TextWrapping="Wrap"
                                                    FontSize="20"
                                                    HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <ItemsRepeater ItemsSource="{x:Bind Wallpapers}" 
+                                        </StackPanel>
+                                        <ItemsRepeater ItemsSource="{x:Bind Wallpapers}" 
                                                Margin="8,0,8,0"
                                                x:Name="WallpapersRepeater"
                                                ContextFlyout="{StaticResource WallpaperContextMenu}">
-                                        <ItemsRepeater.Layout>
-                                            <UniformGridLayout
+                                            <ItemsRepeater.Layout>
+                                                <UniformGridLayout
                                             MinItemWidth="{x:Bind ViewModel.WallpaperListMinWidth, Mode=OneWay}" 
                                             MinColumnSpacing="10" 
                                             MinRowSpacing="10" 
                                             ItemsStretch="Fill" 
                                             Orientation="Horizontal"/>
-                                        </ItemsRepeater.Layout>
+                                            </ItemsRepeater.Layout>
 
-                                        <ItemsRepeater.ItemTemplate>
-                                            <DataTemplate x:DataType="models:WallpaperItem">
-                                                <Grid x:Name="ItemContainer">
-                                                    <Grid.Resources>
-                                                        <ThemeShadow x:Name="SharedShadow"/>
-                                                    </Grid.Resources>
-                                                    <ProgressRing IsActive="True" Background="Transparent"/>
-                                                    <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
-                                                    <Grid CornerRadius="8"
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="models:WallpaperItem">
+                                                    <Grid x:Name="ItemContainer">
+                                                        <Grid.Resources>
+                                                            <ThemeShadow x:Name="SharedShadow"/>
+                                                        </Grid.Resources>
+                                                        <ProgressRing IsActive="True" Background="Transparent"/>
+                                                        <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
+                                                        <Grid CornerRadius="8"
                                                           Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                                           PointerEntered="Item_PointerEntered"
                                                           PointerExited="Item_PointerExited"
@@ -439,36 +448,36 @@
                                                           ContextFlyout="{StaticResource WallpaperContextMenu}"
                                                           RightTapped="WallpaperItem_RightTapped">
 
-                                                        <Viewbox Stretch="Uniform" VerticalAlignment="Top">
-                                                            <Canvas Width="100" Height="100"/>
-                                                        </Viewbox>
+                                                            <Viewbox Stretch="Uniform" VerticalAlignment="Top">
+                                                                <Canvas Width="100" Height="100"/>
+                                                            </Viewbox>
 
-                                                        <Image Stretch="UniformToFill">
-                                                            <Image.Source>
-                                                                <BitmapImage UriSource="{x:Bind Preview}" 
+                                                            <Image Stretch="UniformToFill">
+                                                                <Image.Source>
+                                                                    <BitmapImage UriSource="{x:Bind Preview}" 
                                                                          AutoPlay="{Binding DataContext.ViewModel.AutoPlayGif, ElementName=PageRoot,Mode=OneWay}"/>
-                                                            </Image.Source>
-                                                        </Image>
+                                                                </Image.Source>
+                                                            </Image>
 
-                                                        <Grid VerticalAlignment="Bottom" Height="45">
-                                                            <Grid.Background>
-                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                                    <GradientStop Color="Transparent" Offset="0"/>
-                                                                    <GradientStop Color="#CC000000" Offset="1"/>
-                                                                </LinearGradientBrush>
-                                                            </Grid.Background>
-                                                            <TextBlock Text="{x:Bind Title}" 
+                                                            <Grid VerticalAlignment="Bottom" Height="45">
+                                                                <Grid.Background>
+                                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                        <GradientStop Color="Transparent" Offset="0"/>
+                                                                        <GradientStop Color="#CC000000" Offset="1"/>
+                                                                    </LinearGradientBrush>
+                                                                </Grid.Background>
+                                                                <TextBlock Text="{x:Bind Title}" 
                                                                    Foreground="White" 
                                                                    FontSize="12" 
                                                                    VerticalAlignment="Bottom"
                                                                    Margin="10,0,10,8" 
                                                                    TextTrimming="CharacterEllipsis"/>
-                                                        </Grid>
-                                                        <Grid x:Name="CheckBoxOverlay" 
+                                                            </Grid>
+                                                            <Grid x:Name="CheckBoxOverlay" 
                                                               HorizontalAlignment="Left"
                                                               VerticalAlignment="Top" 
                                                               Margin="8">
-                                                            <CheckBox x:Name="SelectionCheckBox"
+                                                                <CheckBox x:Name="SelectionCheckBox"
                                                                   IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
                                                                   Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
                                                                   VerticalAlignment="Top"
@@ -482,22 +491,31 @@
                                                                   Content="{x:Null}" 
                                                                   HorizontalContentAlignment="Center"
                                                                   VerticalContentAlignment="Center">
-                                                                <CheckBox.Resources>
-                                                                    <!-- 未选中状态 -->
-                                                                    <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" 
+                                                                    <CheckBox.Resources>
+                                                                        <!-- 未选中状态 -->
+                                                                        <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" 
                                                                             ResourceKey="SystemControlBackgroundChromeWhiteBrush" />
-                                                                    <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" 
+                                                                        <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" 
                                                                             ResourceKey="SystemControlBackgroundChromeWhiteBrush" />
-                                                                </CheckBox.Resources>
-                                                            </CheckBox>
+                                                                    </CheckBox.Resources>
+                                                                </CheckBox>
+                                                            </Grid>
                                                         </Grid>
                                                     </Grid>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsRepeater.ItemTemplate>
-                                    </ItemsRepeater>
-                                </StackPanel>
-                            </ScrollViewer>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </StackPanel>
+                                </ScrollView>
+                                <AnnotatedScrollBar 
+                                    x:Name="Papers_AnnotatedScrollBarControl"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Stretch"
+                                    MaxWidth="10"
+                                    Margin="0,0,8,0"
+                                    Visibility="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
+                                    DetailLabelRequested="Papers_AnnotatedScrollBarControl_DetailLabelRequested"/>
+                            </Grid>
                         </SplitView.Content>
                     </SplitView>
                 </Grid>

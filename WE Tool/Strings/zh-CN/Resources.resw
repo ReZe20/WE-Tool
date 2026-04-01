@@ -418,7 +418,7 @@
     <value>提取</value>
   </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
-    <value>筛选结果响应延迟</value>
+    <value>筛选结果响应延迟(ms)</value>
   </data>
   <data name="AppBarButton_Copy.Label" xml:space="preserve">
     <value>复制</value>
@@ -437,5 +437,11 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>大图标</value>
+  </data>
+  <data name="AppBarButton_IsAnnotatedScrollBarEnabled.Text" xml:space="preserve">
+    <value>带注释滚动条</value>
+  </data>
+  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+    <value>壁纸图标大小</value>
   </data>
 </root>
