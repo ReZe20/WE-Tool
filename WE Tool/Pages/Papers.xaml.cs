@@ -56,6 +56,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private bool _isLeftMouseButtonPressed = false;
     private bool _isMultiSelectMode = false;
     private bool _isScanning = false;
+    private Microsoft.UI.Xaml.Controls.Primitives.IScrollController? _originalVerticalScrollController;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _sizeChangedDebounceTimer;
     private static readonly FrozenDictionary<string, Func<SettingsViewModel, bool>> _tagGetters = new Dictionary<string, Func<SettingsViewModel, bool>>
     {
         ["Abstract"] = vm => vm.Abstract,
@@ -115,7 +117,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         this.InitializeComponent();
         this.DataContext = this;
-
+        _sizeChangedDebounceTimer = DispatcherQueue.CreateTimer();
+        _sizeChangedDebounceTimer.Interval = TimeSpan.FromMilliseconds(500);
+        _sizeChangedDebounceTimer.IsRepeating = false;
+        _sizeChangedDebounceTimer.Tick += async (sender, args) =>
+        {
+            RefreshScrollBarLabels();
+        };
         App.ScanCompleted += App_ScanCompleted;
 
         this.Unloaded += (s, e) => {
@@ -142,13 +150,18 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         this.Loaded += async (s, e) =>
         {
             await ViewModel.InitializeAsync();
-
-            if (WallpapersScrollView.ScrollPresenter != null)
-            {
-                WallpapersScrollView.ScrollPresenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
-            }
-
             await RefreshWallpaperList();
+
+            var presenter = WallpapersScrollView.ScrollPresenter;
+            _originalVerticalScrollController = presenter.VerticalScrollController;
+            if (ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+            {
+                presenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
+            }
+            else if (!ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+            {
+                presenter.VerticalScrollController = _originalVerticalScrollController;
+            }
         };
 
         OpenSelectedFoldersCommand = new AsyncRelayCommand(async () =>
@@ -186,11 +199,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             // 使用 DispatcherQueue 确保在布局计算完成后再刷新标签
             DispatcherQueue.TryEnqueue(() =>
             {
-                //RefreshScrollBarLabels();
+                _sizeChangedDebounceTimer?.Stop();
+                _sizeChangedDebounceTimer?.Start();
             });
         };
+        
         _pickerService = new PickerService();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
+
+        Log.Information("正在检查变量: ", nameof(WallpapersScrollView.ScrollPresenter.VerticalScrollController));
     }
     private async void App_ScanCompleted(object? sender, EventArgs e)
     {
@@ -409,10 +426,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             Log.Error(ex,"筛选结果时出现异常。");
         }
     }
-    private void Papers_AnnotatedScrollBarControl_DetailLabelRequested()
-    {
-        WallpapersScrollView.ScrollPresenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
-    }
+
     private void ShadowRect_Loaded(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement casterElement)
@@ -1049,6 +1063,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         GC.Collect(2, GCCollectionMode.Forced, true);
         GC.WaitForPendingFinalizers();
     }
+    private void ChangeSort(object sender, RoutedEventArgs e)
+    {
+        RefreshScrollBarLabels();
+    }
     private void SelectAllWallpapers_Click(object sender, RoutedEventArgs e)
     {
         InternalSelectAllWallpapers();
@@ -1079,13 +1097,24 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
         InternalInvertSelection();
     }
-    private void OnIconSizeChanged(object sender, RoutedEventArgs e)
+    private async void OnIconSizeChanged(object sender, RoutedEventArgs e)
     {
+        await Task.Delay(100);
         HideWallpaperContextMenu();
     }
-    private void ChangeAnnotatedScrollBarEnabled(object sender, RoutedEventArgs e)
+    private async void ChangeAnnotatedScrollBarEnabled(object sender, RoutedEventArgs e)
     {
         HideWallpaperContextMenu();
+
+        var presenter = WallpapersScrollView.ScrollPresenter;
+        if (ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+        {
+            presenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
+        }
+        else if(!ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+        {
+            presenter.VerticalScrollController = _originalVerticalScrollController;
+        }
     }
     private void CancelMultiSelect_Click(object sender, RoutedEventArgs e)
     {
@@ -1115,7 +1144,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void RefreshScrollBarLabels()
     {
-        DispatcherQueue.TryEnqueue(() =>
+        DispatcherQueue.TryEnqueue(async () =>
         {
             // 1. 彻底清空现有标签
             Papers_AnnotatedScrollBarControl.Labels.Clear();
@@ -1139,16 +1168,19 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
                 switch (ViewModel.SortOrder)
                 {
-                    case 0: // 拼音/英文逻辑
+                    case 0: 
                         string group = _zhGroupings.Lookup(item.Title ?? "");
                         char letter = group.FirstOrDefault(c => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
                         labelText = letter != default(char) ? char.ToUpper(letter).ToString() : "#";
                         break;
                     case 1:
-                        labelText = item.CreationTime.ToString("yyyy/MM");
+                        labelText = item.CreationTime.ToString("yy/MM");
                         break;
                     case 2:
-                        labelText = item.UpdateTime.ToString("yyyy/MM");
+                        labelText = item.UpdateTime.ToString("yy/MM");
+                        break;
+                    case 3:
+                        labelText = item.FileSize.ToString();
                         break;
                     default:
                         continue;
@@ -1171,7 +1203,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
         });
     }
-
     private void Papers_AnnotatedScrollBarControl_DetailLabelRequested(AnnotatedScrollBar sender, AnnotatedScrollBarDetailLabelRequestedEventArgs args)
     {
         // 如果列表为空，直接返回

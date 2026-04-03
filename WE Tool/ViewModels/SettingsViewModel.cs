@@ -22,6 +22,7 @@ using WE_Tool.Helper;
 using WE_Tool.Models;
 using WE_Tool.Service;
 using static System.Formats.Asn1.AsnWriter;
+using ABI.Microsoft.UI.Xaml;
 
 namespace WE_Tool.ViewModels
 {
@@ -71,6 +72,7 @@ namespace WE_Tool.ViewModels
             {
                 SetProperty(ref _isAnnotatedScrollBarEnabled, value);
                 OnPropertyChanged(nameof(PapersScrollViewBarVisibility));
+                OnPropertyChanged(nameof(PapersScrollViewMargin));
             }
         }
 
@@ -87,7 +89,15 @@ namespace WE_Tool.ViewModels
                 SetProperty(ref field, value);
             }
         }
+        public Microsoft.UI.Xaml.Thickness PapersScrollViewMargin
+        {
+            get => 
+                IsAnnotatedScrollBarEnabled ?
+                new Microsoft.UI.Xaml.Thickness(4, 0, 44, 0) :
+                new Microsoft.UI.Xaml.Thickness(4, 0, 4, 0);
 
+            set => SetProperty(ref field, value);
+        }
         public int WallpaperViewIndex
         {
             get => _wallpaperViewIndex;

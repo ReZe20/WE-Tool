@@ -144,22 +144,22 @@
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
                     <MenuFlyout Placement="Bottom">
-                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Width="140">
+                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Width="140" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE8D2;"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Width="140">
+                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Width="140" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xED0E;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2"  Width="140">
+                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2"  Width="140" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xF738;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Width="140">
+                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Width="140" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xEDA2;" />
                             </MenuFlyoutItem.Icon>
@@ -393,8 +393,9 @@
                                             VerticalAnchorRatio="0.5"
                                             x:Name="WallpapersScrollView"
                                             VerticalScrollBarVisibility="{x:Bind ViewModel.PapersScrollViewBarVisibility,Mode=OneWay}"
-                                            Grid.Column="0">
-                                    <StackPanel>
+                                            Grid.Column="0"
+                                            ContextFlyout="{StaticResource WallpaperContextMenu}">
+                                    <StackPanel Margin="{x:Bind ViewModel.PapersScrollViewMargin, Mode=OneWay}">
                                         <StackPanel x:Name="NoResultTip" Visibility="Collapsed">
                                             <TextBlock x:Uid="NoResultTip1"
                                                    Style="{StaticResource TitleTextBlockStyle}" 
@@ -418,11 +419,11 @@
                                                ContextFlyout="{StaticResource WallpaperContextMenu}">
                                             <ItemsRepeater.Layout>
                                                 <UniformGridLayout
-                                            MinItemWidth="{x:Bind ViewModel.WallpaperListMinWidth, Mode=OneWay}" 
-                                            MinColumnSpacing="10" 
-                                            MinRowSpacing="10" 
-                                            ItemsStretch="Fill" 
-                                            Orientation="Horizontal"/>
+                                                    MinItemWidth="{x:Bind ViewModel.WallpaperListMinWidth, Mode=OneWay}" 
+                                                    MinColumnSpacing="10" 
+                                                    MinRowSpacing="10" 
+                                                    ItemsStretch="Fill" 
+                                                    Orientation="Horizontal"/>
                                             </ItemsRepeater.Layout>
 
                                             <ItemsRepeater.ItemTemplate>
