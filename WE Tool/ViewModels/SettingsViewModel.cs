@@ -58,66 +58,44 @@ namespace WE_Tool.ViewModels
         public partial string StartPageTag { get; set; } = null!;
 
         [ObservableProperty]
-        public partial int BottomBarHeight { get; set; }
-
-        [ObservableProperty]
         public partial bool IsBottomBarOpen { get; set; }
+
+        public Microsoft.UI.Xaml.GridLength BottomBarHeight
+        {
+            get => IsBottomBarOpen ?
+                  new Microsoft.UI.Xaml.GridLength(50) :
+                  new Microsoft.UI.Xaml.GridLength(0);
+            set => SetProperty(ref field, value);
+        }
 
         [ObservableProperty]
         public partial bool AutoPlayGif { get; set; }
-        public bool IsAnnotatedScrollBarEnabled 
-        {
-            get => _isAnnotatedScrollBarEnabled;
-            set
-            {
-                SetProperty(ref _isAnnotatedScrollBarEnabled, value);
-                OnPropertyChanged(nameof(PapersScrollViewBarVisibility));
-                OnPropertyChanged(nameof(PapersScrollViewMargin));
-            }
-        }
+
+        [ObservableProperty]
+        public partial bool IsAnnotatedScrollBarEnabled { get; set; }
 
         public ScrollingScrollBarVisibility PapersScrollViewBarVisibility
         {
-            get
-            {
-                return IsAnnotatedScrollBarEnabled
+            get => IsAnnotatedScrollBarEnabled
                     ? ScrollingScrollBarVisibility.Hidden
                     : ScrollingScrollBarVisibility.Visible;
-            }
             set
             {
                 SetProperty(ref field, value);
             }
         }
+
         public Microsoft.UI.Xaml.Thickness PapersScrollViewMargin
         {
-            get => 
-                IsAnnotatedScrollBarEnabled ?
+            get => IsAnnotatedScrollBarEnabled ? 
                 new Microsoft.UI.Xaml.Thickness(4, 0, 44, 0) :
                 new Microsoft.UI.Xaml.Thickness(4, 0, 4, 0);
 
             set => SetProperty(ref field, value);
         }
-        public int WallpaperViewIndex
-        {
-            get => _wallpaperViewIndex;
-            set
-            {
-                if (SetProperty(ref _wallpaperViewIndex, value))
-                {
-                    WallpaperListMinWidth = value switch
-                    {
-                        0 => 180,
-                        1 => 240,
-                        2 => 300,
-                        _ => 180
-                    };
-                    OnPropertyChanged(nameof(SmallIconItem));
-                    OnPropertyChanged(nameof(MediumIconItem));
-                    OnPropertyChanged(nameof(LargeIconItem));
-                }
-            }
-        }
+
+        [ObservableProperty]
+        public partial int WallpaperViewIndex { get; set; }
 
         public bool SmallIconItem
         {
@@ -393,6 +371,24 @@ namespace WE_Tool.ViewModels
             _ = ShowRestartDialog();
         }
 
+        partial void OnWallpaperViewIndexChanged(int value)
+        {
+            WallpaperListMinWidth = value switch
+            {
+                0 => 180,
+                1 => 240,
+                2 => 300,
+                _ => 180
+            };
+            OnPropertyChanged(nameof(SmallIconItem));
+            OnPropertyChanged(nameof(MediumIconItem));
+            OnPropertyChanged(nameof(LargeIconItem));
+        }
+        partial void OnIsAnnotatedScrollBarEnabledChanged(bool value)
+        {
+            OnPropertyChanged(nameof(PapersScrollViewBarVisibility));
+            OnPropertyChanged(nameof(PapersScrollViewMargin));
+        }
         partial void OnSortOrderChanged(int value)
         {
             UpdateSortUI();
@@ -405,7 +401,7 @@ namespace WE_Tool.ViewModels
 
         partial void OnIsBottomBarOpenChanged(bool value)
         {
-            BottomBarHeight = value ? 50 : 0;
+            BottomBarHeight = value ? new Microsoft.UI.Xaml.GridLength(50) : new Microsoft.UI.Xaml.GridLength(0);
         }
 
         public string SortDirectionGlyph => IsSortAscending ? "\uE70D" : "\uE70E";
@@ -443,7 +439,6 @@ namespace WE_Tool.ViewModels
             AppLanguage = _settings.AppLanguage ?? "default";
             StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
 
-            BottomBarHeight = _settings.Papers.BottomBarHeight;
             IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             AutoPlayGif = _settings.Papers.AutoPlayGif;
             IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
@@ -655,7 +650,6 @@ namespace WE_Tool.ViewModels
 
                 _settings.StartPageTag = StartPageTag;
 
-                _settings.Papers.BottomBarHeight = BottomBarHeight;
                 _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
                 _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;
                 _settings.Papers.AutoPlayGif = AutoPlayGif;
