@@ -17,7 +17,6 @@ namespace WE_Tool.Models
 
     public class PapersConfig
     {
-        public int BottomBarHeight { get; set; } = 50;
         public bool IsBottomBarOpen { get; set; } = true;
         public bool AutoPlayGif { get; set; } = true;
         public bool IsAnnotatedScrollBarEnabled { get; set; } = false;

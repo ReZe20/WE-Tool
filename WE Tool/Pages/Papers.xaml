@@ -14,7 +14,6 @@
     x:Name="PageRoot"
     NavigationCacheMode="Required">
     <Page.Resources>
-        <converters:IntToGridLengthConverter x:Key="IntToGridLengthConverter" />
         <converters:FileSizeToString x:Key="FileSizeToString"/>
         <converters:TypeToDisplay x:Key="TypeToDisplay"/>
         <converters:SourceToDisplay x:Key="SourceToDisplay"/>
@@ -110,7 +109,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="{Binding ViewModel.BottomBarHeight, Mode=OneWay, Converter={StaticResource IntToGridLengthConverter}}"/>
+            <RowDefinition Height="{Binding ViewModel.BottomBarHeight, Mode=OneWay}"/>
         </Grid.RowDefinitions>
 
         <Button x:Name="LeftToggleFilterButton" Height="35" Grid.Row="0" HorizontalAlignment="Left" Margin="211,0,0,0" Click="LeftToggleFilterButton_Click" Style="{StaticResource AccentButtonStyle}" ToolTipService.ToolTip="侧边栏">
