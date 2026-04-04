@@ -12,13 +12,14 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Serilog;
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Frozen;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
@@ -43,6 +44,7 @@ namespace WE_Tool;
 public sealed partial class Papers : Page, INotifyPropertyChanged
 {
     private readonly IPickerService _pickerService;
+    private readonly WE_Tool.Converters.FileSizeToString _sizeConverter = new();
     private List<WallpaperItem> _allWallpapers = [];
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<WallpaperItem> Wallpapers { get; set; } = [];
@@ -404,7 +406,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     }
                 });
 
-                DispatcherQueue.TryEnqueue(async () =>
+                await DispatcherQueue.EnqueueAsync(async () =>
                 {
                     int batchSize = 40;
                     for (int i = 0; i < filteredResult.Count; i += batchSize)
@@ -418,6 +420,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                         await Task.Delay(1);
                     }
                 });
+                if (!token.IsCancellationRequested)
+                {
+                    RefreshScrollBarLabels();
+                }
             }
         }
         catch (OperationCanceledException) { }
@@ -1063,10 +1069,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         GC.Collect(2, GCCollectionMode.Forced, true);
         GC.WaitForPendingFinalizers();
     }
-    private void ChangeSort(object sender, RoutedEventArgs e)
-    {
-        RefreshScrollBarLabels();
-    }
+
     private void SelectAllWallpapers_Click(object sender, RoutedEventArgs e)
     {
         InternalSelectAllWallpapers();
@@ -1180,7 +1183,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                         labelText = item.UpdateTime.ToString("yy/MM");
                         break;
                     case 3:
-                        labelText = item.FileSize.ToString();
+                        labelText = _sizeConverter.Convert(item.FileSize, typeof(string), "", "").ToString()?? "";
                         break;
                     default:
                         continue;
@@ -1197,7 +1200,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 double ratio = (double)kvp.Value / Wallpapers.Count;
                 double offset = ratio * maxScroll;
-
                 // 使用构造函数初始化只读属性
                 Papers_AnnotatedScrollBarControl.Labels.Add(new AnnotatedScrollBarLabel(kvp.Key, offset));
             }
@@ -1216,7 +1218,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (maxOffset <= 0) return;
 
         // 计算当前滚动的百分比进度
-        double fraction = args.ScrollOffset / maxOffset;
+        double stableMaxOffset = Wallpapers.Count * 180;
+
+        // 或者：确保计算结果在极短时间内不要剧烈变动
+        double fraction = Math.Clamp(args.ScrollOffset / maxOffset, 0.0, 1.0);
 
         // 严谨处理：限制比例在 0 到 1 之间，防止越界计算
         fraction = Math.Clamp(fraction, 0.0, 1.0);
@@ -1228,29 +1233,25 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         var item = Wallpapers[index];
 
         // 根据当前的排序方式（SortOrder），动态决定悬浮标签应该显示什么内容
-        string label = string.Empty;
         switch (ViewModel.SortOrder)
         {
-            case 0: // 按名称排序
-                label = string.IsNullOrWhiteSpace(item.Title) ? "#" : item.Title.Substring(0, 1).ToUpper();
+            case 0:
+                string group = _zhGroupings.Lookup(item.Title ?? "");
+                char letter = group.FirstOrDefault(c => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+                args.Content = letter != default(char) ? char.ToUpper(letter).ToString() : "#";
                 break;
-            case 1: // 按订阅/创建时间排序
-                label = item.CreationTime.ToString("yyyy/MM");
+            case 1:
+                args.Content = item.CreationTime.ToString("yy/MM");
                 break;
-            case 2: // 按最后更新时间排序
-                label = item.UpdateTime.ToString("yyyy/MM");
+            case 2:
+                args.Content = item.UpdateTime.ToString("yy/MM");
                 break;
-            case 3: // 按文件大小排序 (转换为 MB 显示)
-                double mbSize = item.FileSize / 1048576.0;
-                label = mbSize > 1024 ? $"{mbSize / 1024:F1} GB" : $"{mbSize:F0} MB";
+            case 3:
+                args.Content = _sizeConverter.Convert(item.FileSize, typeof(string), "", "").ToString() ?? "";
                 break;
             default:
-                label = "•";
                 break;
         }
-
-        // 将计算好的标签赋值给事件参数
-        args.Content = label;
     }
 
     // ... INotifyPropertyChanged 标准实现 ...
@@ -1258,10 +1259,5 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    private void AnnotatedScrollBarControl_DetailLabelRequested(AnnotatedScrollBar sender, AnnotatedScrollBarDetailLabelRequestedEventArgs args)
-    {
-
     }
 }

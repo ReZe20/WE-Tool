@@ -23,7 +23,7 @@ namespace WE_Tool.Converters
                 unitIndex++;
             }
 
-            return string.Format(CultureInfo.CurrentCulture, "{0:F2} {1}", size, units[unitIndex]);
+            return string.Format(CultureInfo.CurrentCulture, "{0:F0} {1}", size, units[unitIndex]);
         }
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {

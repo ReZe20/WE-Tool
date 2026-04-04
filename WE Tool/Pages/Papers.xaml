@@ -143,22 +143,22 @@
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
                     <MenuFlyout Placement="Bottom">
-                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Width="140" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Width="140">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE8D2;"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Width="140" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Width="140">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xED0E;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2"  Width="140" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2"  Width="140">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xF738;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Width="140" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Width="140">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xEDA2;" />
                             </MenuFlyoutItem.Icon>
@@ -511,10 +511,31 @@
                                     x:Name="Papers_AnnotatedScrollBarControl"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Stretch"
-                                    MaxWidth="10"
                                     Margin="0,0,8,0"
                                     Visibility="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
-                                    DetailLabelRequested="Papers_AnnotatedScrollBarControl_DetailLabelRequested"/>
+                                    DetailLabelRequested="Papers_AnnotatedScrollBarControl_DetailLabelRequested">
+                                    <AnnotatedScrollBar.LabelTemplate>
+                                        <DataTemplate x:DataType="AnnotatedScrollBarLabel">
+                                            <Grid Margin="0,0,0,0" HorizontalAlignment="Right">
+                                                <TextBlock Text="{x:Bind Content}" 
+                                                           Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                                           FontSize="12"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </AnnotatedScrollBar.LabelTemplate>
+
+                                    <AnnotatedScrollBar.DetailLabelTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" 
+                                                       FontSize="13" 
+                                                       FontWeight="SemiBold" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </DataTemplate>
+                                    </AnnotatedScrollBar.DetailLabelTemplate>
+
+                                </AnnotatedScrollBar>
                             </Grid>
                         </SplitView.Content>
                     </SplitView>

@@ -21,13 +21,12 @@ namespace WE_Tool.Models
         public bool AutoPlayGif { get; set; } = true;
         public bool IsAnnotatedScrollBarEnabled { get; set; } = false;
         public int WallpaperViewIndex { get; set; } = 0;
-        public int WallpaperListMinWidth { get; set; } = 180;
         public bool LeftSplitViewPaneOpen { get; set; } = true;
         public bool RightSplitViewPaneOpen { get; set; } = true;
         public int SortOrder { get; set; } = 0;
         public bool IsSortAscending { get; set; } = true;
         public bool DetailSelectionEnabled { get; set; } = true;
-        public int FilterResultResponseDelay { get; set; } = 1000;
+        public int FilterResultResponseDelay { get; set; } = 500;
         public class Expander
         {
             public bool TypeExpander { get; set; } = true;

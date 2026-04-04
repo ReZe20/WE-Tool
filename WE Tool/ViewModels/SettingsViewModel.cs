@@ -140,11 +140,37 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial int SortOrder { get; set; }
 
-        [ObservableProperty]
-        public partial string SortGlyph { get; set; } = "\uE8D2";
+        public string SortGlyph 
+        {
+            get
+            {
+                return SortOrder switch
+                {
+                    0 => "\uE8D2",
+                    1 => "\uED0E",
+                    2 => "\uF738",
+                    3 => "\uEDA2",
+                    _ => "\uE8D2"
+                };
+            }
+            set => SetProperty(ref field, value);
+        }
 
-        [ObservableProperty]
-        public partial string SortText { get; set; } = LanguageHelper.GetResource("SortByName.Text");
+        public string SortText 
+        {
+            get
+            {
+                return SortOrder switch
+                {
+                    0 => LanguageHelper.GetResource("SortByName.Text"),
+                    1 => LanguageHelper.GetResource("SortBySubTime.Text"),
+                    2 => LanguageHelper.GetResource("SortByLastTime.Text"),
+                    3 => LanguageHelper.GetResource("SortByFileSize.Text"),
+                    _ => LanguageHelper.GetResource("SortByName.Text")
+                };
+            }
+            set; 
+        }
 
         [ObservableProperty]
         public partial bool IsSortAscending { get; set; }
@@ -339,30 +365,6 @@ namespace WE_Tool.ViewModels
             }
         }
 
-        private void UpdateSortUI()
-        {
-            switch (SortOrder)
-            {
-                case 0:
-                    SortGlyph = "\uE8D2";
-                    SortText = LanguageHelper.GetResource("SortByName.Text");
-                    break;
-                case 1:
-                    SortGlyph = "\uED0E";
-                    SortText = LanguageHelper.GetResource("SortBySubTime.Text");
-                    break;
-                case 2:
-                    SortGlyph = "\uF738";
-                    SortText = LanguageHelper.GetResource("SortByLastTime.Text");
-                    break;
-                case 3:
-                    SortGlyph = "\uEDA2";
-                    SortText = LanguageHelper.GetResource("SortByFileSize.Text");
-                    break;
-            }
-        }
-
-
         partial void OnAppLanguageChanged(string value)
         {
             if (_isBatchUpdating) return;
@@ -391,7 +393,8 @@ namespace WE_Tool.ViewModels
         }
         partial void OnSortOrderChanged(int value)
         {
-            UpdateSortUI();
+            OnPropertyChanged(nameof(SortGlyph));
+            OnPropertyChanged(nameof(SortText));
         }
 
         partial void OnIsSortAscendingChanged(bool value)
@@ -443,7 +446,6 @@ namespace WE_Tool.ViewModels
             AutoPlayGif = _settings.Papers.AutoPlayGif;
             IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
             WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
-            WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
             LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
             RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
             DetailSelectionEnabled = _settings.Papers.DetailSelectionEnabled;
@@ -654,7 +656,6 @@ namespace WE_Tool.ViewModels
                 _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;
                 _settings.Papers.AutoPlayGif = AutoPlayGif;
                 _settings.Papers.IsAnnotatedScrollBarEnabled = IsAnnotatedScrollBarEnabled;
-                _settings.Papers.WallpaperListMinWidth = WallpaperListMinWidth;
                 _settings.Papers.LeftSplitViewPaneOpen = LeftSplitViewPaneOpen;
                 _settings.Papers.RightSplitViewPaneOpen = RightSplitViewPaneOpen;
 
