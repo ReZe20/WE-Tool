@@ -411,6 +411,9 @@
   <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
     <value>反选</value>
   </data>
+  <data name="MenuFlyoutItem_InvertSelection.Text" xml:space="preserve">
+    <value>反选</value>
+  </data>
   <data name="AppBarButton_Properties.Label" xml:space="preserve">
     <value>属性</value>
   </data>
@@ -443,5 +446,11 @@
   </data>
   <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>壁纸图标大小</value>
+  </data>
+  <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
+    <value>查看</value>
   </data>
 </root>

@@ -35,7 +35,7 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
 
-                <AppBarButton x:Uid="AppBarButton_Delete" Foreground="{ThemeResource SystemControlErrorTextForegroundBrush}"
+                <AppBarButton x:Uid="AppBarButton_Delete" 
                               Command="{x:Bind DeleteSelectedCommand}"
                               CommandParameter="{Binding}">
                     <AppBarButton.Icon>
@@ -66,13 +66,13 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton x:Name="MoreOptionsButton"
+                <AppBarButton x:Name="ViewOptionsButton"
                               x:Uid="AppBarButton_View">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE890;"/>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
-                        <MenuFlyout x:Name="SubMenuFlyout" >
+                        <MenuFlyout x:Name="ViewSubMenuFlyout" >
                             <ToggleMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
                                                   x:Name="SmallIconItem"
                                                   Tag="Small"
@@ -95,6 +95,38 @@
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
+                <AppBarButton x:Name="SortOptionsButton"
+                              x:Uid="AppBarButton_View">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8CB;" />
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout x:Name="SortSubMenuFlyout" >
+                            <ToggleMenuFlyoutItem x:Uid="SortByName" 
+                                                  x:Name="SortByNameItem"
+                                                  Tag="Small"
+                                                  Click="OnIconSizeChanged"
+                                                  IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"/>
+                            <ToggleMenuFlyoutItem x:Uid="SortBySubTime"
+                                                  x:Name="SortBySubTimeItem"
+                                                  Tag="Medium"
+                                                  Click="OnIconSizeChanged"
+                                                  IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"/>
+
+                            <ToggleMenuFlyoutItem x:Uid="SortByLastTime"
+                                                  x:Name="SortByLastTime"
+                                                  Tag="Large"
+                                                  Click="OnIconSizeChanged"
+                                                  IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"/>
+
+                            <ToggleMenuFlyoutItem x:Uid="SortByFileSize"
+                                                  x:Name="SortByFileSizeItem"
+                                                  Tag="Large"
+                                                  Click="OnIconSizeChanged"
+                                                  IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"/>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_Properties">
                     <AppBarButton.Icon>
@@ -103,6 +135,40 @@
                 </AppBarButton>
             </CommandBarFlyout.SecondaryCommands>
         </CommandBarFlyout>
+        <MenuFlyout x:Name="ScrollViewBackgroundMenu">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="SelectAllWallpapers_Click_ByCommandBarFlyout">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8B3;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="InvertSelection_CLick_ByCommandBarFlyout">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8E6;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+            <MenuFlyoutSeparator/>
+            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_View">
+                <MenuFlyoutSubItem.Icon>
+                    <FontIcon Glyph="&#xE890;"/>
+                </MenuFlyoutSubItem.Icon>
+                <ToggleMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
+                              Tag="Small"
+                              Click="OnIconSizeChanged"
+                              IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"/>
+                <ToggleMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
+                              Tag="Medium"
+                              Click="OnIconSizeChanged"
+                              IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"/>
+                <ToggleMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
+                              Tag="Large"
+                              Click="OnIconSizeChanged"
+                              IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"/>
+                    <MenuFlyoutSeparator/>
+                <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
+                              IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                              Click="ChangeAnnotatedScrollBarEnabled"/>
+            </MenuFlyoutSubItem>
+        </MenuFlyout>
     </Page.Resources>
 
     <Grid>
@@ -393,7 +459,7 @@
                                             x:Name="WallpapersScrollView"
                                             VerticalScrollBarVisibility="{x:Bind ViewModel.PapersScrollViewBarVisibility,Mode=OneWay}"
                                             Grid.Column="0"
-                                            ContextFlyout="{StaticResource WallpaperContextMenu}">
+                                            ContextFlyout="{StaticResource ScrollViewBackgroundMenu}">
                                     <StackPanel Margin="{x:Bind ViewModel.PapersScrollViewMargin, Mode=OneWay}">
                                         <StackPanel x:Name="NoResultTip" Visibility="Collapsed">
                                             <TextBlock x:Uid="NoResultTip1"

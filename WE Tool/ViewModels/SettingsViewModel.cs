@@ -146,6 +146,38 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial string SortText { get; set; } = LanguageHelper.GetResource("SortByName.Text");
 
+        public bool SortByName
+        {
+            get => SortOrder == 0;
+            set
+            {
+                if (value) SortOrder = 0;
+            }
+        }
+        public bool SortBySubTime
+        {
+            get => SortOrder == 1;
+            set
+            {
+                if (value) SortOrder = 1;
+            }
+        }
+        public bool SortByLastTime
+        {
+            get => SortOrder == 2;
+            set
+            {
+                if (value) SortOrder = 2;
+            }
+        }
+        public bool SortByFileSize
+        {
+            get => SortOrder == 3;
+            set
+            {
+                if (value) SortOrder = 3;
+            }
+        }
         [ObservableProperty]
         public partial bool IsSortAscending { get; set; }
 
@@ -392,6 +424,10 @@ namespace WE_Tool.ViewModels
         partial void OnSortOrderChanged(int value)
         {
             UpdateSortUI();
+            OnPropertyChanged(nameof(SortByName));
+            OnPropertyChanged(nameof(SortBySubTime));
+            OnPropertyChanged(nameof(SortByLastTime));
+            OnPropertyChanged(nameof(SortByFileSize));
         }
 
         partial void OnIsSortAscendingChanged(bool value)
