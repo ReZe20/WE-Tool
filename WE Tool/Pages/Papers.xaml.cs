@@ -1203,6 +1203,27 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
         });
     }
+    private void WallpaperScrollView_ContextRequested(FrameworkElement sender, ContextRequestedEventArgs args)
+    {
+        // 1. 阻止事件进一步冒泡，防止触发多次弹出逻辑
+        args.Handled = true;
+
+        // 2. 获取右键点击的具体坐标
+        if (args.TryGetPosition(sender, out Point p))
+        {
+            // 如果是鼠标右键点击，在点击位置弹出
+            WallpaperContextMenu.ShowAt(sender, new FlyoutShowOptions
+            {
+                Position = p,
+                ShowMode = FlyoutShowMode.Standard
+            });
+        }
+        else
+        {
+            // 如果是通过键盘（Shift+F10）触发，在元素中心弹出
+            WallpaperContextMenu.ShowAt(sender);
+        }
+    }
     private void Papers_AnnotatedScrollBarControl_DetailLabelRequested(AnnotatedScrollBar sender, AnnotatedScrollBarDetailLabelRequestedEventArgs args)
     {
         // 如果列表为空，直接返回

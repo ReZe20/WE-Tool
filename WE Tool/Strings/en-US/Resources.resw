@@ -411,10 +411,16 @@
   <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
     <value>Invert Selection</value>
   </data>
+  <data name="MenuFlyoutItem_InvertSelection.Text" xml:space="preserve">
+    <value>Invert Selection</value>
+  </data>
   <data name="AppBarButton_Properties.Label" xml:space="preserve">
     <value>Properties</value>
   </data>
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
     <value>Extract</value>
+  </data>
+  <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
+    <value>Select All</value>
   </data>
 </root>
