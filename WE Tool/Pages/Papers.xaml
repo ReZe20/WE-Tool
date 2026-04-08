@@ -27,14 +27,14 @@
                         <FontIcon Glyph="&#xE72D;" />
                     </AppBarButton.Icon>
                 </AppBarButton>
-
+                <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_OpenDirectory"
                               Command="{x:Bind OpenSelectedFoldersCommand}">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE838;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-
+                <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_Delete" 
                               Command="{x:Bind DeleteSelectedCommand}"
                               CommandParameter="{Binding}">
@@ -44,25 +44,54 @@
                 </AppBarButton>
             </CommandBarFlyout.PrimaryCommands>
             <CommandBarFlyout.SecondaryCommands>
-                <AppBarButton x:Uid="AppBarButton_Copy" Click="Copy_Click_ByCommandBarFlyout">
+                <AppBarButton x:Uid="AppBarButton_Copy" 
+                              Click="Copy_Click_ByCommandBarFlyout"
+                              KeyboardAcceleratorTextOverride="     Ctrl+C">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8C8;" />
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Uid="AppBarButton_Cut" Click="Cut_Click_ByCommandBarFlyout">
+                <AppBarButton x:Uid="AppBarButton_Cut" 
+                              Click="Cut_Click_ByCommandBarFlyout"
+                              KeyboardAcceleratorTextOverride="     Ctrl+V">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8C6;" />
                     </AppBarButton.Icon>
                 </AppBarButton>
+                <AppBarButton x:Uid="AppBarButton_Delete" 
+                              Command="{x:Bind DeleteSelectedCommand}"
+                              CommandParameter="{Binding}"
+                              KeyboardAcceleratorTextOverride="     Delete">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE74D;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton x:Uid="AppBarButton_DeleteForever"
+                              Command="{x:Bind OpenSelectedFoldersCommand}"
+                              KeyboardAcceleratorTextOverride="Shift+Del">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE75C;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton x:Uid="AppBarButton_SelectAll" Click="SelectAllWallpapers_Click_ByCommandBarFlyout">
+                <AppBarButton x:Uid="AppBarButton_SelectAll" 
+                              Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
+                              KeyboardAcceleratorTextOverride="     Ctrl+A">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8B3;" />
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Uid="AppBarButton_InvertSelection" Click="InvertSelection_CLick_ByCommandBarFlyout">
+                <AppBarButton x:Uid="AppBarButton_InvertSelection" 
+                              Click="InvertSelection_CLick_ByCommandBarFlyout"
+                              KeyboardAcceleratorTextOverride="     Ctrl+I">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8E6;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton x:Uid="AppBarButton_MultiSelect" 
+                              Click="MultiSelect_CLick_ByCommandBarFlyout">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE762;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
@@ -96,31 +125,27 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarButton x:Name="SortOptionsButton"
-                              x:Uid="AppBarButton_View">
+                              x:Uid="AppBarButton_Sort">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8CB;" />
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
                         <MenuFlyout x:Name="SortSubMenuFlyout" >
                             <ToggleMenuFlyoutItem x:Uid="SortByName" 
-                                                  x:Name="SortByNameItem"
                                                   Tag="Small"
                                                   Click="OnIconSizeChanged"
                                                   IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"/>
                             <ToggleMenuFlyoutItem x:Uid="SortBySubTime"
-                                                  x:Name="SortBySubTimeItem"
                                                   Tag="Medium"
                                                   Click="OnIconSizeChanged"
                                                   IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"/>
 
                             <ToggleMenuFlyoutItem x:Uid="SortByLastTime"
-                                                  x:Name="SortByLastTime"
                                                   Tag="Large"
                                                   Click="OnIconSizeChanged"
                                                   IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"/>
 
                             <ToggleMenuFlyoutItem x:Uid="SortByFileSize"
-                                                  x:Name="SortByFileSizeItem"
                                                   Tag="Large"
                                                   Click="OnIconSizeChanged"
                                                   IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"/>
@@ -128,20 +153,25 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton x:Uid="AppBarButton_Properties">
+                <AppBarButton x:Uid="AppBarButton_Properties" 
+                              KeyboardAcceleratorTextOverride="Alt+Enter">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE90F;" />
+                        <FontIcon Glyph="&#xE90F;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBarFlyout.SecondaryCommands>
         </CommandBarFlyout>
         <MenuFlyout x:Name="ScrollViewBackgroundMenu">
-            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="SelectAllWallpapers_Click_ByCommandBarFlyout">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" 
+                            Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
+                            KeyboardAcceleratorTextOverride="    Ctrl+A">
                 <MenuFlyoutItem.Icon>
                     <FontIcon Glyph="&#xE8B3;"/>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
-            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="InvertSelection_CLick_ByCommandBarFlyout">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection"
+                            Click="InvertSelection_CLick_ByCommandBarFlyout"
+                            KeyboardAcceleratorTextOverride="    Ctrl+I">
                 <MenuFlyoutItem.Icon>
                     <FontIcon Glyph="&#xE8E6;"/>
                 </MenuFlyoutItem.Icon>
@@ -168,8 +198,48 @@
                               IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
                               Click="ChangeAnnotatedScrollBarEnabled"/>
             </MenuFlyoutSubItem>
+            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_Sort">
+                <MenuFlyoutSubItem.Icon>
+                    <FontIcon Glyph="&#xE8CB;"/>
+                </MenuFlyoutSubItem.Icon>
+                <ToggleMenuFlyoutItem x:Uid="SortByName" 
+                          x:Name="SortByNameItem"
+                          Tag="Small"
+                          Click="OnIconSizeChanged"
+                          IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"/>
+                <ToggleMenuFlyoutItem x:Uid="SortBySubTime"
+                          x:Name="SortBySubTimeItem"
+                          Tag="Medium"
+                          Click="OnIconSizeChanged"
+                          IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"/>
+                <ToggleMenuFlyoutItem x:Uid="SortByLastTime"
+                          x:Name="SortByLastTime"
+                          Tag="Large"
+                          Click="OnIconSizeChanged"
+                          IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"/>
+                <ToggleMenuFlyoutItem x:Uid="SortByFileSize"
+                          x:Name="SortByFileSizeItem"
+                          Tag="Large"
+                          Click="OnIconSizeChanged"
+                          IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"/>
+            </MenuFlyoutSubItem>
         </MenuFlyout>
     </Page.Resources>
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator />
+        <KeyboardAccelerator Key="A" 
+                             Modifiers="Control"
+                             Invoked="SelectAllWallpaper_Accelerator_Invoked"/>
+        <KeyboardAccelerator Key="I" 
+                             Modifiers="Control"
+                             Invoked="InvertSelection_Accelerator_Invoked"/>
+        <KeyboardAccelerator Key="Enter" 
+                             Modifiers="Menu"
+                             Invoked="Property_Accelerator_Invoked"/>
+        <KeyboardAccelerator Key="C" 
+                             Modifiers="Control"
+                             Invoked="Copy_Accelerator_Invoked"/>
+    </Page.KeyboardAccelerators>
 
     <Grid>
         <Grid.RowDefinitions>

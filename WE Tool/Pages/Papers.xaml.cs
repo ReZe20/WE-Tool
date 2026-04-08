@@ -1067,6 +1067,22 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         RefreshScrollBarLabels();
     }
+    private void SelectAllWallpaper_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    {
+        if (!IsMultiSelectMode)
+        {
+            IsMultiSelectMode = true;
+        }
+        InternalSelectAllWallpapers();
+    }
+    private void InvertSelection_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    {
+        if (!IsMultiSelectMode)
+        {
+            IsMultiSelectMode = true;
+        }
+        InternalInvertSelection();
+    }
     private void SelectAllWallpapers_Click(object sender, RoutedEventArgs e)
     {
         InternalSelectAllWallpapers();
@@ -1075,11 +1091,29 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         InternalInvertSelection();
     }
+    private void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    {
+        CopyWallpapers();
+    }
     private void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
+        CopyWallpapers();
+    }
+    private void CopyWallpapers()
+    {
+        HideWallpaperContextMenu();
+    }
+    private void Cut_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    {
+        CutWallpapers();
     }
     private void Cut_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
+        CutWallpapers();
+    }
+    private void CutWallpapers()
+    {
+        HideWallpaperContextMenu();
     }
     private void SelectAllWallpapers_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
@@ -1096,6 +1130,23 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             IsMultiSelectMode = true;
         }
         InternalInvertSelection();
+    }
+    private void MultiSelect_CLick_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    {
+        HideWallpaperContextMenu();
+    }
+    private void Property_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    {
+        Properties();
+        e.Handled = true;
+    }
+    private void Properties_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    {
+        Properties();
+    }
+    private void Properties()
+    {
+        HideWallpaperContextMenu();
     }
     private async void OnIconSizeChanged(object sender, RoutedEventArgs e)
     {
