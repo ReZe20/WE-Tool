@@ -462,7 +462,7 @@
   <data name="AppBarButton_DeleteForever.Label" xml:space="preserve">
     <value>永远删除</value>
   </data>
-  <data name="AppBarButton_MultiSelect.Label" xml:space="preserve">
+  <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
     <value>多选</value>
   </data>
 </root>

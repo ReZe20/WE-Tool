@@ -1091,6 +1091,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         InternalInvertSelection();
     }
+    private void MultiSelect_CLick(object sender, RoutedEventArgs e)
+    {
+        
+    }
+
     private void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
         CopyWallpapers();
@@ -1103,6 +1108,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         HideWallpaperContextMenu();
     }
+
     private void Cut_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
         CutWallpapers();
@@ -1115,6 +1121,33 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         HideWallpaperContextMenu();
     }
+
+    private async void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    {
+        e.Handled = true;
+        if (DeleteSelectedCommand == null) return;
+
+        try
+        {
+            if (IsMultiSelectMode)
+            {
+                await DeleteSelectedCommand.ExecuteAsync(null);
+            }
+            else
+            {
+                await DeleteSelectedCommand.ExecuteAsync(SelectedWallpapers);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "通过删除快捷键执行删除命令时发生异常。");
+        }
+    }
+    private void DeleteForever_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    {
+
+    }
+
     private void SelectAllWallpapers_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
         if (!IsMultiSelectMode)

@@ -46,7 +46,8 @@
             <CommandBarFlyout.SecondaryCommands>
                 <AppBarButton x:Uid="AppBarButton_Copy" 
                               Click="Copy_Click_ByCommandBarFlyout"
-                              KeyboardAcceleratorTextOverride="     Ctrl+C">
+                              KeyboardAcceleratorTextOverride="     Ctrl+C"
+>
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8C8;" />
                     </AppBarButton.Icon>
@@ -67,7 +68,8 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="AppBarButton_DeleteForever"
-                              Command="{x:Bind OpenSelectedFoldersCommand}"
+                              Command="{x:Bind DeleteSelectedCommand}"
+                              CommandParameter="{Binding}"  
                               KeyboardAcceleratorTextOverride="Shift+Del">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE75C;" />
@@ -86,12 +88,6 @@
                               KeyboardAcceleratorTextOverride="     Ctrl+I">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8E6;" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarButton x:Uid="AppBarButton_MultiSelect" 
-                              Click="MultiSelect_CLick_ByCommandBarFlyout">
-                    <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE762;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
@@ -139,12 +135,10 @@
                                                   Tag="Medium"
                                                   Click="OnIconSizeChanged"
                                                   IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"/>
-
                             <ToggleMenuFlyoutItem x:Uid="SortByLastTime"
                                                   Tag="Large"
                                                   Click="OnIconSizeChanged"
                                                   IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"/>
-
                             <ToggleMenuFlyoutItem x:Uid="SortByFileSize"
                                                   Tag="Large"
                                                   Click="OnIconSizeChanged"
@@ -239,6 +233,15 @@
         <KeyboardAccelerator Key="C" 
                              Modifiers="Control"
                              Invoked="Copy_Accelerator_Invoked"/>
+        <KeyboardAccelerator Key="X" 
+                             Modifiers="Control"
+                             Invoked="Cut_Accelerator_Invoked"/>
+        <KeyboardAccelerator Key="Delete"
+                             Modifiers="None"
+                             Invoked="Delete_Accelerator_Invoked"/>
+        <KeyboardAccelerator Key="Delete"
+                             Modifiers="Shift"
+                             Invoked="DeleteForever_Accelerator_Invoked"/>
     </Page.KeyboardAccelerators>
 
     <Grid>
