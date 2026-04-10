@@ -82,9 +82,9 @@
                                     <StackPanel Orientation="Horizontal" >
                                         <TextBlock x:Uid="PapersSetting_WallpaperIconSize" Margin="28,0,12,0" VerticalAlignment="Center"/>
                                         <ComboBox SelectedIndex="{x:Bind ViewModel.WallpaperViewIndex, Mode=TwoWay}">
-                                            <ComboBoxItem Tag="0" Content="小"/>
-                                            <ComboBoxItem Tag="1" Content="中"/>
-                                            <ComboBoxItem Tag="2" Content="大"/>
+                                            <ComboBoxItem Tag="0" x:Uid="PapersSetting_ComboBoxItem_SmallIcon"/>
+                                            <ComboBoxItem Tag="1" x:Uid="PapersSetting_ComboBoxItem_MediumIcon"/>
+                                            <ComboBoxItem Tag="2" x:Uid="PapersSetting_ComboBoxItem_LargeIcon"/>
                                         </ComboBox>
                                     </StackPanel>
                                 </controls:SettingsCard.Header>
@@ -101,6 +101,57 @@
                                                    Minimum="0"/>
                                     </StackPanel>
                                 </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Uid="PapersSetting_ContextMenuItems" 
+                                                   Margin="28,0,36,0" 
+                                                   VerticalAlignment="Center"/>
+                                        <StackPanel Orientation="Vertical">
+                                            <TextBlock Text="壁纸右键菜单" Margin="0,16,0,16" VerticalAlignment="Center"/>
+                                            <Border Background="{ThemeResource FlyoutPresenterBackground}"
+                                                    CornerRadius="{ThemeResource OverlayCornerRadius}"
+                                                    Padding="8"
+                                                    Width="215"
+                                                    Height="300">
+                                                <Border.Shadow>
+                                                    <ThemeShadow/>
+                                                </Border.Shadow>
+                                                <StackPanel Orientation="Vertical">
+                                                    <StackPanel Orientation="Horizontal"
+                                                                VerticalAlignment="Top">
+                                                        <ToggleButton Width="60" Height="60">
+                                                            <StackPanel Orientation="Vertical">
+                                                                <FontIcon Glyph="&#xE72D;" FontSize="15" Margin="0,6,0,6"/>
+                                                                <TextBlock Text="提取" FontSize="12"/>
+                                                            </StackPanel>
+                                                        </ToggleButton>
+                                                        <AppBarSeparator/>
+                                                        <ToggleButton Width="60" Height="60">
+                                                            <StackPanel Orientation="Vertical">
+                                                                <FontIcon Glyph="&#xE838;" FontSize="16" Margin="0,4,0,7"/>
+                                                                <TextBlock Text="打开目录" FontSize="9"/>
+                                                            </StackPanel>
+                                                        </ToggleButton>
+                                                        <AppBarSeparator/>
+                                                        <ToggleButton Width="60" Height="60">
+                                                            <StackPanel Orientation="Vertical">
+                                                                <FontIcon Glyph="&#xE74D;" FontSize="15" Margin="0,6,0,6"/>
+                                                                <TextBlock Text="删除" FontSize="12"/>
+                                                            </StackPanel>
+                                                        </ToggleButton>
+                                                    </StackPanel>
+                                                    <AppBarSeparator/>
+                                                    
+                                                    <StackPanel />
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                                
                             </controls:SettingsCard>
 
                         </controls:SettingsExpander.Items>

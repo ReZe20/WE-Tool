@@ -465,4 +465,16 @@
   <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
     <value>多选</value>
   </data>
+  <data name="PapersSetting_ComboBoxItem_SmallIcon.Content" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="PapersSetting_ComboBoxItem_MediumIcon.Content" xml:space="preserve">
+    <value>中</value>
+  </data>
+  <data name="PapersSetting_ComboBoxItem_LargeIcon.Content" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="PapersSetting_ContextMenuItems.Text" xml:space="preserve">
+    <value>右键菜单选项</value>
+  </data>
 </root>
