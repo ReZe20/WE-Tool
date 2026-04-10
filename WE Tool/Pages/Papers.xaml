@@ -248,7 +248,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="{Binding ViewModel.BottomBarHeight, Mode=OneWay}"/>
+            <RowDefinition Height="{Binding ViewModel.BottomBarHeight}"/>
         </Grid.RowDefinitions>
 
         <Button x:Name="LeftToggleFilterButton" Height="35" Grid.Row="0" HorizontalAlignment="Left" Margin="211,0,0,0" Click="LeftToggleFilterButton_Click" Style="{StaticResource AccentButtonStyle}" ToolTipService.ToolTip="侧边栏">

@@ -1135,7 +1135,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
             else
             {
-                await DeleteSelectedCommand.ExecuteAsync(SelectedWallpapers);
+                await DeleteSelectedCommand.ExecuteAsync(ViewModel.SelectedWallpaper);
             }
         }
         catch (Exception ex)
