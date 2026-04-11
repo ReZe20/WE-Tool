@@ -95,6 +95,51 @@ namespace WE_Tool.ViewModels
         }
 
         [ObservableProperty]
+        public partial int WallpaperTagDisplayIndex { get; set; }
+
+        public bool TypeDisplayInTag
+        {
+            get => WallpaperTagDisplayIndex == 0;
+            set
+            {
+                if (value) WallpaperTagDisplayIndex = 0;
+            }
+        }
+        public bool RatingDisplayInTag
+        {
+            get => WallpaperTagDisplayIndex == 1;
+            set
+            {
+                if (value) WallpaperTagDisplayIndex = 1;
+            }
+        }
+        public bool SourceDisplayInTag
+        {
+            get => WallpaperTagDisplayIndex == 2;
+            set
+            {
+                if (value) WallpaperTagDisplayIndex = 2;
+            }
+        }
+        public bool NoneDisplayInTag
+        {
+            get => WallpaperTagDisplayIndex == 3;
+            set
+            {
+                if (value) WallpaperTagDisplayIndex = 3;
+            }
+        }
+        public Microsoft.UI.Xaml.Visibility TagDisplayVisibility
+        {
+            get
+            {
+                return WallpaperTagDisplayIndex != 3 ?
+                    Microsoft.UI.Xaml.Visibility.Visible :
+                    Microsoft.UI.Xaml.Visibility.Collapsed;
+            }
+        }
+
+        [ObservableProperty]
         public partial int WallpaperViewIndex { get; set; }
 
         public bool SmallIconItem
@@ -412,9 +457,10 @@ namespace WE_Tool.ViewModels
                 2 => 300,
                 _ => 180
             };
-            OnPropertyChanged(nameof(SmallIconItem));
-            OnPropertyChanged(nameof(MediumIconItem));
-            OnPropertyChanged(nameof(LargeIconItem));
+        }
+        partial void OnWallpaperTagDisplayIndexChanged(int value)
+        {
+            OnPropertyChanged(nameof(TagDisplayVisibility));
         }
         partial void OnIsAnnotatedScrollBarEnabledChanged(bool value)
         {
@@ -424,10 +470,6 @@ namespace WE_Tool.ViewModels
         partial void OnSortOrderChanged(int value)
         {
             UpdateSortUI();
-            OnPropertyChanged(nameof(SortByName));
-            OnPropertyChanged(nameof(SortBySubTime));
-            OnPropertyChanged(nameof(SortByLastTime));
-            OnPropertyChanged(nameof(SortByFileSize));
         }
 
         partial void OnIsSortAscendingChanged(bool value)
@@ -478,6 +520,7 @@ namespace WE_Tool.ViewModels
             IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             AutoPlayGif = _settings.Papers.AutoPlayGif;
             IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
+            WallpaperTagDisplayIndex = _settings.Papers.WallpaperTagDisplayIndex;
             WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
             WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
             LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
@@ -689,6 +732,7 @@ namespace WE_Tool.ViewModels
                 _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
                 _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;
                 _settings.Papers.AutoPlayGif = AutoPlayGif;
+                _settings.Papers.WallpaperTagDisplayIndex = WallpaperTagDisplayIndex;
                 _settings.Papers.IsAnnotatedScrollBarEnabled = IsAnnotatedScrollBarEnabled;
                 _settings.Papers.WallpaperListMinWidth = WallpaperListMinWidth;
                 _settings.Papers.LeftSplitViewPaneOpen = LeftSplitViewPaneOpen;

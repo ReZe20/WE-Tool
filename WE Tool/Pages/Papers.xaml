@@ -20,6 +20,7 @@
         <converters:RatingToDisplay x:Key="RatingToDisplay"/>
         <converters:TagToDisplay x:Key="TagToDisplay"/>
         <converters:DescriptionToDisplay x:Key="DescriptionToDisplay"/>
+        <converters:PapersTagContentChoose x:Key="PapersTagContentChoose"/>
         <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
             <CommandBarFlyout.PrimaryCommands>
                 <AppBarButton x:Uid="AppBarButton_Extract">
@@ -46,8 +47,7 @@
             <CommandBarFlyout.SecondaryCommands>
                 <AppBarButton x:Uid="AppBarButton_Copy" 
                               Click="Copy_Click_ByCommandBarFlyout"
-                              KeyboardAcceleratorTextOverride="     Ctrl+C"
->
+                              KeyboardAcceleratorTextOverride="     Ctrl+C">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8C8;" />
                     </AppBarButton.Icon>
@@ -98,25 +98,55 @@
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
                         <MenuFlyout x:Name="ViewSubMenuFlyout" >
-                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
-                                                  x:Name="SmallIconItem"
-                                                  Tag="Small"
-                                                  Click="OnIconSizeChanged"
-                                                  IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"/>
-                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
-                                                  x:Name="MediumIconItem"
-                                                  Tag="Medium"
-                                                  Click="OnIconSizeChanged"
-                                                  IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"/>
-                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
-                                                  x:Name="LargeIconItem"
-                                                  Tag="Large"
-                                                  Click="OnIconSizeChanged"
-                                                  IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
+                                                 x:Name="SmallIconItem"
+                                                 Tag="Small"
+                                                 Click="OnIconSizeChanged"
+                                                 IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"
+                                                 GroupName="ViewGroup"/>
+                            <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
+                                                 x:Name="MediumIconItem"
+                                                 Tag="Medium"
+                                                 Click="OnIconSizeChanged"
+                                                 IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"
+                                                 GroupName="ViewGroup"/>
+                            <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
+                                                 x:Name="LargeIconItem"
+                                                 Tag="Large"
+                                                 Click="OnIconSizeChanged"
+                                                 IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"
+                                                 GroupName="ViewGroup"/>
                             <MenuFlyoutSeparator/>
                             <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                                  IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
-                                                  Click="ChangeAnnotatedScrollBarEnabled"/>
+                                                 IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                                                 Click="ChangeAnnotatedScrollBarEnabled"/>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                
+                <AppBarButton x:Uid="AppBarButton_TagDisplay"
+                              x:Name="AppBarButton_TagDisplay">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8EC;"/>
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout>
+                            <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                 x:Uid="AppBarButton_Type"
+                                                 Click="OnTagDisplayChanged"
+                                                 IsChecked="{x:Bind ViewModel.TypeDisplayInTag, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                 x:Uid="AppBarButton_Rating"
+                                                 Click="OnTagDisplayChanged"
+                                                 IsChecked="{x:Bind ViewModel.RatingDisplayInTag, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                 x:Uid="AppBarButton_Source"
+                                                 Click="OnTagDisplayChanged"
+                                                 IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                 x:Uid="AppBarButton_None"
+                                                 Click="OnTagDisplayChanged"
+                                                 IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
@@ -127,22 +157,26 @@
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
                         <MenuFlyout x:Name="SortSubMenuFlyout" >
-                            <ToggleMenuFlyoutItem x:Uid="SortByName" 
-                                                  Tag="Small"
-                                                  Click="OnIconSizeChanged"
-                                                  IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"/>
-                            <ToggleMenuFlyoutItem x:Uid="SortBySubTime"
-                                                  Tag="Medium"
-                                                  Click="OnIconSizeChanged"
-                                                  IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"/>
-                            <ToggleMenuFlyoutItem x:Uid="SortByLastTime"
-                                                  Tag="Large"
-                                                  Click="OnIconSizeChanged"
-                                                  IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"/>
-                            <ToggleMenuFlyoutItem x:Uid="SortByFileSize"
-                                                  Tag="Large"
-                                                  Click="OnIconSizeChanged"
-                                                  IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem x:Uid="SortByName" 
+                                                 Tag="Small"
+                                                 Click="OnIconSizeChanged"
+                                                 IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"
+                                                 GroupName="SortGroup"/>
+                            <RadioMenuFlyoutItem x:Uid="SortBySubTime"
+                                                 Tag="Medium"
+                                                 Click="OnIconSizeChanged"
+                                                 IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"
+                                                 GroupName="SortGroup"/>
+                            <RadioMenuFlyoutItem x:Uid="SortByLastTime"
+                                                 Tag="Large"
+                                                 Click="OnIconSizeChanged"
+                                                 IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"
+                                                 GroupName="SortGroup"/>
+                            <RadioMenuFlyoutItem x:Uid="SortByFileSize"
+                                                 Tag="Large"
+                                                 Click="OnIconSizeChanged"
+                                                 IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"
+                                                 GroupName="SortGroup"/>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
@@ -557,7 +591,7 @@
                                                ContextFlyout="{StaticResource WallpaperContextMenu}">
                                             <ItemsRepeater.Layout>
                                                 <UniformGridLayout
-                                                    MinItemWidth="{x:Bind ViewModel.WallpaperListMinWidth, Mode=OneWay}" 
+                                                    MinItemWidth="{x:Bind ViewModel.WallpaperListMinWidth, Mode=OneWay}"
                                                     MinColumnSpacing="10" 
                                                     MinRowSpacing="10" 
                                                     ItemsStretch="Fill" 
@@ -573,19 +607,19 @@
                                                         <ProgressRing IsActive="True" Background="Transparent"/>
                                                         <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
                                                         <Grid CornerRadius="8"
-                                                          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                          PointerEntered="Item_PointerEntered"
-                                                          PointerExited="Item_PointerExited"
-                                                          PointerReleased="Item_PointerReleased"
-                                                          PointerPressed="Item_PointerPressed"
-                                                          RenderTransformOrigin="0.5,0.5"
-                                                          x:Name="ItemRootGrid"
-                                                          DataContext="{x:Bind}"
-                                                          Translation="0,0,64"
-                                                          Loaded="ShadowRect_Loaded"
-                                                          Shadow="{StaticResource SharedShadow}"
-                                                          ContextFlyout="{StaticResource WallpaperContextMenu}"
-                                                          RightTapped="WallpaperItem_RightTapped">
+                                                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                              PointerEntered="Item_PointerEntered"
+                                                              PointerExited="Item_PointerExited"
+                                                              PointerReleased="Item_PointerReleased"
+                                                              PointerPressed="Item_PointerPressed"
+                                                              RenderTransformOrigin="0.5,0.5"
+                                                              x:Name="ItemRootGrid"
+                                                              DataContext="{x:Bind}"
+                                                              Translation="0,0,64"
+                                                              Loaded="ShadowRect_Loaded"
+                                                              Shadow="{StaticResource SharedShadow}"
+                                                              ContextFlyout="{StaticResource WallpaperContextMenu}"
+                                                              RightTapped="WallpaperItem_RightTapped">
 
                                                             <Viewbox Stretch="Uniform" VerticalAlignment="Top">
                                                                 <Canvas Width="100" Height="100"/>
@@ -594,7 +628,7 @@
                                                             <Image Stretch="UniformToFill">
                                                                 <Image.Source>
                                                                     <BitmapImage UriSource="{x:Bind Preview}" 
-                                                                         AutoPlay="{Binding DataContext.ViewModel.AutoPlayGif, ElementName=PageRoot,Mode=OneWay}"/>
+                                                                         AutoPlay="{Binding DataContext.ViewModel.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
                                                                 </Image.Source>
                                                             </Image>
 
@@ -606,39 +640,49 @@
                                                                     </LinearGradientBrush>
                                                                 </Grid.Background>
                                                                 <TextBlock Text="{x:Bind Title}" 
-                                                                   Foreground="White" 
-                                                                   FontSize="12" 
-                                                                   VerticalAlignment="Bottom"
-                                                                   Margin="10,0,10,8" 
-                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                           Foreground="White" 
+                                                                           FontSize="12" 
+                                                                           VerticalAlignment="Bottom"
+                                                                           Margin="10,0,10,8" 
+                                                                           TextTrimming="CharacterEllipsis"/>
                                                             </Grid>
-                                                            <Grid x:Name="CheckBoxOverlay" 
-                                                              HorizontalAlignment="Left"
-                                                              VerticalAlignment="Top" 
-                                                              Margin="8">
-                                                                <CheckBox x:Name="SelectionCheckBox"
-                                                                  IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
-                                                                  Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
-                                                                  VerticalAlignment="Top"
-                                                                  HorizontalAlignment="Left"
-                                                                  Margin="8"
-                                                                  Click="SelectionCheckBox_Click"
-                                                                  Background="Transparent"
-                                                                  CornerRadius="6"
-                                                                  MinWidth="0" MinHeight="0" Padding="0" Width="24" Height="24"
-                                                                  UseLayoutRounding="True"
-                                                                  Content="{x:Null}" 
-                                                                  HorizontalContentAlignment="Center"
-                                                                  VerticalContentAlignment="Center">
-                                                                    <CheckBox.Resources>
-                                                                        <!-- 未选中状态 -->
-                                                                        <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" 
+                                                            <Border HorizontalAlignment="Right"
+                                                                    VerticalAlignment="Top"
+                                                                    BorderBrush="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                                    CornerRadius="0,0,0,10"
+                                                                    MinWidth="50"
+                                                                    MinHeight="20"
+                                                                    Padding="4"
+                                                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                                    Visibility="{Binding DataContext.ViewModel.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
+                                                                    x:Name="TagDisplayBorder">
+                                                                <TextBlock Text="{x:Bind Converter={StaticResource PapersTagContentChoose}}"
+                                                                           HorizontalAlignment="Center"
+                                                                           FontSize="12"
+                                                                           VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <CheckBox x:Name="SelectionCheckBox"
+                                                                      IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                                      Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
+                                                                      VerticalAlignment="Top"
+                                                                      HorizontalAlignment="Left"
+                                                                      Margin="8"
+                                                                      Click="SelectionCheckBox_Click"
+                                                                      Background="Transparent"
+                                                                      CornerRadius="6"
+                                                                      MinWidth="0" MinHeight="0" Padding="0" Width="24" Height="24"
+                                                                      UseLayoutRounding="True"
+                                                                      Content="{x:Null}" 
+                                                                      HorizontalContentAlignment="Center"
+                                                                      VerticalContentAlignment="Center">
+                                                                <CheckBox.Resources>
+                                                                    <!-- 未选中状态 -->
+                                                                    <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" 
                                                                             ResourceKey="SystemControlBackgroundChromeWhiteBrush" />
-                                                                        <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" 
+                                                                    <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" 
                                                                             ResourceKey="SystemControlBackgroundChromeWhiteBrush" />
-                                                                    </CheckBox.Resources>
-                                                                </CheckBox>
-                                                            </Grid>
+                                                                </CheckBox.Resources>
+                                                            </CheckBox>
                                                         </Grid>
                                                     </Grid>
                                                 </DataTemplate>

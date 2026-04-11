@@ -107,13 +107,40 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             });
         }
     }
+    public bool IsMultiSelectMode
+    {
+        get => _isMultiSelectMode;
+        set
+        {
+            if (_isMultiSelectMode != value)
+            {
+                _isMultiSelectMode = value;
+                OnPropertyChanged();
+
+                if (Wallpapers != null)
+                {
+                    foreach (var item in Wallpapers)
+                    {
+                        item.IsInMultiSelectMode = value;
+                    }
+                }
+                UpdateStackVisuals();
+                ToggleMultiSelectVisuals(_isMultiSelectMode);
+            }
+        }
+    }
     public IAsyncRelayCommand<WallpaperItem> DeleteWallpaperCommand { get; }
     public Papers()
     {
-        ViewModel = new SettingsViewModel(new ConfigService(), new PickerService())
+        var app = Application.Current as App;
+        if (app?.ViewModel != null)
         {
-            SelectedWallpapers = SelectedWallpapers
-        };
+            ViewModel = app.ViewModel;
+        }
+        else
+        {
+            ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
+        }
 
         this.InitializeComponent();
         this.DataContext = this;
@@ -196,7 +223,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         });
         WallpapersScrollView.SizeChanged += (s, e) =>
         {
-            // 使用 DispatcherQueue 确保在布局计算完成后再刷新标签
             DispatcherQueue.TryEnqueue(() =>
             {
                 _sizeChangedDebounceTimer?.Stop();
@@ -475,29 +501,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         await ViewModel.ResetFiltersAsync(2, false);
     }
-
-    public bool IsMultiSelectMode
-    {
-        get => _isMultiSelectMode;
-        set
-        {
-            if (_isMultiSelectMode != value)
-            {
-                _isMultiSelectMode = value;
-                OnPropertyChanged();
-
-                if (Wallpapers != null)
-                {
-                    foreach (var item in Wallpapers)
-                    {
-                        item.IsInMultiSelectMode = value;
-                    }
-                }
-                UpdateStackVisuals();
-                ToggleMultiSelectVisuals(_isMultiSelectMode);
-            }
-        }
-    }
+    
     private void UpdateItemCheckBoxOpacity(Grid grid, WallpaperItem item)
     {
         if (grid == null || item == null) return;
@@ -746,8 +750,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         if (sender is Grid grid)
         {
-            var checkBox = GetCheckBoxOverlay(grid);
-            checkBox?.Children.OfType<CheckBox>().First().Opacity = 1;
+            var checkBox = grid.Children.OfType<CheckBox>().FirstOrDefault();
+            checkBox?.Opacity = 1;
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -791,15 +795,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
             visual.StartAnimation("Scale", scaleAnimation);
 
-            var overlay = GetCheckBoxOverlay(grid);
-            if (overlay != null)
-            {
-                Visual overlayVisual = ElementCompositionPreview.GetElementVisual(overlay);
-                // 同样设置中心点，保证 CheckBox 在原地缩放而不会发生偏移
-                overlayVisual.CenterPoint = new Vector3((float)overlay.ActualWidth / 2, (float)overlay.ActualHeight / 2, 0f);
-                // 将同一个 scaleAnimation 派发给 CheckBoxOverlay
-                overlayVisual.StartAnimation("Scale", scaleAnimation);
-            }
+
 
             Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
             if (itemVisual?.Parent is ContainerVisual parentVisual)
@@ -813,8 +809,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (sender is Grid grid && grid.DataContext is WallpaperItem item)
         {
-            var checkBox = GetCheckBoxOverlay(grid);
-            checkBox?.Children.OfType<CheckBox>().First().Opacity = IsMultiSelectMode? 1 : 0;
+            UpdateItemCheckBoxOpacity(grid, item);
 
             ApplyScaleAnimation(grid, 1.0f);
             UpdateItemCheckBoxOpacity(grid, item);
@@ -945,14 +940,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 }
             }
         }
-    }
-    private static Grid? GetCheckBoxOverlay(Grid itemRootGrid)
-    {
-        if (VisualTreeHelper.GetParent(itemRootGrid) is Grid container)
-        {
-            return container.Children.OfType<Grid>().SingleOrDefault(c => c.Name == "ItemRootGrid")?.Children.OfType<Grid>().SingleOrDefault(g => g.Name == "CheckBoxOverlay");
-        }
-        return null;
     }
 
     private void WallpaperItem_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -1185,6 +1172,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         await Task.Delay(100);
         HideWallpaperContextMenu();
+    }
+    private async void OnTagDisplayChanged(object sender, RoutedEventArgs e)
+    {
+        HideWallpaperContextMenu();
+        WallpapersRepeater.ItemsSource = null;
+        WallpapersRepeater.ItemsSource = Wallpapers;
     }
     private async void ChangeAnnotatedScrollBarEnabled(object sender, RoutedEventArgs e)
     {
