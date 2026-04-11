@@ -477,4 +477,19 @@
   <data name="PapersSetting_ContextMenuItems.Text" xml:space="preserve">
     <value>右键菜单选项</value>
   </data>
+  <data name="AppBarButton_Type.Text" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="AppBarButton_Source.Text" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="AppBarButton_Rating.Text" xml:space="preserve">
+    <value>分级</value>
+  </data>
+  <data name="AppBarButton_None.Text" xml:space="preserve">
+    <value>（不显示）</value>
+  </data>
+  <data name="AppBarButton_TagDisplay.Label" xml:space="preserve">
+    <value>标签</value>
+  </data>
 </root>
