@@ -209,47 +209,75 @@
                 <MenuFlyoutSubItem.Icon>
                     <FontIcon Glyph="&#xE890;"/>
                 </MenuFlyoutSubItem.Icon>
-                <ToggleMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
-                              Tag="Small"
-                              Click="OnIconSizeChanged"
-                              IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"/>
-                <ToggleMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
-                              Tag="Medium"
-                              Click="OnIconSizeChanged"
-                              IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"/>
-                <ToggleMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
-                              Tag="Large"
-                              Click="OnIconSizeChanged"
-                              IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
+                                     Tag="Small"
+                                     Click="OnIconSizeChanged"
+                                     IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"
+                                     GroupName="MenuViewGroup"/>
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
+                                     Tag="Medium"
+                                     Click="OnIconSizeChanged"
+                                     IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"
+                                     GroupName="MenuViewGroup"/>
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
+                                     Tag="Large"
+                                     Click="OnIconSizeChanged"
+                                     IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"
+                                     GroupName="MenuViewGroup"/>
                     <MenuFlyoutSeparator/>
                 <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                              IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
-                              Click="ChangeAnnotatedScrollBarEnabled"/>
+                                     IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                                     Click="ChangeAnnotatedScrollBarEnabled"/>
+            </MenuFlyoutSubItem>
+            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
+                <MenuFlyoutSubItem.Icon>
+                    <FontIcon Glyph="&#xE8EC;"/>
+                </MenuFlyoutSubItem.Icon>
+                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                     x:Uid="AppBarButton_Type"
+                                     Click="OnTagDisplayChanged"
+                                     IsChecked="{x:Bind ViewModel.TypeDisplayInTag, Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                     x:Uid="AppBarButton_Rating"
+                                     Click="OnTagDisplayChanged"
+                                     IsChecked="{x:Bind ViewModel.RatingDisplayInTag, Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                     x:Uid="AppBarButton_Source"
+                                     Click="OnTagDisplayChanged"
+                                     IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                     x:Uid="AppBarButton_None"
+                                     Click="OnTagDisplayChanged"
+                                     IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
             </MenuFlyoutSubItem>
             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_Sort">
                 <MenuFlyoutSubItem.Icon>
                     <FontIcon Glyph="&#xE8CB;"/>
                 </MenuFlyoutSubItem.Icon>
-                <ToggleMenuFlyoutItem x:Uid="SortByName" 
-                          x:Name="SortByNameItem"
-                          Tag="Small"
-                          Click="OnIconSizeChanged"
-                          IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"/>
-                <ToggleMenuFlyoutItem x:Uid="SortBySubTime"
-                          x:Name="SortBySubTimeItem"
-                          Tag="Medium"
-                          Click="OnIconSizeChanged"
-                          IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"/>
-                <ToggleMenuFlyoutItem x:Uid="SortByLastTime"
-                          x:Name="SortByLastTime"
-                          Tag="Large"
-                          Click="OnIconSizeChanged"
-                          IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"/>
-                <ToggleMenuFlyoutItem x:Uid="SortByFileSize"
-                          x:Name="SortByFileSizeItem"
-                          Tag="Large"
-                          Click="OnIconSizeChanged"
-                          IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem x:Uid="SortByName" 
+                                     x:Name="SortByNameItem"
+                                     Tag="Small"
+                                     Click="OnIconSizeChanged"
+                                     IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"
+                                     GroupName="MenuSortGroup"/>
+                <RadioMenuFlyoutItem x:Uid="SortBySubTime"
+                                     x:Name="SortBySubTimeItem"
+                                     Tag="Medium"
+                                     Click="OnIconSizeChanged"
+                                     IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"
+                                     GroupName="MenuSortGroup"/>
+                <RadioMenuFlyoutItem x:Uid="SortByLastTime"
+                                     x:Name="SortByLastTime"
+                                     Tag="Large"
+                                     Click="OnIconSizeChanged"
+                                     IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"
+                                     GroupName="MenuSortGroup"/>
+                <RadioMenuFlyoutItem x:Uid="SortByFileSize"
+                                     x:Name="SortByFileSizeItem"
+                                     Tag="Large"
+                                     Click="OnIconSizeChanged"
+                                     IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"
+                                     GroupName="MenuSortGroup"/>
             </MenuFlyoutSubItem>
         </MenuFlyout>
     </Page.Resources>

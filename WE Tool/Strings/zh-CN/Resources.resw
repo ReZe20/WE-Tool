@@ -484,12 +484,15 @@
     <value>来源</value>
   </data>
   <data name="AppBarButton_Rating.Text" xml:space="preserve">
-    <value>分级</value>
+    <value>年龄分级</value>
   </data>
   <data name="AppBarButton_None.Text" xml:space="preserve">
     <value>（不显示）</value>
   </data>
   <data name="AppBarButton_TagDisplay.Label" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="MenuFlyoutSubItem_TagDisplay.Text" xml:space="preserve">
     <value>标签</value>
   </data>
 </root>
