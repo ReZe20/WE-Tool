@@ -97,23 +97,19 @@ namespace WE_Tool
         }
         public static void StartBackgroundScan(string workShopPath, string officialPath, string projectPath, string acfPath)
         {
-            // 每次启动新的扫描时确保总进度为 0
             ScanProgressChanged?.Invoke(null, 0);
 
             ScanTask = Task.Run(async () =>
             {
                 try
                 {
-                    // 三个源，按等权重合成总进度
                     int sources = 3;
-                    // helper: create per-source progress that maps to global
                     EventHandler<int>? handler = ScanProgressChanged;
                     IProgress<int> makeProgress(int index)
                     {
                         int baseOffset = (int)Math.Round(index * (100.0 / sources));
                         return new Progress<int>(val =>
                         {
-                            // val: 0..100 -> map to baseOffset .. baseOffset + 100/sources
                             double slot = 100.0 / sources;
                             int overall = Math.Min(100, (int)Math.Round(baseOffset + (val / 100.0) * slot));
                             handler?.Invoke(null, overall);
@@ -129,7 +125,7 @@ namespace WE_Tool
                     var projectList = await projectListTask;
 
                     GlobalAllWallpapers = workShopList.Concat(officialList).Concat(projectList).ToList();
-                    // 确保最终为 100%
+
                     ScanProgressChanged?.Invoke(null, 100);
                     ScanCompleted?.Invoke(null, EventArgs.Empty);
                 }
