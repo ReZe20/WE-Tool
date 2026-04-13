@@ -136,10 +136,14 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (app?.ViewModel != null)
         {
             ViewModel = app.ViewModel;
+            ViewModel.SelectedWallpapers = SelectedWallpapers;
         }
         else
         {
-            ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
+            ViewModel = new SettingsViewModel(new ConfigService(), new PickerService())
+            {
+                SelectedWallpapers = SelectedWallpapers
+            };
         }
 
         this.InitializeComponent();
@@ -480,15 +484,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
     }
 
-    private void LeftToggleFilterButton_Click(object sender, RoutedEventArgs e)
-    {
-        LeftSplitView.IsPaneOpen = !LeftSplitView.IsPaneOpen;
-    }
-    private void RightToggleFilterButton_Click(object sender, RoutedEventArgs e)
-    {
-        RightSplitView.IsPaneOpen = !RightSplitView.IsPaneOpen;
-    }
-
     private async void ResetFilter_Click(object sender, RoutedEventArgs e)
     {
         await ViewModel.ResetFiltersAsync(1,true);
@@ -620,6 +615,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         else
         {
             StopAllStackAnimations();
+            SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
+            ViewModel.SuspendSelectedWallpapersCollectionChanged();
 
             SinglePreviewBorder.Visibility = Visibility.Visible;
             SingleSelectionInfoPanel.Visibility = Visibility.Visible;
@@ -655,6 +652,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 wp.IsSelected = false;
             }
             SelectedWallpapers.Clear();
+
+            SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
+            ViewModel.ResumeSelectedWallpapersCollectionChanged();
+
             RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             UpdateMultiSelectCount();
 
@@ -1009,6 +1010,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void InternalSelectAllWallpapers()
     {
+        ViewModel.SuspendSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
 
         var itemsToAdd = Wallpapers.Where(w => !w.IsSelected).ToList();
@@ -1018,6 +1020,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             SelectedWallpapers.Add(item);
         }
 
+        ViewModel.ResumeSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
         RefreshDisplayedSelectedWallpapers(forceRebuild: true);
 
@@ -1029,6 +1032,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void InternalInvertSelection()
     {
+        ViewModel.SuspendSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
         var currentlySelected = SelectedWallpapers.ToList();
         foreach (var item in Wallpapers)
@@ -1041,6 +1045,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (item.IsSelected)
                 SelectedWallpapers.Add(item);
         }
+        ViewModel.ResumeSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
         RefreshDisplayedSelectedWallpapers(forceRebuild: true);
 
@@ -1150,10 +1155,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             IsMultiSelectMode = true;
         }
         InternalInvertSelection();
-    }
-    private void MultiSelect_CLick_ByCommandBarFlyout(object sender, RoutedEventArgs e)
-    {
-        HideWallpaperContextMenu();
     }
     private void Property_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {

@@ -312,80 +312,180 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="{Binding ViewModel.BottomBarHeight}"/>
         </Grid.RowDefinitions>
-
-        <Button x:Name="LeftToggleFilterButton" Height="35" Grid.Row="0" HorizontalAlignment="Left" Margin="211,0,0,0" Click="LeftToggleFilterButton_Click" Style="{StaticResource AccentButtonStyle}" ToolTipService.ToolTip="侧边栏">
-            <Button.Content>
-                <StackPanel Orientation="Horizontal">
-                    <FontIcon Glyph="&#xE71D;" Margin="0,0,5,0"/>
-                    <TextBlock x:Uid="FilterResults"/>
-                </StackPanel>
-            </Button.Content>
-        </Button>
-
-        <AutoSuggestBox Grid.Row="0" 
-                        Height="35"
-                        Width="208" 
-                        QueryIcon="Find"
-                        x:Uid="SearchBox"
-                        HorizontalAlignment="Left"
-                        Margin="2,0,0,0" 
-                        FontSize="16" 
-                        FontWeight="Light"
-                        VerticalAlignment="Center"
-                        TextChanged="WallpaperSearchBox_TextChanged"/>
-
-        <StackPanel Grid.Row="0" HorizontalAlignment="Right" Orientation="Horizontal" Margin="10,0,120,0">
-            <DropDownButton Width="140" Height="35" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right">
+        <Border BorderThickness="0,0,0,1" BorderBrush="LightGray"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+            <AutoSuggestBox Grid.Row="0" 
+                            Height="34"
+                            Width="208" 
+                            QueryIcon="Find"
+                            x:Uid="SearchBox"
+                            HorizontalAlignment="Left"
+                            Margin="3,0,0,0" 
+                            FontSize="16" 
+                            CornerRadius="6"
+                            FontWeight="Light"
+                            VerticalAlignment="Center"
+                            TextChanged="WallpaperSearchBox_TextChanged"/>
+            <ToggleButton x:Name="LeftToggleFilterButton" Height="35" HorizontalAlignment="Left" BorderThickness="0" Background="Transparent" IsChecked="{x:Bind ViewModel.LeftSplitViewPaneOpen, Mode=TwoWay}" Margin="3,0,0,0">
+                <ToggleButton.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon Glyph="&#xE71D;" Margin="0,0,5,0" FontSize="16"/>
+                        <TextBlock x:Uid="FilterResults"/>
+                    </StackPanel>
+                </ToggleButton.Content>
+            </ToggleButton>
+            <AppBarSeparator/>
+            <Button Style="{ThemeResource SubtleButtonStyle}"
+                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                <Button.Content>
+                    <FontIcon Glyph="&#xE8C6;" FontSize="16"/>
+                </Button.Content>
+            </Button>
+            <Button Style="{ThemeResource SubtleButtonStyle}"
+                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                <Button.Content>
+                    <FontIcon Glyph="&#xE8C8;" FontSize="16"/>
+                </Button.Content>
+            </Button>
+            <Button Style="{ThemeResource SubtleButtonStyle}"
+                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                <Button.Content>
+                    <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                </Button.Content>
+            </Button>
+            <Button Style="{ThemeResource SubtleButtonStyle}"
+                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                <Button.Content>
+                    <FontIcon Glyph="&#xE75C;" FontSize="16"/>
+                </Button.Content>
+            </Button>
+            <Button Style="{ThemeResource SubtleButtonStyle}"
+                    Click="SelectAllWallpapers_Click_ByCommandBarFlyout">
+                <Button.Content>
+                    <FontIcon Glyph="&#xE8B3;" FontSize="16"/>
+                </Button.Content>
+            </Button>
+            <Button Style="{ThemeResource SubtleButtonStyle}"
+                    Click="InvertSelection_CLick_ByCommandBarFlyout">
+                <Button.Content>
+                    <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
+                </Button.Content>
+            </Button>
+            <AppBarSeparator/>
+            <DropDownButton Height="35" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal">
-                        <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.SortGlyph, Mode=OneWay}"/>
+                        <FontIcon Glyph="&#xE890;" Margin="0,0,8,0" FontSize="16"/>
+                        <TextBlock x:Uid="MenuFlyoutSubItem_View"/>
+                    </StackPanel>
+                </DropDownButton.Content>
+                <DropDownButton.Flyout>
+                    <MenuFlyout>
+                        <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
+                                             Tag="Small"
+                                             Click="OnIconSizeChanged"
+                                             IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"
+                                             GroupName="ViewGroup"/>
+                        <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
+                                             Tag="Medium"
+                                             Click="OnIconSizeChanged"
+                                             IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"
+                                             GroupName="ViewGroup"/>
+                        <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
+                                             Tag="Large"
+                                             Click="OnIconSizeChanged"
+                                             IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"
+                                             GroupName="ViewGroup"/>
+                        <MenuFlyoutSeparator/>
+                        <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
+                                             IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                                             Click="ChangeAnnotatedScrollBarEnabled"/>
+                    </MenuFlyout>
+                </DropDownButton.Flyout>
+            </DropDownButton>
+            <DropDownButton Height="35" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent">
+                <DropDownButton.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon Glyph="&#xE8EC;" Margin="0,0,8,0" FontSize="16"/>
+                        <TextBlock x:Uid="MenuFlyoutSubItem_TagDisplay"/>
+                    </StackPanel>
+                </DropDownButton.Content>
+                <DropDownButton.Flyout>
+                    <MenuFlyout>
+                        <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                             x:Uid="AppBarButton_Type"
+                                             Click="OnTagDisplayChanged"
+                                             IsChecked="{x:Bind ViewModel.TypeDisplayInTag, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                             x:Uid="AppBarButton_Rating"
+                                             Click="OnTagDisplayChanged"
+                                             IsChecked="{x:Bind ViewModel.RatingDisplayInTag, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                             x:Uid="AppBarButton_Source"
+                                             Click="OnTagDisplayChanged"
+                                             IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                             x:Uid="AppBarButton_None"
+                                             Click="OnTagDisplayChanged"
+                                             IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
+                    </MenuFlyout>
+                </DropDownButton.Flyout>
+            </DropDownButton>
+            <DropDownButton Width="115" Height="35" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Style="{ThemeResource SubtleButtonStyle}">
+                <DropDownButton.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.SortGlyph, Mode=OneWay}" FontSize="16"/>
                         <TextBlock x:Name="sortButtonText" Text="{x:Bind ViewModel.SortText, Mode=OneWay}" Margin="5,0,0,0" />
                     </StackPanel>
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
                     <MenuFlyout Placement="Bottom">
-                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Width="140" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE8D2;"/>
+                                <FontIcon Glyph="&#xE8D2;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Width="140" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xED0E;" />
+                                <FontIcon Glyph="&#xED0E;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2"  Width="140" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xF738;" />
+                                <FontIcon Glyph="&#xF738;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Width="140" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xEDA2;" />
+                                <FontIcon Glyph="&#xEDA2;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{x:Bind ViewModel.IsSortAscending, Mode=TwoWay}">
+            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{x:Bind ViewModel.IsSortAscending, Mode=TwoWay}" BorderThickness="0" Background="Transparent">
                 <ToggleButton.Content>
-                    <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.SortDirectionGlyph, Mode=OneWay}"/>
+                    <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
                 </ToggleButton.Content>
             </ToggleButton>
         </StackPanel>
-        <Button x:Name="RightToggleFilterButton"
-                Grid.Row="0"
-                HorizontalAlignment="Right"
-                Click="RightToggleFilterButton_Click" 
-                Style="{StaticResource SubtleButtonStyle}"
-                Width="118">
-            <Button.Content>
-                <StackPanel Orientation="Horizontal">
-                    <FontIcon Glyph="&#xE712;" Margin="0,0,5,0"/>
-                    <TextBlock x:Uid="DetailsPanel" Margin="5,0,5,0"/>
-                </StackPanel>
-            </Button.Content>
-        </Button>
+
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,3,0">
+            <ToggleButton x:Name="RightToggleFilterButton"
+                          Grid.Row="0"
+                          HorizontalAlignment="Right"
+                          Width="118"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          IsChecked="{x:Bind ViewModel.RightSplitViewPaneOpen, Mode=TwoWay}">
+                <ToggleButton.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon Glyph="&#xE90D;" Margin="0,0,5,0"/>
+                        <TextBlock x:Uid="DetailsPanel" Margin="5,0,5,0"/>
+                    </StackPanel>
+                </ToggleButton.Content>
+            </ToggleButton>
+        </StackPanel>
         <SplitView 
                 x:Name="RightSplitView" 
                 PanePlacement="Right" 
@@ -694,7 +794,7 @@
                                                                       Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
                                                                       VerticalAlignment="Top"
                                                                       HorizontalAlignment="Left"
-                                                                      Margin="8"
+                                                                      Margin="10,8,0,0"
                                                                       Click="SelectionCheckBox_Click"
                                                                       Background="Transparent"
                                                                       CornerRadius="6"
