@@ -495,4 +495,7 @@
   <data name="MenuFlyoutSubItem_TagDisplay.Text" xml:space="preserve">
     <value>标签</value>
   </data>
+  <data name="GridColumnButton_view.Text" xml:space="preserve">
+    <value>查看</value>
+  </data>
 </root>

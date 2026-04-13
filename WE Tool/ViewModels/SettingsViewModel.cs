@@ -28,10 +28,10 @@ namespace WE_Tool.ViewModels
 {
     public partial class SettingsViewModel : ObservableObject
     {
+        private ObservableCollection<WallpaperItem>? _previousSelectedWallpapers;
         public bool _isBatchUpdating = false;
         public int _wallpaperViewIndex;
         public bool _isAnnotatedScrollBarEnabled;
-        public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
 
         private readonly IConfigService _configService;
         private readonly IPickerService _pickerService;
@@ -49,13 +49,21 @@ namespace WE_Tool.ViewModels
         public IAsyncRelayCommand AutoDetectDownloadPathCommand { get; }
 
         [ObservableProperty]
-        public partial WallpaperItem? SelectedWallpaper { get; set; }
-
-        [ObservableProperty]
         public partial string AppLanguage { get; set; } = null!;
 
         [ObservableProperty]
         public partial string StartPageTag { get; set; } = null!;
+
+        [ObservableProperty]
+        public partial ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
+
+        [ObservableProperty]
+        public partial WallpaperItem? SelectedWallpaper { get; set; }
+
+        public bool IsButtonInGridColumnEnabled
+        {
+            get => SelectedWallpapers.Count != 0 || SelectedWallpaper != null;
+        }
 
         [ObservableProperty]
         public partial bool IsBottomBarOpen { get; set; }
@@ -446,6 +454,38 @@ namespace WE_Tool.ViewModels
 
             _settings.AppLanguage = value ?? "default";
             _ = ShowRestartDialog();
+        }
+        public void SuspendSelectedWallpapersCollectionChanged()
+        {
+            _previousSelectedWallpapers?.CollectionChanged -= OnSelectedWallpapersCollectionChanged;
+        }
+        public void ResumeSelectedWallpapersCollectionChanged()
+        {
+            _previousSelectedWallpapers?.CollectionChanged += OnSelectedWallpapersCollectionChanged;
+            OnSelectedWallpaperChanged(SelectedWallpaper);
+        }
+        partial void OnSelectedWallpaperChanged(WallpaperItem value)
+        {
+            OnPropertyChanged(nameof(IsButtonInGridColumnEnabled));
+        }
+        public void OnSelectedWallpapersCollectionChanged(object? sender,System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(IsButtonInGridColumnEnabled));
+        }
+        partial void OnSelectedWallpapersChanged(ObservableCollection<WallpaperItem> value)
+        {
+            if (_previousSelectedWallpapers != null)
+            {
+                _previousSelectedWallpapers.CollectionChanged -= OnSelectedWallpapersCollectionChanged;
+            }
+
+            _previousSelectedWallpapers = value;
+            if (value != null)
+            {
+                value.CollectionChanged += OnSelectedWallpapersCollectionChanged;
+            }
+
+            OnPropertyChanged(nameof(IsButtonInGridColumnEnabled));
         }
 
         partial void OnWallpaperViewIndexChanged(int value)
