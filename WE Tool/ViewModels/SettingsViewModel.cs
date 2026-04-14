@@ -129,7 +129,7 @@ namespace WE_Tool.ViewModels
                 if (value) WallpaperTagDisplayIndex = 2;
             }
         }
-        public bool NoneDisplayInTag
+        public bool TagDisplayInTag
         {
             get => WallpaperTagDisplayIndex == 3;
             set
@@ -137,11 +137,19 @@ namespace WE_Tool.ViewModels
                 if (value) WallpaperTagDisplayIndex = 3;
             }
         }
+        public bool NoneDisplayInTag
+        {
+            get => WallpaperTagDisplayIndex == 4;
+            set
+            {
+                if (value) WallpaperTagDisplayIndex = 4;
+            }
+        }
         public Microsoft.UI.Xaml.Visibility TagDisplayVisibility
         {
             get
             {
-                return WallpaperTagDisplayIndex != 3 ?
+                return WallpaperTagDisplayIndex != 4 ?
                     Microsoft.UI.Xaml.Visibility.Visible :
                     Microsoft.UI.Xaml.Visibility.Collapsed;
             }
