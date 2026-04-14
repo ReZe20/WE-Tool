@@ -193,11 +193,29 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial int SortOrder { get; set; }
 
-        [ObservableProperty]
-        public partial string SortGlyph { get; set; } = "\uE8D2";
+        public string SortGlyph 
+        {
+            get => SortOrder switch
+            {
+                0 => "\uE8D2",
+                1 => "\uED0E",
+                2 => "\uF738",
+                3 => "\uEDA2",
+                _ => "\uE8D2"
+            };
+        }
 
-        [ObservableProperty]
-        public partial string SortText { get; set; } = LanguageHelper.GetResource("SortByName.Text");
+        public string SortText
+        {
+            get => LanguageHelper.GetResource(SortOrder switch
+            {
+                0 => "SortByName.Text",
+                1 => "SortBySubTime.Text",
+                2 => "SortByLastTime.Text",
+                3 => "SortByLastTime.Text",
+                _ => "SortByName.Text"
+            });
+        }
 
         public bool SortByName
         {
@@ -424,30 +442,6 @@ namespace WE_Tool.ViewModels
             }
         }
 
-        private void UpdateSortUI()
-        {
-            switch (SortOrder)
-            {
-                case 0:
-                    SortGlyph = "\uE8D2";
-                    SortText = LanguageHelper.GetResource("SortByName.Text");
-                    break;
-                case 1:
-                    SortGlyph = "\uED0E";
-                    SortText = LanguageHelper.GetResource("SortBySubTime.Text");
-                    break;
-                case 2:
-                    SortGlyph = "\uF738";
-                    SortText = LanguageHelper.GetResource("SortByLastTime.Text");
-                    break;
-                case 3:
-                    SortGlyph = "\uEDA2";
-                    SortText = LanguageHelper.GetResource("SortByFileSize.Text");
-                    break;
-            }
-        }
-
-
         partial void OnAppLanguageChanged(string value)
         {
             if (_isBatchUpdating) return;
@@ -509,7 +503,8 @@ namespace WE_Tool.ViewModels
         }
         partial void OnSortOrderChanged(int value)
         {
-            UpdateSortUI();
+            OnPropertyChanged(nameof(SortText));
+            OnPropertyChanged(nameof(SortGlyph));
         }
 
         partial void OnIsSortAscendingChanged(bool value)
