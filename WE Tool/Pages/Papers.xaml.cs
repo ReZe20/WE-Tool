@@ -398,7 +398,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     if (ViewModel.Workshop && s == "workshop") source = true;
                     if (ViewModel.Mine && s == "mine") source = true;
 
-                    bool tagsMatch = w.Tags.Any(t => selectedTags.Contains(t?.Replace(" ", "").Replace("-", "") ?? ""));
+                    var rawTag = w.Tags ?? "";
+                    var normalizedTag = rawTag.Replace(" ", "").Replace("-", "");
+                    bool tagsMatch = selectedTags.Count > 0 && selectedTags.Contains(normalizedTag);
+
                     bool searchMatch = string.IsNullOrWhiteSpace(_searchText) ||
                                         (w.Title?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false);
 

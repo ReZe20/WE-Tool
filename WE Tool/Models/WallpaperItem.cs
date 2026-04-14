@@ -17,7 +17,7 @@ namespace WE_Tool.Models
         public string? ContentRating { get; set; }
         public string? Type { get; set; }
         public string? Description { get; set; }
-        public List<string>? Tags { get; set; }
+        public string? Tags { get; set; }
         public string? Source { get; set; }
         public string? Dependency { get; set; }
         public DateTime CreationTime { get; set; }
