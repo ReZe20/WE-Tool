@@ -403,7 +403,7 @@
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <DropDownButton Height="35" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent">
+            <DropDownButton Height="35" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE8EC;" Margin="0,0,8,0" FontSize="16"/>
@@ -500,7 +500,7 @@
 
                             <Grid x:Name="PreviewImageContainer" Height="250" Width="250" HorizontalAlignment="Center">
                                 <Border x:Name="SinglePreviewBorder" Width="250" Height="250" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                                    <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
+                                    <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue=null}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
                                         <Image.RenderTransform>
                                             <ScaleTransform x:Name="ImageScale" />
                                         </Image.RenderTransform>
@@ -526,36 +526,36 @@
                             </Grid>
 
                             <StackPanel x:Name="SingleSelectionInfoPanel" Spacing="15">
-                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay}" 
+                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay, FallbackValue=''}" 
                                            IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}" 
                                            Style="{StaticResource TitleTextBlockStyle}" 
                                            TextWrapping="Wrap"
                                            FontSize="20"
                                            Margin="10,0,0,0"/>
-                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay}" 
+                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay, FallbackValue=''}" 
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" 
                                            TextWrapping="Wrap"
                                            IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"
                                            Margin="10,0,0,0"/>
                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}}"
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue=''}"
                                                Style="{StaticResource CaptionTextBlockStyle}"
                                                FontWeight="SemiBold"
                                                VerticalAlignment="Center"
                                                Margin="10,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Source, Mode=OneWay, Converter={StaticResource SourceToDisplay}}" 
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Source, Mode=OneWay, Converter={StaticResource SourceToDisplay}, FallbackValue=''}" 
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Type, Mode=OneWay, Converter={StaticResource TypeToDisplay}}"
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Type, Mode=OneWay, Converter={StaticResource TypeToDisplay}, FallbackValue=''}"
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}}" 
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}, FallbackValue=''}" 
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
@@ -566,7 +566,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="x:String">
                                             <Border Background="#20808080" CornerRadius="4" Padding="6,2" Margin="0,4,4,0">
-                                                <TextBlock Text="{x:Bind Mode=OneWay, Converter={StaticResource TagToDisplay}}" FontSize="12"/>
+                                                <TextBlock Text="{x:Bind Mode=OneWay, FallbackValue='', Converter={StaticResource TagToDisplay}}" FontSize="12"/>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -576,7 +576,7 @@
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                 </ItemsControl>
-                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Description, Mode=OneWay, Converter={StaticResource DescriptionToDisplay}}" 
+                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Description, FallbackValue='', Mode=OneWay, Converter={StaticResource DescriptionToDisplay}}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"
                                            MaxHeight="150"
@@ -694,7 +694,8 @@
                                             x:Name="WallpapersScrollView"
                                             VerticalScrollBarVisibility="{x:Bind ViewModel.PapersScrollViewBarVisibility,Mode=OneWay}"
                                             Grid.Column="0"
-                                            ContextFlyout="{StaticResource ScrollViewBackgroundMenu}">
+                                            ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
+                                            Tapped="WallpaperList_Tapped">
                                     <StackPanel Margin="{x:Bind ViewModel.PapersScrollViewMargin, Mode=OneWay}">
                                         <StackPanel x:Name="NoResultTip" Visibility="Collapsed">
                                             <TextBlock x:Uid="NoResultTip1"

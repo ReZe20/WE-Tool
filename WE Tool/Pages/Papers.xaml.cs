@@ -52,6 +52,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private CancellationTokenSource? _filterCts;
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
+    private bool _isWallpaperItemTapped = false;
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
     private bool _isMultiSelectMode = false;
@@ -726,7 +727,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             IsMultiSelectMode = false;
         }
     }
+    private void WallpaperList_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (_isWallpaperItemTapped == true)
+        {
+            _isWallpaperItemTapped = false;
+            return;
+        }
 
+        ViewModel.SelectedWallpaper = null;
+    }
     private void SelectionCheckBox_Click(object sender, RoutedEventArgs e)
     {
         if (sender is CheckBox cb && cb.DataContext is WallpaperItem item)
@@ -748,7 +758,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void Item_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
-
         if (sender is Grid grid)
         {
             var checkBox = grid.Children.OfType<CheckBox>().FirstOrDefault();
@@ -848,6 +857,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (sender is Grid grid)
         {
+
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
 
@@ -887,6 +897,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (sender is Grid grid)
         {
+            _isWallpaperItemTapped = true;
+
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
 
