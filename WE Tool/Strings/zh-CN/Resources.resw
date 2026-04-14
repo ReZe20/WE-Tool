@@ -498,4 +498,7 @@
   <data name="GridColumnButton_view.Text" xml:space="preserve">
     <value>查看</value>
   </data>
+  <data name="AppBarButton_Tag.Text" xml:space="preserve">
+    <value>标签</value>
+  </data>
 </root>

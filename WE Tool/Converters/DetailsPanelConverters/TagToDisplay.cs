@@ -10,7 +10,7 @@ namespace WE_Tool.Converters
 {
     internal class TagToDisplay : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, string language)
+        public object Convert(object value, Type? targetType, object parameter, string language)
         {
             if (value == null) return string.Empty;
             var tagStr = value as string;

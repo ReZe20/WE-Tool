@@ -205,9 +205,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             HideWallpaperContextMenu();
 
-            var itemsToDelete = SelectedWallpapers.Count > 0
+            var itemsToDelete = ViewModel.SelectedWallpapers.Count > 0
             ? SelectedWallpapers.ToList()
-            : item is not null ? [item] : [];
+            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
 
             if (itemsToDelete.Count == 0) return;
             bool confirmed = await DialogHelper.ShowConfirmDialogAsync("删除",
@@ -225,6 +225,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 await DeleteItemAsync(toDelete, skipConfirm: itemsToDelete.Count > 1);
             }
+
+            ViewModel.SelectedWallpaper = null;
         });
         WallpapersScrollView.SizeChanged += (s, e) =>
         {

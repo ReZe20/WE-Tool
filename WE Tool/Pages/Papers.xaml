@@ -62,7 +62,6 @@
                 </AppBarButton>
                 <AppBarButton x:Uid="AppBarButton_Delete" 
                               Command="{x:Bind DeleteSelectedCommand}"
-                              CommandParameter="{Binding}"
                               KeyboardAcceleratorTextOverride="     Delete">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE74D;"/>
@@ -70,7 +69,6 @@
                 </AppBarButton>
                 <AppBarButton x:Uid="AppBarButton_DeleteForever"
                               Command="{x:Bind DeleteSelectedCommand}"
-                              CommandParameter="{Binding}"  
                               KeyboardAcceleratorTextOverride="Shift+Del">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE75C;" />
@@ -90,96 +88,6 @@
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8E6;" />
                     </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarSeparator/>
-                <AppBarButton x:Name="ViewOptionsButton"
-                              x:Uid="AppBarButton_View">
-                    <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE890;"/>
-                    </AppBarButton.Icon>
-                    <AppBarButton.Flyout>
-                        <MenuFlyout x:Name="ViewSubMenuFlyout" >
-                            <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
-                                                 x:Name="SmallIconItem"
-                                                 Tag="Small"
-                                                 Click="OnIconSizeChanged"
-                                                 IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"
-                                                 GroupName="ViewGroup"/>
-                            <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
-                                                 x:Name="MediumIconItem"
-                                                 Tag="Medium"
-                                                 Click="OnIconSizeChanged"
-                                                 IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"
-                                                 GroupName="ViewGroup"/>
-                            <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
-                                                 x:Name="LargeIconItem"
-                                                 Tag="Large"
-                                                 Click="OnIconSizeChanged"
-                                                 IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"
-                                                 GroupName="ViewGroup"/>
-                            <MenuFlyoutSeparator/>
-                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                                 IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
-                                                 Click="ChangeAnnotatedScrollBarEnabled"/>
-                        </MenuFlyout>
-                    </AppBarButton.Flyout>
-                </AppBarButton>
-                
-                <AppBarButton x:Uid="AppBarButton_TagDisplay"
-                              x:Name="AppBarButton_TagDisplay">
-                    <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8EC;"/>
-                    </AppBarButton.Icon>
-                    <AppBarButton.Flyout>
-                        <MenuFlyout>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_Type"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.TypeDisplayInTag, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_Rating"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.RatingDisplayInTag, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_Source"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_None"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
-                        </MenuFlyout>
-                    </AppBarButton.Flyout>
-                </AppBarButton>
-                <AppBarButton x:Name="SortOptionsButton"
-                              x:Uid="AppBarButton_Sort">
-                    <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8CB;" />
-                    </AppBarButton.Icon>
-                    <AppBarButton.Flyout>
-                        <MenuFlyout x:Name="SortSubMenuFlyout" >
-                            <RadioMenuFlyoutItem x:Uid="SortByName" 
-                                                 Tag="Small"
-                                                 Click="OnIconSizeChanged"
-                                                 IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"
-                                                 GroupName="SortGroup"/>
-                            <RadioMenuFlyoutItem x:Uid="SortBySubTime"
-                                                 Tag="Medium"
-                                                 Click="OnIconSizeChanged"
-                                                 IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"
-                                                 GroupName="SortGroup"/>
-                            <RadioMenuFlyoutItem x:Uid="SortByLastTime"
-                                                 Tag="Large"
-                                                 Click="OnIconSizeChanged"
-                                                 IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"
-                                                 GroupName="SortGroup"/>
-                            <RadioMenuFlyoutItem x:Uid="SortByFileSize"
-                                                 Tag="Large"
-                                                 Click="OnIconSizeChanged"
-                                                 IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"
-                                                 GroupName="SortGroup"/>
-                        </MenuFlyout>
-                    </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_Properties" 
@@ -247,6 +155,10 @@
                                      Click="OnTagDisplayChanged"
                                      IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                     x:Uid="AppBarButton_Tag"
+                                     Click="OnTagDisplayChanged"
+                                     IsChecked="{x:Bind ViewModel.TagDisplayInTag, Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_None"
                                      Click="OnTagDisplayChanged"
                                      IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
@@ -313,8 +225,8 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="{x:Bind ViewModel.BottomBarHeight, Mode=OneWay}"/>
         </Grid.RowDefinitions>
-        <Border BorderThickness="0,0,0,1" BorderBrush="LightGray"  Tapped="WallpaperList_Tapped"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"  Tapped="WallpaperList_Tapped">
+        <Border BorderThickness="0,0,0,1" BorderBrush="LightGray"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
             <AutoSuggestBox Grid.Row="0" 
                             Height="34"
                             Width="208" 
@@ -349,13 +261,15 @@
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
+                    Command="{x:Bind DeleteSelectedCommand}">
                 <Button.Content>
                     <FontIcon Glyph="&#xE74D;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
+                    Command="{x:Bind DeleteSelectedCommand}">
                 <Button.Content>
                     <FontIcon Glyph="&#xE75C;" FontSize="16"/>
                 </Button.Content>
@@ -425,6 +339,10 @@
                                              x:Uid="AppBarButton_Source"
                                              Click="OnTagDisplayChanged"
                                              IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                             x:Uid="AppBarButton_Tag"
+                                             Click="OnTagDisplayChanged"
+                                             IsChecked="{x:Bind ViewModel.TagDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_None"
                                              Click="OnTagDisplayChanged"

@@ -33,7 +33,8 @@ namespace WE_Tool.Converters
                     0 => new TypeToDisplay().Convert(model.Type ?? string.Empty, null, "", "") ?? string.Empty,
                     1 => new RatingToDisplay().Convert(model.ContentRating ?? string.Empty, null, "", "") ?? string.Empty,
                     2 => new SourceToDisplay().Convert(model.Source ?? string.Empty, null, "", "") ?? string.Empty,
-                    3 => string.Empty,
+                    3 => new TagToDisplay().Convert(model.Tags ?? string.Empty, null, "", "") ?? string.Empty,
+                    4 => string.Empty,
                     _ => model.Type ?? string.Empty
                 };
             }
