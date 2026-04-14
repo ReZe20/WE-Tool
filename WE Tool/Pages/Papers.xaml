@@ -21,6 +21,7 @@
         <converters:TagToDisplay x:Key="TagToDisplay"/>
         <converters:DescriptionToDisplay x:Key="DescriptionToDisplay"/>
         <converters:PapersTagContentChoose x:Key="PapersTagContentChoose"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
             <CommandBarFlyout.PrimaryCommands>
                 <AppBarButton x:Uid="AppBarButton_Extract">
@@ -310,10 +311,10 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="{Binding ViewModel.BottomBarHeight}"/>
+            <RowDefinition Height="{x:Bind ViewModel.BottomBarHeight, Mode=OneWay}"/>
         </Grid.RowDefinitions>
-        <Border BorderThickness="0,0,0,1" BorderBrush="LightGray"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+        <Border BorderThickness="0,0,0,1" BorderBrush="LightGray"  Tapped="WallpaperList_Tapped"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"  Tapped="WallpaperList_Tapped">
             <AutoSuggestBox Grid.Row="0" 
                             Height="34"
                             Width="208" 
@@ -561,21 +562,16 @@
                                                Margin="4,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
                                 </StackPanel>
-                                <ItemsControl ItemsSource="{x:Bind ViewModel.SelectedWallpaper.Tags, Mode=OneWay}"
-                                              Margin="10,0,0,0">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="x:String">
-                                            <Border Background="#20808080" CornerRadius="4" Padding="6,2" Margin="0,4,4,0">
-                                                <TextBlock Text="{x:Bind Mode=OneWay, FallbackValue='', Converter={StaticResource TagToDisplay}}" FontSize="12"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapGrid Orientation="Horizontal"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
+                                <Grid>
+                                    <Border Background="#20808080" 
+                                            CornerRadius="4" 
+                                            Padding="6,2" 
+                                            Margin="10,4,4,0" 
+                                            HorizontalAlignment="Left"
+                                            Visibility="{x:Bind ViewModel.SelectedWallpaper.Tags, FallbackValue=Collapsed, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}">
+                                        <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Tags, Mode=OneWay, FallbackValue={x:Null}, Converter={StaticResource TagToDisplay}}" FontSize="12"/>
+                                    </Border>
+                                </Grid>
                                 <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Description, FallbackValue='', Mode=OneWay, Converter={StaticResource DescriptionToDisplay}}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"

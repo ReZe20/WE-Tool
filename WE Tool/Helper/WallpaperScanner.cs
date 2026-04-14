@@ -95,9 +95,7 @@ internal class WallpaperScanner
 
     private static CachedEntry LoadCachedEntry(SqliteDataReader reader)
     {
-        var tagsJson = reader.IsDBNull(reader.GetOrdinal("Tags")) ? "[]" : reader.GetString("Tags");
-        var tags = JsonSerializer.Deserialize<List<string>>(tagsJson, JsonOptions)
-                   ?? new List<string> { "Unspecified" };
+        var tagsString = reader.IsDBNull(reader.GetOrdinal("Tags")) ? "Unspecified" : reader.GetString("Tags");
 
         var item = new WallpaperItem
         {
@@ -110,7 +108,7 @@ internal class WallpaperScanner
             UpdateTime = DateTime.ParseExact(reader.GetString("UpdateTime"), "o", CultureInfo.InvariantCulture),
             Preview = reader.GetString("Preview"),
             ContentRating = reader.IsDBNull("ContentRating") ? "Everyone" : reader.GetString("ContentRating"),
-            Tags = tags,
+            Tags = tagsString,
             Type = reader.GetString("Type"),
             Source = reader.GetString("Source"),
             Dependency = reader.IsDBNull("Dependency") ? "" : reader.GetString("Dependency")
@@ -153,7 +151,7 @@ internal class WallpaperScanner
                 cmd.Parameters.AddWithValue("@UpdateTime", item.UpdateTime.ToString("o"));
                 cmd.Parameters.AddWithValue("@Preview", item.Preview);
                 cmd.Parameters.AddWithValue("@ContentRating", item.ContentRating);
-                cmd.Parameters.AddWithValue("@Tags", JsonSerializer.Serialize(item.Tags, JsonOptions));
+                cmd.Parameters.AddWithValue("@Tags", item.Tags ?? "Unspecified");
                 cmd.Parameters.AddWithValue("@Type", item.Type);
                 cmd.Parameters.AddWithValue("@Dependency", item.Dependency ?? "");
                 cmd.Parameters.AddWithValue("@CachedAt", DateTime.UtcNow.ToString("o"));
@@ -344,9 +342,29 @@ internal class WallpaperScanner
                 previewFullPath = "ms-appx:///Assets/NoPreview.png";
 
             // Tags
-            var tagsList = metadata.Tags.HasValue
-                ? metadata.Tags.Value.EnumerateArray().Select(e => e.GetString() ?? "Unspecified").ToList()
-                : ["Unspecified"];
+            string tagsString = "Unspecified";
+            if (metadata.Tags.HasValue)
+            {
+                var tok = metadata.Tags.Value;
+                if (tok.ValueKind == JsonValueKind.String)
+                {
+                    tagsString = tok.GetString() ?? "Unspecified";
+                }
+                else if (tok.ValueKind == JsonValueKind.Array)
+                {
+                    var first = tok.EnumerateArray().Select(e => e.GetString()).FirstOrDefault(s => !string.IsNullOrEmpty(s));
+                    tagsString = first ?? "Unspecified";
+                }
+                else
+                {
+                    try
+                    {
+                        tagsString = tok.GetRawText();
+                        if (string.IsNullOrEmpty(tagsString)) tagsString = "Unspecified";
+                    }
+                    catch { tagsString = "Unspecified"; }
+                }
+            }
 
             // 文件夹大小
             long filesize = 0;
@@ -372,7 +390,7 @@ internal class WallpaperScanner
                 UpdateTime = Directory.GetLastWriteTime(current),
                 Preview = previewFullPath,
                 ContentRating = metadata.Contentrating ?? "Everyone",
-                Tags = tagsList,
+                Tags = tagsString,
                 Type = finalType,
                 Source = source,
                 Dependency = dependency
