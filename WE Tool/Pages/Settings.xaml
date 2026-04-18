@@ -23,19 +23,8 @@
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <StackPanel  Margin="25,10,25,0">
 
-                    <TextBlock x:Uid="Start" Margin="5,10,0,10"/>
-                    <controls:SettingsCard x:Uid="StartPage">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE8A1;"/>
-                        </controls:SettingsCard.HeaderIcon>
-                        <ComboBox SelectedValue="{x:Bind ViewModel.StartPageTag, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
-                            <ComboBoxItem Tag="Papers" x:Uid="InstalledWallpapers"/>
-                            <ComboBoxItem Tag="LoadPapers" x:Uid="ImportWallpapers"/>
-                        </ComboBox>
-                    </controls:SettingsCard>
-
-                    <TextBlock x:Uid="Language" Margin="5,10,0,10"/>
-                    <controls:SettingsCard x:Uid="Programming_Language">
+                    <TextBlock x:Uid="Program" Margin="5,10,0,10"/>
+                    <controls:SettingsCard x:Uid="Programming_Language" Margin="0,0,0,10">
                         <controls:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xF2B7;"/>
                         </controls:SettingsCard.HeaderIcon>
@@ -47,7 +36,26 @@
                             <ComboBoxItem Tag="zh-CN" Content="简体中文"/>
                         </ComboBox>
                     </controls:SettingsCard>
-
+                    <controls:SettingsCard x:Uid="StartPage" Margin="0,0,0,10">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8A1;"/>
+                        </controls:SettingsCard.HeaderIcon>
+                        <ComboBox SelectedValue="{x:Bind ViewModel.StartPageTag, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
+                            <ComboBoxItem Tag="Papers" x:Uid="InstalledWallpapers"/>
+                            <ComboBoxItem Tag="LoadPapers" x:Uid="ImportWallpapers"/>
+                        </ComboBox>
+                    </controls:SettingsCard>
+                    <controls:SettingsCard x:Uid="Theme" Margin="0,0,0,10">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE790;" />
+                        </controls:SettingsCard.HeaderIcon>
+                        <ComboBox SelectedValue="{x:Bind ViewModel.Theme, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
+                            <ComboBoxItem Tag="Default" x:Uid="FollowSystem"/>
+                            <ComboBoxItem Tag="Light" x:Uid="Light"/>
+                            <ComboBoxItem Tag="Dark" x:Uid="Dark"/>
+                        </ComboBox>
+                    </controls:SettingsCard>
+                    
                     <TextBlock x:Uid="Page" Margin="5,10,0,10"/>
                     <controls:SettingsExpander x:Uid="PapersSetting">
                         <controls:SettingsExpander.HeaderIcon>
