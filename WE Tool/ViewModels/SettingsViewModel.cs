@@ -941,6 +941,7 @@ namespace WE_Tool.ViewModels
                 "OfficialPath" => OfficialPath,
                 "ConfigPath" => ConfigPath,
                 "LogPath" => LogPath,
+                "DownloadPath" => DownloadPath,
                 _ => key
             };
 
