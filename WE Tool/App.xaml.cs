@@ -67,6 +67,7 @@ namespace WE_Tool
 
             _window.Activate();
             ScanWallpaperWhenStart();
+            LoadTheme();
         }
         public static string GetAppDataRoot()
         {
@@ -74,6 +75,29 @@ namespace WE_Tool
             string appFolder = System.IO.Path.Combine(localAppData, "WE_Tool");
             System.IO.Directory.CreateDirectory(appFolder);
             return appFolder;
+        }
+        public void LoadTheme()
+        {
+            try
+            {
+                string theme = ViewModel.Theme ?? "";
+
+                ElementTheme elementTheme = theme switch
+                {
+                    "Dark" => ElementTheme.Dark,
+                    "Light" => ElementTheme.Light,
+                    _ => ElementTheme.Default
+                };
+
+                if (MainWindowInstance?.Content is FrameworkElement rootElement)
+                {
+                    rootElement.RequestedTheme = elementTheme;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "应用主题时发生异常。");
+            }
         }
         private async void ScanWallpaperWhenStart()
         {

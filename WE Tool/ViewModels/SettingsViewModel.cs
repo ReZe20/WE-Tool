@@ -1,13 +1,16 @@
 ﻿#nullable enable
+using ABI.Microsoft.UI.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Shapes;
 using Microsoft.Win32;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
@@ -17,12 +20,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using System.ComponentModel;
 using WE_Tool.Helper;
 using WE_Tool.Models;
 using WE_Tool.Service;
 using static System.Formats.Asn1.AsnWriter;
-using ABI.Microsoft.UI.Xaml;
 
 namespace WE_Tool.ViewModels
 {
@@ -53,6 +54,9 @@ namespace WE_Tool.ViewModels
 
         [ObservableProperty]
         public partial string StartPageTag { get; set; } = null!;
+
+        [ObservableProperty]
+        public partial string Theme { get; set; } = null!;
 
         [ObservableProperty]
         public partial ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
@@ -457,6 +461,22 @@ namespace WE_Tool.ViewModels
             _settings.AppLanguage = value ?? "default";
             _ = ShowRestartDialog();
         }
+        partial void OnThemeChanged(string value)
+        {
+            if (_isBatchUpdating) return;
+            _settings.Theme = value ?? "";
+
+            try
+            {
+                var app = Microsoft.UI.Xaml.Application.Current as App;
+                app?.LoadTheme();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "尝试应用主题时失败。");
+            }
+
+        }
         public void SuspendSelectedWallpapersCollectionChanged()
         {
             _previousSelectedWallpapers?.CollectionChanged -= OnSelectedWallpapersCollectionChanged;
@@ -558,7 +578,9 @@ namespace WE_Tool.ViewModels
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
             AppLanguage = _settings.AppLanguage ?? "default";
+
             StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
+            Theme = _settings.Theme;
 
             IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             AutoPlayGif = _settings.Papers.AutoPlayGif;
@@ -771,6 +793,7 @@ namespace WE_Tool.ViewModels
                 _settings.AppLanguage = AppLanguage ?? "";
 
                 _settings.StartPageTag = StartPageTag;
+                _settings.Theme = Theme;
 
                 _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
                 _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;

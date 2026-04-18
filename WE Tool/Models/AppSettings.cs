@@ -9,6 +9,7 @@ namespace WE_Tool.Models
         public int Version { get; set; } = 1;
         public string AppLanguage { get; set; } = "zh-CN";
         public string StartPageTag { get; set; } = "Papers";
+        public string Theme { get; set; } = "Default";
         public PapersConfig Papers { get; set; } = new PapersConfig();
         public PapersConfig.Expander Expander { get; set; } = new PapersConfig.Expander();
         public PathConfig Path { get; set; } = new PathConfig();

@@ -501,4 +501,25 @@
   <data name="AppBarButton_Tag.Text" xml:space="preserve">
     <value>标签</value>
   </data>
+  <data name="Program.Text" xml:space="preserve">
+    <value>程序</value>
+  </data>
+  <data name="c.Head" xml:space="preserve">
+    <value>应用主题</value>
+  </data>
+  <data name="Theme.Header" xml:space="preserve">
+    <value>应用主题</value>
+  </data>
+  <data name="Theme.Description" xml:space="preserve">
+    <value>选择要显示的应用主题</value>
+  </data>
+  <data name="FollowSystem.Content" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="Light.Content" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="Dark.Content" xml:space="preserve">
+    <value>深色</value>
+  </data>
 </root>

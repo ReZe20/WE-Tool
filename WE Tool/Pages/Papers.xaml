@@ -225,7 +225,8 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="{x:Bind ViewModel.BottomBarHeight, Mode=OneWay}"/>
         </Grid.RowDefinitions>
-        <Border BorderThickness="0,0,0,1" BorderBrush="LightGray"/>
+        <AppBarSeparator/>
+        <Rectangle Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="1" Fill="{ThemeResource DividerStrokeColorDefault}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
             <AutoSuggestBox Grid.Row="0" 
                             Height="34"
@@ -780,7 +781,7 @@
               IsHitTestVisible="False">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
                 <ProgressRing x:Name="BackgroundProgressRing" Width="72" Height="72" IsActive="True"/>
-                <TextBlock x:Uid="ScanningTip" Foreground="Black" FontSize="14" HorizontalAlignment="Center"/>
+                <TextBlock x:Uid="ScanningTip" Style="{ThemeResource DisplayTextBlockStyle}"  FontSize="14" HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
     </Grid>
