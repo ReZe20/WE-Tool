@@ -84,6 +84,9 @@ namespace WE_Tool.ViewModels
         public partial bool AutoPlayGif { get; set; }
 
         [ObservableProperty]
+        public partial bool IsWallpaperEnterAnimationEnabled { get; set; }
+
+        [ObservableProperty]
         public partial bool IsAnnotatedScrollBarEnabled { get; set; }
 
         public ScrollingScrollBarVisibility PapersScrollViewBarVisibility
@@ -584,6 +587,7 @@ namespace WE_Tool.ViewModels
 
             IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             AutoPlayGif = _settings.Papers.AutoPlayGif;
+            IsWallpaperEnterAnimationEnabled = _settings.Papers.IsWallpaperEnterAnimationEnabled;
             IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
             WallpaperTagDisplayIndex = _settings.Papers.WallpaperTagDisplayIndex;
             WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
@@ -798,6 +802,7 @@ namespace WE_Tool.ViewModels
                 _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
                 _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;
                 _settings.Papers.AutoPlayGif = AutoPlayGif;
+                _settings.Papers.IsWallpaperEnterAnimationEnabled = IsWallpaperEnterAnimationEnabled;
                 _settings.Papers.WallpaperTagDisplayIndex = WallpaperTagDisplayIndex;
                 _settings.Papers.IsAnnotatedScrollBarEnabled = IsAnnotatedScrollBarEnabled;
                 _settings.Papers.WallpaperListMinWidth = WallpaperListMinWidth;

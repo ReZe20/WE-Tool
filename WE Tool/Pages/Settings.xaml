@@ -87,6 +87,15 @@
 
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox x:Uid="PapersSetting_IsWallpaperEnterAnimationEnabled"
+                                                  IsChecked="{x:Bind ViewModel.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal" >
                                         <TextBlock x:Uid="PapersSetting_WallpaperIconSize" Margin="28,0,12,0" VerticalAlignment="Center"/>
                                         <ComboBox SelectedIndex="{x:Bind ViewModel.WallpaperViewIndex, Mode=TwoWay}">
@@ -107,6 +116,14 @@
                                                    LargeChange="1000"
                                                    SpinButtonPlacementMode="Inline"
                                                    Minimum="0"/>
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Uid="PapersSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
+                                        
                                     </StackPanel>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>

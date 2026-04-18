@@ -803,13 +803,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 return;
             }
 
-            var scaleAnimation = compositor.CreateSpringVector3Animation();
-            scaleAnimation.Target = "Scale";
-            scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
-            scaleAnimation.DampingRatio = 0.6f;
-            scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
-            visual.StartAnimation("Scale", scaleAnimation);
-
+            if (ViewModel.IsWallpaperEnterAnimationEnabled)
+            {
+                var scaleAnimation = compositor.CreateSpringVector3Animation();
+                scaleAnimation.Target = "Scale";
+                scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
+                scaleAnimation.DampingRatio = 0.6f;
+                scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
+                visual.StartAnimation("Scale", scaleAnimation);
+            }
 
 
             Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
@@ -871,10 +873,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             scaleAnimation.Target = "Scale";
 
             // 如果松开时鼠标还在范围内，恢复到 1.15f (悬停态)，否则恢复到 1.0f
-            scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
+            if (!ViewModel.IsWallpaperEnterAnimationEnabled)
+            {
+                scaleAnimation.FinalValue = new Vector3(1f, 1f, 1f);
+            }
+            else
+            {
+                scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
+            }
             scaleAnimation.DampingRatio = 0.6f;
             scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
-
             visual.StartAnimation("Scale", scaleAnimation);
         }
 

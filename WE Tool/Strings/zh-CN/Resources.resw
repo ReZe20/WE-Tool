@@ -522,4 +522,7 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>深色</value>
   </data>
+  <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
+    <value>鼠标进入壁纸图标动画</value>
+  </data>
 </root>
