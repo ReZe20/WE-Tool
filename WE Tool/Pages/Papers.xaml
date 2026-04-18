@@ -12,7 +12,7 @@
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     x:Name="PageRoot"
-    NavigationCacheMode="Required">
+    NavigationCacheMode="Enabled">
     <Page.Resources>
         <converters:FileSizeToString x:Key="FileSizeToString"/>
         <converters:TypeToDisplay x:Key="TypeToDisplay"/>
