@@ -782,7 +782,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 Canvas.SetZIndex(parent, 10000);
             }
 
-
             if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
                 Item_PointerPressed(sender,e);
@@ -872,7 +871,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             var scaleAnimation = compositor.CreateSpringVector3Animation();
             scaleAnimation.Target = "Scale";
 
-            // 如果松开时鼠标还在范围内，恢复到 1.15f (悬停态)，否则恢复到 1.0f
             if (!ViewModel.IsWallpaperEnterAnimationEnabled)
             {
                 scaleAnimation.FinalValue = new Vector3(1f, 1f, 1f);
@@ -1180,6 +1178,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             IsMultiSelectMode = true;
         }
         InternalInvertSelection();
+    }
+    private async void WallpaperListRefresh_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    {
+        App.StartBackgroundScan(ViewModel.WorkshopPath, ViewModel.OfficialPath, ViewModel.ProjectPath,ViewModel.AcfPath);
+        _ = RefreshWallpaperList();
     }
     private void Property_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {

@@ -525,4 +525,7 @@
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>鼠标进入壁纸图标动画</value>
   </data>
+  <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
+    <value>刷新</value>
+  </data>
 </root>
