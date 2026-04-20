@@ -98,7 +98,16 @@
                 </AppBarButton>
             </CommandBarFlyout.SecondaryCommands>
         </CommandBarFlyout>
+        
         <MenuFlyout x:Name="ScrollViewBackgroundMenu">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_Refresh" 
+                            Click="WallpaperListRefresh_Click_ByCommandBarFlyout"
+                            KeyboardAcceleratorTextOverride="    F5">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE777;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+            <MenuFlyoutSeparator/>
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" 
                             Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
                             KeyboardAcceleratorTextOverride="    Ctrl+A">
@@ -225,7 +234,6 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="{x:Bind ViewModel.BottomBarHeight, Mode=OneWay}"/>
         </Grid.RowDefinitions>
-        <AppBarSeparator/>
         <Rectangle Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="1" Fill="{ThemeResource DividerStrokeColorDefault}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
             <AutoSuggestBox Grid.Row="0" 
@@ -285,6 +293,12 @@
                     Click="InvertSelection_CLick_ByCommandBarFlyout">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
+                </Button.Content>
+            </Button>
+            <Button Style="{ThemeResource SubtleButtonStyle}"
+                    Click="WallpaperListRefresh_Click_ByCommandBarFlyout">
+                <Button.Content>
+                    <FontIcon Glyph="&#xE777;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <AppBarSeparator/>
@@ -612,7 +626,7 @@
                                             ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                             Tapped="WallpaperList_Tapped">
                                     <StackPanel Margin="{x:Bind ViewModel.PapersScrollViewMargin, Mode=OneWay}">
-                                        <StackPanel x:Name="NoResultTip" Visibility="Collapsed">
+                                        <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
                                             <TextBlock x:Uid="NoResultTip1"
                                                    Style="{StaticResource TitleTextBlockStyle}" 
                                                    TextWrapping="Wrap"
@@ -664,7 +678,6 @@
                                                               Shadow="{StaticResource SharedShadow}"
                                                               ContextFlyout="{StaticResource WallpaperContextMenu}"
                                                               RightTapped="WallpaperItem_RightTapped">
-
                                                             <Viewbox Stretch="Uniform" VerticalAlignment="Top">
                                                                 <Canvas Width="100" Height="100"/>
                                                             </Viewbox>
@@ -734,14 +747,13 @@
                                         </ItemsRepeater>
                                     </StackPanel>
                                 </ScrollView>
-                                <AnnotatedScrollBar 
-                                    x:Name="Papers_AnnotatedScrollBarControl"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Stretch"
-                                    MaxWidth="10"
-                                    Margin="0,0,8,0"
-                                    Visibility="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
-                                    DetailLabelRequested="Papers_AnnotatedScrollBarControl_DetailLabelRequested"/>
+                                <AnnotatedScrollBar x:Name="Papers_AnnotatedScrollBarControl"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Stretch"
+                                                    MaxWidth="10"
+                                                    Margin="0,0,8,0"
+                                                    Visibility="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
+                                                    DetailLabelRequested="Papers_AnnotatedScrollBarControl_DetailLabelRequested"/>
                             </Grid>
                         </SplitView.Content>
                     </SplitView>
