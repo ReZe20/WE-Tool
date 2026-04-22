@@ -23,6 +23,7 @@ using System.Xml.Linq;
 using WE_Tool.Helper;
 using WE_Tool.Models;
 using WE_Tool.Service;
+using WE_Tool.ViewModels.Settings;
 using static System.Formats.Asn1.AsnWriter;
 
 namespace WE_Tool.ViewModels
@@ -38,7 +39,7 @@ namespace WE_Tool.ViewModels
         private readonly IPickerService _pickerService;
         private AppSettings _settings = new();
         private CancellationTokenSource? _saveCts;
-        private readonly TimeSpan _saveDelay = TimeSpan.FromMilliseconds(500);
+        private readonly System.TimeSpan _saveDelay = System.TimeSpan.FromMilliseconds(500);
         private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
 
         public IRelayCommand<string> ChangeSortCommand { get; }
@@ -49,14 +50,13 @@ namespace WE_Tool.ViewModels
         public IAsyncRelayCommand<string> AutoDetectWorkshopPathCommand { get; }
         public IAsyncRelayCommand AutoDetectDownloadPathCommand { get; }
 
-        [ObservableProperty]
-        public partial string AppLanguage { get; set; } = null!;
+        public AppearanceViewModel Appearance { get; private set; } = null!;
 
-        [ObservableProperty]
-        public partial string StartPageTag { get; set; } = null!;
+        public Controls.TagViewModel Tags { get; private set; } = null!;
+        public Controls.RatingViewModel Rating { get; private set; } = null!;
+        public Controls.TypesViewModel Types { get; private set; } = null!;
+        public Controls.SourceViewModel Source { get; private set; } = null!;
 
-        [ObservableProperty]
-        public partial string Theme { get; set; } = null!;
 
         [ObservableProperty]
         public partial ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
@@ -268,129 +268,6 @@ namespace WE_Tool.ViewModels
         public partial bool IsSortAscending { get; set; }
 
         [ObservableProperty]
-        public partial bool TypeExpander { get; set; }
-
-        [ObservableProperty]
-        public partial bool Scene { get; set; }
-
-        [ObservableProperty]
-        public partial bool Video { get; set; }
-
-        [ObservableProperty]
-        public partial bool Web { get; set; }
-
-        [ObservableProperty]
-        public partial bool Application { get; set; }
-
-        [ObservableProperty]
-        public partial bool Preset { get; set; }
-
-        [ObservableProperty]
-        public partial bool Unknown { get; set; }
-
-        [ObservableProperty]
-        public partial bool RatingExpander { get; set; }
-
-        [ObservableProperty]
-        public partial bool G { get; set; }
-
-        [ObservableProperty]
-        public partial bool Pg { get; set; }
-
-        [ObservableProperty]
-        public partial bool R { get; set; }
-
-        [ObservableProperty]
-        public partial bool SourceExpander { get; set; }
-
-        [ObservableProperty]
-        public partial bool Official { get; set; }
-
-        [ObservableProperty]
-        public partial bool Workshop { get; set; }
-
-        [ObservableProperty]
-        public partial bool Mine { get; set; }
-
-        [ObservableProperty]
-        public partial bool TagsExpander { get; set; }
-
-        [ObservableProperty]
-        public partial bool Abstract { get; set; }
-
-        [ObservableProperty]
-        public partial bool Animal { get; set; }
-
-        [ObservableProperty]
-        public partial bool Anime { get; set; }
-
-        [ObservableProperty]
-        public partial bool Cartoon { get; set; }
-
-        [ObservableProperty]
-        public partial bool Cgi { get; set; }
-
-        [ObservableProperty]
-        public partial bool Cyberpunk { get; set; }
-
-        [ObservableProperty]
-        public partial bool Fantasy { get; set; }
-
-        [ObservableProperty]
-        public partial bool Game { get; set; }
-
-        [ObservableProperty]
-        public partial bool Girls { get; set; }
-
-        [ObservableProperty]
-        public partial bool Guys { get; set; }
-
-        [ObservableProperty]
-        public partial bool Landscape { get; set; }
-
-        [ObservableProperty]
-        public partial bool Medieval { get; set; }
-
-        [ObservableProperty]
-        public partial bool Memes { get; set; }
-
-        [ObservableProperty]
-        public partial bool Mmd { get; set; }
-
-        [ObservableProperty]
-        public partial bool Music { get; set; }
-
-        [ObservableProperty]
-        public partial bool Nature { get; set; }
-
-        [ObservableProperty]
-        public partial bool Pixelart { get; set; }
-
-        [ObservableProperty]
-        public partial bool Relaxing { get; set; }
-
-        [ObservableProperty]
-        public partial bool Retro { get; set; }
-
-        [ObservableProperty]
-        public partial bool SciFi { get; set; }
-
-        [ObservableProperty]
-        public partial bool Sports { get; set; }
-
-        [ObservableProperty]
-        public partial bool Technology { get; set; }
-
-        [ObservableProperty]
-        public partial bool Television { get; set; }
-
-        [ObservableProperty]
-        public partial bool Vehicle { get; set; }
-
-        [ObservableProperty]
-        public partial bool Unspecified { get; set; }
-
-        [ObservableProperty]
         public partial string DownloadPath { get; set; } = null!;
 
         [ObservableProperty]
@@ -440,6 +317,18 @@ namespace WE_Tool.ViewModels
             _configService = configService;
             _pickerService = pickerService;
 
+            Appearance = new AppearanceViewModel();
+
+            Tags = new Controls.TagViewModel();
+            Source = new Controls.SourceViewModel();
+            Types = new Controls.TypesViewModel();
+            Rating = new Controls.RatingViewModel();
+
+            Source.PropertyChanged += OnPropertyChanged;
+            Appearance.PropertyChanged += OnPropertyChanged;
+            Types.PropertyChanged += OnPropertyChanged;
+            Tags.PropertyChanged += OnPropertyChanged;
+
             ChangeSortCommand = new RelayCommand<string>(ExecuteChangeSort);
             SaveCommand = new AsyncRelayCommand(SaveAsync);
             BrowseFolderCommand = new AsyncRelayCommand<object>(BrowseFolderAsync);
@@ -448,7 +337,11 @@ namespace WE_Tool.ViewModels
             AutoDetectWorkshopPathCommand = new AsyncRelayCommand<string>(AutoDetectWorkshopPathAsync);
             AutoDetectDownloadPathCommand = new AsyncRelayCommand(AutoDetectDownloadPathAsync);
         }
-
+        private void OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (_isBatchUpdating) return;
+            _ = SaveAsync();
+        }
         public void ExecuteChangeSort(string? parameter)
         {
             if (int.TryParse(parameter, out int newOrder))
@@ -457,29 +350,6 @@ namespace WE_Tool.ViewModels
             }
         }
 
-        partial void OnAppLanguageChanged(string value)
-        {
-            if (_isBatchUpdating) return;
-
-            _settings.AppLanguage = value ?? "default";
-            _ = ShowRestartDialog();
-        }
-        partial void OnThemeChanged(string value)
-        {
-            if (_isBatchUpdating) return;
-            _settings.Theme = value ?? "";
-
-            try
-            {
-                var app = Microsoft.UI.Xaml.Application.Current as App;
-                app?.LoadTheme();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "尝试应用主题时失败。");
-            }
-
-        }
         public void SuspendSelectedWallpapersCollectionChanged()
         {
             _previousSelectedWallpapers?.CollectionChanged -= OnSelectedWallpapersCollectionChanged;
@@ -580,10 +450,12 @@ namespace WE_Tool.ViewModels
 
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
-            AppLanguage = _settings.AppLanguage ?? "default";
+            Appearance.LoadFromSettings(_settings);
 
-            StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
-            Theme = _settings.Theme;
+            Tags.LoadFromSettings(_settings.Expander);
+            Source.LoadFromSettings(_settings.Expander);
+            Types.LoadFromSettings(_settings.Expander);
+            Rating.LoadFromSettings(_settings.Expander);
 
             IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             AutoPlayGif = _settings.Papers.AutoPlayGif;
@@ -599,51 +471,6 @@ namespace WE_Tool.ViewModels
 
             IsSortAscending = _settings.Papers.IsSortAscending;
             SortOrder = _settings.Papers.SortOrder;
-
-            TypeExpander = _settings.Expander.TypeExpander;
-            Scene = _settings.Expander.Scene;
-            Video = _settings.Expander.Video;
-            Web = _settings.Expander.Web;
-            Application = _settings.Expander.Application;
-            Preset = _settings.Expander.Preset;
-            Unknown = _settings.Expander.Unknown;
-
-            RatingExpander = _settings.Expander.RatingExpander;
-            G = _settings.Expander.G;
-            Pg = _settings.Expander.Pg;
-            R = _settings.Expander.R;
-
-            SourceExpander = _settings.Expander.SourceExpander;
-            Official = _settings.Expander.Official;
-            Workshop = _settings.Expander.Workshop;
-            Mine = _settings.Expander.Mine;
-
-            TagsExpander = _settings.Expander.TagsExpander;
-            Abstract = _settings.Expander.Abstract;
-            Animal = _settings.Expander.Animal;
-            Anime = _settings.Expander.Anime;
-            Cartoon = _settings.Expander.Cartoon;
-            Cgi = _settings.Expander.Cgi;
-            Cyberpunk = _settings.Expander.Cyberpunk;
-            Fantasy = _settings.Expander.Fantasy;
-            Game = _settings.Expander.Game;
-            Girls = _settings.Expander.Girls;
-            Guys = _settings.Expander.Guys;
-            Landscape = _settings.Expander.Landscape;
-            Medieval = _settings.Expander.Medieval;
-            Memes = _settings.Expander.Memes;
-            Mmd = _settings.Expander.Mmd;
-            Music = _settings.Expander.Music;
-            Nature = _settings.Expander.Nature;
-            Pixelart = _settings.Expander.Pixelart;
-            Relaxing = _settings.Expander.Relaxing;
-            Retro = _settings.Expander.Retro;
-            SciFi = _settings.Expander.SciFi;
-            Sports = _settings.Expander.Sports;
-            Technology = _settings.Expander.Technology;
-            Television = _settings.Expander.Television;
-            Vehicle = _settings.Expander.Vehicle;
-            Unspecified = _settings.Expander.Unspecified;
 
             DownloadPath = _settings.Path.DownloadPath;
             if (string.IsNullOrEmpty(DownloadPath))
@@ -698,78 +525,6 @@ namespace WE_Tool.ViewModels
             _settings.Path.OfficialPath = OfficialPath;
         }
 
-        public async Task ResetFiltersAsync(int mode, bool selectmode)
-        {
-            if (_isBatchUpdating) return;
-
-            _isBatchUpdating = true;
-
-            try
-            {
-                if (mode == 1)
-                {
-                    var actions = new List<Action>
-                    {
-                        () => Scene = selectmode,
-                        () => Video = selectmode,
-                        () => Web = selectmode,
-                        () => Application = selectmode,
-                        () => Unknown = selectmode,
-                        () => G = selectmode,
-                        () => Pg = selectmode,
-                        () => R = selectmode,
-                        () => Official = selectmode,
-                        () => Workshop = selectmode,
-                        () => Mine = selectmode,
-                    };
-                    foreach (var action in actions)
-                    {
-                        action();
-                    }
-                }
-                if (mode == 1 || mode == 2)
-                {
-                    var tags = new List<Action>
-                    {
-                        () => Abstract = selectmode,
-                        () => Animal = selectmode,
-                        () => Anime = selectmode,
-                        () => Cartoon = selectmode,
-                        () => Cgi = selectmode,
-                        () => Cyberpunk = selectmode,
-                        () => Fantasy = selectmode,
-                        () => Game = selectmode,
-                        () => Girls = selectmode,
-                        () => Guys = selectmode,
-                        () => Landscape = selectmode,
-                        () => Medieval = selectmode,
-                        () => Memes = selectmode,
-                        () => Mmd = selectmode,
-                        () => Music = selectmode,
-                        () => Nature = selectmode,
-                        () => Pixelart = selectmode,
-                        () => Relaxing = selectmode,
-                        () => Retro = selectmode,
-                        () => SciFi = selectmode,
-                        () => Sports = selectmode,
-                        () => Technology = selectmode,
-                        () => Television = selectmode,
-                        () => Vehicle = selectmode,
-                        () => Unspecified = selectmode
-                    };
-                    foreach (var action in tags)
-                    {
-                        action();
-                    }
-                }
-            }
-            finally
-            {
-                _isBatchUpdating = false;
-                OnPropertyChanged(nameof(Abstract));
-                await SaveAsync();
-            }
-        }
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);
@@ -794,10 +549,9 @@ namespace WE_Tool.ViewModels
             await _saveSemaphore.WaitAsync();
             try
             {
-                _settings.AppLanguage = AppLanguage ?? "";
-
-                _settings.StartPageTag = StartPageTag;
-                _settings.Theme = Theme;
+                _settings.AppLanguage = Appearance.AppLanguage ?? "";
+                _settings.StartPageTag = Appearance.StartPageTag;
+                _settings.Theme = Appearance.Theme;
 
                 _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
                 _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;
@@ -814,50 +568,50 @@ namespace WE_Tool.ViewModels
                 _settings.Papers.DetailSelectionEnabled = DetailSelectionEnabled;
                 _settings.Papers.FilterResultResponseDelay = FilterResultResponseDelay;
 
-                _settings.Expander.TypeExpander = TypeExpander;
-                _settings.Expander.Scene = Scene;
-                _settings.Expander.Video = Video;
-                _settings.Expander.Web = Web;
-                _settings.Expander.Application = Application;
-                _settings.Expander.Preset = Preset;
-                _settings.Expander.Unknown = Unknown;
+                _settings.Expander.TypeExpander = Types.TypeExpander;
+                _settings.Expander.Scene = Types.Scene;
+                _settings.Expander.Video = Types.Video;
+                _settings.Expander.Web = Types.Web;
+                _settings.Expander.Application = Types.Application;
+                _settings.Expander.Preset = Types.Preset;
+                _settings.Expander.Unknown = Types.Unknown;
 
-                _settings.Expander.RatingExpander = RatingExpander;
-                _settings.Expander.G = G;
-                _settings.Expander.Pg = Pg;
-                _settings.Expander.R = R;
+                _settings.Expander.RatingExpander = Rating.RatingExpander;
+                _settings.Expander.G = Rating.G;
+                _settings.Expander.Pg = Rating.Pg;
+                _settings.Expander.R = Rating.R;
 
-                _settings.Expander.SourceExpander = SourceExpander;
-                _settings.Expander.Official = Official;
-                _settings.Expander.Workshop = Workshop;
-                _settings.Expander.Mine = Mine;
+                _settings.Expander.SourceExpander = Source.SourceExpander;
+                _settings.Expander.Official = Source.Official;
+                _settings.Expander.Workshop = Source.Workshop;
+                _settings.Expander.Mine = Source.Mine;
 
-                _settings.Expander.TagsExpander = TagsExpander;
-                _settings.Expander.Abstract = Abstract;
-                _settings.Expander.Animal = Animal;
-                _settings.Expander.Anime = Anime;
-                _settings.Expander.Cartoon = Cartoon;
-                _settings.Expander.Cgi = Cgi;
-                _settings.Expander.Cyberpunk = Cyberpunk;
-                _settings.Expander.Fantasy = Fantasy;
-                _settings.Expander.Game = Game;
-                _settings.Expander.Girls = Girls;
-                _settings.Expander.Guys = Guys;
-                _settings.Expander.Landscape = Landscape;
-                _settings.Expander.Medieval = Medieval;
-                _settings.Expander.Memes = Memes;
-                _settings.Expander.Mmd = Mmd;
-                _settings.Expander.Music = Music;
-                _settings.Expander.Nature = Nature;
-                _settings.Expander.Pixelart = Pixelart;
-                _settings.Expander.Relaxing = Relaxing;
-                _settings.Expander.Retro = Retro;
-                _settings.Expander.SciFi = SciFi;
-                _settings.Expander.Sports = Sports;
-                _settings.Expander.Technology = Technology;
-                _settings.Expander.Television = Television;
-                _settings.Expander.Vehicle = Vehicle;
-                _settings.Expander.Unspecified = Unspecified;
+                _settings.Expander.TagsExpander = Tags.TagsExpander;
+                _settings.Expander.Abstract = Tags.Abstract;
+                _settings.Expander.Animal = Tags.Animal;
+                _settings.Expander.Anime = Tags.Anime;
+                _settings.Expander.Cartoon = Tags.Cartoon;
+                _settings.Expander.Cgi = Tags.Cgi;
+                _settings.Expander.Cyberpunk = Tags.Cyberpunk;
+                _settings.Expander.Fantasy = Tags.Fantasy;
+                _settings.Expander.Game = Tags.Game;
+                _settings.Expander.Girls = Tags.Girls;
+                _settings.Expander.Guys = Tags.Guys;
+                _settings.Expander.Landscape = Tags.Landscape;
+                _settings.Expander.Medieval = Tags.Medieval;
+                _settings.Expander.Memes = Tags.Memes;
+                _settings.Expander.Mmd = Tags.Mmd;
+                _settings.Expander.Music = Tags.Music;
+                _settings.Expander.Nature = Tags.Nature;
+                _settings.Expander.Pixelart = Tags.Pixelart;
+                _settings.Expander.Relaxing = Tags.Relaxing;
+                _settings.Expander.Retro = Tags.Retro;
+                _settings.Expander.SciFi = Tags.SciFi;
+                _settings.Expander.Sports = Tags.Sports;
+                _settings.Expander.Technology = Tags.Technology;
+                _settings.Expander.Television = Tags.Television;
+                _settings.Expander.Vehicle = Tags.Vehicle;
+                _settings.Expander.Unspecified = Tags.Unspecified;
 
                 _settings.Path.DownloadPath = DownloadPath;
                 _settings.Path.WorkshopPath = WorkshopPath;

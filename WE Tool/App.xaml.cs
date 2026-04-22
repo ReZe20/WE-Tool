@@ -80,7 +80,7 @@ namespace WE_Tool
         {
             try
             {
-                string theme = ViewModel.Theme ?? "";
+                string theme = ViewModel.Appearance.Theme ?? "";
 
                 ElementTheme elementTheme = theme switch
                 {

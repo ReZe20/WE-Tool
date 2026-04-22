@@ -31,6 +31,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.System;
 using Windows.UI.Core;
+using WE_Tool.ViewModels.Settings;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -61,31 +62,31 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _sizeChangedDebounceTimer;
     private static readonly FrozenDictionary<string, Func<SettingsViewModel, bool>> _tagGetters = new Dictionary<string, Func<SettingsViewModel, bool>>
     {
-        ["Abstract"] = vm => vm.Abstract,
-        ["Animal"] = vm => vm.Animal,
-        ["Anime"] = vm => vm.Anime,
-        ["Cartoon"] = vm => vm.Cartoon,
-        ["Cgi"] = vm => vm.Cgi,
-        ["Cyberpunk"] = vm => vm.Cyberpunk,
-        ["Fantasy"] = vm => vm.Fantasy,
-        ["Game"] = vm => vm.Game,
-        ["Girls"] = vm => vm.Girls,
-        ["Guys"] = vm => vm.Guys,
-        ["Landscape"] = vm => vm.Landscape,
-        ["Medieval"] = vm => vm.Medieval,
-        ["Memes"] = vm => vm.Memes,
-        ["Mmd"] = vm => vm.Mmd,
-        ["Music"] = vm => vm.Music,
-        ["Nature"] = vm => vm.Nature,
-        ["Pixelart"] = vm => vm.Pixelart,
-        ["Relaxing"] = vm => vm.Relaxing,
-        ["Retro"] = vm => vm.Retro,
-        ["SciFi"] = vm => vm.SciFi,
-        ["Sports"] = vm => vm.Sports,
-        ["Technology"] = vm => vm.Technology,
-        ["Television"] = vm => vm.Television,
-        ["Vehicle"] = vm => vm.Vehicle,
-        ["Unspecified"] = vm => vm.Unspecified,
+        ["Abstract"] = vm => vm.Tags.Abstract,
+        ["Animal"] = vm => vm.Tags.Animal,
+        ["Anime"] = vm => vm.Tags.Anime,
+        ["Cartoon"] = vm => vm.Tags.Cartoon,
+        ["Cgi"] = vm => vm.Tags.Cgi,
+        ["Cyberpunk"] = vm => vm.Tags.Cyberpunk,
+        ["Fantasy"] = vm => vm.Tags.Fantasy,
+        ["Game"] = vm => vm.Tags.Game,
+        ["Girls"] = vm => vm.Tags.Girls,
+        ["Guys"] = vm => vm.Tags.Guys,
+        ["Landscape"] = vm => vm.Tags.Landscape,
+        ["Medieval"] = vm => vm.Tags.Medieval,
+        ["Memes"] = vm => vm.Tags.Memes,
+        ["Mmd"] = vm => vm.Tags.Mmd,
+        ["Music"] = vm => vm.Tags.Music,
+        ["Nature"] = vm => vm.Tags.Nature,
+        ["Pixelart"] = vm => vm.Tags.Pixelart,
+        ["Relaxing"] = vm => vm.Tags.Relaxing,
+        ["Retro"] = vm => vm.Tags.Retro,
+        ["SciFi"] = vm => vm.Tags.SciFi,
+        ["Sports"] = vm => vm.Tags.Sports,
+        ["Technology"] = vm => vm.Tags.Technology,
+        ["Television"] = vm => vm.Tags.Television,
+        ["Vehicle"] = vm => vm.Tags.Vehicle,
+        ["Unspecified"] = vm => vm.Tags.Unspecified,
     }.ToFrozenDictionary();
     public  bool IsScanning
     {
@@ -381,24 +382,24 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 {
                     bool typeMatch = false;
                     string t = w.Type?.ToLower() ?? string.Empty;
-                    if (ViewModel.Scene && t == "scene") typeMatch = true;
-                    if (ViewModel.Video && t == "video") typeMatch = true;
-                    if (ViewModel.Web && t == "web") typeMatch = true;
-                    if (ViewModel.Application && t == "application") typeMatch = true;
-                    if (ViewModel.Preset && t == "preset") typeMatch = true;
-                    if (ViewModel.Unknown && t == "unknown") typeMatch = true;
+                    if (ViewModel.Types.Scene && t == "scene") typeMatch = true;
+                    if (ViewModel.Types.Video && t == "video") typeMatch = true;
+                    if (ViewModel.Types.Web && t == "web") typeMatch = true;
+                    if (ViewModel.Types.Application && t == "application") typeMatch = true;
+                    if (ViewModel.Types.Preset && t == "preset") typeMatch = true;
+                    if (ViewModel.Types.Unknown && t == "unknown") typeMatch = true;
 
                     bool ratingMatch = false;
                     string r = w.ContentRating?.ToLower() ?? string.Empty;
-                    if (ViewModel.G && r == "everyone") ratingMatch = true;
-                    if (ViewModel.Pg && r == "questionable") ratingMatch = true;
-                    if (ViewModel.R && r == "mature") ratingMatch = true;
+                    if (ViewModel.Rating.G && r == "everyone") ratingMatch = true;
+                    if (ViewModel.Rating.Pg && r == "questionable") ratingMatch = true;
+                    if (ViewModel.Rating.R && r == "mature") ratingMatch = true;
 
                     bool source = false;
                     string s = w.Source?.ToLower() ?? string.Empty;
-                    if (ViewModel.Official && s == "official") source = true;
-                    if (ViewModel.Workshop && s == "workshop") source = true;
-                    if (ViewModel.Mine && s == "mine") source = true;
+                    if (ViewModel.Source.Official && s == "official") source = true;
+                    if (ViewModel.Source.Workshop && s == "workshop") source = true;
+                    if (ViewModel.Source.Mine && s == "mine") source = true;
 
                     var rawTag = w.Tags ?? "";
                     var normalizedTag = rawTag.Replace(" ", "").Replace("-", "");
@@ -492,15 +493,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     private async void ResetFilter_Click(object sender, RoutedEventArgs e)
     {
-        await ViewModel.ResetFiltersAsync(1,true);
+        //await TagsViewModel.ResetFiltersAsync(true);
     }
     private async void SelectAllTags_Click(object sender, RoutedEventArgs e)
     {
-        await ViewModel.ResetFiltersAsync(2, true);
+        //await TagsViewModel.ResetFiltersAsync(true);
     } 
     private async void DeselectAllTags_Click(object sender, RoutedEventArgs e)
     {
-        await ViewModel.ResetFiltersAsync(2, false);
+        //await TagsViewModel.ResetFiltersAsync(false);
     }
     
     private void UpdateItemCheckBoxOpacity(Grid grid, WallpaperItem item)

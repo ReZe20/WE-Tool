@@ -64,7 +64,7 @@ namespace WE_Tool
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"初始化失败。Tag: {ViewModel?.StartPageTag}");
+                Log.Error(ex, $"初始化失败。Tag: {ViewModel?.Appearance?.StartPageTag}");
             }
         }
         private static NavigationViewItem? FindNavItemByTag(IEnumerable items, string tag)

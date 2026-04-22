@@ -9,12 +9,6 @@ using Windows.Storage;
 
 namespace WE_Tool.Service
 {
-    public interface IConfigService
-    {
-        Task<AppSettings> LoadAsync();
-        Task SaveAsync(AppSettings settings);
-    }
-
     public class ConfigService : IConfigService
     {
         private const string FileName = "config.json";

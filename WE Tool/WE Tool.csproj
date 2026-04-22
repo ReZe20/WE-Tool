@@ -18,7 +18,7 @@
   <ItemGroup>
     <None Remove="Assets\noPreview.png" />
     <None Remove="LoadPapers.xaml" />
-    <None Remove="Pages\Info.xaml" />
+    <None Remove="Views\Info.xaml" />
     <None Remove="Papers.xaml" />
   </ItemGroup>
 
