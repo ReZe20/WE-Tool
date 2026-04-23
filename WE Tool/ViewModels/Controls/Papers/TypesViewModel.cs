@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using WE_Tool.Models;
 
-namespace WE_Tool.ViewModels.Controls
+namespace WE_Tool.ViewModels.Controls.Papers
 {
     public partial class TypesViewModel : ObservableObject
     {

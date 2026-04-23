@@ -130,21 +130,21 @@
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
                                      Tag="Small"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.PapersControl.SmallIconItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
                                      Tag="Medium"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.PapersControl.MediumIconItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
                                      Tag="Large"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.PapersControl.LargeIconItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
                     <MenuFlyoutSeparator/>
                 <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                     IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.PapersControl.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
                                      Click="ChangeAnnotatedScrollBarEnabled"/>
             </MenuFlyoutSubItem>
             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
@@ -154,23 +154,23 @@
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_Type"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.TypeDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.PapersControl.TypeDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_Rating"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.RatingDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.PapersControl.RatingDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_Source"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.PapersControl.SourceDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_Tag"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.TagDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.PapersControl.TagDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_None"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.PapersControl.NoneDisplayInTag, Mode=TwoWay}"/>
             </MenuFlyoutSubItem>
             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_Sort">
                 <MenuFlyoutSubItem.Icon>
@@ -180,25 +180,25 @@
                                      x:Name="SortByNameItem"
                                      Tag="Small"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.PapersControl.SortByName,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortBySubTime"
                                      x:Name="SortBySubTimeItem"
                                      Tag="Medium"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.PapersControl.SortBySubTime,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortByLastTime"
                                      x:Name="SortByLastTime"
                                      Tag="Large"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.PapersControl.SortByLastTime,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortByFileSize"
                                      x:Name="SortByFileSizeItem"
                                      Tag="Large"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.PapersControl.SortByFileSize,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
             </MenuFlyoutSubItem>
         </MenuFlyout>
@@ -232,7 +232,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="{x:Bind ViewModel.BottomBarHeight, Mode=OneWay}"/>
+            <RowDefinition Height="{x:Bind ViewModel.PapersControl.BottomBarHeight, Mode=OneWay}"/>
         </Grid.RowDefinitions>
         <Rectangle Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="1" Fill="{ThemeResource DividerStrokeColorDefault}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
@@ -248,7 +248,7 @@
                             FontWeight="Light"
                             VerticalAlignment="Center"
                             TextChanged="WallpaperSearchBox_TextChanged"/>
-            <ToggleButton x:Name="LeftToggleFilterButton" Height="35" HorizontalAlignment="Left" BorderThickness="0" Background="Transparent" IsChecked="{x:Bind ViewModel.LeftSplitViewPaneOpen, Mode=TwoWay}" Margin="3,0,0,0">
+            <ToggleButton x:Name="LeftToggleFilterButton" Height="35" HorizontalAlignment="Left" BorderThickness="0" Background="Transparent" IsChecked="{x:Bind ViewModel.PapersControl.LeftSplitViewPaneOpen, Mode=TwoWay}" Margin="3,0,0,0">
                 <ToggleButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE71D;" Margin="0,0,5,0" FontSize="16"/>
@@ -258,26 +258,26 @@
             </ToggleButton>
             <AppBarSeparator/>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                    IsEnabled="{x:Bind ViewModel.PapersControl.IsButtonInGridColumnEnabled, Mode=OneWay}">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8C6;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                    IsEnabled="{x:Bind ViewModel.PapersControl.IsButtonInGridColumnEnabled, Mode=OneWay}">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8C8;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
+                    IsEnabled="{x:Bind ViewModel.PapersControl.IsButtonInGridColumnEnabled, Mode=OneWay}"
                     Command="{x:Bind DeleteSelectedCommand}">
                 <Button.Content>
                     <FontIcon Glyph="&#xE74D;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
+                    IsEnabled="{x:Bind ViewModel.PapersControl.IsButtonInGridColumnEnabled, Mode=OneWay}"
                     Command="{x:Bind DeleteSelectedCommand}">
                 <Button.Content>
                     <FontIcon Glyph="&#xE75C;" FontSize="16"/>
@@ -314,21 +314,21 @@
                         <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
                                              Tag="Small"
                                              Click="OnIconSizeChanged"
-                                             IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"
+                                             IsChecked="{x:Bind ViewModel.PapersControl.SmallIconItem,Mode=TwoWay}"
                                              GroupName="ViewGroup"/>
                         <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
                                              Tag="Medium"
                                              Click="OnIconSizeChanged"
-                                             IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"
+                                             IsChecked="{x:Bind ViewModel.PapersControl.MediumIconItem,Mode=TwoWay}"
                                              GroupName="ViewGroup"/>
                         <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
                                              Tag="Large"
                                              Click="OnIconSizeChanged"
-                                             IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"
+                                             IsChecked="{x:Bind ViewModel.PapersControl.LargeIconItem,Mode=TwoWay}"
                                              GroupName="ViewGroup"/>
                         <MenuFlyoutSeparator/>
                         <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                             IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                                             IsChecked="{x:Bind ViewModel.PapersControl.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
                                              Click="ChangeAnnotatedScrollBarEnabled"/>
                     </MenuFlyout>
                 </DropDownButton.Flyout>
@@ -345,31 +345,31 @@
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_Type"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.TypeDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.PapersControl.TypeDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_Rating"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.RatingDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.PapersControl.RatingDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_Source"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.PapersControl.SourceDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_Tag"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.TagDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.PapersControl.TagDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_None"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.PapersControl.NoneDisplayInTag, Mode=TwoWay}"/>
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
             <DropDownButton Width="115" Height="35" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Style="{ThemeResource SubtleButtonStyle}">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal">
-                        <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.SortGlyph, Mode=OneWay}" FontSize="16"/>
-                        <TextBlock x:Name="sortButtonText" Text="{x:Bind ViewModel.SortText, Mode=OneWay}" Margin="5,0,0,0" />
+                        <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.PapersControl.SortGlyph, Mode=OneWay}" FontSize="16"/>
+                        <TextBlock x:Name="sortButtonText" Text="{x:Bind ViewModel.PapersControl.SortText, Mode=OneWay}" Margin="5,0,0,0" />
                     </StackPanel>
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
@@ -397,9 +397,9 @@
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{x:Bind ViewModel.IsSortAscending, Mode=TwoWay}" BorderThickness="0" Background="Transparent">
+            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{x:Bind ViewModel.PapersControl.IsSortAscending, Mode=TwoWay}" BorderThickness="0" Background="Transparent">
                 <ToggleButton.Content>
-                    <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
+                    <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.PapersControl.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
                 </ToggleButton.Content>
             </ToggleButton>
         </StackPanel>
@@ -411,7 +411,7 @@
                           Width="118"
                           BorderThickness="0"
                           Background="Transparent"
-                          IsChecked="{x:Bind ViewModel.RightSplitViewPaneOpen, Mode=TwoWay}">
+                          IsChecked="{x:Bind ViewModel.PapersControl.RightSplitViewPaneOpen, Mode=TwoWay}">
                 <ToggleButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE90D;" Margin="0,0,5,0"/>
@@ -426,7 +426,7 @@
                 OpenPaneLength="304" 
                 DisplayMode="Inline"
                 Grid.Row="1"
-                IsPaneOpen="{x:Bind ViewModel.RightSplitViewPaneOpen, Mode=TwoWay}">
+                IsPaneOpen="{x:Bind ViewModel.PapersControl.RightSplitViewPaneOpen, Mode=TwoWay}">
             <SplitView.Pane>
                 <ScrollViewer>
                     <Grid Padding="15,15,15,15" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
@@ -434,7 +434,7 @@
 
                             <Grid x:Name="PreviewImageContainer" Height="250" Width="250" HorizontalAlignment="Center">
                                 <Border x:Name="SinglePreviewBorder" Width="250" Height="250" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                                    <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue=null}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
+                                    <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.PapersControl.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue=null}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
                                         <Image.RenderTransform>
                                             <ScaleTransform x:Name="ImageScale" />
                                         </Image.RenderTransform>
@@ -460,40 +460,40 @@
                             </Grid>
 
                             <StackPanel x:Name="SingleSelectionInfoPanel" Spacing="15">
-                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay, FallbackValue=''}" 
-                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}" 
+                                <TextBlock Text="{x:Bind ViewModel.PapersControl.SelectedWallpaper.Title, Mode=OneWay, FallbackValue=''}" 
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.PapersControl.DetailSelectionEnabled, Mode=OneWay}" 
                                            Style="{StaticResource TitleTextBlockStyle}" 
                                            TextWrapping="Wrap"
                                            FontSize="20"
                                            Margin="10,0,0,0"/>
-                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay, FallbackValue=''}" 
+                                <TextBlock Text="{x:Bind ViewModel.PapersControl.SelectedWallpaper.FolderPath, Mode=OneWay, FallbackValue=''}" 
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" 
                                            TextWrapping="Wrap"
-                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.PapersControl.DetailSelectionEnabled, Mode=OneWay}"
                                            Margin="10,0,0,0"/>
                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue=''}"
+                                    <TextBlock Text="{x:Bind ViewModel.PapersControl.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue=''}"
                                                Style="{StaticResource CaptionTextBlockStyle}"
                                                FontWeight="SemiBold"
                                                VerticalAlignment="Center"
                                                Margin="10,0,4,0"
-                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Source, Mode=OneWay, Converter={StaticResource SourceToDisplay}, FallbackValue=''}" 
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.PapersControl.DetailSelectionEnabled, Mode=OneWay}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.PapersControl.SelectedWallpaper.Source, Mode=OneWay, Converter={StaticResource SourceToDisplay}, FallbackValue=''}" 
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
-                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Type, Mode=OneWay, Converter={StaticResource TypeToDisplay}, FallbackValue=''}"
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.PapersControl.DetailSelectionEnabled, Mode=OneWay}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.PapersControl.SelectedWallpaper.Type, Mode=OneWay, Converter={StaticResource TypeToDisplay}, FallbackValue=''}"
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
-                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}, FallbackValue=''}" 
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.PapersControl.DetailSelectionEnabled, Mode=OneWay}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.PapersControl.SelectedWallpaper.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}, FallbackValue=''}" 
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
-                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.PapersControl.DetailSelectionEnabled, Mode=OneWay}"/>
                                 </StackPanel>
                                 <Grid>
                                     <Border Background="#20808080" 
@@ -501,16 +501,16 @@
                                             Padding="6,2" 
                                             Margin="10,4,4,0" 
                                             HorizontalAlignment="Left"
-                                            Visibility="{x:Bind ViewModel.SelectedWallpaper.Tags, FallbackValue=Collapsed, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}">
-                                        <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Tags, Mode=OneWay, FallbackValue={x:Null}, Converter={StaticResource TagToDisplay}}" FontSize="12"/>
+                                            Visibility="{x:Bind ViewModel.PapersControl.SelectedWallpaper.Tags, FallbackValue=Collapsed, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}">
+                                        <TextBlock Text="{x:Bind ViewModel.PapersControl.SelectedWallpaper.Tags, Mode=OneWay, FallbackValue={x:Null}, Converter={StaticResource TagToDisplay}}" FontSize="12"/>
                                     </Border>
                                 </Grid>
-                                <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Description, FallbackValue='', Mode=OneWay, Converter={StaticResource DescriptionToDisplay}}" 
+                                <TextBlock Text="{x:Bind ViewModel.PapersControl.SelectedWallpaper.Description, FallbackValue='', Mode=OneWay, Converter={StaticResource DescriptionToDisplay}}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"
                                            MaxHeight="150"
                                            TextTrimming="CharacterEllipsis"
-                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.PapersControl.DetailSelectionEnabled, Mode=OneWay}"
                                            Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
                                            Margin="10,0,0,0"/>
                             </StackPanel>
@@ -529,7 +529,7 @@
             </SplitView.Pane>
             <SplitView.Content>
                 <Grid>
-                    <SplitView x:Name="LeftSplitView" PanePlacement="Left" OpenPaneLength="210" DisplayMode="Inline" IsPaneOpen="{x:Bind ViewModel.LeftSplitViewPaneOpen, Mode=TwoWay}">
+                    <SplitView x:Name="LeftSplitView" PanePlacement="Left" OpenPaneLength="210" DisplayMode="Inline" IsPaneOpen="{x:Bind ViewModel.PapersControl.LeftSplitViewPaneOpen, Mode=TwoWay}">
                         <SplitView.Pane>
                             <Grid BorderBrush="#E0E0E0" BorderThickness="0,0,0,0">
                                 <Grid.RowDefinitions>
@@ -621,11 +621,11 @@
                                 <ScrollView HorizontalAnchorRatio="0.5" 
                                             VerticalAnchorRatio="0.5"
                                             x:Name="WallpapersScrollView"
-                                            VerticalScrollBarVisibility="{x:Bind ViewModel.PapersScrollViewBarVisibility,Mode=OneWay}"
+                                            VerticalScrollBarVisibility="{x:Bind ViewModel.PapersControl.PapersScrollViewBarVisibility,Mode=OneWay}"
                                             Grid.Column="0"
                                             ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                             Tapped="WallpaperList_Tapped">
-                                    <StackPanel Margin="{x:Bind ViewModel.PapersScrollViewMargin, Mode=OneWay}">
+                                    <StackPanel Margin="{x:Bind ViewModel.PapersControl.PapersScrollViewMargin, Mode=OneWay}">
                                         <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
                                             <TextBlock x:Uid="NoResultTip1"
                                                    Style="{StaticResource TitleTextBlockStyle}" 
@@ -649,7 +649,7 @@
                                                ContextFlyout="{StaticResource WallpaperContextMenu}">
                                             <ItemsRepeater.Layout>
                                                 <UniformGridLayout
-                                                    MinItemWidth="{x:Bind ViewModel.WallpaperListMinWidth, Mode=OneWay}"
+                                                    MinItemWidth="{x:Bind ViewModel.PapersControl.WallpaperListMinWidth, Mode=OneWay}"
                                                     MinColumnSpacing="10" 
                                                     MinRowSpacing="10" 
                                                     ItemsStretch="Fill" 
@@ -711,7 +711,7 @@
                                                                     MinHeight="20"
                                                                     Padding="4"
                                                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                                    Visibility="{Binding DataContext.ViewModel.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
+                                                                    Visibility="{Binding DataContext.ViewModel.PapersControl.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
                                                                     x:Name="TagDisplayBorder">
                                                                 <TextBlock Text="{x:Bind Converter={StaticResource PapersTagContentChoose}}"
                                                                            HorizontalAlignment="Center"
@@ -752,7 +752,7 @@
                                                     VerticalAlignment="Stretch"
                                                     MaxWidth="10"
                                                     Margin="0,0,8,0"
-                                                    Visibility="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
+                                                    Visibility="{x:Bind ViewModel.PapersControl.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
                                                     DetailLabelRequested="Papers_AnnotatedScrollBarControl_DetailLabelRequested"/>
                             </Grid>
                         </SplitView.Content>

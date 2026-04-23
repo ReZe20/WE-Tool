@@ -10,7 +10,7 @@ using System.Xml.Linq;
 using WE_Tool.Models;
 using static System.Formats.Asn1.AsnWriter;
 
-namespace WE_Tool.ViewModels.Controls
+namespace WE_Tool.ViewModels.Controls.Papers
 {
     public partial class SourceViewModel : ObservableObject
     {

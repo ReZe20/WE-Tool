@@ -18,7 +18,7 @@ namespace WE_Tool.Converters
             {
                 try
                 {
-                    index = app.ViewModel.WallpaperTagDisplayIndex;
+                    index = app.ViewModel.PapersControl.WallpaperTagDisplayIndex;
                 }
                 catch
                 {

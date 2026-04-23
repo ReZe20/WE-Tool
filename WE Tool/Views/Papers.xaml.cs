@@ -138,14 +138,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (app?.ViewModel != null)
         {
             ViewModel = app.ViewModel;
-            ViewModel.SelectedWallpapers = SelectedWallpapers;
+            ViewModel.PapersControl.SelectedWallpapers = SelectedWallpapers;
         }
         else
         {
-            ViewModel = new SettingsViewModel(new ConfigService(), new PickerService())
-            {
-                SelectedWallpapers = SelectedWallpapers
-            };
+            ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
         }
 
         this.InitializeComponent();
@@ -167,18 +164,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         this.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(Global_PointerReleased), true);
         this.AddHandler(UIElement.PointerCanceledEvent, new PointerEventHandler(Global_PointerReleased), true);
 
-        ViewModel.PropertyChanged += (s, e) => {
-            if (ViewModel._isBatchUpdating) return;
-
-            if (e.PropertyName == "SteamWorkshopPath" 
-                || e.PropertyName?.EndsWith("Expander") == true
-                || e.PropertyName?.Contains("Pane") == true
-                || e.PropertyName == "SortIndex"
-                || e.PropertyName == nameof(ViewModel.SelectedWallpaper))
-                return;
-
-            _ = ApplyFilters();
-        };
+        ViewModel.Tags.PropertyChanged += (s, e) => _ = ApplyFilters();
+        ViewModel.Source.PropertyChanged += (s, e) => _ = ApplyFilters();
+        ViewModel.Types.PropertyChanged += (s, e) => _ = ApplyFilters();
+        ViewModel.Rating.PropertyChanged += (s, e) => _ = ApplyFilters();
 
         this.Loaded += async (s, e) =>
         {
@@ -187,11 +176,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             var presenter = WallpapersScrollView.ScrollPresenter;
             _originalVerticalScrollController = presenter.VerticalScrollController;
-            if (ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+            if (ViewModel.PapersControl.IsAnnotatedScrollBarEnabled && presenter != null)
             {
                 presenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
             }
-            else if (!ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+            else if (!ViewModel.PapersControl.IsAnnotatedScrollBarEnabled && presenter != null)
             {
                 presenter.VerticalScrollController = _originalVerticalScrollController;
             }
@@ -206,9 +195,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             HideWallpaperContextMenu();
 
-            var itemsToDelete = ViewModel.SelectedWallpapers.Count > 0
+            var itemsToDelete = ViewModel.PapersControl.SelectedWallpapers.Count > 0
             ? SelectedWallpapers.ToList()
-            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
+            : ViewModel.PapersControl.SelectedWallpaper is not null ? [ViewModel.PapersControl.SelectedWallpaper] : [];
 
             if (itemsToDelete.Count == 0) return;
             bool confirmed = await DialogHelper.ShowConfirmDialogAsync("删除",
@@ -227,7 +216,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 await DeleteItemAsync(toDelete, skipConfirm: itemsToDelete.Count > 1);
             }
 
-            ViewModel.SelectedWallpaper = null;
+            ViewModel.PapersControl.SelectedWallpaper = null;
         });
         WallpapersScrollView.SizeChanged += (s, e) =>
         {
@@ -370,11 +359,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         try
         {
-            await Task.Delay(ViewModel.FilterResultResponseDelay, token);
+            await Task.Delay(ViewModel.PapersControl.FilterResultResponseDelay, token);
 
             var selectedTags = GetSelectedTags();
-            int sortIndex = ViewModel.SortOrder;
-            bool isAscending = ViewModel.IsSortAscending;
+            int sortIndex = ViewModel.PapersControl.SortOrder;
+            bool isAscending = ViewModel.PapersControl.IsSortAscending;
 
             var filteredResult = await Task.Run(() =>
             {
@@ -589,10 +578,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (isMulti)
         {
             // 如果单选有焦点，顺便加入多选
-            if (ViewModel.SelectedWallpaper != null && !SelectedWallpapers.Contains(ViewModel.SelectedWallpaper))
+            if (ViewModel.PapersControl.SelectedWallpaper != null && !SelectedWallpapers.Contains(ViewModel.PapersControl.SelectedWallpaper))
             {
-                ViewModel.SelectedWallpaper.IsSelected = true;
-                SelectedWallpapers.Add(ViewModel.SelectedWallpaper);
+                ViewModel.PapersControl.SelectedWallpaper.IsSelected = true;
+                SelectedWallpapers.Add(ViewModel.PapersControl.SelectedWallpaper);
                 RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             }
             else if (SelectedWallpapers.Count > 0)
@@ -623,7 +612,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             StopAllStackAnimations();
             SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
-            ViewModel.SuspendSelectedWallpapersCollectionChanged();
+            ViewModel.PapersControl.SuspendSelectedWallpapersCollectionChanged();
 
             SinglePreviewBorder.Visibility = Visibility.Visible;
             SingleSelectionInfoPanel.Visibility = Visibility.Visible;
@@ -661,7 +650,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             SelectedWallpapers.Clear();
 
             SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
-            ViewModel.ResumeSelectedWallpapersCollectionChanged();
+            ViewModel.PapersControl.ResumeSelectedWallpapersCollectionChanged();
 
             RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             UpdateMultiSelectCount();
@@ -741,7 +730,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return;
         }
 
-        ViewModel.SelectedWallpaper = null;
+        ViewModel.PapersControl.SelectedWallpaper = null;
     }
     private void SelectionCheckBox_Click(object sender, RoutedEventArgs e)
     {
@@ -786,7 +775,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
                 Item_PointerPressed(sender,e);
-                ViewModel.SelectedWallpaper = item;
+                ViewModel.PapersControl.SelectedWallpaper = item;
                 PlayDrillInAnimation();
                 if (IsMultiSelectMode)
                 {
@@ -803,7 +792,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 return;
             }
 
-            if (ViewModel.IsWallpaperEnterAnimationEnabled)
+            if (ViewModel.PapersControl.IsWallpaperEnterAnimationEnabled)
             {
                 var scaleAnimation = compositor.CreateSpringVector3Animation();
                 scaleAnimation.Target = "Scale";
@@ -872,7 +861,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             var scaleAnimation = compositor.CreateSpringVector3Animation();
             scaleAnimation.Target = "Scale";
 
-            if (!ViewModel.IsWallpaperEnterAnimationEnabled)
+            if (!ViewModel.PapersControl.IsWallpaperEnterAnimationEnabled)
             {
                 scaleAnimation.FinalValue = new Vector3(1f, 1f, 1f);
             }
@@ -894,9 +883,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 if (!_isMultiSelectMode)
                 {
-                    if (ViewModel.SelectedWallpaper != item)
+                    if (ViewModel.PapersControl.SelectedWallpaper != item)
                     {
-                        ViewModel.SelectedWallpaper = item;
+                        ViewModel.PapersControl.SelectedWallpaper = item;
                         PlayDrillInAnimation();
                     }
                 }
@@ -935,7 +924,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     var modifiers = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
                     if (modifiers && !_isMultiSelectMode)
                     {
-                        ViewModel.SelectedWallpaper = item;
+                        ViewModel.PapersControl.SelectedWallpaper = item;
                         IsMultiSelectMode = true;
                         item.IsSelected = !item.IsSelected;
 
@@ -945,7 +934,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
                     if (_isMultiSelectMode)
                     {
-                        ViewModel.SelectedWallpaper = item;
+                        ViewModel.PapersControl.SelectedWallpaper = item;
                         item.IsSelected = !item.IsSelected;
 
                         if (item.IsSelected && !SelectedWallpapers.Contains(item))
@@ -973,16 +962,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             if (!_isMultiSelectMode)
             {
-                if (ViewModel.SelectedWallpaper != item)
+                if (ViewModel.PapersControl.SelectedWallpaper != item)
                 {
-                    ViewModel.SelectedWallpaper = item;
+                    ViewModel.PapersControl.SelectedWallpaper = item;
                     PlayDrillInAnimation();
                 }
             }
 
             RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             UpdateMultiSelectCount();
-            ViewModel.SelectedWallpaper = item;
+            ViewModel.PapersControl.SelectedWallpaper = item;
         }
     }
     private static void ApplyScaleAnimation(FrameworkElement fe, float targetScale)
@@ -1034,7 +1023,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void InternalSelectAllWallpapers()
     {
-        ViewModel.SuspendSelectedWallpapersCollectionChanged();
+        ViewModel.PapersControl.SuspendSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
 
         var itemsToAdd = Wallpapers.Where(w => !w.IsSelected).ToList();
@@ -1044,7 +1033,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             SelectedWallpapers.Add(item);
         }
 
-        ViewModel.ResumeSelectedWallpapersCollectionChanged();
+        ViewModel.PapersControl.ResumeSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
         RefreshDisplayedSelectedWallpapers(forceRebuild: true);
 
@@ -1056,7 +1045,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void InternalInvertSelection()
     {
-        ViewModel.SuspendSelectedWallpapersCollectionChanged();
+        ViewModel.PapersControl.SuspendSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
         var currentlySelected = SelectedWallpapers.ToList();
         foreach (var item in Wallpapers)
@@ -1069,7 +1058,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (item.IsSelected)
                 SelectedWallpapers.Add(item);
         }
-        ViewModel.ResumeSelectedWallpapersCollectionChanged();
+        ViewModel.PapersControl.ResumeSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
         RefreshDisplayedSelectedWallpapers(forceRebuild: true);
 
@@ -1151,7 +1140,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
             else
             {
-                await DeleteSelectedCommand.ExecuteAsync(ViewModel.SelectedWallpaper);
+                await DeleteSelectedCommand.ExecuteAsync(ViewModel.PapersControl.SelectedWallpaper);
             }
         }
         catch (Exception ex)
@@ -1214,11 +1203,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         HideWallpaperContextMenu();
 
         var presenter = WallpapersScrollView.ScrollPresenter;
-        if (ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+        if (ViewModel.PapersControl.IsAnnotatedScrollBarEnabled && presenter != null)
         {
             presenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
         }
-        else if(!ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+        else if(!ViewModel.PapersControl.IsAnnotatedScrollBarEnabled && presenter != null)
         {
             presenter.VerticalScrollController = _originalVerticalScrollController;
         }
@@ -1273,7 +1262,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 var item = Wallpapers[i];
                 string labelText = "#";
 
-                switch (ViewModel.SortOrder)
+                switch (ViewModel.PapersControl.SortOrder)
                 {
                     case 0: 
                         string group = _zhGroupings.Lookup(item.Title ?? "");
@@ -1357,7 +1346,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         // 根据当前的排序方式（SortOrder），动态决定悬浮标签应该显示什么内容
         string label = string.Empty;
-        switch (ViewModel.SortOrder)
+        switch (ViewModel.PapersControl.SortOrder)
         {
             case 0: // 按名称排序
                 label = string.IsNullOrWhiteSpace(item.Title) ? "#" : item.Title.Substring(0, 1).ToUpper();

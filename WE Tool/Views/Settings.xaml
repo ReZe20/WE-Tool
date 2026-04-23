@@ -65,14 +65,14 @@
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
                                     <CheckBox x:Uid="PapersSetting_BottomBarVisibility" 
-                                              IsChecked="{x:Bind ViewModel.IsBottomBarOpen, Mode=TwoWay}"/>
+                                              IsChecked="{x:Bind ViewModel.PapersControl.IsBottomBarOpen, Mode=TwoWay}"/>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
 
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
                                     <CheckBox x:Uid="PapersSetting_DetailTextSelectMode"
-                                              IsChecked="{x:Bind ViewModel.DetailSelectionEnabled, Mode=TwoWay}"/>
+                                              IsChecked="{x:Bind ViewModel.PapersControl.DetailSelectionEnabled, Mode=TwoWay}"/>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
 
@@ -80,7 +80,7 @@
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <CheckBox x:Uid="PapersSetting_WallpaperAutoPlay"
-                                                  IsChecked="{x:Bind ViewModel.AutoPlayGif, Mode=TwoWay}"/>
+                                                  IsChecked="{x:Bind ViewModel.PapersControl.AutoPlayGif, Mode=TwoWay}"/>
                                     </StackPanel>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
@@ -89,7 +89,7 @@
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <CheckBox x:Uid="PapersSetting_IsWallpaperEnterAnimationEnabled"
-                                                  IsChecked="{x:Bind ViewModel.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
+                                                  IsChecked="{x:Bind ViewModel.PapersControl.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
                                     </StackPanel>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
@@ -98,7 +98,7 @@
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal" >
                                         <TextBlock x:Uid="PapersSetting_WallpaperIconSize" Margin="28,0,12,0" VerticalAlignment="Center"/>
-                                        <ComboBox SelectedIndex="{x:Bind ViewModel.WallpaperViewIndex, Mode=TwoWay}">
+                                        <ComboBox SelectedIndex="{x:Bind ViewModel.PapersControl.WallpaperViewIndex, Mode=TwoWay}">
                                             <ComboBoxItem Tag="0" x:Uid="PapersSetting_ComboBoxItem_SmallIcon"/>
                                             <ComboBoxItem Tag="1" x:Uid="PapersSetting_ComboBoxItem_MediumIcon"/>
                                             <ComboBoxItem Tag="2" x:Uid="PapersSetting_ComboBoxItem_LargeIcon"/>
@@ -111,7 +111,7 @@
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock x:Uid="PapersSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
-                                        <NumberBox Value="{x:Bind ViewModel.FilterResultResponseDelay, Mode=TwoWay}"
+                                        <NumberBox Value="{x:Bind ViewModel.PapersControl.FilterResultResponseDelay, Mode=TwoWay}"
                                                    SmallChange="100"
                                                    LargeChange="1000"
                                                    SpinButtonPlacementMode="Inline"
