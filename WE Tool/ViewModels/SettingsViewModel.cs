@@ -52,6 +52,7 @@ namespace WE_Tool.ViewModels
 
         public AppearanceViewModel Appearance { get; private set; } = null!;
 
+        public PapersViewModel Papers { get; private set; } = null!;
         public Controls.Papers.PapersControlViewModel PapersControl { get; private set; } = null!;
         public Controls.Papers.TagViewModel Tags { get; private set; } = null!;
         public Controls.Papers.RatingViewModel Rating { get; private set; } = null!;
@@ -122,7 +123,6 @@ namespace WE_Tool.ViewModels
             Types.PropertyChanged += OnPropertyChanged;
             Tags.PropertyChanged += OnPropertyChanged;
 
-            ChangeSortCommand = new RelayCommand<string>(PapersControl.ExecuteChangeSort);
             SaveCommand = new AsyncRelayCommand(SaveAsync);
             BrowseFolderCommand = new AsyncRelayCommand<object>(BrowseFolderAsync);
             BrowseFileCommand = new AsyncRelayCommand<object>(BrowseFileAsync);

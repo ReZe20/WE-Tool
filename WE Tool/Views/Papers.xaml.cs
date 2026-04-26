@@ -164,6 +164,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         this.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(Global_PointerReleased), true);
         this.AddHandler(UIElement.PointerCanceledEvent, new PointerEventHandler(Global_PointerReleased), true);
 
+        ViewModel.PapersControl.PropertyChanged += (s, e) =>
+        {
+            if (ViewModel.PapersControl._isBatchUpdating != false || e.PropertyName == "SortOrder" || e.PropertyName == "IsSortAscending")
+            {
+                _ = ApplyFilters();
+            }
+        };
         ViewModel.Tags.PropertyChanged += (s, e) => _ = ApplyFilters();
         ViewModel.Source.PropertyChanged += (s, e) => _ = ApplyFilters();
         ViewModel.Types.PropertyChanged += (s, e) => _ = ApplyFilters();
@@ -459,7 +466,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             if (casterElement.Shadow is ThemeShadow themeShadow)
             {
-
                 if (VisualTreeHelper.GetParent(casterElement) is Grid parentContainer)
                 {
                     var receiverGrid = parentContainer.FindName("ShadowCastGrid") as Grid;
@@ -796,7 +802,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 var scaleAnimation = compositor.CreateSpringVector3Animation();
                 scaleAnimation.Target = "Scale";
-                scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
+                scaleAnimation.FinalValue = new Vector3(1.2f, 1.2f, 1.2f);
                 scaleAnimation.DampingRatio = 0.6f;
                 scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
                 visual.StartAnimation("Scale", scaleAnimation);
@@ -867,7 +873,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
             else
             {
-                scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
+                scaleAnimation.FinalValue = new Vector3(1.2f, 1.2f, 1.2f);
             }
             scaleAnimation.DampingRatio = 0.6f;
             scaleAnimation.Period = TimeSpan.FromMilliseconds(50);

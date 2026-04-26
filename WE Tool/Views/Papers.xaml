@@ -374,26 +374,26 @@
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
                     <MenuFlyout Placement="Bottom">
-                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Click="ChangeSort">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE8D2;" FontSize="16"/>
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Click="ChangeSort">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xED0E;" FontSize="16"/>
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2" Click="ChangeSort">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xF738;" FontSize="16"/>
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Click="ChangeSort">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xEDA2;" FontSize="16"/>
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
+                        <RadioMenuFlyoutItem x:Uid="SortByName" 
+                                             Tag="Small"
+                                             Click="OnIconSizeChanged"
+                                             IsChecked="{x:Bind ViewModel.PapersControl.SortByName,Mode=TwoWay}"
+                                             GroupName="MSortGroup"/>
+                        <RadioMenuFlyoutItem x:Uid="SortBySubTime"
+                                             Tag="Medium"
+                                             Click="OnIconSizeChanged"
+                                             IsChecked="{x:Bind ViewModel.PapersControl.SortBySubTime,Mode=TwoWay}"
+                                             GroupName="SortGroup"/>
+                        <RadioMenuFlyoutItem x:Uid="SortByLastTime"
+                                             Tag="Large"
+                                             Click="OnIconSizeChanged"
+                                             IsChecked="{x:Bind ViewModel.PapersControl.SortByLastTime,Mode=TwoWay}"
+                                             GroupName="SortGroup"/>
+                        <RadioMenuFlyoutItem x:Uid="SortByFileSize"
+                                             Tag="Large"
+                                             Click="OnIconSizeChanged"
+                                             IsChecked="{x:Bind ViewModel.PapersControl.SortByFileSize,Mode=TwoWay}"
+                                             GroupName="SortGroup"/>
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
@@ -675,7 +675,6 @@
                                                               DataContext="{x:Bind}"
                                                               Translation="0,0,64"
                                                               Loaded="ShadowRect_Loaded"
-                                                              Shadow="{StaticResource SharedShadow}"
                                                               ContextFlyout="{StaticResource WallpaperContextMenu}"
                                                               RightTapped="WallpaperItem_RightTapped">
                                                             <Viewbox Stretch="Uniform" VerticalAlignment="Top">
@@ -685,7 +684,7 @@
                                                             <Image Stretch="UniformToFill">
                                                                 <Image.Source>
                                                                     <BitmapImage UriSource="{x:Bind Preview}" 
-                                                                         AutoPlay="{Binding DataContext.ViewModel.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
+                                                                         AutoPlay="{Binding DataContext.ViewModel.PapersControl.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
                                                                 </Image.Source>
                                                             </Image>
 

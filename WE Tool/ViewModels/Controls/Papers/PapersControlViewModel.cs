@@ -189,7 +189,7 @@ namespace WE_Tool.ViewModels.Controls.Papers
                 0 => "SortByName.Text",
                 1 => "SortBySubTime.Text",
                 2 => "SortByLastTime.Text",
-                3 => "SortByLastTime.Text",
+                3 => "SortByFileSize.Text",
                 _ => "SortByName.Text"
             });
         }
@@ -279,10 +279,18 @@ namespace WE_Tool.ViewModels.Controls.Papers
                 2 => 300,
                 _ => 180
             };
+            OnPropertyChanged(nameof(SmallIconItem));
+            OnPropertyChanged(nameof(MediumIconItem));
+            OnPropertyChanged(nameof(LargeIconItem));
         }
         partial void OnWallpaperTagDisplayIndexChanged(int value)
         {
             OnPropertyChanged(nameof(TagDisplayVisibility));
+            OnPropertyChanged(nameof(TypeDisplayInTag));
+            OnPropertyChanged(nameof(RatingDisplayInTag));
+            OnPropertyChanged(nameof(SourceDisplayInTag));
+            OnPropertyChanged(nameof(TagDisplayInTag));
+            OnPropertyChanged(nameof(NoneDisplayInTag));
         }
         partial void OnIsAnnotatedScrollBarEnabledChanged(bool value)
         {
@@ -293,6 +301,10 @@ namespace WE_Tool.ViewModels.Controls.Papers
         {
             OnPropertyChanged(nameof(SortText));
             OnPropertyChanged(nameof(SortGlyph));
+            OnPropertyChanged(nameof(SortByName));
+            OnPropertyChanged(nameof(SortBySubTime));
+            OnPropertyChanged(nameof(SortByLastTime));
+            OnPropertyChanged(nameof(SortByFileSize));
         }
 
         partial void OnIsSortAscendingChanged(bool value)
