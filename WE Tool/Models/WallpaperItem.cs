@@ -21,7 +21,10 @@ namespace WE_Tool.Models
         public string? Source { get; set; }
         public string? Dependency { get; set; }
         public DateTime CreationTime { get; set; }
+        public DateTime SubTime { get; set; }
+        public DateTime ModifiedTime { get; set; }
         public DateTime UpdateTime { get; set; }
+        public long FileSizeInACF { get; set; }
         public long FileSize { get; set; }
 
         private bool _isSelected;
