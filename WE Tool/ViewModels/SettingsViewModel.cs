@@ -41,22 +41,12 @@ namespace WE_Tool.ViewModels
         private readonly TimeSpan _saveDelay = TimeSpan.FromMilliseconds(500);
         private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
 
-        public IRelayCommand<string> ChangeSortCommand { get; }
         public IAsyncRelayCommand SaveCommand { get; }
-        public IAsyncRelayCommand<object> BrowseFolderCommand { get; }
-        public IAsyncRelayCommand<object> BrowseFileCommand { get; }
-        public IAsyncRelayCommand<object> OpenFolderCommand { get; }
-        public IAsyncRelayCommand<string> AutoDetectWorkshopPathCommand { get; }
-        public IAsyncRelayCommand AutoDetectDownloadPathCommand { get; }
 
-        [ObservableProperty]
-        public partial string AppLanguage { get; set; } = null!;
-
-        [ObservableProperty]
-        public partial string StartPageTag { get; set; } = null!;
-
-        [ObservableProperty]
-        public partial string Theme { get; set; } = null!;
+        public FilterExpanderViewModel FilterExpanderVM { get; } = new();
+        public AppSettingsViewModel AppSettingsVM { get; } = new();
+        public WallpaperDisplayViewModel WallpaperDisplayVM { get; } = new();
+        public PathManagementViewModel PathManagementVM { get; }
 
         [ObservableProperty]
         public partial ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
@@ -68,342 +58,6 @@ namespace WE_Tool.ViewModels
         {
             get => SelectedWallpapers.Count != 0 || SelectedWallpaper != null;
         }
-
-        [ObservableProperty]
-        public partial bool IsBottomBarOpen { get; set; }
-
-        public Microsoft.UI.Xaml.GridLength BottomBarHeight
-        {
-            get => IsBottomBarOpen ?
-                  new Microsoft.UI.Xaml.GridLength(50) :
-                  new Microsoft.UI.Xaml.GridLength(0);
-            set => SetProperty(ref field, value);
-        }
-
-        [ObservableProperty]
-        public partial bool AutoPlayGif { get; set; }
-
-        [ObservableProperty]
-        public partial bool IsWallpaperEnterAnimationEnabled { get; set; }
-
-        [ObservableProperty]
-        public partial bool IsAnnotatedScrollBarEnabled { get; set; }
-
-        public ScrollingScrollBarVisibility PapersScrollViewBarVisibility
-        {
-            get => IsAnnotatedScrollBarEnabled
-                    ? ScrollingScrollBarVisibility.Hidden
-                    : ScrollingScrollBarVisibility.Visible;
-            set
-            {
-                SetProperty(ref field, value);
-            }
-        }
-
-        public Microsoft.UI.Xaml.Thickness PapersScrollViewMargin
-        {
-            get => IsAnnotatedScrollBarEnabled ? 
-                new Microsoft.UI.Xaml.Thickness(4, 0, 44, 0) :
-                new Microsoft.UI.Xaml.Thickness(4, 0, 4, 0);
-
-            set => SetProperty(ref field, value);
-        }
-
-        [ObservableProperty]
-        public partial int WallpaperTagDisplayIndex { get; set; }
-
-        public bool TypeDisplayInTag
-        {
-            get => WallpaperTagDisplayIndex == 0;
-            set
-            {
-                if (value) WallpaperTagDisplayIndex = 0;
-            }
-        }
-        public bool RatingDisplayInTag
-        {
-            get => WallpaperTagDisplayIndex == 1;
-            set
-            {
-                if (value) WallpaperTagDisplayIndex = 1;
-            }
-        }
-        public bool SourceDisplayInTag
-        {
-            get => WallpaperTagDisplayIndex == 2;
-            set
-            {
-                if (value) WallpaperTagDisplayIndex = 2;
-            }
-        }
-        public bool TagDisplayInTag
-        {
-            get => WallpaperTagDisplayIndex == 3;
-            set
-            {
-                if (value) WallpaperTagDisplayIndex = 3;
-            }
-        }
-        public bool NoneDisplayInTag
-        {
-            get => WallpaperTagDisplayIndex == 4;
-            set
-            {
-                if (value) WallpaperTagDisplayIndex = 4;
-            }
-        }
-        public Microsoft.UI.Xaml.Visibility TagDisplayVisibility
-        {
-            get
-            {
-                return WallpaperTagDisplayIndex != 4 ?
-                    Microsoft.UI.Xaml.Visibility.Visible :
-                    Microsoft.UI.Xaml.Visibility.Collapsed;
-            }
-        }
-
-        [ObservableProperty]
-        public partial int WallpaperViewIndex { get; set; }
-
-        public bool SmallIconItem
-        {
-            get => WallpaperViewIndex == 0;
-            set
-            {
-                if (value) WallpaperViewIndex = 0;
-            }
-        }
-        public bool MediumIconItem
-        {
-            get => WallpaperViewIndex == 1;
-            set
-            {
-                if (value) WallpaperViewIndex = 1;
-            }
-        }
-        public bool LargeIconItem
-        {
-            get => WallpaperViewIndex == 2;
-            set
-            {
-                if (value) WallpaperViewIndex = 2;
-            }
-        }
-
-        [ObservableProperty]
-        public partial int WallpaperListMinWidth { get; set; }
-
-        [ObservableProperty]
-        public partial bool LeftSplitViewPaneOpen { get; set; }
-
-        [ObservableProperty]
-        public partial bool RightSplitViewPaneOpen { get; set; }
-
-        [ObservableProperty]
-        public partial bool DetailSelectionEnabled { get; set; }
-
-        [ObservableProperty]
-        public partial int FilterResultResponseDelay { get; set; }
-
-        [ObservableProperty]
-        public partial int SortOrder { get; set; }
-
-        public string SortGlyph 
-        {
-            get => SortOrder switch
-            {
-                0 => "\uE8D2",
-                1 => "\uED0E",
-                2 => "\uF738",
-                3 => "\uEDA2",
-                _ => "\uE8D2"
-            };
-        }
-
-        public string SortText
-        {
-            get => LanguageHelper.GetResource(SortOrder switch
-            {
-                0 => "SortByName.Text",
-                1 => "SortBySubTime.Text",
-                2 => "SortByLastTime.Text",
-                3 => "SortByLastTime.Text",
-                _ => "SortByName.Text"
-            });
-        }
-
-        public bool SortByName
-        {
-            get => SortOrder == 0;
-            set
-            {
-                if (value) SortOrder = 0;
-            }
-        }
-        public bool SortBySubTime
-        {
-            get => SortOrder == 1;
-            set
-            {
-                if (value) SortOrder = 1;
-            }
-        }
-        public bool SortByLastTime
-        {
-            get => SortOrder == 2;
-            set
-            {
-                if (value) SortOrder = 2;
-            }
-        }
-        public bool SortByFileSize
-        {
-            get => SortOrder == 3;
-            set
-            {
-                if (value) SortOrder = 3;
-            }
-        }
-        [ObservableProperty]
-        public partial bool IsSortAscending { get; set; }
-
-        [ObservableProperty]
-        public partial bool TypeExpander { get; set; }
-
-        [ObservableProperty]
-        public partial bool Scene { get; set; }
-
-        [ObservableProperty]
-        public partial bool Video { get; set; }
-
-        [ObservableProperty]
-        public partial bool Web { get; set; }
-
-        [ObservableProperty]
-        public partial bool Application { get; set; }
-
-        [ObservableProperty]
-        public partial bool Preset { get; set; }
-
-        [ObservableProperty]
-        public partial bool Unknown { get; set; }
-
-        [ObservableProperty]
-        public partial bool RatingExpander { get; set; }
-
-        [ObservableProperty]
-        public partial bool G { get; set; }
-
-        [ObservableProperty]
-        public partial bool Pg { get; set; }
-
-        [ObservableProperty]
-        public partial bool R { get; set; }
-
-        [ObservableProperty]
-        public partial bool SourceExpander { get; set; }
-
-        [ObservableProperty]
-        public partial bool Official { get; set; }
-
-        [ObservableProperty]
-        public partial bool Workshop { get; set; }
-
-        [ObservableProperty]
-        public partial bool Mine { get; set; }
-
-        [ObservableProperty]
-        public partial bool TagsExpander { get; set; }
-
-        [ObservableProperty]
-        public partial bool Abstract { get; set; }
-
-        [ObservableProperty]
-        public partial bool Animal { get; set; }
-
-        [ObservableProperty]
-        public partial bool Anime { get; set; }
-
-        [ObservableProperty]
-        public partial bool Cartoon { get; set; }
-
-        [ObservableProperty]
-        public partial bool Cgi { get; set; }
-
-        [ObservableProperty]
-        public partial bool Cyberpunk { get; set; }
-
-        [ObservableProperty]
-        public partial bool Fantasy { get; set; }
-
-        [ObservableProperty]
-        public partial bool Game { get; set; }
-
-        [ObservableProperty]
-        public partial bool Girls { get; set; }
-
-        [ObservableProperty]
-        public partial bool Guys { get; set; }
-
-        [ObservableProperty]
-        public partial bool Landscape { get; set; }
-
-        [ObservableProperty]
-        public partial bool Medieval { get; set; }
-
-        [ObservableProperty]
-        public partial bool Memes { get; set; }
-
-        [ObservableProperty]
-        public partial bool Mmd { get; set; }
-
-        [ObservableProperty]
-        public partial bool Music { get; set; }
-
-        [ObservableProperty]
-        public partial bool Nature { get; set; }
-
-        [ObservableProperty]
-        public partial bool Pixelart { get; set; }
-
-        [ObservableProperty]
-        public partial bool Relaxing { get; set; }
-
-        [ObservableProperty]
-        public partial bool Retro { get; set; }
-
-        [ObservableProperty]
-        public partial bool SciFi { get; set; }
-
-        [ObservableProperty]
-        public partial bool Sports { get; set; }
-
-        [ObservableProperty]
-        public partial bool Technology { get; set; }
-
-        [ObservableProperty]
-        public partial bool Television { get; set; }
-
-        [ObservableProperty]
-        public partial bool Vehicle { get; set; }
-
-        [ObservableProperty]
-        public partial bool Unspecified { get; set; }
-
-        [ObservableProperty]
-        public partial string DownloadPath { get; set; } = null!;
-
-        [ObservableProperty]
-        public partial string WorkshopPath { get; set; } = null!;
-
-        [ObservableProperty]
-        public partial string ProjectPath { get; set; } = null!;
-
-        [ObservableProperty]
-        public partial string AcfPath { get; set; } = null!;
-
-        [ObservableProperty]
-        public partial string OfficialPath { get; set; } = null!;
 
         [ObservableProperty]
         public partial bool IgnoreExtension { get; set; }
@@ -440,46 +94,59 @@ namespace WE_Tool.ViewModels
             _configService = configService;
             _pickerService = pickerService;
 
-            ChangeSortCommand = new RelayCommand<string>(ExecuteChangeSort);
             SaveCommand = new AsyncRelayCommand(SaveAsync);
-            BrowseFolderCommand = new AsyncRelayCommand<object>(BrowseFolderAsync);
-            BrowseFileCommand = new AsyncRelayCommand<object>(BrowseFileAsync);
-            OpenFolderCommand = new AsyncRelayCommand<object>(OpenFolderAsync);
-            AutoDetectWorkshopPathCommand = new AsyncRelayCommand<string>(AutoDetectWorkshopPathAsync);
-            AutoDetectDownloadPathCommand = new AsyncRelayCommand(AutoDetectDownloadPathAsync);
-        }
-
-        public void ExecuteChangeSort(string? parameter)
-        {
-            if (int.TryParse(parameter, out int newOrder))
+            PathManagementVM = new PathManagementViewModel(_pickerService)
             {
-                SortOrder = newOrder;
-            }
+                GetSelectedWallpapersToOpen = () =>
+                {
+                    var selected = SelectedWallpapers;
+                    if (selected.Count > 0)
+                        return [.. selected];
+                    if (SelectedWallpaper is { FolderPath: not null })
+                        return [SelectedWallpaper];
+                    return [];
+                }
+            };
+            PathManagementVM.SaveRequested += () => _ = SaveAsync();
+
+            // 任意子 VM 的属性变化都触发保存
+            AppSettingsVM.PropertyChanged += OnSubViewModelPropertyChanged;
+            FilterExpanderVM.PropertyChanged += OnSubViewModelPropertyChanged;
+            WallpaperDisplayVM.PropertyChanged += OnSubViewModelPropertyChanged;
+            PathManagementVM.PropertyChanged += OnSubViewModelPropertyChanged;
+
+            AppSettingsVM.PropertyChanged += (s, e) =>
+            {
+                if (_isBatchUpdating) return;
+
+                switch (e.PropertyName)
+                {
+                    case nameof(AppSettingsViewModel.AppLanguage):
+                        _settings.AppLanguage = AppSettingsVM.AppLanguage ?? "default";
+                        _ = ShowRestartDialog();
+                        break;
+                    case nameof(AppSettingsViewModel.Theme):
+                        _settings.Theme = AppSettingsVM.Theme ?? "";
+                        try
+                        {
+                            var app = Microsoft.UI.Xaml.Application.Current as App;
+                            app?.LoadTheme();
+                        }
+                        catch (Exception ex)
+                        {
+                            Serilog.Log.Error(ex, "尝试应用主题时失败。");
+                        }
+                        break;
+                }
+            };
         }
 
-        partial void OnAppLanguageChanged(string value)
+        private void OnSubViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (_isBatchUpdating) return;
-
-            _settings.AppLanguage = value ?? "default";
-            _ = ShowRestartDialog();
+            _ = SaveAsync();
         }
-        partial void OnThemeChanged(string value)
-        {
-            if (_isBatchUpdating) return;
-            _settings.Theme = value ?? "";
 
-            try
-            {
-                var app = Microsoft.UI.Xaml.Application.Current as App;
-                app?.LoadTheme();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "尝试应用主题时失败。");
-            }
-
-        }
         public void SuspendSelectedWallpapersCollectionChanged()
         {
             _previousSelectedWallpapers?.CollectionChanged -= OnSelectedWallpapersCollectionChanged;
@@ -513,62 +180,6 @@ namespace WE_Tool.ViewModels
             OnPropertyChanged(nameof(IsButtonInGridColumnEnabled));
         }
 
-        partial void OnWallpaperViewIndexChanged(int value)
-        {
-            WallpaperListMinWidth = value switch
-            {
-                0 => 180,
-                1 => 240,
-                2 => 300,
-                _ => 180
-            };
-        }
-        partial void OnWallpaperTagDisplayIndexChanged(int value)
-        {
-            OnPropertyChanged(nameof(TagDisplayVisibility));
-        }
-        partial void OnIsAnnotatedScrollBarEnabledChanged(bool value)
-        {
-            OnPropertyChanged(nameof(PapersScrollViewBarVisibility));
-            OnPropertyChanged(nameof(PapersScrollViewMargin));
-        }
-        partial void OnSortOrderChanged(int value)
-        {
-            OnPropertyChanged(nameof(SortText));
-            OnPropertyChanged(nameof(SortGlyph));
-        }
-
-        partial void OnIsSortAscendingChanged(bool value)
-        {
-            OnPropertyChanged(nameof(SortDirectionGlyph));
-        }
-
-        partial void OnIsBottomBarOpenChanged(bool value)
-        {
-            BottomBarHeight = value ? new Microsoft.UI.Xaml.GridLength(50) : new Microsoft.UI.Xaml.GridLength(0);
-        }
-
-        public string SortDirectionGlyph => IsSortAscending ? "\uE70D" : "\uE70E";
-
-#pragma warning disable CA1822 // ConfigPath在之后需要实例访问，不标记static
-        public string ConfigPath
-        {
-            get
-            {
-                return System.IO.Path.Combine(App.GetAppDataRoot());
-            }
-            set { }
-        }
-
-#pragma warning disable CA1822 // LogPath在之后需要实例访问，不标记static
-        public string LogPath
-        {
-            get
-            {
-                return System.IO.Path.Combine(App.GetAppDataRoot(), "logs");
-            }
-            set { }
-        }
 
         public async Task InitializeAsync()
         {
@@ -580,92 +191,87 @@ namespace WE_Tool.ViewModels
 
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
-            AppLanguage = _settings.AppLanguage ?? "default";
+            AppSettingsVM.AppLanguage = _settings.AppLanguage ?? "default";
 
-            StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
-            Theme = _settings.Theme;
+            AppSettingsVM.StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
+            AppSettingsVM.Theme = _settings.Theme;
 
-            IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
-            AutoPlayGif = _settings.Papers.AutoPlayGif;
-            IsWallpaperEnterAnimationEnabled = _settings.Papers.IsWallpaperEnterAnimationEnabled;
-            IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
-            WallpaperTagDisplayIndex = _settings.Papers.WallpaperTagDisplayIndex;
-            WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
-            WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
-            LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
-            RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
-            DetailSelectionEnabled = _settings.Papers.DetailSelectionEnabled;
-            FilterResultResponseDelay = _settings.Papers.FilterResultResponseDelay;
+            WallpaperDisplayVM.IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
+            WallpaperDisplayVM.AutoPlayGif = _settings.Papers.AutoPlayGif;
+            WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled = _settings.Papers.IsWallpaperEnterAnimationEnabled;
+            WallpaperDisplayVM.IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
+            WallpaperDisplayVM.WallpaperTagDisplayIndex = _settings.Papers.WallpaperTagDisplayIndex;
+            WallpaperDisplayVM.WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
+            WallpaperDisplayVM.WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
+            WallpaperDisplayVM.LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
+            WallpaperDisplayVM.RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
+            WallpaperDisplayVM.DetailSelectionEnabled = _settings.Papers.DetailSelectionEnabled;
+            WallpaperDisplayVM.FilterResultResponseDelay = _settings.Papers.FilterResultResponseDelay;
 
-            IsSortAscending = _settings.Papers.IsSortAscending;
-            SortOrder = _settings.Papers.SortOrder;
+            WallpaperDisplayVM.IsSortAscending = _settings.Papers.IsSortAscending;
+            WallpaperDisplayVM.SortOrder = _settings.Papers.SortOrder;
 
-            TypeExpander = _settings.Expander.TypeExpander;
-            Scene = _settings.Expander.Scene;
-            Video = _settings.Expander.Video;
-            Web = _settings.Expander.Web;
-            Application = _settings.Expander.Application;
-            Preset = _settings.Expander.Preset;
-            Unknown = _settings.Expander.Unknown;
+            FilterExpanderVM.TypeExpander = _settings.Expander.TypeExpander;
+            FilterExpanderVM.Scene = _settings.Expander.Scene;
+            FilterExpanderVM.Video = _settings.Expander.Video;
+            FilterExpanderVM.Web = _settings.Expander.Web;
+            FilterExpanderVM.Application = _settings.Expander.Application;
+            FilterExpanderVM.Preset = _settings.Expander.Preset;
+            FilterExpanderVM.Unknown = _settings.Expander.Unknown;
 
-            RatingExpander = _settings.Expander.RatingExpander;
-            G = _settings.Expander.G;
-            Pg = _settings.Expander.Pg;
-            R = _settings.Expander.R;
+            FilterExpanderVM.RatingExpander = _settings.Expander.RatingExpander;
+            FilterExpanderVM.G = _settings.Expander.G;
+            FilterExpanderVM.Pg = _settings.Expander.Pg;
+            FilterExpanderVM.R = _settings.Expander.R;
 
-            SourceExpander = _settings.Expander.SourceExpander;
-            Official = _settings.Expander.Official;
-            Workshop = _settings.Expander.Workshop;
-            Mine = _settings.Expander.Mine;
+            FilterExpanderVM.SourceExpander = _settings.Expander.SourceExpander;
+            FilterExpanderVM.Official = _settings.Expander.Official;
+            FilterExpanderVM.Workshop = _settings.Expander.Workshop;
+            FilterExpanderVM.Mine = _settings.Expander.Mine;
 
-            TagsExpander = _settings.Expander.TagsExpander;
-            Abstract = _settings.Expander.Abstract;
-            Animal = _settings.Expander.Animal;
-            Anime = _settings.Expander.Anime;
-            Cartoon = _settings.Expander.Cartoon;
-            Cgi = _settings.Expander.Cgi;
-            Cyberpunk = _settings.Expander.Cyberpunk;
-            Fantasy = _settings.Expander.Fantasy;
-            Game = _settings.Expander.Game;
-            Girls = _settings.Expander.Girls;
-            Guys = _settings.Expander.Guys;
-            Landscape = _settings.Expander.Landscape;
-            Medieval = _settings.Expander.Medieval;
-            Memes = _settings.Expander.Memes;
-            Mmd = _settings.Expander.Mmd;
-            Music = _settings.Expander.Music;
-            Nature = _settings.Expander.Nature;
-            Pixelart = _settings.Expander.Pixelart;
-            Relaxing = _settings.Expander.Relaxing;
-            Retro = _settings.Expander.Retro;
-            SciFi = _settings.Expander.SciFi;
-            Sports = _settings.Expander.Sports;
-            Technology = _settings.Expander.Technology;
-            Television = _settings.Expander.Television;
-            Vehicle = _settings.Expander.Vehicle;
-            Unspecified = _settings.Expander.Unspecified;
+            FilterExpanderVM.TagsExpander = _settings.Expander.TagsExpander;
+            FilterExpanderVM.Abstract = _settings.Expander.Abstract;
+            FilterExpanderVM.Animal = _settings.Expander.Animal;
+            FilterExpanderVM.Anime = _settings.Expander.Anime;
+            FilterExpanderVM.Cartoon = _settings.Expander.Cartoon;
+            FilterExpanderVM.Cgi = _settings.Expander.Cgi;
+            FilterExpanderVM.Cyberpunk = _settings.Expander.Cyberpunk;
+            FilterExpanderVM.Fantasy = _settings.Expander.Fantasy;
+            FilterExpanderVM.Game = _settings.Expander.Game;
+            FilterExpanderVM.Girls = _settings.Expander.Girls;
+            FilterExpanderVM.Guys = _settings.Expander.Guys;
+            FilterExpanderVM.Landscape = _settings.Expander.Landscape;
+            FilterExpanderVM.Medieval = _settings.Expander.Medieval;
+            FilterExpanderVM.Memes = _settings.Expander.Memes;
+            FilterExpanderVM.Mmd = _settings.Expander.Mmd;
+            FilterExpanderVM.Music = _settings.Expander.Music;
+            FilterExpanderVM.Nature = _settings.Expander.Nature;
+            FilterExpanderVM.Pixelart = _settings.Expander.Pixelart;
+            FilterExpanderVM.Relaxing = _settings.Expander.Relaxing;
+            FilterExpanderVM.Retro = _settings.Expander.Retro;
+            FilterExpanderVM.SciFi = _settings.Expander.SciFi;
+            FilterExpanderVM.Sports = _settings.Expander.Sports;
+            FilterExpanderVM.Technology = _settings.Expander.Technology;
+            FilterExpanderVM.Television = _settings.Expander.Television;
+            FilterExpanderVM.Vehicle = _settings.Expander.Vehicle;
+            FilterExpanderVM.Unspecified = _settings.Expander.Unspecified;
 
-            DownloadPath = _settings.Path.DownloadPath;
-            if (string.IsNullOrEmpty(DownloadPath))
-                await AutoDetectDownloadPathAsync();
+            PathManagementVM.LoadFromSettings(_settings);
+            if (string.IsNullOrEmpty(PathManagementVM.DownloadPath))
+                await PathManagementVM.AutoDetectDownloadPathAsync();
 
             string mode = "0000";
-            WorkshopPath = _settings.Path.WorkshopPath;
-            ProjectPath = _settings.Path.ProjectPath;
-            AcfPath = _settings.Path.AcfPath;
-            OfficialPath = _settings.Path.OfficialPath;
-
-            if (string.IsNullOrEmpty(WorkshopPath))
+            if (string.IsNullOrEmpty(PathManagementVM.WorkshopPath))
                 mode = mode.Remove(0, 1).Insert(0, "1");
-            if (string.IsNullOrEmpty(ProjectPath))
+            if (string.IsNullOrEmpty(PathManagementVM.ProjectPath))
                 mode = mode.Remove(1, 1).Insert(1, "1");
-            if (string.IsNullOrEmpty(AcfPath))
+            if (string.IsNullOrEmpty(PathManagementVM.AcfPath))
                 mode = mode.Remove(2, 1).Insert(2, "1");
-            if (string.IsNullOrEmpty(OfficialPath))
+            if (string.IsNullOrEmpty(PathManagementVM.OfficialPath))
                 mode = mode.Remove(3, 1).Insert(3, "1");
 
             if (mode.Contains('1'))
-                await AutoDetectWorkshopPathAsync(mode);
+                await PathManagementVM.AutoDetectWorkshopPathAsync(mode);
 
             IgnoreExtension = _settings.Extract.IgnoreExtension;
             IgnoreExtensionList = _settings.Extract.IgnoreExtensionList;
@@ -680,22 +286,13 @@ namespace WE_Tool.ViewModels
 
             if (isNewConfig || mode.Contains('1') || string.IsNullOrEmpty(_settings.Path.DownloadPath))
             {
-                SyncPathsToSettings();
+                PathManagementVM.SyncToSettings(_settings);
                 await _configService.SaveAsync(_settings);
             }
 
             _isBatchUpdating = false;
             await SaveAsync();
             OnPropertyChanged(string.Empty);
-        }
-
-        private void SyncPathsToSettings()
-        {
-            _settings.Path.DownloadPath = DownloadPath;
-            _settings.Path.WorkshopPath = WorkshopPath;
-            _settings.Path.ProjectPath = ProjectPath;
-            _settings.Path.AcfPath = AcfPath;
-            _settings.Path.OfficialPath = OfficialPath;
         }
 
         public async Task ResetFiltersAsync(int mode, bool selectmode)
@@ -710,17 +307,17 @@ namespace WE_Tool.ViewModels
                 {
                     var actions = new List<Action>
                     {
-                        () => Scene = selectmode,
-                        () => Video = selectmode,
-                        () => Web = selectmode,
-                        () => Application = selectmode,
-                        () => Unknown = selectmode,
-                        () => G = selectmode,
-                        () => Pg = selectmode,
-                        () => R = selectmode,
-                        () => Official = selectmode,
-                        () => Workshop = selectmode,
-                        () => Mine = selectmode,
+                        () => FilterExpanderVM.Scene = selectmode,
+                        () => FilterExpanderVM.Video = selectmode,
+                        () => FilterExpanderVM.Web = selectmode,
+                        () => FilterExpanderVM.Application = selectmode,
+                        () => FilterExpanderVM.Unknown = selectmode,
+                        () => FilterExpanderVM.G = selectmode,
+                        () => FilterExpanderVM.Pg = selectmode,
+                        () => FilterExpanderVM.R = selectmode,
+                        () => FilterExpanderVM.Official = selectmode,
+                        () => FilterExpanderVM.Workshop = selectmode,
+                        () => FilterExpanderVM.Mine = selectmode,
                     };
                     foreach (var action in actions)
                     {
@@ -731,31 +328,31 @@ namespace WE_Tool.ViewModels
                 {
                     var tags = new List<Action>
                     {
-                        () => Abstract = selectmode,
-                        () => Animal = selectmode,
-                        () => Anime = selectmode,
-                        () => Cartoon = selectmode,
-                        () => Cgi = selectmode,
-                        () => Cyberpunk = selectmode,
-                        () => Fantasy = selectmode,
-                        () => Game = selectmode,
-                        () => Girls = selectmode,
-                        () => Guys = selectmode,
-                        () => Landscape = selectmode,
-                        () => Medieval = selectmode,
-                        () => Memes = selectmode,
-                        () => Mmd = selectmode,
-                        () => Music = selectmode,
-                        () => Nature = selectmode,
-                        () => Pixelart = selectmode,
-                        () => Relaxing = selectmode,
-                        () => Retro = selectmode,
-                        () => SciFi = selectmode,
-                        () => Sports = selectmode,
-                        () => Technology = selectmode,
-                        () => Television = selectmode,
-                        () => Vehicle = selectmode,
-                        () => Unspecified = selectmode
+                        () => FilterExpanderVM.Abstract = selectmode,
+                        () => FilterExpanderVM.Animal = selectmode,
+                        () => FilterExpanderVM.Anime = selectmode,
+                        () => FilterExpanderVM.Cartoon = selectmode,
+                        () => FilterExpanderVM.Cgi = selectmode,
+                        () => FilterExpanderVM.Cyberpunk = selectmode,
+                        () => FilterExpanderVM.Fantasy = selectmode,
+                        () => FilterExpanderVM.Game = selectmode,
+                        () => FilterExpanderVM.Girls = selectmode,
+                        () => FilterExpanderVM.Guys = selectmode,
+                        () => FilterExpanderVM.Landscape = selectmode,
+                        () => FilterExpanderVM.Medieval = selectmode,
+                        () => FilterExpanderVM.Memes = selectmode,
+                        () => FilterExpanderVM.Mmd = selectmode,
+                        () => FilterExpanderVM.Music = selectmode,
+                        () => FilterExpanderVM.Nature = selectmode,
+                        () => FilterExpanderVM.Pixelart = selectmode,
+                        () => FilterExpanderVM.Relaxing = selectmode,
+                        () => FilterExpanderVM.Retro = selectmode,
+                        () => FilterExpanderVM.SciFi = selectmode,
+                        () => FilterExpanderVM.Sports = selectmode,
+                        () => FilterExpanderVM.Technology = selectmode,
+                        () => FilterExpanderVM.Television = selectmode,
+                        () => FilterExpanderVM.Vehicle = selectmode,
+                        () => FilterExpanderVM.Unspecified = selectmode
                     };
                     foreach (var action in tags)
                     {
@@ -766,7 +363,6 @@ namespace WE_Tool.ViewModels
             finally
             {
                 _isBatchUpdating = false;
-                OnPropertyChanged(nameof(Abstract));
                 await SaveAsync();
             }
         }
@@ -794,76 +390,76 @@ namespace WE_Tool.ViewModels
             await _saveSemaphore.WaitAsync();
             try
             {
-                _settings.AppLanguage = AppLanguage ?? "";
+                _settings.AppLanguage = AppSettingsVM.AppLanguage ?? "";
 
-                _settings.StartPageTag = StartPageTag;
-                _settings.Theme = Theme;
+                _settings.StartPageTag = AppSettingsVM.StartPageTag;
+                _settings.Theme = AppSettingsVM.Theme;
 
-                _settings.Papers.IsBottomBarOpen = IsBottomBarOpen;
-                _settings.Papers.WallpaperViewIndex = WallpaperViewIndex;
-                _settings.Papers.AutoPlayGif = AutoPlayGif;
-                _settings.Papers.IsWallpaperEnterAnimationEnabled = IsWallpaperEnterAnimationEnabled;
-                _settings.Papers.WallpaperTagDisplayIndex = WallpaperTagDisplayIndex;
-                _settings.Papers.IsAnnotatedScrollBarEnabled = IsAnnotatedScrollBarEnabled;
-                _settings.Papers.WallpaperListMinWidth = WallpaperListMinWidth;
-                _settings.Papers.LeftSplitViewPaneOpen = LeftSplitViewPaneOpen;
-                _settings.Papers.RightSplitViewPaneOpen = RightSplitViewPaneOpen;
+                _settings.Papers.IsBottomBarOpen = WallpaperDisplayVM.IsBottomBarOpen;
+                _settings.Papers.WallpaperViewIndex = WallpaperDisplayVM.WallpaperViewIndex;
+                _settings.Papers.AutoPlayGif = WallpaperDisplayVM.AutoPlayGif;
+                _settings.Papers.IsWallpaperEnterAnimationEnabled = WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled;
+                _settings.Papers.WallpaperTagDisplayIndex = WallpaperDisplayVM.WallpaperTagDisplayIndex;
+                _settings.Papers.IsAnnotatedScrollBarEnabled = WallpaperDisplayVM.IsAnnotatedScrollBarEnabled;
+                _settings.Papers.WallpaperListMinWidth = WallpaperDisplayVM.WallpaperListMinWidth;
+                _settings.Papers.LeftSplitViewPaneOpen = WallpaperDisplayVM.LeftSplitViewPaneOpen;
+                _settings.Papers.RightSplitViewPaneOpen = WallpaperDisplayVM.RightSplitViewPaneOpen;
 
-                _settings.Papers.IsSortAscending = IsSortAscending;
-                _settings.Papers.SortOrder = SortOrder;
-                _settings.Papers.DetailSelectionEnabled = DetailSelectionEnabled;
-                _settings.Papers.FilterResultResponseDelay = FilterResultResponseDelay;
+                _settings.Papers.IsSortAscending = WallpaperDisplayVM.IsSortAscending;
+                _settings.Papers.SortOrder = WallpaperDisplayVM.SortOrder;
+                _settings.Papers.DetailSelectionEnabled = WallpaperDisplayVM.DetailSelectionEnabled;
+                _settings.Papers.FilterResultResponseDelay = WallpaperDisplayVM.FilterResultResponseDelay;
 
-                _settings.Expander.TypeExpander = TypeExpander;
-                _settings.Expander.Scene = Scene;
-                _settings.Expander.Video = Video;
-                _settings.Expander.Web = Web;
-                _settings.Expander.Application = Application;
-                _settings.Expander.Preset = Preset;
-                _settings.Expander.Unknown = Unknown;
+                _settings.Expander.TypeExpander = FilterExpanderVM.TypeExpander;
+                _settings.Expander.Scene = FilterExpanderVM.Scene;
+                _settings.Expander.Video = FilterExpanderVM.Video;
+                _settings.Expander.Web = FilterExpanderVM.Web;
+                _settings.Expander.Application = FilterExpanderVM.Application;
+                _settings.Expander.Preset = FilterExpanderVM.Preset;
+                _settings.Expander.Unknown = FilterExpanderVM.Unknown;
 
-                _settings.Expander.RatingExpander = RatingExpander;
-                _settings.Expander.G = G;
-                _settings.Expander.Pg = Pg;
-                _settings.Expander.R = R;
+                _settings.Expander.RatingExpander = FilterExpanderVM.RatingExpander;
+                _settings.Expander.G = FilterExpanderVM.G;
+                _settings.Expander.Pg = FilterExpanderVM.Pg;
+                _settings.Expander.R = FilterExpanderVM.R;
 
-                _settings.Expander.SourceExpander = SourceExpander;
-                _settings.Expander.Official = Official;
-                _settings.Expander.Workshop = Workshop;
-                _settings.Expander.Mine = Mine;
+                _settings.Expander.SourceExpander = FilterExpanderVM.SourceExpander;
+                _settings.Expander.Official = FilterExpanderVM.Official;
+                _settings.Expander.Workshop = FilterExpanderVM.Workshop;
+                _settings.Expander.Mine = FilterExpanderVM.Mine;
 
-                _settings.Expander.TagsExpander = TagsExpander;
-                _settings.Expander.Abstract = Abstract;
-                _settings.Expander.Animal = Animal;
-                _settings.Expander.Anime = Anime;
-                _settings.Expander.Cartoon = Cartoon;
-                _settings.Expander.Cgi = Cgi;
-                _settings.Expander.Cyberpunk = Cyberpunk;
-                _settings.Expander.Fantasy = Fantasy;
-                _settings.Expander.Game = Game;
-                _settings.Expander.Girls = Girls;
-                _settings.Expander.Guys = Guys;
-                _settings.Expander.Landscape = Landscape;
-                _settings.Expander.Medieval = Medieval;
-                _settings.Expander.Memes = Memes;
-                _settings.Expander.Mmd = Mmd;
-                _settings.Expander.Music = Music;
-                _settings.Expander.Nature = Nature;
-                _settings.Expander.Pixelart = Pixelart;
-                _settings.Expander.Relaxing = Relaxing;
-                _settings.Expander.Retro = Retro;
-                _settings.Expander.SciFi = SciFi;
-                _settings.Expander.Sports = Sports;
-                _settings.Expander.Technology = Technology;
-                _settings.Expander.Television = Television;
-                _settings.Expander.Vehicle = Vehicle;
-                _settings.Expander.Unspecified = Unspecified;
+                _settings.Expander.TagsExpander = FilterExpanderVM.TagsExpander;
+                _settings.Expander.Abstract = FilterExpanderVM.Abstract;
+                _settings.Expander.Animal = FilterExpanderVM.Animal;
+                _settings.Expander.Anime = FilterExpanderVM.Anime;
+                _settings.Expander.Cartoon = FilterExpanderVM.Cartoon;
+                _settings.Expander.Cgi = FilterExpanderVM.Cgi;
+                _settings.Expander.Cyberpunk = FilterExpanderVM.Cyberpunk;
+                _settings.Expander.Fantasy = FilterExpanderVM.Fantasy;
+                _settings.Expander.Game = FilterExpanderVM.Game;
+                _settings.Expander.Girls = FilterExpanderVM.Girls;
+                _settings.Expander.Guys = FilterExpanderVM.Guys;
+                _settings.Expander.Landscape = FilterExpanderVM.Landscape;
+                _settings.Expander.Medieval = FilterExpanderVM.Medieval;
+                _settings.Expander.Memes = FilterExpanderVM.Memes;
+                _settings.Expander.Mmd = FilterExpanderVM.Mmd;
+                _settings.Expander.Music = FilterExpanderVM.Music;
+                _settings.Expander.Nature = FilterExpanderVM.Nature;
+                _settings.Expander.Pixelart = FilterExpanderVM.Pixelart;
+                _settings.Expander.Relaxing = FilterExpanderVM.Relaxing;
+                _settings.Expander.Retro = FilterExpanderVM.Retro;
+                _settings.Expander.SciFi = FilterExpanderVM.SciFi;
+                _settings.Expander.Sports = FilterExpanderVM.Sports;
+                _settings.Expander.Technology = FilterExpanderVM.Technology;
+                _settings.Expander.Television = FilterExpanderVM.Television;
+                _settings.Expander.Vehicle = FilterExpanderVM.Vehicle;
+                _settings.Expander.Unspecified = FilterExpanderVM.Unspecified;
 
-                _settings.Path.DownloadPath = DownloadPath;
-                _settings.Path.WorkshopPath = WorkshopPath;
-                _settings.Path.ProjectPath = ProjectPath;
-                _settings.Path.OfficialPath = OfficialPath;
-                _settings.Path.AcfPath = AcfPath;
+                _settings.Path.DownloadPath = PathManagementVM.DownloadPath;
+                _settings.Path.WorkshopPath = PathManagementVM.WorkshopPath;
+                _settings.Path.ProjectPath = PathManagementVM.ProjectPath;
+                _settings.Path.OfficialPath = PathManagementVM.OfficialPath;
+                _settings.Path.AcfPath = PathManagementVM.AcfPath;
 
                 _settings.Extract.IgnoreExtension = IgnoreExtension;
                 _settings.Extract.IgnoreExtensionList = IgnoreExtensionList;
@@ -881,232 +477,6 @@ namespace WE_Tool.ViewModels
             finally
             {
                 _saveSemaphore.Release();
-            }
-        }
-
-        private async Task BrowseFileAsync(object? parameter)
-        {
-            var filePath = await _pickerService.PickFileAsync();
-
-            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath) && parameter != null)
-            {
-                AcfPath = filePath;
-                await SaveAsync();
-            }
-        }
-
-        private async Task BrowseFolderAsync(object? parameter)
-        {
-            var path = await _pickerService.PickFolderAsync();
-            if (!string.IsNullOrEmpty(path))
-            {
-                var key = (parameter as string) ?? "WorkshopPath";
-                switch (key)
-                {
-                    case "WorkshopPath":
-                        WorkshopPath = path;
-                        break;
-                    case "ProjectPath":
-                        ProjectPath = path;
-                        break;
-                    case "AcfPath":
-                        AcfPath = path;
-                        break;
-                    case "OfficialPath":
-                        OfficialPath = path;
-                        break;
-                    default:
-                        DownloadPath = path;
-                        break;
-                }
-            }
-        }
-
-        private async Task OpenFolderAsync(object? parameter)
-        {
-            var key = (parameter as string) ?? "DownloadPath";
-
-            if (key == "OpenSelectedWallpapers")
-            {
-                var itemToOpen = SelectedWallpapers.Count > 0
-                    ? SelectedWallpapers.ToList()
-                    : SelectedWallpaper is { FolderPath: not null }
-                    ? [SelectedWallpaper]
-                    : [];
-
-                await ParallelOpenFoldersAsync(itemToOpen);
-                return;
-            }
-
-            string? targetPath = key switch
-            {
-                "WorkshopPath" => WorkshopPath,
-                "ProjectPath" => ProjectPath,
-                "AcfPath" => AcfPath,
-                "OfficialPath" => OfficialPath,
-                "ConfigPath" => ConfigPath,
-                "LogPath" => LogPath,
-                "DownloadPath" => DownloadPath,
-                _ => key
-            };
-
-            if (!string.IsNullOrEmpty(targetPath) && !Directory.Exists(targetPath))
-            {
-                try
-                {
-                    Directory.CreateDirectory(targetPath);
-                }
-                catch (Exception ex)
-                {
-                    await DialogHelper.ShowMessageAsync("错误", $"打开目录不存在，程序在创建目录时失败: {ex.Message}");
-                    Log.Error(ex, "创建目录时出现异常。");
-                    return;
-                }
-            }
-
-            if (string.IsNullOrEmpty(targetPath))
-            {
-                await DialogHelper.ShowMessageAsync("错误", "打开目录为空，请先选择目录。");
-                Log.Warning("用户尝试打开空目录。");
-                return;
-            }
-
-            await _pickerService.OpenFolderAsync(targetPath);
-        }
-
-        public async Task OpenSelectedWallpapersFoldersAsync()
-        {
-            await OpenFolderAsync("OpenSelectedWallpapers");
-        }
-
-        public async Task RemoveWorkshopKeyFromAcfAsync(string workshopID, string acfPath)
-        {
-            if (string.IsNullOrEmpty(workshopID) || !File.Exists(acfPath)) return;
-
-            await Task.Run(() =>
-            {
-                try
-                {
-                    string content = File.ReadAllText(acfPath);
-                    string pattern = $@"\s*""{workshopID}""\s*\{{[\s\S]*?\}}";
-
-                    if (System.Text.RegularExpressions.Regex.IsMatch(content, pattern))
-                    {
-                        string newContent = System.Text.RegularExpressions.Regex.Replace(content, pattern, string.Empty);
-                        File.WriteAllText(acfPath, newContent);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"[ViewModel] 清理 ACF 键值失败: {workshopID}");
-                }
-            });
-        }
-
-        private async Task ParallelOpenFoldersAsync(List<WallpaperItem> items)
-        {
-            if (items.Count > 5)
-            {
-                bool isConfirmed = await DialogHelper.ShowConfirmDialogAsync(
-                    "确认打开",
-                    $"这将打开 {items.Count} 个文件资源管理器，是否继续打开？",
-                    "确定",
-                    "取消");
-                if (!isConfirmed) return;
-            }
-
-            foreach (var item in items)
-            {
-                if (string.IsNullOrWhiteSpace(item.FolderPath)) continue;
-                await OpenSingleFolderAsync(item.FolderPath);
-            }
-        }
-
-        private async Task OpenSingleFolderAsync(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                try
-                {
-                    Directory.CreateDirectory(path);
-                }
-                catch (Exception ex)
-                {
-                    await DialogHelper.ShowMessageAsync("错误", $"尝试打开目录时发现目录不存在，尝试创建目录失败：{ex.Message}");
-                }
-            }
-
-            await _pickerService.OpenFolderAsync(path);
-        }
-
-        public async Task AutoDetectWorkshopPathAsync(string? mode)
-        {
-            if (string.IsNullOrEmpty(mode))
-            {
-                return;
-            }
-
-            if (mode == "0000") return;
-
-            var result = await Task.Run(() =>
-            {
-                string? foundBaseDir = null;
-                try
-                {
-                    using RegistryKey rootKey = Registry.CurrentUser;
-
-                    string[] possibleSubKeys = [@"Software\WallpaperEngine", @"Software\Wallpaper Engine"];
-                    foreach (var subKey in possibleSubKeys)
-                    {
-                        using RegistryKey? weKey = rootKey.OpenSubKey(subKey);
-
-                        if (weKey == null) continue;
-                        object? installPath = weKey.GetValue("installPath");
-                        if (installPath is string pathStr)
-                        {
-                            string targetSuffix = @"\common\wallpaper_engine";
-                            int index = pathStr.ToLower().LastIndexOf(targetSuffix);
-                            if (index != -1)
-                            {
-                                foundBaseDir = pathStr[..index];
-                                break;
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning(ex, "读取WallpaperEngine注册表出现异常。");
-                }
-                return foundBaseDir;
-            });
-
-            if (!string.IsNullOrEmpty(result))
-            {
-                if (mode[0] == '1')
-                    WorkshopPath = result + @"\workshop\content\431960";
-                if (mode[1] == '1')
-                    ProjectPath = result + @"\common\wallpaper_engine\projects\myprojects";
-                if (mode[2] == '1')
-                    AcfPath = result + @"\workshop\appworkshop_431960.acf";
-                if (mode[3] == '1')
-                    OfficialPath = result + @"\common\wallpaper_engine\projects\defaultprojects";
-            }
-        }
-
-        public async Task AutoDetectDownloadPathAsync()
-        {
-            try
-            {
-                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                if (!string.IsNullOrEmpty(desktopPath))
-                {
-                    DownloadPath = desktopPath + "\\WE_OutPut";
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "设置桌面路径为保存路径时出现异常。");
             }
         }
 

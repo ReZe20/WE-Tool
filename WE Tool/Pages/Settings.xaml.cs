@@ -70,7 +70,7 @@ public sealed partial class Settings : Page
     }
     private void TriggerGlobalScan()
     {
-        App.StartBackgroundScan(ViewModel.WorkshopPath, ViewModel.OfficialPath, ViewModel.ProjectPath, ViewModel.AcfPath);
+        App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath, ViewModel.PathManagementVM.AcfPath);
     }
 
     private void ComboBoxItem_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

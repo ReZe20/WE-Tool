@@ -61,31 +61,31 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _sizeChangedDebounceTimer;
     private static readonly FrozenDictionary<string, Func<SettingsViewModel, bool>> _tagGetters = new Dictionary<string, Func<SettingsViewModel, bool>>
     {
-        ["Abstract"] = vm => vm.Abstract,
-        ["Animal"] = vm => vm.Animal,
-        ["Anime"] = vm => vm.Anime,
-        ["Cartoon"] = vm => vm.Cartoon,
-        ["Cgi"] = vm => vm.Cgi,
-        ["Cyberpunk"] = vm => vm.Cyberpunk,
-        ["Fantasy"] = vm => vm.Fantasy,
-        ["Game"] = vm => vm.Game,
-        ["Girls"] = vm => vm.Girls,
-        ["Guys"] = vm => vm.Guys,
-        ["Landscape"] = vm => vm.Landscape,
-        ["Medieval"] = vm => vm.Medieval,
-        ["Memes"] = vm => vm.Memes,
-        ["Mmd"] = vm => vm.Mmd,
-        ["Music"] = vm => vm.Music,
-        ["Nature"] = vm => vm.Nature,
-        ["Pixelart"] = vm => vm.Pixelart,
-        ["Relaxing"] = vm => vm.Relaxing,
-        ["Retro"] = vm => vm.Retro,
-        ["SciFi"] = vm => vm.SciFi,
-        ["Sports"] = vm => vm.Sports,
-        ["Technology"] = vm => vm.Technology,
-        ["Television"] = vm => vm.Television,
-        ["Vehicle"] = vm => vm.Vehicle,
-        ["Unspecified"] = vm => vm.Unspecified,
+        ["Abstract"] = vm => vm.FilterExpanderVM.Abstract,
+        ["Animal"] = vm => vm.FilterExpanderVM.Animal,
+        ["Anime"] = vm => vm.FilterExpanderVM.Anime,
+        ["Cartoon"] = vm => vm.FilterExpanderVM.Cartoon,
+        ["Cgi"] = vm => vm.FilterExpanderVM.Cgi,
+        ["Cyberpunk"] = vm => vm.FilterExpanderVM.Cyberpunk,
+        ["Fantasy"] = vm => vm.FilterExpanderVM.Fantasy,
+        ["Game"] = vm => vm.FilterExpanderVM.Game,
+        ["Girls"] = vm => vm.FilterExpanderVM.Girls,
+        ["Guys"] = vm => vm.FilterExpanderVM.Guys,
+        ["Landscape"] = vm => vm.FilterExpanderVM.Landscape,
+        ["Medieval"] = vm => vm.FilterExpanderVM.Medieval,
+        ["Memes"] = vm => vm.FilterExpanderVM.Memes,
+        ["Mmd"] = vm => vm.FilterExpanderVM.Mmd,
+        ["Music"] = vm => vm.FilterExpanderVM.Music,
+        ["Nature"] = vm => vm.FilterExpanderVM.Nature,
+        ["Pixelart"] = vm => vm.FilterExpanderVM.Pixelart,
+        ["Relaxing"] = vm => vm.FilterExpanderVM.Relaxing,
+        ["Retro"] = vm => vm.FilterExpanderVM.Retro,
+        ["SciFi"] = vm => vm.FilterExpanderVM.SciFi,
+        ["Sports"] = vm => vm.FilterExpanderVM.Sports,
+        ["Technology"] = vm => vm.FilterExpanderVM.Technology,
+        ["Television"] = vm => vm.FilterExpanderVM.Television,
+        ["Vehicle"] = vm => vm.FilterExpanderVM.Vehicle,
+        ["Unspecified"] = vm => vm.FilterExpanderVM.Unspecified,
     }.ToFrozenDictionary();
     public  bool IsScanning
     {
@@ -186,11 +186,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             var presenter = WallpapersScrollView.ScrollPresenter;
             _originalVerticalScrollController = presenter.VerticalScrollController;
-            if (ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+            if (ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled && presenter != null)
             {
                 presenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
             }
-            else if (!ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+            else if (!ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled && presenter != null)
             {
                 presenter.VerticalScrollController = _originalVerticalScrollController;
             }
@@ -199,7 +199,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         OpenSelectedFoldersCommand = new AsyncRelayCommand(async () =>
         {
             HideWallpaperContextMenu();
-            await ViewModel.OpenSelectedWallpapersFoldersAsync();
+            await ViewModel.PathManagementVM.OpenSelectedWallpapersFoldersAsync();
         });
         DeleteSelectedCommand = new AsyncRelayCommand<WallpaperItem?>(async item =>
         {
@@ -312,7 +312,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
             else
             {
-                App.StartBackgroundScan(ViewModel.WorkshopPath, ViewModel.OfficialPath, ViewModel.ProjectPath, ViewModel.AcfPath);
+                App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath, ViewModel.PathManagementVM.AcfPath);
                 await App.ScanTask;
                 _allWallpapers = [.. App.GlobalAllWallpapers];
             }
@@ -369,11 +369,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         try
         {
-            await Task.Delay(ViewModel.FilterResultResponseDelay, token);
+            await Task.Delay(ViewModel.WallpaperDisplayVM.FilterResultResponseDelay, token);
 
             var selectedTags = GetSelectedTags();
-            int sortIndex = ViewModel.SortOrder;
-            bool isAscending = ViewModel.IsSortAscending;
+            int sortIndex = ViewModel.WallpaperDisplayVM.SortOrder;
+            bool isAscending = ViewModel.WallpaperDisplayVM.IsSortAscending;
 
             var filteredResult = await Task.Run(() =>
             {
@@ -381,24 +381,24 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 {
                     bool typeMatch = false;
                     string t = w.Type?.ToLower() ?? string.Empty;
-                    if (ViewModel.Scene && t == "scene") typeMatch = true;
-                    if (ViewModel.Video && t == "video") typeMatch = true;
-                    if (ViewModel.Web && t == "web") typeMatch = true;
-                    if (ViewModel.Application && t == "application") typeMatch = true;
-                    if (ViewModel.Preset && t == "preset") typeMatch = true;
-                    if (ViewModel.Unknown && t == "unknown") typeMatch = true;
+                    if (ViewModel.FilterExpanderVM.Scene && t == "scene") typeMatch = true;
+                    if (ViewModel.FilterExpanderVM.Video && t == "video") typeMatch = true;
+                    if (ViewModel.FilterExpanderVM.Web && t == "web") typeMatch = true;
+                    if (ViewModel.FilterExpanderVM.Application && t == "application") typeMatch = true;
+                    if (ViewModel.FilterExpanderVM.Preset && t == "preset") typeMatch = true;
+                    if (ViewModel.FilterExpanderVM.Unknown && t == "unknown") typeMatch = true;
 
                     bool ratingMatch = false;
                     string r = w.ContentRating?.ToLower() ?? string.Empty;
-                    if (ViewModel.G && r == "everyone") ratingMatch = true;
-                    if (ViewModel.Pg && r == "questionable") ratingMatch = true;
-                    if (ViewModel.R && r == "mature") ratingMatch = true;
+                    if (ViewModel.FilterExpanderVM.G && r == "everyone") ratingMatch = true;
+                    if (ViewModel.FilterExpanderVM.Pg && r == "questionable") ratingMatch = true;
+                    if (ViewModel.FilterExpanderVM.R && r == "mature") ratingMatch = true;
 
                     bool source = false;
                     string s = w.Source?.ToLower() ?? string.Empty;
-                    if (ViewModel.Official && s == "official") source = true;
-                    if (ViewModel.Workshop && s == "workshop") source = true;
-                    if (ViewModel.Mine && s == "mine") source = true;
+                    if (ViewModel.FilterExpanderVM.Official && s == "official") source = true;
+                    if (ViewModel.FilterExpanderVM.Workshop && s == "workshop") source = true;
+                    if (ViewModel.FilterExpanderVM.Mine && s == "mine") source = true;
 
                     var rawTag = w.Tags ?? "";
                     var normalizedTag = rawTag.Replace(" ", "").Replace("-", "");
@@ -802,7 +802,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 return;
             }
 
-            if (ViewModel.IsWallpaperEnterAnimationEnabled)
+            if (ViewModel.WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled)
             {
                 var scaleAnimation = compositor.CreateSpringVector3Animation();
                 scaleAnimation.Target = "Scale";
@@ -871,7 +871,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             var scaleAnimation = compositor.CreateSpringVector3Animation();
             scaleAnimation.Target = "Scale";
 
-            if (!ViewModel.IsWallpaperEnterAnimationEnabled)
+            if (!ViewModel.WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled)
             {
                 scaleAnimation.FinalValue = new Vector3(1f, 1f, 1f);
             }
@@ -1181,7 +1181,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private async void WallpaperListRefresh_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
-        App.StartBackgroundScan(ViewModel.WorkshopPath, ViewModel.OfficialPath, ViewModel.ProjectPath,ViewModel.AcfPath);
+        App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath,ViewModel.PathManagementVM.AcfPath);
         _ = RefreshWallpaperList();
     }
     private void Property_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
@@ -1213,11 +1213,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         HideWallpaperContextMenu();
 
         var presenter = WallpapersScrollView.ScrollPresenter;
-        if (ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+        if (ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled && presenter != null)
         {
             presenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
         }
-        else if(!ViewModel.IsAnnotatedScrollBarEnabled && presenter != null)
+        else if(!ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled && presenter != null)
         {
             presenter.VerticalScrollController = _originalVerticalScrollController;
         }
@@ -1234,7 +1234,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (item == null || item.WorkshopID == null || item.FolderPath == null) return;
 
-        await ViewModel.RemoveWorkshopKeyFromAcfAsync(item.WorkshopID, ViewModel.AcfPath);
+        await ViewModel.PathManagementVM.RemoveWorkshopKeyFromAcfAsync(item.WorkshopID, ViewModel.PathManagementVM.AcfPath);
         bool isFolderDeleted = await _pickerService.DeleteFolderAsync(item.FolderPath);
 
         if (isFolderDeleted)
@@ -1272,7 +1272,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 var item = Wallpapers[i];
                 string labelText = "#";
 
-                switch (ViewModel.SortOrder)
+                switch (ViewModel.WallpaperDisplayVM.SortOrder)
                 {
                     case 0: 
                         string group = _zhGroupings.Lookup(item.Title ?? "");
@@ -1356,7 +1356,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         // 根据当前的排序方式（SortOrder），动态决定悬浮标签应该显示什么内容
         string label = string.Empty;
-        switch (ViewModel.SortOrder)
+        switch (ViewModel.WallpaperDisplayVM.SortOrder)
         {
             case 0: // 按名称排序
                 label = string.IsNullOrWhiteSpace(item.Title) ? "#" : item.Title.Substring(0, 1).ToUpper();
