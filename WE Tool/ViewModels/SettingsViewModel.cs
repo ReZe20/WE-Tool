@@ -122,7 +122,7 @@ namespace WE_Tool.ViewModels
                 switch (e.PropertyName)
                 {
                     case nameof(AppSettingsViewModel.AppLanguage):
-                        _settings.AppLanguage = AppSettingsVM.AppLanguage ?? "default";
+                        _settings.AppLanguage = AppSettingsVM.AppLanguage ?? "";
                         _ = ShowRestartDialog();
                         break;
                     case nameof(AppSettingsViewModel.Theme):
@@ -191,7 +191,7 @@ namespace WE_Tool.ViewModels
 
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
-            AppSettingsVM.AppLanguage = _settings.AppLanguage ?? "default";
+            AppSettingsVM.AppLanguage = _settings.AppLanguage ?? "";
 
             AppSettingsVM.StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
             AppSettingsVM.Theme = _settings.Theme;
