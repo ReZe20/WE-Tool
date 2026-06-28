@@ -130,21 +130,21 @@
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
                                      Tag="Small"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SmallIconItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
                                      Tag="Medium"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.MediumIconItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
                                      Tag="Large"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LargeIconItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
                     <MenuFlyoutSeparator/>
                 <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                     IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
                                      Click="ChangeAnnotatedScrollBarEnabled"/>
             </MenuFlyoutSubItem>
             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
@@ -154,23 +154,23 @@
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_Type"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.TypeDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_Rating"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.RatingDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_Source"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_Tag"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.TagDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
                 <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
                                      x:Uid="AppBarButton_None"
                                      Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
             </MenuFlyoutSubItem>
             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_Sort">
                 <MenuFlyoutSubItem.Icon>
@@ -180,25 +180,25 @@
                                      x:Name="SortByNameItem"
                                      Tag="Small"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SortByName,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByName,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortBySubTime"
                                      x:Name="SortBySubTimeItem"
                                      Tag="Medium"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SortBySubTime,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortBySubTime,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortByLastTime"
                                      x:Name="SortByLastTime"
                                      Tag="Large"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SortByLastTime,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByLastTime,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortByFileSize"
                                      x:Name="SortByFileSizeItem"
                                      Tag="Large"
                                      Click="OnIconSizeChanged"
-                                     IsChecked="{x:Bind ViewModel.SortByFileSize,Mode=TwoWay}"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByFileSize,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
             </MenuFlyoutSubItem>
         </MenuFlyout>
@@ -232,7 +232,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="{x:Bind ViewModel.BottomBarHeight, Mode=OneWay}"/>
+            <RowDefinition Height="{x:Bind ViewModel.WallpaperDisplayVM.BottomBarHeight, Mode=OneWay}"/>
         </Grid.RowDefinitions>
         <Rectangle Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="1" Fill="{ThemeResource DividerStrokeColorDefault}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
@@ -248,7 +248,7 @@
                             FontWeight="Light"
                             VerticalAlignment="Center"
                             TextChanged="WallpaperSearchBox_TextChanged"/>
-            <ToggleButton x:Name="LeftToggleFilterButton" Height="35" HorizontalAlignment="Left" BorderThickness="0" Background="Transparent" IsChecked="{x:Bind ViewModel.LeftSplitViewPaneOpen, Mode=TwoWay}" Margin="3,0,0,0">
+            <ToggleButton x:Name="LeftToggleFilterButton" Height="35" HorizontalAlignment="Left" BorderThickness="0" Background="Transparent" IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}" Margin="3,0,0,0">
                 <ToggleButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE71D;" Margin="0,0,5,0" FontSize="16"/>
@@ -314,21 +314,21 @@
                         <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
                                              Tag="Small"
                                              Click="OnIconSizeChanged"
-                                             IsChecked="{x:Bind ViewModel.SmallIconItem,Mode=TwoWay}"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SmallIconItem,Mode=TwoWay}"
                                              GroupName="ViewGroup"/>
                         <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon"
                                              Tag="Medium"
                                              Click="OnIconSizeChanged"
-                                             IsChecked="{x:Bind ViewModel.MediumIconItem,Mode=TwoWay}"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.MediumIconItem,Mode=TwoWay}"
                                              GroupName="ViewGroup"/>
                         <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon"
                                              Tag="Large"
                                              Click="OnIconSizeChanged"
-                                             IsChecked="{x:Bind ViewModel.LargeIconItem,Mode=TwoWay}"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LargeIconItem,Mode=TwoWay}"
                                              GroupName="ViewGroup"/>
                         <MenuFlyoutSeparator/>
                         <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                             IsChecked="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
                                              Click="ChangeAnnotatedScrollBarEnabled"/>
                     </MenuFlyout>
                 </DropDownButton.Flyout>
@@ -345,51 +345,51 @@
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_Type"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.TypeDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_Rating"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.RatingDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_Source"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.SourceDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_Tag"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.TagDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="LabelGroup"
                                              x:Uid="AppBarButton_None"
                                              Click="OnTagDisplayChanged"
-                                             IsChecked="{x:Bind ViewModel.NoneDisplayInTag, Mode=TwoWay}"/>
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
             <DropDownButton Width="115" Height="35" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Style="{ThemeResource SubtleButtonStyle}">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal">
-                        <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.SortGlyph, Mode=OneWay}" FontSize="16"/>
-                        <TextBlock x:Name="sortButtonText" Text="{x:Bind ViewModel.SortText, Mode=OneWay}" Margin="5,0,0,0" />
+                        <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortGlyph, Mode=OneWay}" FontSize="16"/>
+                        <TextBlock x:Name="sortButtonText" Text="{x:Bind ViewModel.WallpaperDisplayVM.SortText, Mode=OneWay}" Margin="5,0,0,0" />
                     </StackPanel>
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
                     <MenuFlyout Placement="Bottom">
-                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="0" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="0" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE8D2;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="1" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="1" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xED0E;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="2" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="2" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xF738;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.ChangeSortCommand}" CommandParameter="3" Click="ChangeSort">
+                        <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="3" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xEDA2;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
@@ -397,9 +397,9 @@
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{x:Bind ViewModel.IsSortAscending, Mode=TwoWay}" BorderThickness="0" Background="Transparent">
+            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending, Mode=TwoWay}" BorderThickness="0" Background="Transparent">
                 <ToggleButton.Content>
-                    <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
+                    <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
                 </ToggleButton.Content>
             </ToggleButton>
         </StackPanel>
@@ -411,7 +411,7 @@
                           Width="118"
                           BorderThickness="0"
                           Background="Transparent"
-                          IsChecked="{x:Bind ViewModel.RightSplitViewPaneOpen, Mode=TwoWay}">
+                          IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}">
                 <ToggleButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE90D;" Margin="0,0,5,0"/>
@@ -426,7 +426,7 @@
                 OpenPaneLength="304" 
                 DisplayMode="Inline"
                 Grid.Row="1"
-                IsPaneOpen="{x:Bind ViewModel.RightSplitViewPaneOpen, Mode=TwoWay}">
+                IsPaneOpen="{x:Bind ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}">
             <SplitView.Pane>
                 <ScrollViewer>
                     <Grid Padding="15,15,15,15" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
@@ -461,7 +461,7 @@
 
                             <StackPanel x:Name="SingleSelectionInfoPanel" Spacing="15">
                                 <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay, FallbackValue=''}" 
-                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}" 
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}" 
                                            Style="{StaticResource TitleTextBlockStyle}" 
                                            TextWrapping="Wrap"
                                            FontSize="20"
@@ -470,7 +470,7 @@
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" 
                                            TextWrapping="Wrap"
-                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"
                                            Margin="10,0,0,0"/>
                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                     <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue=''}"
@@ -478,22 +478,22 @@
                                                FontWeight="SemiBold"
                                                VerticalAlignment="Center"
                                                Margin="10,0,4,0"
-                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"/>
                                     <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Source, Mode=OneWay, Converter={StaticResource SourceToDisplay}, FallbackValue=''}" 
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
-                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"/>
                                     <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Type, Mode=OneWay, Converter={StaticResource TypeToDisplay}, FallbackValue=''}"
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
-                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"/>
                                     <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}, FallbackValue=''}" 
                                                Style="{StaticResource CaptionTextBlockStyle}" 
                                                FontWeight="SemiBold"
                                                Margin="4,0,4,0"
-                                               IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"/>
+                                               IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"/>
                                 </StackPanel>
                                 <Grid>
                                     <Border Background="#20808080" 
@@ -510,7 +510,7 @@
                                            TextWrapping="Wrap"
                                            MaxHeight="150"
                                            TextTrimming="CharacterEllipsis"
-                                           IsTextSelectionEnabled="{x:Bind ViewModel.DetailSelectionEnabled, Mode=OneWay}"
+                                           IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"
                                            Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
                                            Margin="10,0,0,0"/>
                             </StackPanel>
@@ -529,7 +529,7 @@
             </SplitView.Pane>
             <SplitView.Content>
                 <Grid>
-                    <SplitView x:Name="LeftSplitView" PanePlacement="Left" OpenPaneLength="210" DisplayMode="Inline" IsPaneOpen="{x:Bind ViewModel.LeftSplitViewPaneOpen, Mode=TwoWay}">
+                    <SplitView x:Name="LeftSplitView" PanePlacement="Left" OpenPaneLength="210" DisplayMode="Inline" IsPaneOpen="{x:Bind ViewModel.WallpaperDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}">
                         <SplitView.Pane>
                             <Grid BorderBrush="#E0E0E0" BorderThickness="0,0,0,0">
                                 <Grid.RowDefinitions>
@@ -547,34 +547,34 @@
                                                 </StackPanel>
                                             </Button.Content>
                                         </Button>
-                                        <Expander x:Uid="Type" x:Name="TypeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.TypeExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Type" x:Name="TypeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.TypeExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="TypeFilterPanel">
-                                                <CheckBox x:Uid="Type_Scene" Tag="Scene" IsChecked="{x:Bind ViewModel.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Type_Video" Tag="Video" IsChecked="{x:Bind ViewModel.Video, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Type_Web" Tag="Web" IsChecked="{x:Bind ViewModel.Web, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Type_Application" Tag="Application" IsChecked="{x:Bind ViewModel.Application, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Type_Preset" Tag="Preset" IsChecked="{x:Bind ViewModel.Preset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Type_Unknown" Tag="Unknow" IsChecked="{x:Bind ViewModel.Unknown, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Scene" Tag="Scene" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Video" Tag="Video" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Video, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Web" Tag="Web" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Web, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Application" Tag="Application" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Application, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Preset" Tag="Preset" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Preset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Type_Unknown" Tag="Unknow" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Unknown, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander x:Uid="Rating" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Rating" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="AgeRatingFilterPanel">
-                                                <CheckBox x:Uid="Rating_Everyone" Tag="G" IsChecked="{x:Bind ViewModel.G, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Rating_Questionable" Tag="PG" IsChecked="{x:Bind ViewModel.Pg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Rating_Mature" Tag="R" IsChecked="{x:Bind ViewModel.R, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Rating_Everyone" Tag="G" IsChecked="{x:Bind ViewModel.FilterExpanderVM.G, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Rating_Questionable" Tag="PG" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Pg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Rating_Mature" Tag="R" IsChecked="{x:Bind ViewModel.FilterExpanderVM.R, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander x:Uid="Source" x:Name="SourceExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.SourceExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Source" x:Name="SourceExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.SourceExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="SourceFilterPanel">
-                                                <CheckBox x:Uid="Source_Official" Tag="Official" IsChecked="{x:Bind ViewModel.Official, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Source_Workshop" Tag="Workshop" IsChecked="{x:Bind ViewModel.Workshop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Source_Mine" Tag="Mine" IsChecked="{x:Bind ViewModel.Mine, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Source_Official" Tag="Official" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Official, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Source_Workshop" Tag="Workshop" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Workshop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Source_Mine" Tag="Mine" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Mine, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander x:Uid="Tag" x:Name="TagsExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.TagsExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Tag" x:Name="TagsExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.TagsExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                             <StackPanel x:Name="TagsContainer">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -584,31 +584,31 @@
                                                     <Button x:Uid="All" Click="SelectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="0"/>
                                                     <Button x:Uid="None" Click="DeselectAllTags_Click" HorizontalAlignment="Stretch" Grid.Column="1"/>
                                                 </Grid>
-                                                <CheckBox x:Uid="Tag_Abstract" Tag="Abstract" IsChecked="{x:Bind ViewModel.Abstract, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Animal" Tag="Animal" IsChecked="{x:Bind ViewModel.Animal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                <CheckBox x:Uid="Tag_Anime" Tag="Anime" IsChecked="{x:Bind ViewModel.Anime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Cartoon" Tag="Cartoon" IsChecked="{x:Bind ViewModel.Cartoon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_CGI" Tag="CGI" IsChecked="{x:Bind ViewModel.Cgi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Cyberpunk" Tag="Cyberpunk" IsChecked="{x:Bind ViewModel.Cyberpunk, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Fantasy" Tag="Fantasy" IsChecked="{x:Bind ViewModel.Fantasy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Game" Tag="Game" IsChecked="{x:Bind ViewModel.Game, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Girls" Tag="Girls" IsChecked="{x:Bind ViewModel.Girls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Guys" Tag="Guys" IsChecked="{x:Bind ViewModel.Guys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Landscape" Tag="Landscape" IsChecked="{x:Bind ViewModel.Landscape, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Medieval" Tag="Medieval" IsChecked="{x:Bind ViewModel.Medieval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Memes" Tag="Memes" IsChecked="{x:Bind ViewModel.Memes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_MMD" Tag="MMD" IsChecked="{x:Bind ViewModel.Mmd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Music" Tag="Music" IsChecked="{x:Bind ViewModel.Music, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Nature" Tag="Nature" IsChecked="{x:Bind ViewModel.Nature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Pixelart" Tag="Pixelart" IsChecked="{x:Bind ViewModel.Pixelart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Relaxing" Tag="Relaxing" IsChecked="{x:Bind ViewModel.Relaxing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Retro" Tag="Retro" IsChecked="{x:Bind ViewModel.Retro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_SciFi" Tag="SciFi" IsChecked="{x:Bind ViewModel.SciFi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Sports" Tag="Sports" IsChecked="{x:Bind ViewModel.Sports, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Technology" Tag="Technology" IsChecked="{x:Bind ViewModel.Technology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Television" Tag="Television" IsChecked="{x:Bind ViewModel.Television, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Vehicle" Tag="Vehicle" IsChecked="{x:Bind ViewModel.Vehicle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <CheckBox x:Uid="Tag_Unspecified" Tag="Unspecified" IsChecked="{x:Bind ViewModel.Unspecified, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Abstract" Tag="Abstract" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Abstract, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Animal" Tag="Animal" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Animal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <CheckBox x:Uid="Tag_Anime" Tag="Anime" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Anime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Cartoon" Tag="Cartoon" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Cartoon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_CGI" Tag="CGI" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Cgi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Cyberpunk" Tag="Cyberpunk" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Cyberpunk, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Fantasy" Tag="Fantasy" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Fantasy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Game" Tag="Game" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Game, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Girls" Tag="Girls" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Girls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Guys" Tag="Guys" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Guys, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Landscape" Tag="Landscape" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Landscape, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Medieval" Tag="Medieval" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Medieval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Memes" Tag="Memes" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Memes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_MMD" Tag="MMD" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Mmd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Music" Tag="Music" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Music, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Nature" Tag="Nature" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Nature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Pixelart" Tag="Pixelart" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Pixelart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Relaxing" Tag="Relaxing" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Relaxing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Retro" Tag="Retro" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Retro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_SciFi" Tag="SciFi" IsChecked="{x:Bind ViewModel.FilterExpanderVM.SciFi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Sports" Tag="Sports" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Sports, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Technology" Tag="Technology" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Technology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Television" Tag="Television" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Television, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Vehicle" Tag="Vehicle" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Vehicle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Tag_Unspecified" Tag="Unspecified" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Unspecified, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
                                     </StackPanel>
@@ -621,11 +621,11 @@
                                 <ScrollView HorizontalAnchorRatio="0.5" 
                                             VerticalAnchorRatio="0.5"
                                             x:Name="WallpapersScrollView"
-                                            VerticalScrollBarVisibility="{x:Bind ViewModel.PapersScrollViewBarVisibility,Mode=OneWay}"
+                                            VerticalScrollBarVisibility="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewBarVisibility,Mode=OneWay}"
                                             Grid.Column="0"
                                             ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                             Tapped="WallpaperList_Tapped">
-                                    <StackPanel Margin="{x:Bind ViewModel.PapersScrollViewMargin, Mode=OneWay}">
+                                    <StackPanel Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}">
                                         <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
                                             <TextBlock x:Uid="NoResultTip1"
                                                    Style="{StaticResource TitleTextBlockStyle}" 
@@ -649,7 +649,7 @@
                                                ContextFlyout="{StaticResource WallpaperContextMenu}">
                                             <ItemsRepeater.Layout>
                                                 <UniformGridLayout
-                                                    MinItemWidth="{x:Bind ViewModel.WallpaperListMinWidth, Mode=OneWay}"
+                                                    MinItemWidth="{x:Bind ViewModel.WallpaperDisplayVM.WallpaperListMinWidth, Mode=OneWay}"
                                                     MinColumnSpacing="10" 
                                                     MinRowSpacing="10" 
                                                     ItemsStretch="Fill" 
@@ -685,7 +685,7 @@
                                                             <Image Stretch="UniformToFill">
                                                                 <Image.Source>
                                                                     <BitmapImage UriSource="{x:Bind Preview}" 
-                                                                         AutoPlay="{Binding DataContext.ViewModel.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
+                                                                         AutoPlay="{Binding DataContext.ViewModel.WallpaperDisplayVM.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
                                                                 </Image.Source>
                                                             </Image>
 
@@ -711,7 +711,7 @@
                                                                     MinHeight="20"
                                                                     Padding="4"
                                                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                                    Visibility="{Binding DataContext.ViewModel.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
+                                                                    Visibility="{Binding DataContext.ViewModel.WallpaperDisplayVM.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
                                                                     x:Name="TagDisplayBorder">
                                                                 <TextBlock Text="{x:Bind Converter={StaticResource PapersTagContentChoose}}"
                                                                            HorizontalAlignment="Center"
@@ -752,7 +752,7 @@
                                                     VerticalAlignment="Stretch"
                                                     MaxWidth="10"
                                                     Margin="0,0,8,0"
-                                                    Visibility="{x:Bind ViewModel.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
+                                                    Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
                                                     DetailLabelRequested="Papers_AnnotatedScrollBarControl_DetailLabelRequested"/>
                             </Grid>
                         </SplitView.Content>
@@ -773,16 +773,16 @@
                 <Button Style="{StaticResource SubtleButtonStyle}"
                         VerticalAlignment="Center"
                         Margin="0,5,0,0"
-                        Command="{x:Bind ViewModel.AutoDetectDownloadPathCommand}">
+                        Command="{x:Bind ViewModel.PathManagementVM.AutoDetectDownloadPathCommand}">
                     <Button.Content>
                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                     </Button.Content>
                 </Button>
             </StackPanel>
-            <TextBox Grid.Column="1" x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+            <TextBox Grid.Column="1" x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
             <StackPanel VerticalAlignment="Center" Grid.Column="2" Orientation="Horizontal">
-                <Button Margin="0,0,0,0" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                <Button Margin="4,0,8,0" x:Uid="OpenFolder" Command="{x:Bind ViewModel.OpenFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                <Button Margin="0,0,0,0" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                <Button Margin="4,0,8,0" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
         <Grid x:Name="ScanOverlay"

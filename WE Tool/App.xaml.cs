@@ -80,7 +80,7 @@ namespace WE_Tool
         {
             try
             {
-                string theme = ViewModel.Theme ?? "";
+                string theme = ViewModel.AppSettingsVM.Theme ?? "";
 
                 ElementTheme elementTheme = theme switch
                 {
@@ -174,11 +174,19 @@ namespace WE_Tool
 
                 if (!System.IO.File.Exists(configPath))
                 {
-                    Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = "";
+                    // 配置文件不存在，不设置覆盖，使用系统默认
                 }
-                else if (lang == "default")
+                else if (string.IsNullOrEmpty(lang) || lang == "default")
                 {
-                    Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = "";
+                    // 跟随系统：清空之前的语言覆盖
+                    try
+                    {
+                        Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = "";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "无法重置语言覆盖为系统默认（SDK限制），将保持上一次的覆盖设置");
+                    }
                 }
                 else
                 {

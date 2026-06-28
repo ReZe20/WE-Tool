@@ -427,4 +427,7 @@
   <data name="AppBarButton_Type.Text" type="System.Resources.ResXNullRef, System.Windows.Forms">
     <value />
   </data>
+  <data name="FollowSystem.Content" xml:space="preserve">
+    <value>Follow System</value>
+  </data>
 </root>

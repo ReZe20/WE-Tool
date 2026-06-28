@@ -31,16 +31,17 @@
                         <ComboBox SelectedValuePath="Tag"
                                   SelectedIndex="0"
                                   MinWidth="150" 
-                                  SelectedValue="{x:Bind ViewModel.AppLanguage, Mode=TwoWay}">
+                                  SelectedValue="{x:Bind ViewModel.AppSettingsVM.AppLanguage, Mode=TwoWay}">
                             <ComboBoxItem Tag="en-US" Content="English"/>
                             <ComboBoxItem Tag="zh-CN" Content="简体中文"/>
+                            <ComboBoxItem Tag="" x:Uid="FollowSystem"/>
                         </ComboBox>
                     </controls:SettingsCard>
                     <controls:SettingsCard x:Uid="StartPage" Margin="0,0,0,10">
                         <controls:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE8A1;"/>
                         </controls:SettingsCard.HeaderIcon>
-                        <ComboBox SelectedValue="{x:Bind ViewModel.StartPageTag, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
+                        <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.StartPageTag, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
                             <ComboBoxItem Tag="Papers" x:Uid="InstalledWallpapers"/>
                             <ComboBoxItem Tag="LoadPapers" x:Uid="ImportWallpapers"/>
                         </ComboBox>
@@ -49,7 +50,7 @@
                         <controls:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE790;" />
                         </controls:SettingsCard.HeaderIcon>
-                        <ComboBox SelectedValue="{x:Bind ViewModel.Theme, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
+                        <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.Theme, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
                             <ComboBoxItem Tag="Default" x:Uid="FollowSystem"/>
                             <ComboBoxItem Tag="Light" x:Uid="Light"/>
                             <ComboBoxItem Tag="Dark" x:Uid="Dark"/>
@@ -65,14 +66,14 @@
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
                                     <CheckBox x:Uid="PapersSetting_BottomBarVisibility" 
-                                              IsChecked="{x:Bind ViewModel.IsBottomBarOpen, Mode=TwoWay}"/>
+                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsBottomBarOpen, Mode=TwoWay}"/>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
 
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
                                     <CheckBox x:Uid="PapersSetting_DetailTextSelectMode"
-                                              IsChecked="{x:Bind ViewModel.DetailSelectionEnabled, Mode=TwoWay}"/>
+                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=TwoWay}"/>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
 
@@ -80,7 +81,7 @@
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <CheckBox x:Uid="PapersSetting_WallpaperAutoPlay"
-                                                  IsChecked="{x:Bind ViewModel.AutoPlayGif, Mode=TwoWay}"/>
+                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.AutoPlayGif, Mode=TwoWay}"/>
                                     </StackPanel>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
@@ -89,7 +90,7 @@
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <CheckBox x:Uid="PapersSetting_IsWallpaperEnterAnimationEnabled"
-                                                  IsChecked="{x:Bind ViewModel.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
+                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
                                     </StackPanel>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
@@ -98,7 +99,7 @@
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal" >
                                         <TextBlock x:Uid="PapersSetting_WallpaperIconSize" Margin="28,0,12,0" VerticalAlignment="Center"/>
-                                        <ComboBox SelectedIndex="{x:Bind ViewModel.WallpaperViewIndex, Mode=TwoWay}">
+                                        <ComboBox SelectedIndex="{x:Bind ViewModel.WallpaperDisplayVM.WallpaperViewIndex, Mode=TwoWay}">
                                             <ComboBoxItem Tag="0" x:Uid="PapersSetting_ComboBoxItem_SmallIcon"/>
                                             <ComboBoxItem Tag="1" x:Uid="PapersSetting_ComboBoxItem_MediumIcon"/>
                                             <ComboBoxItem Tag="2" x:Uid="PapersSetting_ComboBoxItem_LargeIcon"/>
@@ -111,7 +112,7 @@
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock x:Uid="PapersSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
-                                        <NumberBox Value="{x:Bind ViewModel.FilterResultResponseDelay, Mode=TwoWay}"
+                                        <NumberBox Value="{x:Bind ViewModel.WallpaperDisplayVM.FilterResultResponseDelay, Mode=TwoWay}"
                                                    SmallChange="100"
                                                    LargeChange="1000"
                                                    SpinButtonPlacementMode="Inline"
@@ -132,7 +133,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="ExportDirectory"/>
                                 <Button Style="{StaticResource SubtleButtonStyle}" 
-                                        Command="{x:Bind ViewModel.AutoDetectDownloadPathCommand}">
+                                        Command="{x:Bind ViewModel.PathManagementVM.AutoDetectDownloadPathCommand}">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -144,8 +145,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <controls:SettingsCard x:Uid="ChooseWorkshopPath" Margin="0,0,0,10">
@@ -155,7 +156,7 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="WorkShopPath"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="1000">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="1000">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -167,8 +168,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.WorkshopPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="WorkshopPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.WorkshopPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="WorkshopPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <controls:SettingsCard x:Uid="ChooseProjectPath" Margin="0,0,0,10">
@@ -178,7 +179,7 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="ProjectPath"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="0100">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0100">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -190,8 +191,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.ProjectPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="ProjectPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.ProjectPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="ProjectPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <controls:SettingsCard x:Uid="OfficialWallpaperPath" Margin="0,0,0,10">
@@ -201,7 +202,7 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="OfficialWallpaperPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="0001">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0001">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -213,8 +214,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.OfficialPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFolderCommand}" CommandParameter="OfficialPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.OfficialPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="OfficialPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <controls:SettingsCard x:Uid="AcfPath" Margin="0,0,0,10">
@@ -224,7 +225,7 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="AcfPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.AutoDetectWorkshopPathCommand}" CommandParameter="0010">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0010">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -236,8 +237,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.AcfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.BrowseFileCommand}" CommandParameter="AcfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.AcfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="AcfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <controls:SettingsCard x:Uid="SettingPath" Margin="0,0,0,10">
@@ -254,8 +255,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.ConfigPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.OpenFolderCommand}" CommandParameter="ConfigPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.ConfigPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="ConfigPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <controls:SettingsCard x:Uid="LogPath" Margin="0,0,0,10">
@@ -272,8 +273,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.LogPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.OpenFolderCommand}" CommandParameter="LogPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.LogPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="LogPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <TextBlock x:Uid="Extract" Margin="5,10,0,10"/>
