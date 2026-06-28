@@ -168,32 +168,29 @@ namespace WE_Tool
                 string folderPath = GetAppDataRoot();
                 var configPath = System.IO.Path.Combine(folderPath, "config.json");
 
+                if (!System.IO.File.Exists(configPath))
+                {
+                    // 配置文件不存在 → 不设置 PrimaryLanguageOverride，使用系统默认语言
+                    Log.Information("语言加载完成: 首次启动，使用系统默认");
+                    return;
+                }
+
                 string json = File.ReadAllText(configPath);
                 var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
                 string lang = obj["AppLanguage"]?.ToString() ?? "default";
 
-                if (!System.IO.File.Exists(configPath))
+                // 跟随系统（空字符串或"default"）→ 不设置 PrimaryLanguageOverride
+                // 文档：空字符串不是合法的 BCP-47 标签，set 会抛 COMException
+                // 正确做法：完全不调用 setter，让系统默认生效
+                if (string.IsNullOrEmpty(lang) || lang == "default")
                 {
-                    // 配置文件不存在，不设置覆盖，使用系统默认
-                }
-                else if (string.IsNullOrEmpty(lang) || lang == "default")
-                {
-                    // 跟随系统：清空之前的语言覆盖
-                    try
-                    {
-                        Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = "";
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Warning(ex, "无法重置语言覆盖为系统默认（SDK限制），将保持上一次的覆盖设置");
-                    }
+                    Log.Information("语言加载完成: 跟随系统默认");
                 }
                 else
                 {
                     Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = lang;
+                    Log.Information("语言加载完成: {Language}", lang);
                 }
-
-                Log.Information("语言加载完成: {Language}", lang);
             }
             catch (Exception ex)
             {
