@@ -198,7 +198,7 @@ namespace WE_Tool.ViewModels
                 0 => "SortByName.Text",
                 1 => "SortBySubTime.Text",
                 2 => "SortByLastTime.Text",
-                3 => "SortByLastTime.Text",
+                3 => "SortByFileSize.Text",
                 _ => "SortByName.Text"
             });
         }
