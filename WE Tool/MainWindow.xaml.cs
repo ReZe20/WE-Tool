@@ -36,7 +36,8 @@ namespace WE_Tool
         private readonly IConfigService _configService = new ConfigService();
         public MainWindow()
         {
-            ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
+            var app = Application.Current as App;
+            ViewModel = app?.ViewModel ?? new SettingsViewModel(new ConfigService(), new PickerService());
             InitializeComponent();
             this.ExtendsContentIntoTitleBar = true;
             this.Activated += MainWindow_Activated;
@@ -57,9 +58,7 @@ namespace WE_Tool
                     nvSample.SelectedItem = item;
 
                     if (MapTagToPageType(tag) is { } pageType)
-                    {
                         contentFrame.Navigate(pageType);
-                    }
                 }
             }
             catch (Exception ex)
@@ -96,7 +95,7 @@ namespace WE_Tool
                 _ => typeof(Papers)
             };
 
-        private void NvSample_ItemInvoked(NavigationView sneder, NavigationViewItemInvokedEventArgs args)
+        private void NvSample_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
             if (args.InvokedItemContainer == null)
                 return;
@@ -113,6 +112,29 @@ namespace WE_Tool
             };
         }
 
+        public string CurrentPageTag =>
+            (nvSample.SelectedItem as NavigationViewItem)?.Tag?.ToString() ?? "Papers";
+
+        internal void NavigateToPage(string tag)
+        {
+            var pageType = MapTagToPageType(tag);
+            contentFrame.Navigate(pageType, null);
+        }
+
+        internal void RefreshUILanguage()
+        {
+            // 重新加载语言资源，使 SortText 等更新
+            LanguageHelper.ReloadResources();
+
+            // 重建当前 Page（x:Uid 重新从 .resw 加载）
+            var pageType = MapTagToPageType(CurrentPageTag);
+            contentFrame.BackStack.Clear();
+            int originalCacheSize = contentFrame.CacheSize;
+            contentFrame.CacheSize = 0;
+            contentFrame.Navigate(pageType, null);
+            contentFrame.CacheSize = originalCacheSize;
+            
+        }
     }
 }
  

@@ -39,6 +39,8 @@ namespace WE_Tool
         // 全局扫描进度事件（0-100）
         public static event EventHandler<int>? ScanProgressChanged;
         public static Window? MainWindowInstance { get; private set; }
+        // 捕获启动时的系统首选 UI 语言（如 "zh-CN"/"en-US"），跟随系统时用作 PrimaryLanguageOverride
+        public static readonly string SystemLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
 
         public App()
         {
@@ -161,6 +163,34 @@ namespace WE_Tool
                 }
             });
         }
+        public static void ApplyLanguage(string lang)
+        {
+            // 跟随系统时将系统 UI 语言码传给 WinRT 覆盖设置
+            string targetLang = (string.IsNullOrEmpty(lang) || lang == "default")
+                ? SystemLanguage
+                : lang;
+
+            // 重复检测：如果和当前设置相同，无需更新
+            string currentLang = Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride;
+            if (string.Equals(currentLang, targetLang, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            try
+            {
+                Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = targetLang;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "设置语言覆盖时出现异常（WinRT限制，已忽略）");
+            }
+
+            // 热更新：重建当前 Page
+            if (MainWindowInstance is MainWindow mainWindow)
+                mainWindow.RefreshUILanguage();
+
+            Log.Information("语言热切换完成: {Language}", targetLang);
+        }
+
         private static void LoadInitialLanguage()
         {
             try
