@@ -37,13 +37,10 @@ public sealed partial class Settings : Page
 
     public Settings()
     {
+        var app = Application.Current as App;
+        ViewModel = app?.ViewModel ?? new SettingsViewModel(new ConfigService(), new PickerService());
         InitializeComponent();
-
-        ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
-
         DataContext = this;
-
-        this.Loaded += async (s, e) => await ViewModel.InitializeAsync();
     }
 
     private async void WallpapersPath_TextChanged(object sender, TextChangedEventArgs e)

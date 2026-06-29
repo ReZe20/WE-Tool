@@ -322,7 +322,7 @@
     <value>程序语言</value>
   </data>
   <data name="Programming_Language.Description" xml:space="preserve">
-    <value>选择WE Tool的显示语言，更换语言后需要重启程序</value>
+    <value>选择WE Tool的显示语言，部分选项的语言需要在程序重启后更新</value>
   </data>
   <data name="Language_Related.Content" xml:space="preserve">
     <value>跟随系统</value>
@@ -477,9 +477,6 @@
   <data name="PapersSetting_ContextMenuItems.Text" xml:space="preserve">
     <value>右键菜单选项</value>
   </data>
-  <data name="AppBarButton_Type.Text" xml:space="preserve">
-    <value>类型</value>
-  </data>
   <data name="AppBarButton_Source.Text" xml:space="preserve">
     <value>来源</value>
   </data>
@@ -504,9 +501,6 @@
   <data name="Program.Text" xml:space="preserve">
     <value>程序</value>
   </data>
-  <data name="c.Head" xml:space="preserve">
-    <value>应用主题</value>
-  </data>
   <data name="Theme.Header" xml:space="preserve">
     <value>应用主题</value>
   </data>
@@ -527,5 +521,11 @@
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
     <value>刷新</value>
+  </data>
+  <data name="AppBarButton_Type.Text" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="c.Head" xml:space="preserve">
+    <value>应用主题</value>
   </data>
 </root>

@@ -11,21 +11,10 @@ namespace WE_Tool.Helper
 {
     internal class LanguageHelper
     {
-        private static readonly ResourceLoader _loader = new();
+        private static Microsoft.Windows.ApplicationModel.Resources.ResourceLoader? _loader = new();
         // 线程安全的字典，速度极快
         private static readonly ConcurrentDictionary<string, string> _cache = new();
 
-        static LanguageHelper()
-        {
-            try
-            {
-                _loader = new ResourceLoader();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "语言资源文件初始化出现异常。");
-            }
-        }
         public static string GetString(string prefix, string value)
         {
             if (string.IsNullOrEmpty(value)) return "未知";
@@ -80,6 +69,13 @@ namespace WE_Tool.Helper
         public static void ClearCache()
         {
             _cache.Clear();
+        }
+
+        public static void ReloadResources()
+        {
+            _cache.Clear();
+            _loader = new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader();
+            Log.Information("LanguageHelper 资源已重新加载");
         }
     }
 }

@@ -122,8 +122,9 @@ namespace WE_Tool.ViewModels
                 switch (e.PropertyName)
                 {
                     case nameof(AppSettingsViewModel.AppLanguage):
-                        _settings.AppLanguage = AppSettingsVM.AppLanguage ?? "";
-                        _ = ShowRestartDialog();
+                        var appLang = AppSettingsVM.AppLanguage ?? "";
+                        _settings.AppLanguage = appLang;
+                        App.ApplyLanguage(appLang);
                         break;
                     case nameof(AppSettingsViewModel.Theme):
                         _settings.Theme = AppSettingsVM.Theme ?? "";
@@ -191,7 +192,7 @@ namespace WE_Tool.ViewModels
 
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
-            AppSettingsVM.AppLanguage = _settings.AppLanguage ?? "";
+            AppSettingsVM.AppLanguage = _settings.AppLanguage ?? "default";
 
             AppSettingsVM.StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
             AppSettingsVM.Theme = _settings.Theme;
@@ -477,32 +478,6 @@ namespace WE_Tool.ViewModels
             finally
             {
                 _saveSemaphore.Release();
-            }
-        }
-
-        private static async Task ShowRestartDialog()
-        {
-            var xamlRoot = App.MainWindowInstance?.Content?.XamlRoot;
-            if (xamlRoot == null)
-            {
-                Log.Warning("无法显示重启对话框：XamlRoot 为空。");
-                return;
-            }
-            ContentDialog dialog = new()
-            {
-                Title = "需要重启",
-                Content = "更改语言设置后需要重启应用程序才能完全生效。是否现在重启？",
-                PrimaryButtonText = "立即重启",
-                CloseButtonText = "稍后重启",
-                DefaultButton = ContentDialogButton.Primary,
-                XamlRoot = xamlRoot
-            };
-
-            var result = await dialog.ShowAsync();
-
-            if (result == ContentDialogResult.Primary)
-            {
-                Microsoft.Windows.AppLifecycle.AppInstance.Restart("");
             }
         }
     }
