@@ -18,7 +18,7 @@
   <ItemGroup>
     <None Remove="Assets\noPreview.png" />
     <None Remove="LoadPapers.xaml" />
-    <None Remove="Pages\Info.xaml" />
+    <None Remove="Views\Info.xaml" />
     <None Remove="Papers.xaml" />
   </ItemGroup>
 
@@ -57,7 +57,7 @@
     <PackageReference Include="WinUIEx" Version="2.9.0" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Pages\Info.xaml">
+    <Page Update="Views\Info.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
@@ -72,7 +72,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Pages\Settings.xaml">
+    <Page Update="Views\Settings.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
