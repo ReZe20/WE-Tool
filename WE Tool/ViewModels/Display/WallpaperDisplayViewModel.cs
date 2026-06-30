@@ -64,6 +64,11 @@ namespace WE_Tool.ViewModels
         partial void OnWallpaperTagDisplayIndexChanged(int value)
         {
             OnPropertyChanged(nameof(TagDisplayVisibility));
+            OnPropertyChanged(nameof(TypeDisplayInTag));
+            OnPropertyChanged(nameof(RatingDisplayInTag));
+            OnPropertyChanged(nameof(SourceDisplayInTag));
+            OnPropertyChanged(nameof(TagDisplayInTag));
+            OnPropertyChanged(nameof(NoneDisplayInTag));
         }
 
         public bool TypeDisplayInTag
@@ -128,6 +133,9 @@ namespace WE_Tool.ViewModels
                 2 => 300,
                 _ => 180
             };
+            OnPropertyChanged(nameof(SmallIconItem));
+            OnPropertyChanged(nameof(MediumIconItem));
+            OnPropertyChanged(nameof(LargeIconItem));
         }
 
         public bool SmallIconItem
@@ -187,6 +195,7 @@ namespace WE_Tool.ViewModels
                 1 => "\uED0E",
                 2 => "\uF738",
                 3 => "\uEDA2",
+                4 => "\uE8F7",
                 _ => "\uE8D2"
             };
         }
@@ -199,6 +208,7 @@ namespace WE_Tool.ViewModels
                 1 => "SortBySubTime.Text",
                 2 => "SortByLastTime.Text",
                 3 => "SortByFileSize.Text",
+                4 => "SortByAcfUpdateTime.Text",
                 _ => "SortByName.Text"
             });
         }
@@ -233,6 +243,14 @@ namespace WE_Tool.ViewModels
             set
             {
                 if (value) SortOrder = 3;
+            }
+        }
+        public bool SortByAcfUpdateTime
+        {
+            get => SortOrder == 4;
+            set
+            {
+                if (value) SortOrder = 4;
             }
         }
 

@@ -421,6 +421,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     1 => isAscending ? query.OrderBy(w => w.CreationTime) : query.OrderByDescending(w => w.CreationTime),
                     2 => isAscending ? query.OrderBy(w => w.UpdateTime) : query.OrderByDescending(w => w.UpdateTime),
                     3 => isAscending ? query.OrderBy(w => w.FileSize) : query.OrderByDescending(w => w.FileSize),
+                    4 => isAscending ? query.OrderBy(w => w.AcfUpdateTime) : query.OrderByDescending(w => w.AcfUpdateTime),
                     _ => query.OrderByDescending(w => w.UpdateTime)
                 };
                 return sortedQuery.ToList();
@@ -1292,6 +1293,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     case 3:
                         labelText = item.FileSize.ToString();
                         break;
+                    case 4:
+                        labelText = item.AcfUpdateTime?.ToString("yy/MM") ?? "??";
+                        break;
                     default:
                         continue;
                 }
@@ -1374,6 +1378,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             case 3: // 按文件大小排序 (转换为 MB 显示)
                 double mbSize = item.FileSize / 1048576.0;
                 label = mbSize > 1024 ? $"{mbSize / 1024:F1} GB" : $"{mbSize:F0} MB";
+                break;
+            case 4: // 按修改时间排序
+                label = item.AcfUpdateTime?.ToString("yyyy/MM") ?? "??";
                 break;
             default:
                 label = "•";

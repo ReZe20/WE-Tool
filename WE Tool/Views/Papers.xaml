@@ -194,6 +194,12 @@
                                      Click="OnIconSizeChanged"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByLastTime,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
+                <RadioMenuFlyoutItem x:Uid="SortByAcfUpdateTime"
+                                     x:Name="SortByAcfUpdateTimeItem"
+                                     Tag="Large"
+                                     Click="OnIconSizeChanged"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByAcfUpdateTime,Mode=TwoWay}"
+                                     GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortByFileSize"
                                      x:Name="SortByFileSizeItem"
                                      Tag="Large"
@@ -387,6 +393,11 @@
                         <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="2" Click="ChangeSort">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xF738;" FontSize="16"/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Uid="SortByAcfUpdateTime" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="4" Click="ChangeSort">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE8F7;" FontSize="16"/>
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="3" Click="ChangeSort">
