@@ -179,6 +179,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _ = ApplyFilters();
         };
 
+        // 筛选/排序/显示属性现在在子 VM 中，订阅它们的 PropertyChanged 来触发筛选刷新
+        ViewModel.FilterExpanderVM.PropertyChanged += (s, e) => _ = ApplyFilters();
+        ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) => _ = ApplyFilters();
+
         this.Loaded += async (s, e) =>
         {
             await ViewModel.InitializeAsync();
