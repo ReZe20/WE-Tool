@@ -258,6 +258,9 @@
   <data name="SortByFileSize.Text" xml:space="preserve">
     <value>File Size</value>
   </data>
+  <data name="SortByAcfUpdateTime.Text" xml:space="preserve">
+    <value>Modified</value>
+  </data>
   <data name="SortBySubTime.Text" xml:space="preserve">
     <value>Sub Date</value>
   </data>

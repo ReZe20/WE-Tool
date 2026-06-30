@@ -258,6 +258,9 @@
   <data name="SortByFileSize.Text" xml:space="preserve">
     <value>按大小排序</value>
   </data>
+  <data name="SortByAcfUpdateTime.Text" xml:space="preserve">
+    <value>按修改时间</value>
+  </data>
   <data name="SortBySubTime.Text" xml:space="preserve">
     <value>按订阅时间</value>
   </data>
