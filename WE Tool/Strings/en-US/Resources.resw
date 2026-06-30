@@ -531,4 +531,58 @@
   <data name="c.Head" xml:space="preserve">
     <value>Apply Theme</value>
   </data>
+  <data name="PropertiesPanel_Header.Text" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="PropertiesPanel_BasicInfo.Text" xml:space="preserve">
+    <value>Basic Info</value>
+  </data>
+  <data name="PropertiesPanel_FileInfo.Text" xml:space="preserve">
+    <value>File Info</value>
+  </data>
+  <data name="PropertiesPanel_TimeInfo.Text" xml:space="preserve">
+    <value>Time Info</value>
+  </data>
+  <data name="PropertiesPanel_TypeLabel.Text" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="PropertiesPanel_SourceLabel.Text" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="PropertiesPanel_RatingLabel.Text" xml:space="preserve">
+    <value>Age Rating</value>
+  </data>
+  <data name="PropertiesPanel_TagLabel.Text" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="WorkshopID.Text" xml:space="preserve">
+    <value>Workshop ID</value>
+  </data>
+  <data name="Dependency.Text" xml:space="preserve">
+    <value>Dependency</value>
+  </data>
+  <data name="CreationTime.Text" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="UpdateTime.Text" xml:space="preserve">
+    <value>Updated</value>
+  </data>
+  <data name="AcfUpdateTime.Text" xml:space="preserve">
+    <value>ACF Updated</value>
+  </data>
+  <data name="FileSize.Text" xml:space="preserve">
+    <value>File Size</value>
+  </data>
+  <data name="FolderPath.Text" xml:space="preserve">
+    <value>Folder Path</value>
+  </data>
+  <data name="Description.Text" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="PreviewPath.Text" xml:space="preserve">
+    <value>Preview Path</value>
+  </data>
+  <data name="PropertiesPanel.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
 </root>

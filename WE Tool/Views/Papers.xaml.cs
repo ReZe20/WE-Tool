@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Serilog;
 using System;
@@ -57,6 +58,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private bool _isLeftMouseButtonPressed = false;
     private bool _isMultiSelectMode = false;
     private bool _isScanning = false;
+    private FrameworkElement? _rightClickedWallpaperElement;
     private Microsoft.UI.Xaml.Controls.Primitives.IScrollController? _originalVerticalScrollController;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _sizeChangedDebounceTimer;
     private static readonly FrozenDictionary<string, Func<SettingsViewModel, bool>> _tagGetters = new Dictionary<string, Func<SettingsViewModel, bool>>
@@ -987,6 +989,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             UpdateMultiSelectCount();
             ViewModel.SelectedWallpaper = item;
+            _rightClickedWallpaperElement = element;
         }
     }
     private static void ApplyScaleAnimation(FrameworkElement fe, float targetScale)
@@ -1035,6 +1038,74 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         imageVisual.StartAnimation("Scale.X", scaleAnim);
         imageVisual.StartAnimation("Scale.Y", scaleAnim);
         imageVisual.StartAnimation("Opacity", opacityAnim);
+    }
+    private void AnimatePropertiesPanelOpen()
+    {
+        var panelVisual = ElementCompositionPreview.GetElementVisual(PropertiesPanel);
+        var backgroundVisual = ElementCompositionPreview.GetElementVisual(PropertiesOverlayBackground);
+        var compositor = panelVisual.Compositor;
+
+        panelVisual.Opacity = 0f;
+        panelVisual.Scale = new Vector3(0.85f, 0.85f, 1f);
+        panelVisual.CenterPoint = new Vector3(
+            (float)(PropertiesPanel.ActualWidth / 2),
+            (float)(PropertiesPanel.ActualHeight / 2), 0f);
+
+        var bgFadeIn = compositor.CreateScalarKeyFrameAnimation();
+        bgFadeIn.InsertKeyFrame(0f, 0f);
+        bgFadeIn.InsertKeyFrame(1f, 1f);
+        bgFadeIn.Duration = TimeSpan.FromMilliseconds(200);
+
+        var scaleAnim = compositor.CreateSpringVector3Animation();
+        scaleAnim.Target = "Scale";
+        scaleAnim.FinalValue = new Vector3(1f, 1f, 1f);
+        scaleAnim.DampingRatio = 0.6f;
+        scaleAnim.Period = TimeSpan.FromMilliseconds(50);
+
+        var opacityAnim = compositor.CreateScalarKeyFrameAnimation();
+        opacityAnim.InsertKeyFrame(0f, 0f);
+        opacityAnim.InsertKeyFrame(1f, 1f);
+        opacityAnim.Duration = TimeSpan.FromMilliseconds(200);
+
+        backgroundVisual.StartAnimation("Opacity", bgFadeIn);
+        panelVisual.StartAnimation("Scale", scaleAnim);
+        panelVisual.StartAnimation("Opacity", opacityAnim);
+    }
+    private void AnimatePropertiesPanelClose(Action onCompleted)
+    {
+        var panelVisual = ElementCompositionPreview.GetElementVisual(PropertiesPanel);
+        var backgroundVisual = ElementCompositionPreview.GetElementVisual(PropertiesOverlayBackground);
+        var compositor = panelVisual.Compositor;
+
+        var bgFadeOut = compositor.CreateScalarKeyFrameAnimation();
+        bgFadeOut.InsertKeyFrame(0f, 1f);
+        bgFadeOut.InsertKeyFrame(1f, 0f);
+        bgFadeOut.Duration = TimeSpan.FromMilliseconds(150);
+
+        var scaleAnim = compositor.CreateScalarKeyFrameAnimation();
+        scaleAnim.Target = "Scale.X";
+        scaleAnim.InsertKeyFrame(0f, 1f);
+        scaleAnim.InsertKeyFrame(1f, 0.85f);
+        scaleAnim.Duration = TimeSpan.FromMilliseconds(150);
+
+        var opacityAnim = compositor.CreateScalarKeyFrameAnimation();
+        opacityAnim.InsertKeyFrame(0f, 1f);
+        opacityAnim.InsertKeyFrame(1f, 0f);
+        opacityAnim.Duration = TimeSpan.FromMilliseconds(150);
+
+        var batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
+        batch.Completed += (s, e) =>
+        {
+            PropertiesOverlay.Visibility = Visibility.Collapsed;
+            onCompleted?.Invoke();
+        };
+
+        backgroundVisual.StartAnimation("Opacity", bgFadeOut);
+        panelVisual.StartAnimation("Scale.X", scaleAnim);
+        panelVisual.StartAnimation("Scale.Y", scaleAnim);
+        panelVisual.StartAnimation("Opacity", opacityAnim);
+
+        batch.End();
     }
     private void InternalSelectAllWallpapers()
     {
@@ -1201,6 +1272,23 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void Properties()
     {
         HideWallpaperContextMenu();
+        if (ViewModel.SelectedWallpaper != null)
+        {
+            PropertiesOverlay.Visibility = Visibility.Visible;
+            // 等一帧让布局完成，然后启动动画
+            _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            {
+                AnimatePropertiesPanelOpen();
+            });
+        }
+    }
+    private void PropertiesOverlayBackground_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        AnimatePropertiesPanelClose(() => { });
+    }
+    private void PropertiesCloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        AnimatePropertiesPanelClose(() => { });
     }
     private async void OnIconSizeChanged(object sender, RoutedEventArgs e)
     {

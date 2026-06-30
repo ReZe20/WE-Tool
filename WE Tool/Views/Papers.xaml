@@ -20,6 +20,7 @@
         <converters:RatingToDisplay x:Key="RatingToDisplay"/>
         <converters:TagToDisplay x:Key="TagToDisplay"/>
         <converters:DescriptionToDisplay x:Key="DescriptionToDisplay"/>
+        <converters:DateTimeToString x:Key="DateTimeToString"/>
         <converters:PapersTagContentChoose x:Key="PapersTagContentChoose"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
@@ -91,6 +92,7 @@
                 </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_Properties" 
+                              Click="Properties_Click_ByCommandBarFlyout"
                               KeyboardAcceleratorTextOverride="Alt+Enter">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE90F;"/>
@@ -806,6 +808,244 @@
                 <ProgressRing x:Name="BackgroundProgressRing" Width="72" Height="72" IsActive="True"/>
                 <TextBlock x:Uid="ScanningTip" Style="{ThemeResource DisplayTextBlockStyle}"  FontSize="14" HorizontalAlignment="Center"/>
             </StackPanel>
+        </Grid>
+
+        <!-- 属性浮层面板 -->
+        <Grid x:Name="PropertiesOverlay"
+              Visibility="Collapsed"
+              Grid.RowSpan="3"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch">
+            <Rectangle x:Name="PropertiesOverlayBackground" Fill="#80000000"
+                       Tapped="PropertiesOverlayBackground_Tapped"/>
+            <Border x:Name="PropertiesPanel"
+                    Width="480"
+                    MaxHeight="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+                    CornerRadius="12"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <Border.Shadow>
+                    <ThemeShadow />
+                </Border.Shadow>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <!-- 标题栏 -->
+                    <Grid Padding="16,12,12,12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE90F;" FontSize="16"/>
+                            <TextBlock x:Uid="PropertiesPanel_Header" 
+                                       Style="{StaticResource TitleTextBlockStyle}" 
+                                       FontSize="18" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                x:Name="PropertiesCloseButton"
+                                Click="PropertiesCloseButton_Click"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                Width="36"
+                                Height="36">
+                            <FontIcon Glyph="&#xE711;" FontSize="10"/>
+                        </Button>
+                    </Grid>
+                    <!-- 内容 -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Padding="0,0,0,16" Spacing="0">
+                            <!-- 壁纸预览图 -->
+                            <Border Width="200" Height="200" HorizontalAlignment="Center"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4">
+                                <Image Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue=null}" Stretch="Uniform"/>
+                            </Border>
+                            <!-- 壁纸标题 -->
+                            <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay, FallbackValue=''}"
+                                       Style="{StaticResource SubtitleTextBlockStyle}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Padding="16,10,16,4"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <StackPanel Padding="16,0,16,0" Spacing="0">
+                            <!-- 基本信息 -->
+                            <TextBlock x:Uid="PropertiesPanel_BasicInfo"
+                                       Style="{StaticResource SubtitleTextBlockStyle}"
+                                       FontWeight="SemiBold"
+                                       Margin="0,8,0,6"
+                                       Foreground="{ThemeResource SystemAccentColor}"/>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Type -->
+                                <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="PropertiesPanel_TypeLabel" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.Type, Mode=OneWay, Converter={StaticResource TypeToDisplay}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
+                                <!-- Source -->
+                                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="PropertiesPanel_SourceLabel" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.Source, Mode=OneWay, Converter={StaticResource SourceToDisplay}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
+                                <!-- ContentRating -->
+                                <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="PropertiesPanel_RatingLabel" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
+                                <!-- Tags -->
+                                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="PropertiesPanel_TagLabel" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.Tags, Mode=OneWay, Converter={StaticResource TagToDisplay}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" 
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,4"/>
+                                <!-- Description -->
+                                <TextBlock Grid.Row="4" Grid.Column="0" 
+                                           x:Uid="Description"
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.Description, Mode=OneWay, Converter={StaticResource DescriptionToDisplay}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" 
+                                           TextWrapping="Wrap"
+                                           MaxHeight="80"
+                                           Margin="0,4,0,4"/>
+                            </Grid>
+
+                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,12,0,8"/>
+
+                            <!-- 文件信息 -->
+                            <TextBlock x:Uid="PropertiesPanel_FileInfo"
+                                       Style="{StaticResource SubtitleTextBlockStyle}"
+                                       FontWeight="SemiBold"
+                                       Margin="0,8,0,6"
+                                       Foreground="{ThemeResource SystemAccentColor}"/>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- FileSize -->
+                                <TextBlock Grid.Row="0" Grid.Column="0" 
+                                           x:Uid="FileSize"
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
+                                <!-- FolderPath -->
+                                <TextBlock Grid.Row="1" Grid.Column="0" 
+                                           x:Uid="FolderPath"
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" 
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,4"/>
+                                <!-- WorkshopID -->
+                                <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="WorkshopID" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.WorkshopID, Mode=OneWay, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" 
+                                           IsTextSelectionEnabled="True"
+                                           Margin="0,4,0,4"/>
+                                <!-- Dependency -->
+                                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="Dependency" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.Dependency, Mode=OneWay, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" 
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,4"/>
+                                <!-- Preview Path -->
+                                <TextBlock Grid.Row="4" Grid.Column="0" x:Uid="PreviewPath" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" 
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,4"/>
+                            </Grid>
+
+                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,12,0,8"/>
+
+                            <!-- 时间信息 -->
+                            <TextBlock x:Uid="PropertiesPanel_TimeInfo"
+                                       Style="{StaticResource SubtitleTextBlockStyle}"
+                                       FontWeight="SemiBold"
+                                       Margin="0,8,0,6"
+                                       Foreground="{ThemeResource SystemAccentColor}"/>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- CreationTime -->
+                                <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="CreationTime" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.CreationTime, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
+                                <!-- UpdateTime -->
+                                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="UpdateTime" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.UpdateTime, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
+                                <!-- AcfUpdateTime -->
+                                <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="AcfUpdateTime" 
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.AcfUpdateTime, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
+                            </Grid>
+                        </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </Page>

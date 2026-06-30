@@ -531,4 +531,58 @@
   <data name="c.Head" xml:space="preserve">
     <value>应用主题</value>
   </data>
+  <data name="PropertiesPanel_Header.Text" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="PropertiesPanel_BasicInfo.Text" xml:space="preserve">
+    <value>基本信息</value>
+  </data>
+  <data name="PropertiesPanel_FileInfo.Text" xml:space="preserve">
+    <value>文件信息</value>
+  </data>
+  <data name="PropertiesPanel_TimeInfo.Text" xml:space="preserve">
+    <value>时间信息</value>
+  </data>
+  <data name="PropertiesPanel_TypeLabel.Text" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="PropertiesPanel_SourceLabel.Text" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="PropertiesPanel_RatingLabel.Text" xml:space="preserve">
+    <value>年龄分级</value>
+  </data>
+  <data name="PropertiesPanel_TagLabel.Text" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="WorkshopID.Text" xml:space="preserve">
+    <value>工坊ID</value>
+  </data>
+  <data name="Dependency.Text" xml:space="preserve">
+    <value>依赖项</value>
+  </data>
+  <data name="CreationTime.Text" xml:space="preserve">
+    <value>创建时间</value>
+  </data>
+  <data name="UpdateTime.Text" xml:space="preserve">
+    <value>更新时间</value>
+  </data>
+  <data name="AcfUpdateTime.Text" xml:space="preserve">
+    <value>ACF更新时间</value>
+  </data>
+  <data name="FileSize.Text" xml:space="preserve">
+    <value>文件大小</value>
+  </data>
+  <data name="FolderPath.Text" xml:space="preserve">
+    <value>文件夹路径</value>
+  </data>
+  <data name="Description.Text" xml:space="preserve">
+    <value>描述</value>
+  </data>
+  <data name="PreviewPath.Text" xml:space="preserve">
+    <value>预览路径</value>
+  </data>
+  <data name="PropertiesPanel.Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
 </root>
