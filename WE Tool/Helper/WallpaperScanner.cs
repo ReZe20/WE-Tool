@@ -23,6 +23,10 @@ internal class WallpaperScanner
     private static readonly Regex WorkshopIdRegex = new(
         @"\""(\d+)\""\s+\{", RegexOptions.Compiled | RegexOptions.Multiline);
 
+    private static readonly Regex AcfTimeUpdatedRegex = new(
+        @"""(\d+)""\s*\{[^}]*""timeupdated""\s*""(\d+)""[^}]*\}",
+        RegexOptions.Compiled | RegexOptions.Multiline);
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -56,6 +60,7 @@ internal class WallpaperScanner
                 FileSize       INTEGER,
                 CreationTime   TEXT,
                 UpdateTime     TEXT,
+                AcfUpdateTime  TEXT,
                 Preview        TEXT,
                 ContentRating  TEXT,
                 Tags           TEXT,
@@ -106,6 +111,9 @@ internal class WallpaperScanner
             FileSize = reader.IsDBNull("FileSize") ? 0L : reader.GetInt64("FileSize"),
             CreationTime = DateTime.ParseExact(reader.GetString("CreationTime"), "o", CultureInfo.InvariantCulture),
             UpdateTime = DateTime.ParseExact(reader.GetString("UpdateTime"), "o", CultureInfo.InvariantCulture),
+            AcfUpdateTime = reader.IsDBNull("AcfUpdateTime")
+                ? null
+                : DateTime.ParseExact(reader.GetString("AcfUpdateTime"), "o", CultureInfo.InvariantCulture),
             Preview = reader.GetString("Preview"),
             ContentRating = reader.IsDBNull("ContentRating") ? "Everyone" : reader.GetString("ContentRating"),
             Tags = tagsString,
@@ -131,10 +139,10 @@ internal class WallpaperScanner
             cmd.CommandText = """
                 INSERT OR REPLACE INTO WallpaperCache 
                 (FolderPath, Source, WorkshopID, Title, Description, FileSize,
-                 CreationTime, UpdateTime, Preview, ContentRating, Tags,
+                 CreationTime, UpdateTime, AcfUpdateTime, Preview, ContentRating, Tags,
                  Type, Dependency, CachedAt)
                 VALUES (@FolderPath, @Source, @WorkshopID, @Title, @Description, @FileSize,
-                        @CreationTime, @UpdateTime, @Preview, @ContentRating, @Tags,
+                        @CreationTime, @UpdateTime, @AcfUpdateTime, @Preview, @ContentRating, @Tags,
                         @Type, @Dependency, @CachedAt)
                 """;
 
@@ -149,6 +157,10 @@ internal class WallpaperScanner
                 cmd.Parameters.AddWithValue("@FileSize", item.FileSize);
                 cmd.Parameters.AddWithValue("@CreationTime", item.CreationTime.ToString("o"));
                 cmd.Parameters.AddWithValue("@UpdateTime", item.UpdateTime.ToString("o"));
+                cmd.Parameters.AddWithValue("@AcfUpdateTime",
+                    item.AcfUpdateTime.HasValue
+                        ? (object)item.AcfUpdateTime.Value.ToString("o")
+                        : DBNull.Value);
                 cmd.Parameters.AddWithValue("@Preview", item.Preview);
                 cmd.Parameters.AddWithValue("@ContentRating", item.ContentRating);
                 cmd.Parameters.AddWithValue("@Tags", item.Tags ?? "Unspecified");
@@ -183,6 +195,7 @@ internal class WallpaperScanner
             : cacheDbPath;
 
         var installedIDs = GetInstalledWorkshopIDs(acfPath);
+        var acfUpdateTimes = GetAcfUpdateTimes(acfPath);
         var resultsBag = new ConcurrentBag<WallpaperItem>();
         var parsedItems = new ConcurrentBag<WallpaperItem>();
         var sw = Stopwatch.StartNew();
@@ -205,11 +218,12 @@ internal class WallpaperScanner
                 .Where(dir => File.Exists(Path.Combine(dir, "project.json")))
                 .ToList();
 
-            // 缓存命中判断
+            // 缓存命中判断（基于文件修改时间）
             var toParse = new List<string>();
             foreach (var current in wallpaperDirs)
             {
                 var currentUpdateTime = Directory.GetLastWriteTime(current);
+
                 if (cacheDict.TryGetValue(current, out var entry) &&
                     entry.UpdateTime == currentUpdateTime)
                 {
@@ -234,7 +248,7 @@ internal class WallpaperScanner
 
                 await Parallel.ForEachAsync(toParse, parallelOptions, async (current, token) =>
                 {
-                    var item = await ParseWallpaperAsync(current, installedIDs, source, token);
+                    var item = await ParseWallpaperAsync(current, installedIDs, source, acfUpdateTimes, token);
                     if (item is not null)
                     {
                         resultsBag.Add(item);
@@ -281,6 +295,45 @@ internal class WallpaperScanner
             return FrozenSet<string>.Empty;
         }
     }
+
+    /// <summary>
+    /// 从 .acf 文件中解析每个工坊壁纸的更新时间 (timeupdated, Unix 秒 → DateTime)
+    /// </summary>
+    private static Dictionary<string, DateTime> GetAcfUpdateTimes(string acfPath)
+    {
+        var result = new Dictionary<string, DateTime>();
+        if (!File.Exists(acfPath)) return result;
+
+        try
+        {
+            var content = File.ReadAllText(acfPath);
+
+            // 只扫描 WorkshopItemsInstalled 段内的条目
+            var sectionMatch = Regex.Match(content,
+                @"""WorkshopItemsInstalled""\s*\{(?<body>.+?)\}\s*""WorkshopItemDetails""",
+                RegexOptions.Singleline);
+            if (!sectionMatch.Success) return result;
+
+            var body = sectionMatch.Groups["body"].Value;
+            var matches = AcfTimeUpdatedRegex.Matches(body);
+
+            foreach (Match match in matches)
+            {
+                var id = match.Groups[1].Value;
+                if (long.TryParse(match.Groups[2].Value, out var unixTs))
+                {
+                    result[id] = DateTimeOffset.FromUnixTimeSeconds(unixTs).DateTime;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "解析 .acf 更新时间出现异常。");
+        }
+
+        return result;
+    }
+
     private record ProjectMetadata
     {
         public string? Type { get; init; }
@@ -299,6 +352,7 @@ internal class WallpaperScanner
         string current,
         FrozenSet<string> installedIDs,
         string source,
+        Dictionary<string, DateTime> acfUpdateTimes,
         CancellationToken ct)
     {
         try
@@ -388,6 +442,9 @@ internal class WallpaperScanner
                 FileSize = filesize,
                 CreationTime = Directory.GetCreationTime(current),
                 UpdateTime = Directory.GetLastWriteTime(current),
+                AcfUpdateTime = acfUpdateTimes.TryGetValue(folderName, out var acfTime)
+                    ? acfTime
+                    : null,
                 Preview = previewFullPath,
                 ContentRating = metadata.Contentrating ?? "Everyone",
                 Tags = tagsString,
