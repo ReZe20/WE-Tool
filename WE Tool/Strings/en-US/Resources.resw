@@ -568,7 +568,7 @@
     <value>Updated</value>
   </data>
   <data name="AcfUpdateTime.Text" xml:space="preserve">
-    <value>ACF Updated</value>
+    <value>Workshop Updated</value>
   </data>
   <data name="FileSize.Text" xml:space="preserve">
     <value>File Size</value>

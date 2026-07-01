@@ -1278,6 +1278,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             // 等一帧让布局完成，然后启动动画
             _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
             {
+                PropertiesPanel.MaxHeight = PropertiesOverlay.ActualHeight * 0.85;
+                PropertiesPanel.UpdateLayout();
                 AnimatePropertiesPanelOpen();
             });
         }

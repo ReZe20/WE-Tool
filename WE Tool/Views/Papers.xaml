@@ -820,13 +820,13 @@
                        Tapped="PropertiesOverlayBackground_Tapped"/>
             <Border x:Name="PropertiesPanel"
                     Width="480"
-                    MaxHeight="520"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
                     CornerRadius="12"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1">
+                    BorderThickness="1"
+                    Margin="0,100,0,100">
                 <Border.Shadow>
                     <ThemeShadow />
                 </Border.Shadow>
@@ -852,14 +852,14 @@
                                 x:Name="PropertiesCloseButton"
                                 Click="PropertiesCloseButton_Click"
                                 Style="{StaticResource SubtleButtonStyle}"
-                                Width="36"
-                                Height="36">
-                            <FontIcon Glyph="&#xE711;" FontSize="10"/>
+                                Width="32"
+                                Height="32">
+                            <FontIcon Glyph="&#xE711;" FontSize="9"/>
                         </Button>
                     </Grid>
                     <!-- 内容 -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Padding="0,0,0,16" Spacing="0">
+                        <StackPanel Padding="0,32,0,16" Spacing="0">
                             <!-- 壁纸预览图 -->
                             <Border Width="200" Height="200" HorizontalAlignment="Center"
                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4">
@@ -868,18 +868,18 @@
                             <!-- 壁纸标题 -->
                             <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay, FallbackValue=''}"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontSize="16"
+                                       FontSize="28"
                                        FontWeight="SemiBold"
-                                       Padding="16,10,16,4"
+                                       Padding="16,20,16,4"
                                        TextTrimming="CharacterEllipsis"/>
                             <StackPanel Padding="16,0,16,0" Spacing="0">
                             <!-- 基本信息 -->
                             <TextBlock x:Uid="PropertiesPanel_BasicInfo"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
                                        FontWeight="SemiBold"
-                                       Margin="0,8,0,6"
+                                       Margin="0,8,0,8"
                                        Foreground="{ThemeResource SystemAccentColor}"/>
-                            <Grid>
+                            <Grid ColumnSpacing="12">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -934,15 +934,15 @@
                                            Margin="0,4,0,4"/>
                             </Grid>
 
-                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,12,0,8"/>
+                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
 
                             <!-- 文件信息 -->
                             <TextBlock x:Uid="PropertiesPanel_FileInfo"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
                                        FontWeight="SemiBold"
-                                       Margin="0,8,0,6"
+                                       Margin="0,8,0,8"
                                        Foreground="{ThemeResource SystemAccentColor}"/>
-                            <Grid>
+                            <Grid ColumnSpacing="12">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -985,31 +985,22 @@
                                 <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="Dependency" 
                                            Style="{StaticResource CaptionTextBlockStyle}" 
                                            Foreground="Gray" Margin="0,4,0,4"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1" 
+                                    <TextBlock Grid.Row="3" Grid.Column="1" 
                                            Text="{x:Bind ViewModel.SelectedWallpaper.Dependency, Mode=OneWay, FallbackValue='-'}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"
                                            Margin="0,4,0,4"/>
-                                <!-- Preview Path -->
-                                <TextBlock Grid.Row="4" Grid.Column="0" x:Uid="PreviewPath" 
-                                           Style="{StaticResource CaptionTextBlockStyle}" 
-                                           Foreground="Gray" Margin="0,4,0,4"/>
-                                <TextBlock Grid.Row="4" Grid.Column="1" 
-                                           Text="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue='-'}" 
-                                           Style="{StaticResource BodyTextBlockStyle}" 
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,4"/>
-                            </Grid>
+                                </Grid>
 
-                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,12,0,8"/>
+                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
 
                             <!-- 时间信息 -->
                             <TextBlock x:Uid="PropertiesPanel_TimeInfo"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
                                        FontWeight="SemiBold"
-                                       Margin="0,8,0,6"
+                                       Margin="0,8,0,8"
                                        Foreground="{ThemeResource SystemAccentColor}"/>
-                            <Grid>
+                            <Grid ColumnSpacing="12">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
