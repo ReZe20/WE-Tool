@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Frozen;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -1107,6 +1108,158 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         batch.End();
     }
+
+    // ========== File structure TreeView model & template selector ==========
+
+    private async Task PopulateFileTreeAsync(string folderPath)
+    {
+        FileStructureTree.RootNodes.Clear();
+
+        if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
+            return;
+
+        var rootName = Path.GetFileName(folderPath);
+        var rootNode = new TreeViewNode
+        {
+            Content = new FileItem { Name = rootName, ItemType = FileItemType.Folder },
+            IsExpanded = true
+        };
+
+        await PopulateTreeNodeChildrenAsync(rootNode, folderPath);
+        FileStructureTree.RootNodes.Add(rootNode);
+    }
+
+    private async Task PopulateTreeNodeChildrenAsync(TreeViewNode node, string directoryPath)
+    {
+        node.HasUnrealizedChildren = false;
+
+        try
+        {
+            // 添加子目录（延迟加载）
+            foreach (var subDir in Directory.EnumerateDirectories(directoryPath))
+            {
+                var dirName = Path.GetFileName(subDir);
+                var dirNode = new TreeViewNode
+                {
+                    Content = new FileItem { Name = dirName, ItemType = FileItemType.Folder },
+                    HasUnrealizedChildren = true
+                };
+                node.Children.Add(dirNode);
+            }
+
+            // 添加文件（含大小）
+            foreach (var file in Directory.EnumerateFiles(directoryPath))
+            {
+                var fileInfo = new FileInfo(file);
+                var ext = Path.GetExtension(file).ToLowerInvariant();
+                var type = ext switch
+                {
+                    ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp" => FileItemType.Image,
+                    ".mp4" or ".webm" or ".avi" or ".mov" or ".mkv" => FileItemType.Video,
+                    ".json" or ".txt" or ".xml" or ".html" or ".htm" or ".css" or ".js" or ".md" => FileItemType.Document,
+                    _ => FileItemType.Other
+                };
+                var fileNode = new TreeViewNode
+                {
+                    Content = new FileItem { Name = fileInfo.Name, ItemType = type, Size = fileInfo.Length }
+                };
+                node.Children.Add(fileNode);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, $"填充 TreeView 节点时异常: {directoryPath}");
+            node.Children.Add(new TreeViewNode
+            {
+                Content = new FileItem { Name = "(访问被拒绝)", ItemType = FileItemType.Other }
+            });
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB", "TB"];
+        double size = Math.Abs((double)bytes);
+        int unitIndex = 0;
+        while (size >= 1024 && unitIndex < units.Length - 1)
+        {
+            size /= 1024;
+            unitIndex++;
+        }
+        return $"{size:F2} {units[unitIndex]}";
+    }
+
+    private async void FileStructureTree_Expanding(TreeView sender, TreeViewExpandingEventArgs args)
+    {
+        var node = args.Node;
+
+        // 查找对应的文件夹路径
+        if (node.Content is FileItem fileItem && fileItem.ItemType == FileItemType.Folder && node.Parent != null)
+        {
+            var path = GetNodePath(node);
+            if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
+            {
+                await PopulateTreeNodeChildrenAsync(node, path);
+            }
+        }
+    }
+
+    private string? GetNodePath(TreeViewNode node)
+    {
+        var segments = new List<string>();
+        var current = node;
+
+        // 从叶子节点向上收集路径段
+        while (current != null)
+        {
+            if (current.Content is FileItem fi && !string.IsNullOrEmpty(fi.Name))
+            {
+                segments.Insert(0, fi.Name);
+            }
+            current = current.Parent;
+        }
+
+        if (segments.Count == 0) return null;
+
+        // 根节点 = 壁纸文件夹名，需要找到对应的完整路径
+        var root = segments[0];
+        var basePath = ViewModel.SelectedWallpaper?.FolderPath;
+        if (string.IsNullOrEmpty(basePath) || Path.GetFileName(basePath) != root)
+            return null;
+
+        var relative = segments.Count > 1
+            ? string.Join(Path.DirectorySeparatorChar.ToString(), segments.Skip(1))
+            : "";
+        return Path.Combine(basePath, relative);
+    }
+    private void FileStructureTree_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        // 找到双击的 TreeViewItem
+        var source = e.OriginalSource as DependencyObject;
+        while (source != null && source is not TreeViewItem)
+            source = VisualTreeHelper.GetParent(source);
+        if (source is not TreeViewItem treeViewItem) return;
+
+        var node = FileStructureTree.NodeFromContainer(treeViewItem);
+        if (node?.Content is not FileItem fileItem || fileItem.ItemType == FileItemType.Folder)
+            return;
+
+        // 构造完整文件路径并打开
+        var fullPath = GetNodePath(node);
+        if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, $"打开文件失败: {fullPath}");
+            }
+        }
+    }
     private void InternalSelectAllWallpapers()
     {
         ViewModel.SuspendSelectedWallpapersCollectionChanged();
@@ -1281,6 +1434,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 PropertiesPanel.MaxHeight = PropertiesOverlay.ActualHeight * 0.85;
                 PropertiesPanel.UpdateLayout();
                 AnimatePropertiesPanelOpen();
+                _ = PopulateFileTreeAsync(ViewModel.SelectedWallpaper!.FolderPath);
             });
         }
     }

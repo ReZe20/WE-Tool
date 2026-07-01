@@ -11,6 +11,7 @@
     xmlns:converters="using:WE_Tool.Converters"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     x:Name="PageRoot"
     NavigationCacheMode="Enabled">
     <Page.Resources>
@@ -23,6 +24,44 @@
         <converters:DateTimeToString x:Key="DateTimeToString"/>
         <converters:PapersTagContentChoose x:Key="PapersTagContentChoose"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+
+        <!-- TreeView 文件结构模板 -->
+        <DataTemplate x:Key="FileTreeFolderTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE8B7;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FileTreeImageTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xEB9F;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FileTreeVideoTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE8B2;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FileTreeDocumentTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE8A5;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FileTreeOtherTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE7C3;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <models:FileTreeTemplateSelector x:Key="FileTreeTemplateSelector"
+                                         FolderTemplate="{StaticResource FileTreeFolderTemplate}"
+                                         ImageTemplate="{StaticResource FileTreeImageTemplate}"
+                                         VideoTemplate="{StaticResource FileTreeVideoTemplate}"
+                                         DocumentTemplate="{StaticResource FileTreeDocumentTemplate}"
+                                         OtherTemplate="{StaticResource FileTreeOtherTemplate}"/>
         <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
             <CommandBarFlyout.PrimaryCommands>
                 <AppBarButton x:Uid="AppBarButton_Extract">
@@ -1040,6 +1079,19 @@
                                            Text="{x:Bind ViewModel.SelectedWallpaper.AcfUpdateTime, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}" 
                                            Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
                             </Grid>
+
+                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
+                            <TextBlock Text="文件结构" 
+                                       Style="{StaticResource SubtitleTextBlockStyle}"
+                                       FontWeight="SemiBold"
+                                       Margin="0,8,0,6"
+                                       Foreground="{ThemeResource SystemAccentColor}"/>
+                            <muxc:TreeView x:Name="FileStructureTree"
+                                           MaxHeight="200"
+                                           Margin="0,0,0,4"
+                                           Expanding="FileStructureTree_Expanding"
+                                           DoubleTapped="FileStructureTree_DoubleTapped"
+                                           ItemTemplateSelector="{StaticResource FileTreeTemplateSelector}"/>
                         </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
