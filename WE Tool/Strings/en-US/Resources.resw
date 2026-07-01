@@ -588,4 +588,40 @@
   <data name="PropertiesPanel.Close" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="Toolbar_FilterToggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Filter Results</value>
+  </data>
+  <data name="Toolbar_GridView.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Grid View</value>
+  </data>
+  <data name="Toolbar_ListView.ToolTipService.ToolTip" xml:space="preserve">
+    <value>List View</value>
+  </data>
+  <data name="Toolbar_Delete.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Toolbar_DeleteForever.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Delete Forever</value>
+  </data>
+  <data name="Toolbar_SelectAll.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="Toolbar_InvertSelection.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Invert Selection</value>
+  </data>
+  <data name="Toolbar_Refresh.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Toolbar_View.ToolTipService.ToolTip" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Toolbar_TagDisplay.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Tag Display</value>
+  </data>
+  <data name="Toolbar_Sort.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="Toolbar_SortDirection.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Sort Direction</value>
+  </data>
 </root>

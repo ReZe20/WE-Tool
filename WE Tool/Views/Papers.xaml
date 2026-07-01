@@ -249,6 +249,10 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                      GroupName="MenuSortGroup"/>
             </MenuFlyoutSubItem>
         </MenuFlyout>
+        <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="FilterExpanderSelectAll_Click"/>
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="FilterExpanderInvert_Click"/>
+        </MenuFlyout>
     </Page.Resources>
     <Page.KeyboardAccelerators>
         <KeyboardAccelerator />
@@ -295,7 +299,7 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                             FontWeight="Light"
                             VerticalAlignment="Center"
                             TextChanged="WallpaperSearchBox_TextChanged"/>
-            <ToggleButton x:Name="LeftToggleFilterButton" Height="35" HorizontalAlignment="Left" BorderThickness="0" Background="Transparent" IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}" Margin="3,0,0,0">
+            <ToggleButton x:Name="LeftToggleFilterButton" Height="35" HorizontalAlignment="Left" BorderThickness="0" Background="Transparent" IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}" Margin="3,0,0,0" x:Uid="Toolbar_FilterToggle">
                 <ToggleButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE71D;" Margin="0,0,5,0" FontSize="16"/>
@@ -305,51 +309,58 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
             </ToggleButton>
             <AppBarSeparator/>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
+                    x:Uid="Toolbar_GridView">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8C6;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}">
+                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
+                    x:Uid="Toolbar_ListView">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8C8;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
                     IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
-                    Command="{x:Bind DeleteSelectedCommand}">
+                    Command="{x:Bind DeleteSelectedCommand}"
+                    x:Uid="Toolbar_Delete">
                 <Button.Content>
                     <FontIcon Glyph="&#xE74D;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
                     IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
-                    Command="{x:Bind DeleteSelectedCommand}">
+                    Command="{x:Bind DeleteSelectedCommand}"
+                    x:Uid="Toolbar_DeleteForever">
                 <Button.Content>
                     <FontIcon Glyph="&#xE75C;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    Click="SelectAllWallpapers_Click_ByCommandBarFlyout">
+                    Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
+                    x:Uid="Toolbar_SelectAll">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8B3;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    Click="InvertSelection_CLick_ByCommandBarFlyout">
+                    Click="InvertSelection_CLick_ByCommandBarFlyout"
+                    x:Uid="Toolbar_InvertSelection">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
-                    Click="WallpaperListRefresh_Click_ByCommandBarFlyout">
+                    Click="WallpaperListRefresh_Click_ByCommandBarFlyout"
+                    x:Uid="Toolbar_Refresh">
                 <Button.Content>
                     <FontIcon Glyph="&#xE777;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <AppBarSeparator/>
-            <DropDownButton Height="35" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent">
+            <DropDownButton Height="35" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent" x:Uid="Toolbar_View">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE890;" Margin="0,0,8,0" FontSize="16"/>
@@ -380,7 +391,7 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <DropDownButton Height="35" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent">
+            <DropDownButton Height="35" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent" x:Uid="Toolbar_TagDisplay">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE8EC;" Margin="0,0,8,0" FontSize="16"/>
@@ -412,7 +423,7 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <DropDownButton Width="115" Height="35" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Style="{ThemeResource SubtleButtonStyle}">
+            <DropDownButton Width="115" Height="35" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" BorderThickness="0" Style="{ThemeResource SubtleButtonStyle}" x:Uid="Toolbar_Sort">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal">
                         <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortGlyph, Mode=OneWay}" FontSize="16"/>
@@ -449,7 +460,7 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending, Mode=TwoWay}" BorderThickness="0" Background="Transparent">
+            <ToggleButton Grid.Row="0" Height="35" Grid.Column="1" HorizontalAlignment="Right" IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending, Mode=TwoWay}" BorderThickness="0" Background="Transparent" x:Uid="Toolbar_SortDirection">
                 <ToggleButton.Content>
                     <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
                 </ToggleButton.Content>
@@ -599,7 +610,8 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                                 </StackPanel>
                                             </Button.Content>
                                         </Button>
-                                        <Expander x:Uid="Type" x:Name="TypeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.TypeExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Type" x:Name="TypeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.TypeExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ContextFlyout="{StaticResource FilterExpanderContextMenu}">
                                             <StackPanel x:Name="TypeFilterPanel">
                                                 <CheckBox x:Uid="Type_Scene" Tag="Scene" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Scene, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Type_Video" Tag="Video" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Video, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -610,7 +622,8 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander x:Uid="Rating" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Rating" x:Name="AgeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.RatingExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ContextFlyout="{StaticResource FilterExpanderContextMenu}">
                                             <StackPanel x:Name="AgeRatingFilterPanel">
                                                 <CheckBox x:Uid="Rating_Everyone" Tag="G" IsChecked="{x:Bind ViewModel.FilterExpanderVM.G, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Rating_Questionable" Tag="PG" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Pg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -618,7 +631,8 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander x:Uid="Source" x:Name="SourceExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.SourceExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Source" x:Name="SourceExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.SourceExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ContextFlyout="{StaticResource FilterExpanderContextMenu}">
                                             <StackPanel x:Name="SourceFilterPanel">
                                                 <CheckBox x:Uid="Source_Official" Tag="Official" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Official, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <CheckBox x:Uid="Source_Workshop" Tag="Workshop" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Workshop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -626,7 +640,8 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander x:Uid="Tag" x:Name="TagsExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.TagsExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <Expander x:Uid="Tag" x:Name="TagsExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.TagsExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ContextFlyout="{StaticResource FilterExpanderContextMenu}">
                                             <StackPanel x:Name="TagsContainer">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>

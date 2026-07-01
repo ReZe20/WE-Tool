@@ -510,6 +510,45 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         await ViewModel.ResetFiltersAsync(2, false);
     }
+
+    private Expander? _currentFilterExpander;
+
+    private void FilterExpanderContextMenu_Opening(object sender, object e)
+    {
+        if (sender is MenuFlyout flyout)
+        {
+            _currentFilterExpander = flyout.Target as Expander;
+        }
+    }
+
+    private void FilterExpanderSelectAll_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentFilterExpander != null)
+            ExpandCheckBoxes(_currentFilterExpander, true);
+    }
+
+    private void FilterExpanderInvert_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentFilterExpander != null)
+            ExpandCheckBoxes(_currentFilterExpander, null);
+    }
+
+    private static void ExpandCheckBoxes(Expander expander, bool? isChecked)
+    {
+        if (expander.Content is not Panel panel) return;
+        foreach (var child in panel.Children)
+        {
+            if (child is CheckBox cb)
+            {
+                cb.IsChecked = isChecked switch
+                {
+                    true => true,
+                    false => false,
+                    _ => !cb.IsChecked
+                };
+            }
+        }
+    }
     
     private void UpdateItemCheckBoxOpacity(Grid grid, WallpaperItem item)
     {

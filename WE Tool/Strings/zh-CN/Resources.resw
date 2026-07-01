@@ -588,4 +588,40 @@
   <data name="PropertiesPanel.Close" xml:space="preserve">
     <value>关闭</value>
   </data>
+  <data name="Toolbar_FilterToggle.ToolTipService.ToolTip" xml:space="preserve">
+    <value>筛选结果</value>
+  </data>
+  <data name="Toolbar_GridView.ToolTipService.ToolTip" xml:space="preserve">
+    <value>网格视图</value>
+  </data>
+  <data name="Toolbar_ListView.ToolTipService.ToolTip" xml:space="preserve">
+    <value>列表视图</value>
+  </data>
+  <data name="Toolbar_Delete.ToolTipService.ToolTip" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Toolbar_DeleteForever.ToolTipService.ToolTip" xml:space="preserve">
+    <value>彻底删除</value>
+  </data>
+  <data name="Toolbar_SelectAll.ToolTipService.ToolTip" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="Toolbar_InvertSelection.ToolTipService.ToolTip" xml:space="preserve">
+    <value>反选</value>
+  </data>
+  <data name="Toolbar_Refresh.ToolTipService.ToolTip" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Toolbar_View.ToolTipService.ToolTip" xml:space="preserve">
+    <value>视图</value>
+  </data>
+  <data name="Toolbar_TagDisplay.ToolTipService.ToolTip" xml:space="preserve">
+    <value>标签显示</value>
+  </data>
+  <data name="Toolbar_Sort.ToolTipService.ToolTip" xml:space="preserve">
+    <value>排序</value>
+  </data>
+  <data name="Toolbar_SortDirection.ToolTipService.ToolTip" xml:space="preserve">
+    <value>排序方向</value>
+  </data>
 </root>
