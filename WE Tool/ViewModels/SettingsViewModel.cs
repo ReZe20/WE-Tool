@@ -72,9 +72,6 @@ namespace WE_Tool.ViewModels
         public partial string OnlyExtensionList { get; set; } = null!;
 
         [ObservableProperty]
-        public partial bool ConvertTEX { get; set; }
-
-        [ObservableProperty]
         public partial bool OneFolder { get; set; }
 
         [ObservableProperty]
@@ -84,10 +81,11 @@ namespace WE_Tool.ViewModels
         public partial bool UseProjectName { get; set; }
 
         [ObservableProperty]
-        public partial bool DontConvertTEX { get; set; }
-
-        [ObservableProperty]
         public partial bool CoverAllFiles { get; set; }
+
+        /// <summary>0=导出原始文件, 1=导出并转换TEX, 2=只导出TEX图片</summary>
+        [ObservableProperty]
+        public partial int TexExportMode { get; set; }
 
         public SettingsViewModel(IConfigService configService, IPickerService pickerService)
         {
@@ -278,12 +276,11 @@ namespace WE_Tool.ViewModels
             IgnoreExtensionList = _settings.Extract.IgnoreExtensionList;
             OnlyExtension = _settings.Extract.OnlyExtension;
             OnlyExtensionList = _settings.Extract.OnlyExtensionList;
-            ConvertTEX = _settings.Extract.ConvertTEX;
             OneFolder = _settings.Extract.OneFolder;
             OutProjectJSON = _settings.Extract.OutProjectJSON;
             UseProjectName = _settings.Extract.UseProjectName;
-            DontConvertTEX = _settings.Extract.DontConvertTEX;
             CoverAllFiles = _settings.Extract.CoverAllFiles;
+            TexExportMode = _settings.Extract.TexExportMode;
 
             if (isNewConfig || mode.Contains('1') || string.IsNullOrEmpty(_settings.Path.DownloadPath))
             {
@@ -466,12 +463,11 @@ namespace WE_Tool.ViewModels
                 _settings.Extract.IgnoreExtensionList = IgnoreExtensionList;
                 _settings.Extract.OnlyExtension = OnlyExtension;
                 _settings.Extract.OnlyExtensionList = OnlyExtensionList;
-                _settings.Extract.ConvertTEX = ConvertTEX;
                 _settings.Extract.OneFolder = OneFolder;
                 _settings.Extract.OutProjectJSON = OutProjectJSON;
                 _settings.Extract.UseProjectName = UseProjectName;
-                _settings.Extract.DontConvertTEX = DontConvertTEX;
                 _settings.Extract.CoverAllFiles = CoverAllFiles;
+                _settings.Extract.TexExportMode = TexExportMode;
 
                 await _configService.SaveAsync(_settings);
             }

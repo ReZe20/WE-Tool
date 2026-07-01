@@ -54,9 +54,59 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private CancellationTokenSource? _filterCts;
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
+    public IAsyncRelayCommand ExtractSelectedCommand { get; }
     private bool _isWallpaperItemTapped = false;
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
+    private bool _isExtracting;
+    public bool IsExtracting
+    {
+        get => _isExtracting;
+        set
+        {
+            if (_isExtracting == value) return;
+            _isExtracting = value;
+            OnPropertyChanged();
+            ExtractOverlayVisibility = value ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private Visibility _extractOverlayVisibility = Visibility.Collapsed;
+    public Visibility ExtractOverlayVisibility
+    {
+        get => _extractOverlayVisibility;
+        set
+        {
+            if (_extractOverlayVisibility == value) return;
+            _extractOverlayVisibility = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private string _extractStatus = string.Empty;
+    public string ExtractStatus
+    {
+        get => _extractStatus;
+        set
+        {
+            if (_extractStatus == value) return;
+            _extractStatus = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private double _extractProgress;
+    public double ExtractProgress
+    {
+        get => _extractProgress;
+        set
+        {
+            if (Math.Abs(_extractProgress - value) < 0.01) return;
+            _extractProgress = value;
+            OnPropertyChanged();
+        }
+    }
+
     private bool _isMultiSelectMode = false;
     private bool _isScanning = false;
     private FrameworkElement? _rightClickedWallpaperElement;
@@ -235,6 +285,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             ViewModel.SelectedWallpaper = null;
         });
+
+        ExtractSelectedCommand = new AsyncRelayCommand(async () =>
+        {
+            HideWallpaperContextMenu();
+            await ExtractSelectedWallpapersAsync();
+        });
+
         WallpapersScrollView.SizeChanged += (s, e) =>
         {
             DispatcherQueue.TryEnqueue(() =>
@@ -1518,6 +1575,96 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         WallpaperContextMenu?.Hide();
     }
+
+    private async Task ExtractSelectedWallpapersAsync()
+    {
+        // Collect selected wallpapers
+        var itemsToExtract = ViewModel.SelectedWallpapers.Count > 0
+            ? SelectedWallpapers.ToList()
+            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
+
+        if (itemsToExtract.Count == 0)
+        {
+            await DialogHelper.ShowMessageAsync("提示", "请选择要提取的壁纸。");
+            return;
+        }
+
+        var outputPath = ViewModel.PathManagementVM.DownloadPath;
+        if (string.IsNullOrEmpty(outputPath))
+        {
+            outputPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "WE_OutPut");
+        }
+
+        try
+        {
+            IsExtracting = true;
+            ExtractProgress = 0;
+            ExtractStatus = "正在提取...";
+
+            var extractService = new RepkgExtractService();
+            var cts = new CancellationTokenSource();
+
+            var progress = new Progress<ExtractProgress>(p =>
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (p.IsComplete)
+                    {
+                        ExtractProgress = 100;
+                        if (!string.IsNullOrEmpty(p.ErrorMessage))
+                        {
+                            ExtractStatus = p.ErrorMessage;
+                        }
+                        else
+                        {
+                            var parts = new List<string>();
+                            if (p.PkgCount > 0) parts.Add($"{p.PkgCount} 个已解析");
+                            if (p.CopyCount > 0) parts.Add($"{p.CopyCount} 个已拷贝");
+                            ExtractStatus = $"提取完成，共 {p.Total} 个壁纸" +
+                                (parts.Count > 0 ? "（" + string.Join("，", parts) + "）" : "");
+                        }
+                        IsExtracting = false;
+                    }
+                    else if (p.Total > 0)
+                    {
+                        ExtractProgress = (double)p.Done / p.Total * 100;
+                        var action = p.Action ?? "处理中";
+                        ExtractStatus = $"{action} ({p.Done + 1}/{p.Total}): {p.CurrentFile}";
+                    }
+                });
+            });
+
+            var extractSettings = new ExtractSettings
+            {
+                UseProjectName = ViewModel.UseProjectName,
+                OneFolder = ViewModel.OneFolder,
+                CoverAllFiles = ViewModel.CoverAllFiles,
+                IgnoreExtension = ViewModel.IgnoreExtension,
+                IgnoreExtensionList = ViewModel.IgnoreExtensionList,
+                OnlyExtension = ViewModel.OnlyExtension,
+                OnlyExtensionList = ViewModel.OnlyExtensionList,
+                OutProjectJSON = ViewModel.OutProjectJSON,
+                TexExportMode = ViewModel.TexExportMode
+            };
+
+            await extractService.ExtractWallpapersAsync(
+                itemsToExtract,
+                outputPath,
+                extractSettings,
+                progress,
+                cts.Token);
+
+            Log.Information("提取完成: {Count} 个壁纸 → {Output}", itemsToExtract.Count, outputPath);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "提取失败");
+            IsExtracting = false;
+            ExtractStatus = "提取失败，请查看日志";
+            ExtractProgress = 0;
+        }
+    }
+
     private async Task DeleteItemAsync(WallpaperItem item, bool skipConfirm = false)
     {
         if (item == null || item.WorkshopID == null || item.FolderPath == null) return;

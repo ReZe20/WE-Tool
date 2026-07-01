@@ -7,7 +7,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:viewmodels="using:WE_Tool.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}">
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:viewmodels="using:WE_Tool.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
+    xmlns:converters="using:WE_Tool.Converters">
+    <Page.Resources>
+        <converters:IntEqualsConverter x:Key="IntEqualsConverter"/>
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="35"/>
@@ -121,6 +125,72 @@
 
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
+
+                    <!-- 提取设置 -->
+                    <TextBlock x:Uid="Extract" Margin="5,10,0,10"/>
+                    <StackPanel>
+                        <controls:SettingsExpander Header="输出设置" Description="对所有壁纸类型生效" Margin="0,0,0,10">
+                            <controls:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xE756;"/>
+                            </controls:SettingsExpander.HeaderIcon>
+                            <controls:SettingsExpander.Items>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="以壁纸名作为子目录名（而非创意工坊ID）" IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="所有文件放入一个目录，不使用子文件夹" IsChecked="{x:Bind ViewModel.OneFolder, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="覆盖已存在的文件" IsChecked="{x:Bind ViewModel.CoverAllFiles, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox Content="拷贝 project.json 与预览图到输出文件夹" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <Grid>
+                                            <CheckBox Content="忽略扩展名" x:Name="IgnoreExtension" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="不提取/拷贝指定扩展名的文件"/>
+                                            <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}" Margin="115,0,20,0" ToolTipService.ToolTip="英文逗号分隔"/>
+                                        </Grid>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <Grid>
+                                            <CheckBox Content="仅提取扩展名" x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" ToolTipService.ToolTip="仅提取/拷贝指定扩展名的文件"/>
+                                            <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="115,0,20,0" ToolTipService.ToolTip="英文逗号分隔"/>
+                                        </Grid>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                            </controls:SettingsExpander.Items>
+                        </controls:SettingsExpander>
+
+                        <controls:SettingsExpander Header="PKG 解析设置" Description="仅对含 .pkg 的场景壁纸生效">
+                            <controls:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xE90F;"/>
+                            </controls:SettingsExpander.HeaderIcon>
+                            <controls:SettingsExpander.Items>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="TEX 纹理处理方式" FontWeight="SemiBold"/>
+                                            <RadioButton Content="导出原始文件（TEX 不转换）" IsChecked="{x:Bind ViewModel.TexExportMode, Mode=OneWay, Converter={StaticResource IntEqualsConverter}, ConverterParameter=0}" GroupName="TexMode" Tag="0" Checked="TexModeRadioButton_Checked"/>
+                                            <RadioButton Content="导出文件并转换 TEX 为图片" IsChecked="{x:Bind ViewModel.TexExportMode, Mode=OneWay, Converter={StaticResource IntEqualsConverter}, ConverterParameter=1}" GroupName="TexMode" Tag="1" Checked="TexModeRadioButton_Checked"/>
+                                            <RadioButton Content="只导出 TEX 转换后的图片" IsChecked="{x:Bind ViewModel.TexExportMode, Mode=OneWay, Converter={StaticResource IntEqualsConverter}, ConverterParameter=2}" GroupName="TexMode" Tag="2" Checked="TexModeRadioButton_Checked"/>
+                                        </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                            </controls:SettingsExpander.Items>
+                        </controls:SettingsExpander>
+                    </StackPanel>
 
                     <TextBlock x:Uid="Path" Margin="5,10,0,10"/>
                     <controls:SettingsCard x:Uid="ChooseWallpaperExportPath" Margin="0,0,0,10">
@@ -275,65 +345,6 @@
                             <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="LogPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
-                    <TextBlock x:Uid="Extract" Margin="5,10,0,10"/>
-                    <StackPanel>
-                        <controls:SettingsExpander Header="场景壁纸设置" Description="控制对 RePKG 的输入指令">
-                            <controls:SettingsExpander.HeaderIcon>
-                                <FontIcon Glyph="&#xE756;"/>
-                            </controls:SettingsExpander.HeaderIcon>
-                            <controls:SettingsExpander.Items>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <Grid>
-                                            <CheckBox Content="忽略扩展名" x:Name="IgnoreExtension" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="不提取具有指定扩展名的文件"/>
-                                            <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}" Margin="125,0,20,0" ToolTipService.ToolTip="请使用英文逗号 &quot;,&quot; 做分隔符"/>
-                                        </Grid>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <Grid>
-                                            <CheckBox Content="仅提取扩展名"  x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" ToolTipService.ToolTip="仅提取具有指定扩展名的文件"/>
-                                            <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="125,0,20,0" ToolTipService.ToolTip="请使用英文逗号 &quot;,&quot; 做分隔符"/>
-                                        </Grid>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox Content="将输入目录中所有 TEX 文件转换为图像" IsChecked="{x:Bind ViewModel.ConvertTEX, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox Content="将所有提取的文件应放入一个目录中，不用子文件夹分别存储" IsChecked="{x:Bind ViewModel.OneFolder, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox Content="同时将project.json与预览图导出至输出文件夹内" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                    </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox Content="使用项目project.json中的名称作为项目子目录的名称，而非创意工坊ID" IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox Content="在提取 PKG 时不将 TEX 文件转换为图像" IsChecked="{x:Bind ViewModel.DontConvertTEX, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox Content="覆盖所有已存在的文件" IsChecked="{x:Bind ViewModel.CoverAllFiles, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                            </controls:SettingsExpander.Items>
-                        </controls:SettingsExpander>
-                    </StackPanel>
                     <TextBlock Text="性能" Margin="5,10,0,10"/>
                     
                 </StackPanel>

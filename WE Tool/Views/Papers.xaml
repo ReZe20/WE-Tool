@@ -64,7 +64,8 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                          OtherTemplate="{StaticResource FileTreeOtherTemplate}"/>
         <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
             <CommandBarFlyout.PrimaryCommands>
-                <AppBarButton x:Uid="AppBarButton_Extract">
+                <AppBarButton x:Uid="AppBarButton_Extract"
+                              Command="{x:Bind ExtractSelectedCommand}">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE72D;" />
                     </AppBarButton.Icon>
@@ -861,6 +862,22 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
                 <ProgressRing x:Name="BackgroundProgressRing" Width="72" Height="72" IsActive="True"/>
                 <TextBlock x:Uid="ScanningTip" Style="{ThemeResource DisplayTextBlockStyle}"  FontSize="14" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 提取进度覆盖 -->
+        <Grid x:Name="ExtractOverlay"
+              Visibility="{x:Bind ExtractOverlayVisibility, Mode=OneWay}"
+              Grid.RowSpan="3"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              IsHitTestVisible="True"
+              Background="#80000000">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Width="320">
+                <TextBlock Text="正在提取壁纸" Style="{ThemeResource SubtitleTextBlockStyle}" HorizontalAlignment="Center"/>
+                <ProgressBar Value="{x:Bind ExtractProgress, Mode=OneWay}" Minimum="0" Maximum="100" Height="4"/>
+                <TextBlock Text="{x:Bind ExtractStatus, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" 
+                           HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
             </StackPanel>
         </Grid>
 

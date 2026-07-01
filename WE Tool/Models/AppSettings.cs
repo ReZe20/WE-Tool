@@ -91,17 +91,20 @@ namespace WE_Tool.Models
 
     public class ExtractSettings
     {
+        // 通用设置
+        public bool UseProjectName { get; set; } = false;
+        public bool OneFolder { get; set; } = false;
+        public bool CoverAllFiles { get; set; } = false;
+
+        // 文件过滤（通用：对 PKG 解析和直接拷贝均生效）
         public bool IgnoreExtension { get; set; } = false;
         public string IgnoreExtensionList { get; set; } = "";
-
         public bool OnlyExtension { get; set; } = false;
         public string OnlyExtensionList { get; set; } = "";
 
-        public bool ConvertTEX { get; set; } = false;
-        public bool OneFolder { get; set; } = false;
+        // PKG 专用
         public bool OutProjectJSON { get; set; } = false;
-        public bool UseProjectName { get; set; } = false;
-        public bool DontConvertTEX { get; set; } = false;
-        public bool CoverAllFiles { get; set; } = false;
+        /// <summary>0=导出原始文件(TEX不转换), 1=导出并转换TEX为图片, 2=只导出TEX转换后的图片</summary>
+        public int TexExportMode { get; set; } = 1;
     }
 }
