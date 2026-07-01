@@ -570,6 +570,9 @@
   <data name="AcfUpdateTime.Text" xml:space="preserve">
     <value>Workshop Updated</value>
   </data>
+  <data name="AcfSize.Text" xml:space="preserve">
+    <value>Wallpaper Size</value>
+  </data>
   <data name="FileSize.Text" xml:space="preserve">
     <value>File Size</value>
   </data>

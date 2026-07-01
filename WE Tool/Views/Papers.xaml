@@ -949,6 +949,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="100"/>
@@ -962,30 +963,37 @@
                                 <TextBlock Grid.Row="0" Grid.Column="1" 
                                            Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue='-'}" 
                                            Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
-                                <!-- FolderPath -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" 
-                                           x:Uid="FolderPath"
+                                <!-- AcfSize (壁纸大小) -->
+                                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="AcfSize" 
                                            Style="{StaticResource CaptionTextBlockStyle}" 
                                            Foreground="Gray" Margin="0,4,0,4"/>
                                 <TextBlock Grid.Row="1" Grid.Column="1" 
+                                           Text="{x:Bind ViewModel.SelectedWallpaper.AcfSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue='-'}" 
+                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
+                                <!-- FolderPath -->
+                                <TextBlock Grid.Row="2" Grid.Column="0" 
+                                           x:Uid="FolderPath"
+                                           Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="Gray" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" 
                                            Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay, FallbackValue='-'}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"
                                            Margin="0,4,0,4"/>
                                 <!-- WorkshopID -->
-                                <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="WorkshopID" 
+                                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="WorkshopID" 
                                            Style="{StaticResource CaptionTextBlockStyle}" 
                                            Foreground="Gray" Margin="0,4,0,4"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" 
+                                <TextBlock Grid.Row="3" Grid.Column="1" 
                                            Text="{x:Bind ViewModel.SelectedWallpaper.WorkshopID, Mode=OneWay, FallbackValue='-'}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            IsTextSelectionEnabled="True"
                                            Margin="0,4,0,4"/>
                                 <!-- Dependency -->
-                                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="Dependency" 
+                                <TextBlock Grid.Row="4" Grid.Column="0" x:Uid="Dependency" 
                                            Style="{StaticResource CaptionTextBlockStyle}" 
                                            Foreground="Gray" Margin="0,4,0,4"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1" 
+                                    <TextBlock Grid.Row="4" Grid.Column="1" 
                                            Text="{x:Bind ViewModel.SelectedWallpaper.Dependency, Mode=OneWay, FallbackValue='-'}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"

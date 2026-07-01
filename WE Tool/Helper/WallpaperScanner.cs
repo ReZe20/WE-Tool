@@ -27,6 +27,10 @@ internal class WallpaperScanner
         @"""(\d+)""\s*\{[^}]*""timeupdated""\s*""(\d+)""[^}]*\}",
         RegexOptions.Compiled | RegexOptions.Multiline);
 
+    private static readonly Regex AcfSizeRegex = new(
+        @"""(\d+)""\s*\{[^}]*""size""\s*""(\d+)""[^}]*\}",
+        RegexOptions.Compiled | RegexOptions.Multiline);
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -66,10 +70,20 @@ internal class WallpaperScanner
                 Tags           TEXT,
                 Type           TEXT,
                 Dependency     TEXT,
+                AcfSize        INTEGER,
                 CachedAt       TEXT
             );
             """;
         cmd.ExecuteNonQuery();
+
+        // 迁移：如果旧表缺少 AcfSize 列则添加
+        try
+        {
+            using var alterCmd = conn.CreateCommand();
+            alterCmd.CommandText = "ALTER TABLE WallpaperCache ADD COLUMN AcfSize INTEGER;";
+            alterCmd.ExecuteNonQuery();
+        }
+        catch { /* 列已存在，忽略 */ }
     }
 
     private static Dictionary<string, CachedEntry> LoadCacheDictionary(string dbPath)
@@ -119,7 +133,8 @@ internal class WallpaperScanner
             Tags = tagsString,
             Type = reader.GetString("Type"),
             Source = reader.GetString("Source"),
-            Dependency = reader.IsDBNull("Dependency") ? "" : reader.GetString("Dependency")
+            Dependency = reader.IsDBNull("Dependency") ? "" : reader.GetString("Dependency"),
+            AcfSize = reader.IsDBNull("AcfSize") ? null : reader.GetInt64("AcfSize")
         };
 
         var cachedAt = DateTime.ParseExact(reader.GetString("CachedAt"), "o", CultureInfo.InvariantCulture);
@@ -140,10 +155,10 @@ internal class WallpaperScanner
                 INSERT OR REPLACE INTO WallpaperCache 
                 (FolderPath, Source, WorkshopID, Title, Description, FileSize,
                  CreationTime, UpdateTime, AcfUpdateTime, Preview, ContentRating, Tags,
-                 Type, Dependency, CachedAt)
+                 Type, Dependency, AcfSize, CachedAt)
                 VALUES (@FolderPath, @Source, @WorkshopID, @Title, @Description, @FileSize,
                         @CreationTime, @UpdateTime, @AcfUpdateTime, @Preview, @ContentRating, @Tags,
-                        @Type, @Dependency, @CachedAt)
+                        @Type, @Dependency, @AcfSize, @CachedAt)
                 """;
 
             foreach (var item in items)
@@ -167,6 +182,10 @@ internal class WallpaperScanner
                 cmd.Parameters.AddWithValue("@Type", item.Type);
                 cmd.Parameters.AddWithValue("@Dependency", item.Dependency ?? "");
                 cmd.Parameters.AddWithValue("@CachedAt", DateTime.UtcNow.ToString("o"));
+                cmd.Parameters.AddWithValue("@AcfSize",
+                    item.AcfSize.HasValue
+                        ? (object)item.AcfSize.Value
+                        : DBNull.Value);
 
                 cmd.ExecuteNonQuery();
             }
@@ -196,6 +215,7 @@ internal class WallpaperScanner
 
         var installedIDs = GetInstalledWorkshopIDs(acfPath);
         var acfUpdateTimes = GetAcfUpdateTimes(acfPath);
+        var acfSizes = GetAcfSizes(acfPath);
         var resultsBag = new ConcurrentBag<WallpaperItem>();
         var parsedItems = new ConcurrentBag<WallpaperItem>();
         var sw = Stopwatch.StartNew();
@@ -248,7 +268,7 @@ internal class WallpaperScanner
 
                 await Parallel.ForEachAsync(toParse, parallelOptions, async (current, token) =>
                 {
-                    var item = await ParseWallpaperAsync(current, installedIDs, source, acfUpdateTimes, token);
+                    var item = await ParseWallpaperAsync(current, installedIDs, source, acfUpdateTimes, acfSizes, token);
                     if (item is not null)
                     {
                         resultsBag.Add(item);
@@ -334,6 +354,43 @@ internal class WallpaperScanner
         return result;
     }
 
+    /// <summary>
+    /// 从 .acf 文件中解析每个工坊壁纸的 Steam 报告大小 (size, 字节)
+    /// </summary>
+    private static Dictionary<string, long> GetAcfSizes(string acfPath)
+    {
+        var result = new Dictionary<string, long>();
+        if (!File.Exists(acfPath)) return result;
+
+        try
+        {
+            var content = File.ReadAllText(acfPath);
+
+            var sectionMatch = Regex.Match(content,
+                @"""WorkshopItemsInstalled""\s*\{(?<body>.+?)\}\s*""WorkshopItemDetails""",
+                RegexOptions.Singleline);
+            if (!sectionMatch.Success) return result;
+
+            var body = sectionMatch.Groups["body"].Value;
+            var matches = AcfSizeRegex.Matches(body);
+
+            foreach (Match match in matches)
+            {
+                var id = match.Groups[1].Value;
+                if (long.TryParse(match.Groups[2].Value, out var size))
+                {
+                    result[id] = size;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "解析 .acf 文件大小时出现异常。");
+        }
+
+        return result;
+    }
+
     private record ProjectMetadata
     {
         public string? Type { get; init; }
@@ -353,6 +410,7 @@ internal class WallpaperScanner
         FrozenSet<string> installedIDs,
         string source,
         Dictionary<string, DateTime> acfUpdateTimes,
+        Dictionary<string, long> acfSizes,
         CancellationToken ct)
     {
         try
@@ -444,6 +502,9 @@ internal class WallpaperScanner
                 UpdateTime = Directory.GetLastWriteTime(current),
                 AcfUpdateTime = acfUpdateTimes.TryGetValue(folderName, out var acfTime)
                     ? acfTime
+                    : null,
+                AcfSize = acfSizes.TryGetValue(folderName, out var acfSize)
+                    ? acfSize
                     : null,
                 Preview = previewFullPath,
                 ContentRating = metadata.Contentrating ?? "Everyone",

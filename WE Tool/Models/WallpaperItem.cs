@@ -24,6 +24,7 @@ namespace WE_Tool.Models
         public DateTime UpdateTime { get; set; }
         public DateTime? AcfUpdateTime { get; set; }
         public long FileSize { get; set; }
+        public long? AcfSize { get; set; }
 
         private bool _isSelected;
         public bool IsSelected
