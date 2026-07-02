@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,6 +40,14 @@ using Windows.UI.Core;
 
 namespace WE_Tool;
 
+public enum ExtractState
+{
+    Idle,
+    Running,
+    Paused,
+    Completed
+}
+
 /// <summary>
 /// An empty page that can be used on its own or navigated to within a Frame.
 /// </summary>
@@ -52,6 +61,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
     private static readonly Windows.Globalization.Collation.CharacterGroupings _zhGroupings = new Windows.Globalization.Collation.CharacterGroupings("zh-CN");
     private CancellationTokenSource? _filterCts;
+    private CancellationTokenSource? _extractCts;
+    private RepkgCliService? _extractService;
+    private int _extractTotalCount;
+    private int _extractCompletedCount;
+    private HashSet<string> _extractCompletedNames = [];
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
     public IAsyncRelayCommand ExtractSelectedCommand { get; }
@@ -68,8 +82,42 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _isExtracting = value;
             OnPropertyChanged();
             ExtractOverlayVisibility = value ? Visibility.Visible : Visibility.Collapsed;
+            if (!value) ExtractState = ExtractState.Completed;
+            if (value)
+            {
+                // 等一帧让布局完成后播放展开动画
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+                    AnimateExtractPanelOpen());
+            }
         }
     }
+
+    private ExtractState _extractState = ExtractState.Idle;
+    public ExtractState ExtractState
+    {
+        get => _extractState;
+        set
+        {
+            if (_extractState == value) return;
+            _extractState = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsPaused));
+            OnPropertyChanged(nameof(CanPause));
+            OnPropertyChanged(nameof(CanResume));
+            OnPropertyChanged(nameof(CanStop));
+            OnPropertyChanged(nameof(PauseButtonVisibility));
+            OnPropertyChanged(nameof(ResumeButtonVisibility));
+            OnPropertyChanged(nameof(StopButtonVisibility));
+        }
+    }
+
+    public bool IsPaused => _extractState == ExtractState.Paused;
+    public bool CanPause => _extractState == ExtractState.Running;
+    public bool CanResume => _extractState == ExtractState.Paused;
+    public bool CanStop => _extractState == ExtractState.Running || _extractState == ExtractState.Paused;
+    public Visibility PauseButtonVisibility => CanPause ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ResumeButtonVisibility => CanResume ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility StopButtonVisibility => CanStop ? Visibility.Visible : Visibility.Collapsed;
 
     private Visibility _extractOverlayVisibility = Visibility.Collapsed;
     public Visibility ExtractOverlayVisibility
@@ -92,6 +140,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (_extractStatus == value) return;
             _extractStatus = value;
             OnPropertyChanged();
+            ExtractStatusVisibility = string.IsNullOrEmpty(value)
+                ? Visibility.Collapsed : Visibility.Visible;
+        }
+    }
+
+    private Visibility _extractStatusVisibility = Visibility.Collapsed;
+    public Visibility ExtractStatusVisibility
+    {
+        get => _extractStatusVisibility;
+        set
+        {
+            if (_extractStatusVisibility == value) return;
+            _extractStatusVisibility = value;
+            OnPropertyChanged();
         }
     }
 
@@ -106,6 +168,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
+
+    public string ExtractProgressText => $"{_extractCompletedCount}/{_extractTotalCount}";
+
+    public ObservableCollection<ExtractProgressItem> ExtractItems { get; } = [];
 
     private bool _isMultiSelectMode = false;
     private bool _isScanning = false;
@@ -1138,15 +1204,41 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void AnimatePropertiesPanelOpen()
     {
-        var panelVisual = ElementCompositionPreview.GetElementVisual(PropertiesPanel);
-        var backgroundVisual = ElementCompositionPreview.GetElementVisual(PropertiesOverlayBackground);
+        AnimatePanelOpen(PropertiesPanel, PropertiesOverlayBackground);
+    }
+    private void AnimatePropertiesPanelClose(Action onCompleted)
+    {
+        AnimatePanelClose(PropertiesPanel, PropertiesOverlayBackground, () =>
+        {
+            PropertiesOverlay.Visibility = Visibility.Collapsed;
+            onCompleted?.Invoke();
+        });
+    }
+
+    private void AnimateExtractPanelOpen()
+    {
+        AnimatePanelOpen(ExtractPanel, ExtractOverlayBackground);
+    }
+    private void AnimateExtractPanelClose(Action onCompleted)
+    {
+        AnimatePanelClose(ExtractPanel, ExtractOverlayBackground, () =>
+        {
+            ExtractOverlayVisibility = Visibility.Collapsed;
+            onCompleted?.Invoke();
+        });
+    }
+
+    private static void AnimatePanelOpen(FrameworkElement panel, FrameworkElement background)
+    {
+        var panelVisual = ElementCompositionPreview.GetElementVisual(panel);
+        var backgroundVisual = ElementCompositionPreview.GetElementVisual(background);
         var compositor = panelVisual.Compositor;
 
         panelVisual.Opacity = 0f;
         panelVisual.Scale = new Vector3(0.85f, 0.85f, 1f);
         panelVisual.CenterPoint = new Vector3(
-            (float)(PropertiesPanel.ActualWidth / 2),
-            (float)(PropertiesPanel.ActualHeight / 2), 0f);
+            (float)(panel.ActualWidth / 2),
+            (float)(panel.ActualHeight / 2), 0f);
 
         var bgFadeIn = compositor.CreateScalarKeyFrameAnimation();
         bgFadeIn.InsertKeyFrame(0f, 0f);
@@ -1168,10 +1260,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         panelVisual.StartAnimation("Scale", scaleAnim);
         panelVisual.StartAnimation("Opacity", opacityAnim);
     }
-    private void AnimatePropertiesPanelClose(Action onCompleted)
+    private static void AnimatePanelClose(FrameworkElement panel, FrameworkElement background, Action onCompleted)
     {
-        var panelVisual = ElementCompositionPreview.GetElementVisual(PropertiesPanel);
-        var backgroundVisual = ElementCompositionPreview.GetElementVisual(PropertiesOverlayBackground);
+        var panelVisual = ElementCompositionPreview.GetElementVisual(panel);
+        var backgroundVisual = ElementCompositionPreview.GetElementVisual(background);
         var compositor = panelVisual.Compositor;
 
         var bgFadeOut = compositor.CreateScalarKeyFrameAnimation();
@@ -1191,11 +1283,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         opacityAnim.Duration = TimeSpan.FromMilliseconds(150);
 
         var batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (s, e) =>
-        {
-            PropertiesOverlay.Visibility = Visibility.Collapsed;
-            onCompleted?.Invoke();
-        };
+        batch.Completed += (s, e) => onCompleted?.Invoke();
 
         backgroundVisual.StartAnimation("Opacity", bgFadeOut);
         panelVisual.StartAnimation("Scale.X", scaleAnim);
@@ -1598,41 +1686,56 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         try
         {
             IsExtracting = true;
+            ExtractState = ExtractState.Running;
+            _extractTotalCount = itemsToExtract.Count;
+            _extractCompletedCount = 0;
+            _extractCompletedNames = [];
             ExtractProgress = 0;
             ExtractStatus = "正在提取...";
 
-            var extractService = new RepkgExtractService();
-            var cts = new CancellationTokenSource();
+            _extractService = new RepkgCliService();
+            _extractCts = new CancellationTokenSource();
 
-            var progress = new Progress<ExtractProgress>(p =>
-            {
-                DispatcherQueue.TryEnqueue(() =>
+            // 初始化进度列表
+            ExtractItems.Clear();
+            foreach (var w in itemsToExtract)
+                ExtractItems.Add(new ExtractProgressItem
                 {
-                    if (p.IsComplete)
+                    Name = w.Title ?? w.WorkshopID ?? (w.FolderPath != null ? new DirectoryInfo(w.FolderPath).Name : "?"),
+                    Action = "等待中",
+                    Progress = 0
+                });
+
+            var uiQueue = DispatcherQueue;
+
+            Action<string> onProgress = msg =>
+            {
+                if (!uiQueue.TryEnqueue(() =>
+                {
+                    var parts = msg.Split('|');
+                    if (parts.Length >= 3)
                     {
-                        ExtractProgress = 100;
-                        if (!string.IsNullOrEmpty(p.ErrorMessage))
+                        var item = ExtractItems.FirstOrDefault(x => x.Name == parts[0]);
+                        if (item != null)
                         {
-                            ExtractStatus = p.ErrorMessage;
+                            item.Action = parts[1];
+                            if (double.TryParse(parts[2], out var p)) item.Progress = p;
+                            // 统计已完成壁纸数，更新总进度
+                            if (parts[1] == "完成" && _extractCompletedNames.Add(parts[0]))
+                            {
+                                _extractCompletedCount++;
+                                ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
+                                OnPropertyChanged(nameof(ExtractProgressText));
+                            }
                         }
                         else
-                        {
-                            var parts = new List<string>();
-                            if (p.PkgCount > 0) parts.Add($"{p.PkgCount} 个已解析");
-                            if (p.CopyCount > 0) parts.Add($"{p.CopyCount} 个已拷贝");
-                            ExtractStatus = $"提取完成，共 {p.Total} 个壁纸" +
-                                (parts.Count > 0 ? "（" + string.Join("，", parts) + "）" : "");
-                        }
-                        IsExtracting = false;
+                            Log.Warning("未找到进度条目: {Name}", parts[0]);
                     }
-                    else if (p.Total > 0)
-                    {
-                        ExtractProgress = (double)p.Done / p.Total * 100;
-                        var action = p.Action ?? "处理中";
-                        ExtractStatus = $"{action} ({p.Done + 1}/{p.Total}): {p.CurrentFile}";
-                    }
-                });
-            });
+                    else
+                        ExtractStatus = msg;
+                }))
+                    Log.Warning("DispatcherQueue.TryEnqueue 失败");
+            };
 
             var extractSettings = new ExtractSettings
             {
@@ -1647,22 +1750,79 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 TexExportMode = ViewModel.TexExportMode
             };
 
-            await extractService.ExtractWallpapersAsync(
-                itemsToExtract,
-                outputPath,
-                extractSettings,
-                progress,
-                cts.Token);
+            await _extractService.ExtractWallpapersAsync(
+                itemsToExtract, outputPath, extractSettings,
+                onProgress, _extractCts.Token);
 
-            Log.Information("提取完成: {Count} 个壁纸 → {Output}", itemsToExtract.Count, outputPath);
+            if (!_extractCts.IsCancellationRequested)
+            {
+                ExtractProgress = 100;
+                ExtractState = ExtractState.Completed;
+                IsExtracting = false;
+                ExtractStatus = "提取完成";
+                Log.Information("提取完成: {Count} 个壁纸 → {Output}", itemsToExtract.Count, outputPath);
+            }
+            else
+            {
+                ExtractState = ExtractState.Completed;
+                IsExtracting = false;
+                ExtractStatus = "提取已停止";
+                Log.Information("提取被用户停止");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            ExtractStatus = "提取已停止";
+            ExtractState = ExtractState.Completed;
+            IsExtracting = false;
+            Log.Information("提取被用户停止");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "提取失败");
+            ExtractState = ExtractState.Completed;
             IsExtracting = false;
             ExtractStatus = "提取失败，请查看日志";
             ExtractProgress = 0;
         }
+    }
+
+    private void PauseExtractButton_Click(object sender, RoutedEventArgs e)
+    {
+        _extractService?.Pause();
+        ExtractState = ExtractState.Paused;
+        ExtractStatus = "已暂停";
+    }
+
+    private void ResumeExtractButton_Click(object sender, RoutedEventArgs e)
+    {
+        _extractCts?.Dispose();
+        _extractCts = new CancellationTokenSource();
+        _extractService?.Resume();
+        ExtractState = ExtractState.Running;
+        ExtractStatus = "正在提取...";
+    }
+
+    private void StopExtractButton_Click(object sender, RoutedEventArgs e)
+    {
+        _extractCts?.Cancel();
+        _extractService?.Stop();
+        ExtractStatus = "正在停止...";
+    }
+
+    private void ExtractCloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (IsExtracting)
+        {
+            _extractCts?.Cancel();
+            _extractService?.Stop();
+            _isExtracting = false; // 避免动画触发二次关闭
+        }
+        AnimateExtractPanelClose(() =>
+        {
+            ExtractOverlayVisibility = Visibility.Collapsed;
+            ExtractState = ExtractState.Idle;
+        });
     }
 
     private async Task DeleteItemAsync(WallpaperItem item, bool skipConfirm = false)
