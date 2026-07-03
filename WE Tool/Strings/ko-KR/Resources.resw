@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,612 +118,612 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Rating_Everyone.Content" xml:space="preserve">
-    <value>G-All ages</value>
+    <value>전체 이용가(G)</value>
   </data>
   <data name="Rating_Questionable.Content" xml:space="preserve">
-    <value>PG13-Parental guidance</value>
+    <value>부모 지도 필요(PG-13)</value>
   </data>
   <data name="Rating_Mature.Content" xml:space="preserve">
-    <value>R-Mature</value>
+    <value>성인용(R-18)</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
-    <value>Source</value>
+    <value>출처</value>
   </data>
   <data name="Source_Official.Content" xml:space="preserve">
-    <value>Official</value>
+    <value>공식</value>
   </data>
   <data name="Source_Mine.Content" xml:space="preserve">
-    <value>My Wallpapers</value>
+    <value>내 배경화면</value>
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
-    <value>Workshop</value>
+    <value>워크샵</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
-    <value>Tags</value>
+    <value>태그</value>
   </data>
   <data name="Tag_Abstract.Content" xml:space="preserve">
-    <value>Abstract</value>
+    <value>추상</value>
   </data>
   <data name="Tag_Animal.Content" xml:space="preserve">
-    <value>Animal</value>
+    <value>동물</value>
   </data>
   <data name="Tag_Anime.Content" xml:space="preserve">
-    <value>Anime</value>
+    <value>애니메이션</value>
   </data>
   <data name="Tag_Cartoon.Content" xml:space="preserve">
-    <value>Cartoon</value>
+    <value>만화</value>
   </data>
   <data name="Tag_CGI.Content" xml:space="preserve">
     <value>CGI</value>
   </data>
   <data name="Tag_Cyberpunk.Content" xml:space="preserve">
-    <value>Cyberpunk</value>
+    <value>사이버펑크</value>
   </data>
   <data name="Tag_Fantasy.Content" xml:space="preserve">
-    <value>Fantasy</value>
+    <value>판타지</value>
   </data>
   <data name="Tag_Game.Content" xml:space="preserve">
-    <value>Game</value>
+    <value>게임</value>
   </data>
   <data name="Tag_Girls.Content" xml:space="preserve">
-    <value>Girls</value>
+    <value>여성</value>
   </data>
   <data name="Tag_Guys.Content" xml:space="preserve">
-    <value>Guys</value>
+    <value>남성</value>
   </data>
   <data name="Tag_Landscape.Content" xml:space="preserve">
-    <value>Landscape</value>
+    <value>풍경</value>
   </data>
   <data name="Tag_Medieval.Content" xml:space="preserve">
-    <value>Medieval</value>
+    <value>중세</value>
   </data>
   <data name="Tag_Memes.Content" xml:space="preserve">
-    <value>Memes</value>
+    <value>밈</value>
   </data>
   <data name="Tag_MMD.Content" xml:space="preserve">
     <value>MMD</value>
   </data>
   <data name="Tag_Music.Content" xml:space="preserve">
-    <value>Music</value>
+    <value>음악</value>
   </data>
   <data name="Tag_Nature.Content" xml:space="preserve">
-    <value>Nature</value>
+    <value>자연</value>
   </data>
   <data name="Tag_Pixelart.Content" xml:space="preserve">
-    <value>Pixelart</value>
+    <value>픽셀아트</value>
   </data>
   <data name="Tag_Relaxing.Content" xml:space="preserve">
-    <value>Relaxing</value>
+    <value>휴식</value>
   </data>
   <data name="Tag_Retro.Content" xml:space="preserve">
-    <value>Retro</value>
+    <value>레트로</value>
   </data>
   <data name="Tag_SciFi.Content" xml:space="preserve">
-    <value>Sci-Fi</value>
+    <value>SF</value>
   </data>
   <data name="Tag_Sports.Content" xml:space="preserve">
-    <value>Sports</value>
+    <value>스포츠</value>
   </data>
   <data name="Tag_Technology.Content" xml:space="preserve">
-    <value>Technology</value>
+    <value>기술</value>
   </data>
   <data name="Tag_Television.Content" xml:space="preserve">
-    <value>Television</value>
+    <value>TV</value>
   </data>
   <data name="Tag_Unspecified.Content" xml:space="preserve">
-    <value>Unspecified     genre</value>
+    <value>지정되지 않음</value>
   </data>
   <data name="Tag_Vehicle.Content" xml:space="preserve">
-    <value>Vehicle</value>
+    <value>차량</value>
   </data>
   <data name="Type.Header" xml:space="preserve">
-    <value>Type</value>
+    <value>유형</value>
   </data>
   <data name="Type_Application.Content" xml:space="preserve">
-    <value>Application</value>
+    <value>애플리케이션</value>
   </data>
   <data name="Type_Scene.Content" xml:space="preserve">
-    <value>Scene</value>
+    <value>씬</value>
   </data>
   <data name="Type_Unknown.Content" xml:space="preserve">
-    <value>Unknown</value>
+    <value>알 수 없음</value>
   </data>
   <data name="Type_Video.Content" xml:space="preserve">
-    <value>Video</value>
+    <value>비디오</value>
   </data>
   <data name="Type_Web.Content" xml:space="preserve">
-    <value>Web</value>
+    <value>웹</value>
   </data>
   <data name="Rating.Header" xml:space="preserve">
-    <value>Age rating</value>
+    <value>연령 등급</value>
   </data>
   <data name="ResetFilters.Text" xml:space="preserve">
-    <value>Reset Filters</value>
+    <value>필터 초기화</value>
   </data>
   <data name="All.Content" xml:space="preserve">
-    <value>All</value>
+    <value>모두</value>
   </data>
   <data name="None.Content" xml:space="preserve">
-    <value>None</value>
+    <value>없음</value>
   </data>
   <data name="FilterResults.Text" xml:space="preserve">
-    <value>Filter Results</value>
+    <value>필터 결과</value>
   </data>
   <data name="SortByName.Text" xml:space="preserve">
-    <value>Name</value>
+    <value>이름순</value>
   </data>
   <data name="SortByLastTime.Text" xml:space="preserve">
-    <value>Last Updated</value>
+    <value>업데이트순</value>
   </data>
   <data name="SortByFileSize.Text" xml:space="preserve">
-    <value>File Size</value>
+    <value>파일 크기순</value>
   </data>
   <data name="SortByAcfUpdateTime.Text" xml:space="preserve">
-    <value>Modified</value>
+    <value>수정 시간순</value>
   </data>
   <data name="SortBySubTime.Text" xml:space="preserve">
-    <value>Sub Date</value>
+    <value>구독 시간순</value>
   </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
-    <value>Details</value>
+    <value>세부 정보 패널</value>
   </data>
   <data name="SearchBox.PlaceholderText" xml:space="preserve">
-    <value>Search</value>
+    <value>검색</value>
   </data>
   <data name="ExportDirectory.Text" xml:space="preserve">
-    <value>Export Directory</value>
+    <value>내보내기 디렉터리</value>
   </data>
   <data name="SelectFolder.Content" xml:space="preserve">
-    <value>Select</value>
+    <value>선택</value>
   </data>
   <data name="OpenFolder.Content" xml:space="preserve">
-    <value>Open</value>
+    <value>열기</value>
   </data>
   <data name="Nodescription" xml:space="preserve">
-    <value>(No description)</value>
+    <value>（설명 없음）</value>
   </data>
   <data name="Settings.Text" xml:space="preserve">
-    <value>Settings</value>
+    <value>설정</value>
   </data>
   <data name="Start.Text" xml:space="preserve">
-    <value>Start</value>
+    <value>시작</value>
   </data>
   <data name="StartPage.Description" xml:space="preserve">
-    <value>Choose the page displayed when launching WE Tool.</value>
+    <value>WE Tool 실행 시 표시할 페이지를 선택합니다.</value>
   </data>
   <data name="StartPage.Header" xml:space="preserve">
-    <value>Startup Page</value>
+    <value>시작 페이지</value>
   </data>
   <data name="InstalledWallpapers.Content" xml:space="preserve">
-    <value>Installed Wallpapers</value>
+    <value>설치된 배경화면</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Import Wallpapers</value>
+    <value>배경화면 가져오기</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
-    <value>About</value>
+    <value>정보</value>
   </data>
   <data name="SettingsPage.Content" xml:space="preserve">
-    <value>Settings</value>
+    <value>설정</value>
   </data>
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
-    <value>Enter or Select Path</value>
+    <value>경로 입력 또는 선택</value>
   </data>
   <data name="Type_Preset.Content" xml:space="preserve">
-    <value>Preset</value>
+    <value>프리셋</value>
   </data>
   <data name="NoResultTip1.Text" xml:space="preserve">
-    <value>No wallpapers found</value>
+    <value>배경화면을 찾을 수 없습니다</value>
   </data>
   <data name="NoResultTip3.Text" xml:space="preserve">
-    <value>Or check if the path in settings is correct</value>
+    <value>또는 설정의 경로가 올바른지 확인하세요</value>
   </data>
   <data name="NoResultTip2.Text" xml:space="preserve">
-    <value>Please select other categories in the filter and search other keywords</value>
+    <value>필터의 다른 카테고리를 선택하거나 다른 키워드로 검색해보세요</value>
   </data>
   <data name="Programming_Language.Header" xml:space="preserve">
-    <value>Programming Language</value>
+    <value>언어</value>
   </data>
   <data name="Programming_Language.Description" xml:space="preserve">
-    <value>Select the display language for WE Tool. The language of some options will only take effect after restarting the program.</value>
+    <value>WE Tool의 표시 언어를 선택합니다. 일부 옵션은 프로그램 재시작 후 적용됩니다.</value>
   </data>
   <data name="Language_Related.Content" xml:space="preserve">
-    <value>Follow System</value>
+    <value>시스템 설정 따르기</value>
   </data>
   <data name="Language.Text" xml:space="preserve">
-    <value>Language</value>
+    <value>언어</value>
   </data>
   <data name="Page.Text" xml:space="preserve">
-    <value>Page</value>
+    <value>페이지</value>
   </data>
   <data name="PapersSetting.Header" xml:space="preserve">
-    <value>Existing Wallpaper Page Settings</value>
+    <value>배경화면 페이지 설정</value>
   </data>
   <data name="PapersSetting.Description" xml:space="preserve">
-    <value>Set Specific Content in Existing Wallpaper Page</value>
+    <value>배경화면 페이지의 세부 내용을 설정합니다</value>
   </data>
   <data name="PapersSetting_BottomBarVisibility.Content" xml:space="preserve">
-    <value>Enable Bottom Path Bar</value>
+    <value>하단 경로 표시줄 사용</value>
   </data>
   <data name="PapersSetting_DetailTextSelectMode.Content" xml:space="preserve">
-    <value>Enable Text Selection for Details Panel</value>
+    <value>세부 정보 패널에서 텍스트 선택 활성화</value>
   </data>
   <data name="PapersSetting_WallpaperAutoPlay.Content" xml:space="preserve">
-    <value>Play GIFs in Wallpaper List</value>
+    <value>배경화면 목록에서 GIF 재생</value>
   </data>
   <data name="PapersSetting_MinimumPixelsForWallpaper.Text" xml:space="preserve">
-    <value>Minimum Wallpaper Pixels</value>
+    <value>배경화면 최소 픽셀</value>
   </data>
   <data name="Path.Text" xml:space="preserve">
-    <value>Path</value>
+    <value>경로</value>
   </data>
   <data name="ChooseWorkshopPath.Description" xml:space="preserve">
-    <value>Select Location for Workshop Wallpapers</value>
+    <value>워크샵 배경화면 위치 선택</value>
   </data>
   <data name="WorkShopPath.Text" xml:space="preserve">
-    <value>Workshop wallpaper path</value>
+    <value>워크샵 배경화면 경로</value>
   </data>
   <data name="ChooseWallpaperExportPath.Description" xml:space="preserve">
-    <value>Select Wallpaper Export Location</value>
+    <value>배경화면 내보내기 위치 선택</value>
   </data>
   <data name="ChooseProjectPath.Description" xml:space="preserve">
-    <value>Select Project Location for Wallpaper Editor</value>
+    <value>배경화면 편집기 프로젝트 위치 선택</value>
   </data>
   <data name="ProjectPath.Text" xml:space="preserve">
-    <value>Project Path</value>
+    <value>프로젝트 경로</value>
   </data>
   <data name="OfficialWallpaperPath_TextBlock.Text" xml:space="preserve">
-    <value>Official Wallpaper Path</value>
+    <value>공식 배경화면 경로</value>
   </data>
   <data name="OfficialWallpaperPath.Description" xml:space="preserve">
-    <value>Or check if the path in settings is correct</value>
+    <value>공식 배경화면 경로</value>
   </data>
   <data name="AcfPath.Description" xml:space="preserve">
-    <value>File for Storing Workshop Subscription Info</value>
+    <value>워크샵 구독 정보를 저장하는 파일</value>
   </data>
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
-    <value>ACF file path</value>
+    <value>ACF 파일 경로</value>
   </data>
   <data name="SettingPath.Description" xml:space="preserve">
-    <value>File Path for Storing Program Settings</value>
+    <value>프로그램 설정을 저장하는 파일 경로</value>
   </data>
   <data name="SettingPath_TextBlock.Text" xml:space="preserve">
-    <value>Config File Path</value>
+    <value>설정 파일 경로</value>
   </data>
   <data name="LogPath.Description" xml:space="preserve">
-    <value>File Path for Storing Program Logs</value>
+    <value>프로그램 로그를 저장하는 파일 경로</value>
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
-    <value>Log File Path</value>
+    <value>로그 파일 경로</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
-    <value>Extract</value>
+    <value>추출</value>
   </data>
   <data name="ScanningTip.Text" xml:space="preserve">
-    <value>Loading wallpapers</value>
+    <value>배경화면 로딩 중...</value>
   </data>
   <data name="AppBarButton_OpenDirectory.Label" xml:space="preserve">
-    <value>Open Directory</value>
+    <value>디렉터리 열기</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value>Delete</value>
+    <value>삭제</value>
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
-    <value>Select All</value>
+    <value>모두 선택</value>
   </data>
   <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>선택 반전</value>
   </data>
   <data name="MenuFlyoutItem_InvertSelection.Text" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>선택 반전</value>
   </data>
   <data name="AppBarButton_Properties.Label" xml:space="preserve">
-    <value>Properties</value>
+    <value>속성</value>
   </data>
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
-    <value>Extract</value>
+    <value>추출</value>
   </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
-    <value>Filter Result Delay (ms)</value>
+    <value>필터 응답 지연(ms)</value>
   </data>
   <data name="AppBarButton_Copy.Label" xml:space="preserve">
-    <value>Copy</value>
+    <value>복사</value>
   </data>
   <data name="AppBarButton_Cut.Label" xml:space="preserve">
-    <value>Cut</value>
+    <value>잘라내기</value>
   </data>
   <data name="AppBarButton_View.Label" xml:space="preserve">
-    <value>View</value>
+    <value>보기</value>
   </data>
   <data name="AppBarButton_SmallIcon.Text" xml:space="preserve">
-    <value>Small Icons</value>
+    <value>작은 아이콘</value>
   </data>
   <data name="AppBarButton_MediumIcon.Text" xml:space="preserve">
-    <value>Medium Icons</value>
+    <value>중간 아이콘</value>
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
-    <value>Large Icons</value>
+    <value>큰 아이콘</value>
   </data>
   <data name="AppBarButton_IsAnnotatedScrollBarEnabled.Text" xml:space="preserve">
-    <value>Annotated Scroll Bar</value>
+    <value>주석 스크롤바</value>
   </data>
   <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
-    <value>Wallpaper Icon Size</value>
+    <value>배경화면 아이콘 크기</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
-    <value>Select All</value>
+    <value>모두 선택</value>
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
-    <value>View</value>
+    <value>보기</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
-    <value>Sort</value>
+    <value>정렬</value>
   </data>
   <data name="AppBarButton_Sort.Label" xml:space="preserve">
-    <value>Sort</value>
+    <value>정렬</value>
   </data>
   <data name="AppBarButton_DeleteForever.Label" xml:space="preserve">
-    <value>Delete Forever</value>
+    <value>영구 삭제</value>
   </data>
   <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
-    <value>Multi-Select</value>
+    <value>다중 선택</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_SmallIcon.Content" xml:space="preserve">
-    <value>Small</value>
+    <value>작게</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_MediumIcon.Content" xml:space="preserve">
-    <value>Medium</value>
+    <value>중간</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_LargeIcon.Content" xml:space="preserve">
-    <value>Large</value>
+    <value>크게</value>
   </data>
   <data name="PapersSetting_ContextMenuItems.Text" xml:space="preserve">
-    <value>Context Menu Options</value>
+    <value>상황에 맞는 메뉴 옵션</value>
   </data>
   <data name="AppBarButton_Source.Text" xml:space="preserve">
-    <value>Source</value>
+    <value>출처</value>
   </data>
   <data name="AppBarButton_Rating.Text" xml:space="preserve">
-    <value>Age Rating</value>
+    <value>연령 등급</value>
   </data>
   <data name="AppBarButton_None.Text" xml:space="preserve">
-    <value>(None)</value>
+    <value>（없음）</value>
   </data>
   <data name="AppBarButton_TagDisplay.Label" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>태그 표시</value>
   </data>
   <data name="MenuFlyoutSubItem_TagDisplay.Text" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>태그 표시</value>
   </data>
   <data name="GridColumnButton_view.Text" xml:space="preserve">
-    <value>View</value>
+    <value>보기</value>
   </data>
   <data name="AppBarButton_Tag.Text" xml:space="preserve">
-    <value>Tag</value>
+    <value>태그</value>
   </data>
   <data name="Program.Text" xml:space="preserve">
-    <value>Program</value>
+    <value>프로그램</value>
   </data>
   <data name="Theme.Header" xml:space="preserve">
-    <value>Theme</value>
+    <value>테마</value>
   </data>
   <data name="Theme.Description" xml:space="preserve">
-    <value>Select the theme to display</value>
+    <value>표시할 테마를 선택합니다</value>
   </data>
   <data name="FollowSystem.Content" xml:space="preserve">
-    <value>Follow System</value>
+    <value>시스템 설정 따르기</value>
   </data>
   <data name="Light.Content" xml:space="preserve">
-    <value>Light</value>
+    <value>라이트</value>
   </data>
   <data name="Dark.Content" xml:space="preserve">
-    <value>Dark</value>
+    <value>다크</value>
   </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
-    <value>Wallpaper Mouse Enter Animation</value>
+    <value>마우스 오버 애니메이션</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
-    <value>Refresh</value>
+    <value>새로고침</value>
   </data>
   <data name="AppBarButton_Type.Text" xml:space="preserve">
-    <value>Type</value>
+    <value>유형</value>
   </data>
   <data name="c.Head" xml:space="preserve">
-    <value>Apply Theme</value>
+    <value>테마 적용</value>
   </data>
   <data name="PropertiesPanel_Header.Text" xml:space="preserve">
-    <value>Properties</value>
+    <value>속성</value>
   </data>
   <data name="PropertiesPanel_BasicInfo.Text" xml:space="preserve">
-    <value>Basic Info</value>
+    <value>기본 정보</value>
   </data>
   <data name="PropertiesPanel_FileInfo.Text" xml:space="preserve">
-    <value>File Info</value>
+    <value>파일 정보</value>
   </data>
   <data name="PropertiesPanel_TimeInfo.Text" xml:space="preserve">
-    <value>Time Info</value>
+    <value>시간 정보</value>
   </data>
   <data name="PropertiesPanel_TypeLabel.Text" xml:space="preserve">
-    <value>Type</value>
+    <value>유형</value>
   </data>
   <data name="PropertiesPanel_SourceLabel.Text" xml:space="preserve">
-    <value>Source</value>
+    <value>출처</value>
   </data>
   <data name="PropertiesPanel_RatingLabel.Text" xml:space="preserve">
-    <value>Age Rating</value>
+    <value>연령 등급</value>
   </data>
   <data name="PropertiesPanel_TagLabel.Text" xml:space="preserve">
-    <value>Tags</value>
+    <value>태그</value>
   </data>
   <data name="WorkshopID.Text" xml:space="preserve">
-    <value>Workshop ID</value>
+    <value>워크샵 ID</value>
   </data>
   <data name="Dependency.Text" xml:space="preserve">
-    <value>Dependency</value>
+    <value>종속성</value>
   </data>
   <data name="CreationTime.Text" xml:space="preserve">
-    <value>Created</value>
+    <value>생성 시간</value>
   </data>
   <data name="UpdateTime.Text" xml:space="preserve">
-    <value>Updated</value>
+    <value>수정 시간</value>
   </data>
   <data name="AcfUpdateTime.Text" xml:space="preserve">
-    <value>Workshop Updated</value>
+    <value>워크샵 업데이트 시간</value>
   </data>
   <data name="AcfSize.Text" xml:space="preserve">
-    <value>Wallpaper Size</value>
+    <value>배경화면 크기</value>
   </data>
   <data name="FileSize.Text" xml:space="preserve">
-    <value>File Size</value>
+    <value>파일 크기</value>
   </data>
   <data name="FolderPath.Text" xml:space="preserve">
-    <value>Folder Path</value>
+    <value>폴더 경로</value>
   </data>
   <data name="Description.Text" xml:space="preserve">
-    <value>Description</value>
+    <value>설명</value>
   </data>
   <data name="PreviewPath.Text" xml:space="preserve">
-    <value>Preview Path</value>
+    <value>미리보기 경로</value>
   </data>
   <data name="PropertiesPanel.Close" xml:space="preserve">
-    <value>Close</value>
+    <value>닫기</value>
   </data>
   <data name="Toolbar_FilterToggle.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Filter Results</value>
+    <value>필터 결과</value>
   </data>
   <data name="Toolbar_GridView.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Cut</value>
+    <value>잘라내기</value>
   </data>
   <data name="Toolbar_ListView.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Copy</value>
+    <value>복사</value>
   </data>
   <data name="Toolbar_Delete.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Delete</value>
+    <value>삭제</value>
   </data>
   <data name="Toolbar_DeleteForever.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Delete Forever</value>
+    <value>영구 삭제</value>
   </data>
   <data name="Toolbar_SelectAll.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Select All</value>
+    <value>모두 선택</value>
   </data>
   <data name="Toolbar_InvertSelection.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>선택 반전</value>
   </data>
   <data name="Toolbar_Refresh.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Refresh</value>
+    <value>새로고침</value>
   </data>
   <data name="Toolbar_View.ToolTipService.ToolTip" xml:space="preserve">
-    <value>View</value>
+    <value>보기</value>
   </data>
   <data name="Toolbar_TagDisplay.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>태그 표시</value>
   </data>
   <data name="Toolbar_Sort.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort</value>
+    <value>정렬</value>
   </data>
   <data name="Toolbar_SortDirection.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort Direction</value>
+    <value>정렬 방향</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Output Settings</value>
+    <value>출력 설정</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
-    <value>Applies to all wallpaper types</value>
+    <value>모든 배경화면 유형에 적용</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
-    <value>File Conflict Handling</value>
+    <value>파일 충돌 처리</value>
   </data>
   <data name="Settings_OverwriteFiles.Content" xml:space="preserve">
-    <value>Overwrite existing files</value>
+    <value>기존 파일 덮어쓰기</value>
   </data>
   <data name="Settings_SkipExtracted.Content" xml:space="preserve">
-    <value>Skip already extracted wallpapers (skip when output directory is not empty)</value>
+    <value>이미 추출된 배경화면 건너뛰기（출력 디렉터리가 비어있지 않을 경우 건너뜀）</value>
   </data>
   <data name="Settings_UseProjectName.Content" xml:space="preserve">
-    <value>Use wallpaper name as subdirectory name (instead of Workshop ID)</value>
+    <value>배경화면 이름을 하위 디렉터리 이름으로 사용（워크샵 ID 대신）</value>
   </data>
   <data name="Settings_OneFolder.Content" xml:space="preserve">
-    <value>Put all files in one directory, no subfolders</value>
+    <value>모든 파일을 하나의 디렉터리에 저장（하위 폴더 사용 안 함）</value>
   </data>
   <data name="Settings_CopyProject.Content" xml:space="preserve">
-    <value>Copy project.json and preview image to output folder</value>
+    <value>project.json과 미리보기 이미지를 출력 폴더에 복사</value>
   </data>
   <data name="Settings_IgnoreExt.Content" xml:space="preserve">
-    <value>Ignore extensions</value>
+    <value>확장자 무시</value>
   </data>
   <data name="Settings_IgnoreExt.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Do not extract/copy files with the specified extensions</value>
+    <value>지정된 확장자의 파일을 추출/복사하지 않음</value>
   </data>
   <data name="Settings_IgnoreExtList.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Separate with commas</value>
+    <value>쉼표로 구분</value>
   </data>
   <data name="Settings_OnlyExt.Content" xml:space="preserve">
-    <value>Only extract extensions</value>
+    <value>특정 확장자만 추출</value>
   </data>
   <data name="Settings_OnlyExt.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Only extract/copy files with the specified extensions</value>
+    <value>지정된 확장자의 파일만 추출/복사</value>
   </data>
   <data name="Settings_OnlyExtList.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Separate with commas</value>
+    <value>쉼표로 구분</value>
   </data>
   <data name="Settings_SkipLarger.Text" xml:space="preserve">
-    <value>Skip larger than (KB)</value>
+    <value>다음보다 큰 파일 건너뛰기 (KB)</value>
   </data>
   <data name="Settings_SkipSmaller.Text" xml:space="preserve">
-    <value>Skip smaller than (KB)</value>
+    <value>다음보다 작은 파일 건너뛰기 (KB)</value>
   </data>
   <data name="Settings_PkgSettings.Header" xml:space="preserve">
-    <value>PKG Parse Settings</value>
+    <value>PKG 분석 설정</value>
   </data>
   <data name="Settings_PkgSettings.Description" xml:space="preserve">
-    <value>Only applies to scene wallpapers containing .pkg</value>
+    <value>.pkg가 포함된 씬 배경화면에만 적용</value>
   </data>
   <data name="Settings_TexMode.Text" xml:space="preserve">
-    <value>TEX Texture Mode</value>
+    <value>TEX 텍스처 처리</value>
   </data>
   <data name="Settings_TexExportRaw.Content" xml:space="preserve">
-    <value>Export raw files (keep TEX as-is)</value>
+    <value>원본 파일 내보내기（TEX 변환 안 함）</value>
   </data>
   <data name="Settings_TexExportConvert.Content" xml:space="preserve">
-    <value>Export files and convert TEX to image</value>
+    <value>파일 내보내기 및 TEX를 이미지로 변환</value>
   </data>
   <data name="Settings_TexExportOnlyImage.Content" xml:space="preserve">
-    <value>Only export TEX converted images</value>
+    <value>TEX 변환된 이미지만 내보내기</value>
   </data>
   <data name="Settings_CpuParallel.Header" xml:space="preserve">
-    <value>Performance</value>
+    <value>성능</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Concurrent extractions, process priority, memory control</value>
+    <value>동시 추출 수, 프로세스 우선순위, 메모리 제어</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
-    <value>Max Concurrent Extractions</value>
+    <value>최대 동시 추출 수</value>
   </data>
   <data name="Settings_ProcessPriority.Text" xml:space="preserve">
-    <value>Process Priority</value>
+    <value>프로세스 우선순위</value>
   </data>
   <data name="Settings_PriorityNormal.Content" xml:space="preserve">
-    <value>Normal</value>
+    <value>보통</value>
   </data>
   <data name="Settings_PriorityBelowNormal.Content" xml:space="preserve">
-    <value>Below Normal</value>
+    <value>보통 이하</value>
   </data>
   <data name="Settings_PriorityIdle.Content" xml:space="preserve">
-    <value>Idle</value>
+    <value>유휴</value>
   </data>
   <data name="Settings_TextureCacheMode.Text" xml:space="preserve">
-    <value>Texture Cache Mode</value>
+    <value>텍스처 캐시 모드</value>
   </data>
   <data name="Settings_CacheMemory.Content" xml:space="preserve">
-    <value>Memory First</value>
+    <value>메모리 우선</value>
   </data>
   <data name="Settings_CacheDisk.Content" xml:space="preserve">
-    <value>Disk Buffer</value>
+    <value>디스크 버퍼</value>
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
-    <value>Auto</value>
+    <value>자동</value>
   </data>
   <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Chunked parsing (read one by one, reduce memory usage)</value>
+    <value>청크 로딩（하나씩 읽어 메모리 사용량 감소）</value>
   </data>
 </root>

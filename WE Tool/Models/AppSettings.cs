@@ -106,5 +106,25 @@ namespace WE_Tool.Models
         public bool OutProjectJSON { get; set; } = false;
         /// <summary>0=导出原始文件(TEX不转换), 1=导出并转换TEX为图片, 2=只导出TEX转换后的图片</summary>
         public int TexExportMode { get; set; } = 1;
+
+        // 性能参数（阶段1）
+        /// <summary>最大并发提取数，默认 1</summary>
+        public int MaxConcurrentExtractions { get; set; } = 1;
+        /// <summary>0=Normal, 1=BelowNormal, 2=Idle</summary>
+        public int ProcessPriority { get; set; } = 0;
+
+        /// <summary>纹理缓存模式：0=内存优先, 1=磁盘缓冲, 2=自动</summary>
+        public int TextureCacheMode { get; set; } = 0;
+
+        // 文件大小过滤（阶段3）
+        /// <summary>PKG 条目大小上限（KB），0=不限制</summary>
+        public int MaxEntrySize { get; set; } = 0;
+        /// <summary>PKG 条目大小下限（KB），0=不限制</summary>
+        public int MinEntrySize { get; set; } = 0;
+        /// <summary>如果输出目录已存在且非空，跳过该壁纸</summary>
+        public bool SkipExistingOutput { get; set; } = false;
+        /// <summary>分块解析模式，逐条读取减少内存占用</summary>
+        public bool LazyLoad { get; set; } = false;
+
     }
 }

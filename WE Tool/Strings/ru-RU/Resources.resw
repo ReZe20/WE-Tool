@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,612 +118,612 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Rating_Everyone.Content" xml:space="preserve">
-    <value>G-All ages</value>
+    <value>Для всех (G)</value>
   </data>
   <data name="Rating_Questionable.Content" xml:space="preserve">
-    <value>PG13-Parental guidance</value>
+    <value>Родительский контроль (PG-13)</value>
   </data>
   <data name="Rating_Mature.Content" xml:space="preserve">
-    <value>R-Mature</value>
+    <value>Для взрослых (R-18)</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
-    <value>Source</value>
+    <value>Источник</value>
   </data>
   <data name="Source_Official.Content" xml:space="preserve">
-    <value>Official</value>
+    <value>Официальные</value>
   </data>
   <data name="Source_Mine.Content" xml:space="preserve">
-    <value>My Wallpapers</value>
+    <value>Мои обои</value>
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
-    <value>Workshop</value>
+    <value>Мастерская</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
-    <value>Tags</value>
+    <value>Теги</value>
   </data>
   <data name="Tag_Abstract.Content" xml:space="preserve">
-    <value>Abstract</value>
+    <value>Абстракция</value>
   </data>
   <data name="Tag_Animal.Content" xml:space="preserve">
-    <value>Animal</value>
+    <value>Животные</value>
   </data>
   <data name="Tag_Anime.Content" xml:space="preserve">
-    <value>Anime</value>
+    <value>Аниме</value>
   </data>
   <data name="Tag_Cartoon.Content" xml:space="preserve">
-    <value>Cartoon</value>
+    <value>Мультфильм</value>
   </data>
   <data name="Tag_CGI.Content" xml:space="preserve">
     <value>CGI</value>
   </data>
   <data name="Tag_Cyberpunk.Content" xml:space="preserve">
-    <value>Cyberpunk</value>
+    <value>Киберпанк</value>
   </data>
   <data name="Tag_Fantasy.Content" xml:space="preserve">
-    <value>Fantasy</value>
+    <value>Фэнтези</value>
   </data>
   <data name="Tag_Game.Content" xml:space="preserve">
-    <value>Game</value>
+    <value>Игры</value>
   </data>
   <data name="Tag_Girls.Content" xml:space="preserve">
-    <value>Girls</value>
+    <value>Девушки</value>
   </data>
   <data name="Tag_Guys.Content" xml:space="preserve">
-    <value>Guys</value>
+    <value>Парни</value>
   </data>
   <data name="Tag_Landscape.Content" xml:space="preserve">
-    <value>Landscape</value>
+    <value>Пейзаж</value>
   </data>
   <data name="Tag_Medieval.Content" xml:space="preserve">
-    <value>Medieval</value>
+    <value>Средневековье</value>
   </data>
   <data name="Tag_Memes.Content" xml:space="preserve">
-    <value>Memes</value>
+    <value>Мемы</value>
   </data>
   <data name="Tag_MMD.Content" xml:space="preserve">
     <value>MMD</value>
   </data>
   <data name="Tag_Music.Content" xml:space="preserve">
-    <value>Music</value>
+    <value>Музыка</value>
   </data>
   <data name="Tag_Nature.Content" xml:space="preserve">
-    <value>Nature</value>
+    <value>Природа</value>
   </data>
   <data name="Tag_Pixelart.Content" xml:space="preserve">
-    <value>Pixelart</value>
+    <value>Пиксель-арт</value>
   </data>
   <data name="Tag_Relaxing.Content" xml:space="preserve">
-    <value>Relaxing</value>
+    <value>Расслабление</value>
   </data>
   <data name="Tag_Retro.Content" xml:space="preserve">
-    <value>Retro</value>
+    <value>Ретро</value>
   </data>
   <data name="Tag_SciFi.Content" xml:space="preserve">
-    <value>Sci-Fi</value>
+    <value>Научная фантастика</value>
   </data>
   <data name="Tag_Sports.Content" xml:space="preserve">
-    <value>Sports</value>
+    <value>Спорт</value>
   </data>
   <data name="Tag_Technology.Content" xml:space="preserve">
-    <value>Technology</value>
+    <value>Технологии</value>
   </data>
   <data name="Tag_Television.Content" xml:space="preserve">
-    <value>Television</value>
+    <value>Телевидение</value>
   </data>
   <data name="Tag_Unspecified.Content" xml:space="preserve">
-    <value>Unspecified     genre</value>
+    <value>Не указано</value>
   </data>
   <data name="Tag_Vehicle.Content" xml:space="preserve">
-    <value>Vehicle</value>
+    <value>Транспорт</value>
   </data>
   <data name="Type.Header" xml:space="preserve">
-    <value>Type</value>
+    <value>Тип</value>
   </data>
   <data name="Type_Application.Content" xml:space="preserve">
-    <value>Application</value>
+    <value>Приложение</value>
   </data>
   <data name="Type_Scene.Content" xml:space="preserve">
-    <value>Scene</value>
+    <value>Сцена</value>
   </data>
   <data name="Type_Unknown.Content" xml:space="preserve">
-    <value>Unknown</value>
+    <value>Неизвестно</value>
   </data>
   <data name="Type_Video.Content" xml:space="preserve">
-    <value>Video</value>
+    <value>Видео</value>
   </data>
   <data name="Type_Web.Content" xml:space="preserve">
-    <value>Web</value>
+    <value>Веб</value>
   </data>
   <data name="Rating.Header" xml:space="preserve">
-    <value>Age rating</value>
+    <value>Возрастной рейтинг</value>
   </data>
   <data name="ResetFilters.Text" xml:space="preserve">
-    <value>Reset Filters</value>
+    <value>Сбросить фильтры</value>
   </data>
   <data name="All.Content" xml:space="preserve">
-    <value>All</value>
+    <value>Все</value>
   </data>
   <data name="None.Content" xml:space="preserve">
-    <value>None</value>
+    <value>Нет</value>
   </data>
   <data name="FilterResults.Text" xml:space="preserve">
-    <value>Filter Results</value>
+    <value>Результаты фильтра</value>
   </data>
   <data name="SortByName.Text" xml:space="preserve">
-    <value>Name</value>
+    <value>Имя</value>
   </data>
   <data name="SortByLastTime.Text" xml:space="preserve">
-    <value>Last Updated</value>
+    <value>Последнее обновление</value>
   </data>
   <data name="SortByFileSize.Text" xml:space="preserve">
-    <value>File Size</value>
+    <value>Размер</value>
   </data>
   <data name="SortByAcfUpdateTime.Text" xml:space="preserve">
-    <value>Modified</value>
+    <value>Изменено</value>
   </data>
   <data name="SortBySubTime.Text" xml:space="preserve">
-    <value>Sub Date</value>
+    <value>Дата подписки</value>
   </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
-    <value>Details</value>
+    <value>Детали</value>
   </data>
   <data name="SearchBox.PlaceholderText" xml:space="preserve">
-    <value>Search</value>
+    <value>Поиск</value>
   </data>
   <data name="ExportDirectory.Text" xml:space="preserve">
-    <value>Export Directory</value>
+    <value>Каталог экспорта</value>
   </data>
   <data name="SelectFolder.Content" xml:space="preserve">
-    <value>Select</value>
+    <value>Выбрать</value>
   </data>
   <data name="OpenFolder.Content" xml:space="preserve">
-    <value>Open</value>
+    <value>Открыть</value>
   </data>
   <data name="Nodescription" xml:space="preserve">
-    <value>(No description)</value>
+    <value>（Нет описания）</value>
   </data>
   <data name="Settings.Text" xml:space="preserve">
-    <value>Settings</value>
+    <value>Настройки</value>
   </data>
   <data name="Start.Text" xml:space="preserve">
-    <value>Start</value>
+    <value>Пуск</value>
   </data>
   <data name="StartPage.Description" xml:space="preserve">
-    <value>Choose the page displayed when launching WE Tool.</value>
+    <value>Выберите страницу, отображаемую при запуске WE Tool.</value>
   </data>
   <data name="StartPage.Header" xml:space="preserve">
-    <value>Startup Page</value>
+    <value>Стартовая страница</value>
   </data>
   <data name="InstalledWallpapers.Content" xml:space="preserve">
-    <value>Installed Wallpapers</value>
+    <value>Установленные обои</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Import Wallpapers</value>
+    <value>Импортировать обои</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
-    <value>About</value>
+    <value>О программе</value>
   </data>
   <data name="SettingsPage.Content" xml:space="preserve">
-    <value>Settings</value>
+    <value>Настройки</value>
   </data>
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
-    <value>Enter or Select Path</value>
+    <value>Введите или выберите путь</value>
   </data>
   <data name="Type_Preset.Content" xml:space="preserve">
-    <value>Preset</value>
+    <value>Пресет</value>
   </data>
   <data name="NoResultTip1.Text" xml:space="preserve">
-    <value>No wallpapers found</value>
+    <value>Обои не найдены</value>
   </data>
   <data name="NoResultTip3.Text" xml:space="preserve">
-    <value>Or check if the path in settings is correct</value>
+    <value>Или проверьте правильность пути в настройках</value>
   </data>
   <data name="NoResultTip2.Text" xml:space="preserve">
-    <value>Please select other categories in the filter and search other keywords</value>
+    <value>Пожалуйста, выберите другие категории в фильтре или найдите по другим ключевым словам</value>
   </data>
   <data name="Programming_Language.Header" xml:space="preserve">
-    <value>Programming Language</value>
+    <value>Язык</value>
   </data>
   <data name="Programming_Language.Description" xml:space="preserve">
-    <value>Select the display language for WE Tool. The language of some options will only take effect after restarting the program.</value>
+    <value>Выберите язык отображения WE Tool. Некоторые параметры вступят в силу только после перезапуска программы.</value>
   </data>
   <data name="Language_Related.Content" xml:space="preserve">
-    <value>Follow System</value>
+    <value>Следовать системе</value>
   </data>
   <data name="Language.Text" xml:space="preserve">
-    <value>Language</value>
+    <value>Язык</value>
   </data>
   <data name="Page.Text" xml:space="preserve">
-    <value>Page</value>
+    <value>Страница</value>
   </data>
   <data name="PapersSetting.Header" xml:space="preserve">
-    <value>Existing Wallpaper Page Settings</value>
+    <value>Настройки существующих обоев</value>
   </data>
   <data name="PapersSetting.Description" xml:space="preserve">
-    <value>Set Specific Content in Existing Wallpaper Page</value>
+    <value>Настройка содержимого страницы существующих обоев</value>
   </data>
   <data name="PapersSetting_BottomBarVisibility.Content" xml:space="preserve">
-    <value>Enable Bottom Path Bar</value>
+    <value>Включить нижнюю панель пути</value>
   </data>
   <data name="PapersSetting_DetailTextSelectMode.Content" xml:space="preserve">
-    <value>Enable Text Selection for Details Panel</value>
+    <value>Включить выделение текста на панели сведений</value>
   </data>
   <data name="PapersSetting_WallpaperAutoPlay.Content" xml:space="preserve">
-    <value>Play GIFs in Wallpaper List</value>
+    <value>Воспроизводить GIF в списке обоев</value>
   </data>
   <data name="PapersSetting_MinimumPixelsForWallpaper.Text" xml:space="preserve">
-    <value>Minimum Wallpaper Pixels</value>
+    <value>Минимальное разрешение обоев</value>
   </data>
   <data name="Path.Text" xml:space="preserve">
-    <value>Path</value>
+    <value>Путь</value>
   </data>
   <data name="ChooseWorkshopPath.Description" xml:space="preserve">
-    <value>Select Location for Workshop Wallpapers</value>
+    <value>Выберите расположение обоев Мастерской</value>
   </data>
   <data name="WorkShopPath.Text" xml:space="preserve">
-    <value>Workshop wallpaper path</value>
+    <value>Путь к обоям Мастерской</value>
   </data>
   <data name="ChooseWallpaperExportPath.Description" xml:space="preserve">
-    <value>Select Wallpaper Export Location</value>
+    <value>Выберите расположение для экспорта обоев</value>
   </data>
   <data name="ChooseProjectPath.Description" xml:space="preserve">
-    <value>Select Project Location for Wallpaper Editor</value>
+    <value>Выберите расположение проекта редактора обоев</value>
   </data>
   <data name="ProjectPath.Text" xml:space="preserve">
-    <value>Project Path</value>
+    <value>Путь проекта</value>
   </data>
   <data name="OfficialWallpaperPath_TextBlock.Text" xml:space="preserve">
-    <value>Official Wallpaper Path</value>
+    <value>Путь к официальным обоям</value>
   </data>
   <data name="OfficialWallpaperPath.Description" xml:space="preserve">
-    <value>Or check if the path in settings is correct</value>
+    <value>Путь к официальным обоям</value>
   </data>
   <data name="AcfPath.Description" xml:space="preserve">
-    <value>File for Storing Workshop Subscription Info</value>
+    <value>Файл с информацией о подписках Мастерской</value>
   </data>
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
-    <value>ACF file path</value>
+    <value>Путь к файлу ACF</value>
   </data>
   <data name="SettingPath.Description" xml:space="preserve">
-    <value>File Path for Storing Program Settings</value>
+    <value>Путь к файлу настроек программы</value>
   </data>
   <data name="SettingPath_TextBlock.Text" xml:space="preserve">
-    <value>Config File Path</value>
+    <value>Путь к файлу конфигурации</value>
   </data>
   <data name="LogPath.Description" xml:space="preserve">
-    <value>File Path for Storing Program Logs</value>
+    <value>Путь к файлу журнала программы</value>
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
-    <value>Log File Path</value>
+    <value>Путь к файлу журнала</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
-    <value>Extract</value>
+    <value>Извлечение</value>
   </data>
   <data name="ScanningTip.Text" xml:space="preserve">
-    <value>Loading wallpapers</value>
+    <value>Загрузка обоев...</value>
   </data>
   <data name="AppBarButton_OpenDirectory.Label" xml:space="preserve">
-    <value>Open Directory</value>
+    <value>Открыть каталог</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value>Delete</value>
+    <value>Удалить</value>
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
-    <value>Select All</value>
+    <value>Выбрать все</value>
   </data>
   <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>Инвертировать выбор</value>
   </data>
   <data name="MenuFlyoutItem_InvertSelection.Text" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>Инвертировать выбор</value>
   </data>
   <data name="AppBarButton_Properties.Label" xml:space="preserve">
-    <value>Properties</value>
+    <value>Свойства</value>
   </data>
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
-    <value>Extract</value>
+    <value>Извлечь</value>
   </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
-    <value>Filter Result Delay (ms)</value>
+    <value>Задержка ответа фильтра (мс)</value>
   </data>
   <data name="AppBarButton_Copy.Label" xml:space="preserve">
-    <value>Copy</value>
+    <value>Копировать</value>
   </data>
   <data name="AppBarButton_Cut.Label" xml:space="preserve">
-    <value>Cut</value>
+    <value>Вырезать</value>
   </data>
   <data name="AppBarButton_View.Label" xml:space="preserve">
-    <value>View</value>
+    <value>Вид</value>
   </data>
   <data name="AppBarButton_SmallIcon.Text" xml:space="preserve">
-    <value>Small Icons</value>
+    <value>Маленькие значки</value>
   </data>
   <data name="AppBarButton_MediumIcon.Text" xml:space="preserve">
-    <value>Medium Icons</value>
+    <value>Средние значки</value>
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
-    <value>Large Icons</value>
+    <value>Большие значки</value>
   </data>
   <data name="AppBarButton_IsAnnotatedScrollBarEnabled.Text" xml:space="preserve">
-    <value>Annotated Scroll Bar</value>
+    <value>Полоса прокрутки с аннотациями</value>
   </data>
   <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
-    <value>Wallpaper Icon Size</value>
+    <value>Размер значка обоев</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
-    <value>Select All</value>
+    <value>Выбрать все</value>
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
-    <value>View</value>
+    <value>Вид</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
-    <value>Sort</value>
+    <value>Сортировка</value>
   </data>
   <data name="AppBarButton_Sort.Label" xml:space="preserve">
-    <value>Sort</value>
+    <value>Сортировка</value>
   </data>
   <data name="AppBarButton_DeleteForever.Label" xml:space="preserve">
-    <value>Delete Forever</value>
+    <value>Удалить навсегда</value>
   </data>
   <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
-    <value>Multi-Select</value>
+    <value>Множественный выбор</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_SmallIcon.Content" xml:space="preserve">
-    <value>Small</value>
+    <value>Маленький</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_MediumIcon.Content" xml:space="preserve">
-    <value>Medium</value>
+    <value>Средний</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_LargeIcon.Content" xml:space="preserve">
-    <value>Large</value>
+    <value>Большой</value>
   </data>
   <data name="PapersSetting_ContextMenuItems.Text" xml:space="preserve">
-    <value>Context Menu Options</value>
+    <value>Элементы контекстного меню</value>
   </data>
   <data name="AppBarButton_Source.Text" xml:space="preserve">
-    <value>Source</value>
+    <value>Источник</value>
   </data>
   <data name="AppBarButton_Rating.Text" xml:space="preserve">
-    <value>Age Rating</value>
+    <value>Возрастной рейтинг</value>
   </data>
   <data name="AppBarButton_None.Text" xml:space="preserve">
-    <value>(None)</value>
+    <value>（Нет）</value>
   </data>
   <data name="AppBarButton_TagDisplay.Label" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>Отображение тегов</value>
   </data>
   <data name="MenuFlyoutSubItem_TagDisplay.Text" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>Отображение тегов</value>
   </data>
   <data name="GridColumnButton_view.Text" xml:space="preserve">
-    <value>View</value>
+    <value>Вид</value>
   </data>
   <data name="AppBarButton_Tag.Text" xml:space="preserve">
-    <value>Tag</value>
+    <value>Тег</value>
   </data>
   <data name="Program.Text" xml:space="preserve">
-    <value>Program</value>
+    <value>Программа</value>
   </data>
   <data name="Theme.Header" xml:space="preserve">
-    <value>Theme</value>
+    <value>Тема</value>
   </data>
   <data name="Theme.Description" xml:space="preserve">
-    <value>Select the theme to display</value>
+    <value>Выберите тему для отображения</value>
   </data>
   <data name="FollowSystem.Content" xml:space="preserve">
-    <value>Follow System</value>
+    <value>Следовать системе</value>
   </data>
   <data name="Light.Content" xml:space="preserve">
-    <value>Light</value>
+    <value>Светлая</value>
   </data>
   <data name="Dark.Content" xml:space="preserve">
-    <value>Dark</value>
+    <value>Тёмная</value>
   </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
-    <value>Wallpaper Mouse Enter Animation</value>
+    <value>Анимация при наведении мыши</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
-    <value>Refresh</value>
+    <value>Обновить</value>
   </data>
   <data name="AppBarButton_Type.Text" xml:space="preserve">
-    <value>Type</value>
+    <value>Тип</value>
   </data>
   <data name="c.Head" xml:space="preserve">
-    <value>Apply Theme</value>
+    <value>Применить тему</value>
   </data>
   <data name="PropertiesPanel_Header.Text" xml:space="preserve">
-    <value>Properties</value>
+    <value>Свойства</value>
   </data>
   <data name="PropertiesPanel_BasicInfo.Text" xml:space="preserve">
-    <value>Basic Info</value>
+    <value>Основная информация</value>
   </data>
   <data name="PropertiesPanel_FileInfo.Text" xml:space="preserve">
-    <value>File Info</value>
+    <value>Информация о файле</value>
   </data>
   <data name="PropertiesPanel_TimeInfo.Text" xml:space="preserve">
-    <value>Time Info</value>
+    <value>Время</value>
   </data>
   <data name="PropertiesPanel_TypeLabel.Text" xml:space="preserve">
-    <value>Type</value>
+    <value>Тип</value>
   </data>
   <data name="PropertiesPanel_SourceLabel.Text" xml:space="preserve">
-    <value>Source</value>
+    <value>Источник</value>
   </data>
   <data name="PropertiesPanel_RatingLabel.Text" xml:space="preserve">
-    <value>Age Rating</value>
+    <value>Возрастной рейтинг</value>
   </data>
   <data name="PropertiesPanel_TagLabel.Text" xml:space="preserve">
-    <value>Tags</value>
+    <value>Теги</value>
   </data>
   <data name="WorkshopID.Text" xml:space="preserve">
-    <value>Workshop ID</value>
+    <value>ID Мастерской</value>
   </data>
   <data name="Dependency.Text" xml:space="preserve">
-    <value>Dependency</value>
+    <value>Зависимость</value>
   </data>
   <data name="CreationTime.Text" xml:space="preserve">
-    <value>Created</value>
+    <value>Создано</value>
   </data>
   <data name="UpdateTime.Text" xml:space="preserve">
-    <value>Updated</value>
+    <value>Изменено</value>
   </data>
   <data name="AcfUpdateTime.Text" xml:space="preserve">
-    <value>Workshop Updated</value>
+    <value>Мастерская обновлена</value>
   </data>
   <data name="AcfSize.Text" xml:space="preserve">
-    <value>Wallpaper Size</value>
+    <value>Размер обоев</value>
   </data>
   <data name="FileSize.Text" xml:space="preserve">
-    <value>File Size</value>
+    <value>Размер файла</value>
   </data>
   <data name="FolderPath.Text" xml:space="preserve">
-    <value>Folder Path</value>
+    <value>Путь к папке</value>
   </data>
   <data name="Description.Text" xml:space="preserve">
-    <value>Description</value>
+    <value>Описание</value>
   </data>
   <data name="PreviewPath.Text" xml:space="preserve">
-    <value>Preview Path</value>
+    <value>Путь к превью</value>
   </data>
   <data name="PropertiesPanel.Close" xml:space="preserve">
-    <value>Close</value>
+    <value>Закрыть</value>
   </data>
   <data name="Toolbar_FilterToggle.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Filter Results</value>
+    <value>Результаты фильтра</value>
   </data>
   <data name="Toolbar_GridView.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Cut</value>
+    <value>Вырезать</value>
   </data>
   <data name="Toolbar_ListView.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Copy</value>
+    <value>Копировать</value>
   </data>
   <data name="Toolbar_Delete.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Delete</value>
+    <value>Удалить</value>
   </data>
   <data name="Toolbar_DeleteForever.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Delete Forever</value>
+    <value>Удалить навсегда</value>
   </data>
   <data name="Toolbar_SelectAll.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Select All</value>
+    <value>Выбрать все</value>
   </data>
   <data name="Toolbar_InvertSelection.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>Инвертировать выбор</value>
   </data>
   <data name="Toolbar_Refresh.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Refresh</value>
+    <value>Обновить</value>
   </data>
   <data name="Toolbar_View.ToolTipService.ToolTip" xml:space="preserve">
-    <value>View</value>
+    <value>Вид</value>
   </data>
   <data name="Toolbar_TagDisplay.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>Отображение тегов</value>
   </data>
   <data name="Toolbar_Sort.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort</value>
+    <value>Сортировка</value>
   </data>
   <data name="Toolbar_SortDirection.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort Direction</value>
+    <value>Направление сортировки</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Output Settings</value>
+    <value>Параметры вывода</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
-    <value>Applies to all wallpaper types</value>
+    <value>Применяется ко всем типам обоев</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
-    <value>File Conflict Handling</value>
+    <value>Обработка конфликтов файлов</value>
   </data>
   <data name="Settings_OverwriteFiles.Content" xml:space="preserve">
-    <value>Overwrite existing files</value>
+    <value>Перезаписывать существующие файлы</value>
   </data>
   <data name="Settings_SkipExtracted.Content" xml:space="preserve">
-    <value>Skip already extracted wallpapers (skip when output directory is not empty)</value>
+    <value>Пропускать уже извлечённые обои（пропускать, если каталог вывода не пуст）</value>
   </data>
   <data name="Settings_UseProjectName.Content" xml:space="preserve">
-    <value>Use wallpaper name as subdirectory name (instead of Workshop ID)</value>
+    <value>Использовать имя обоев как имя подкаталога（вместо ID Мастерской）</value>
   </data>
   <data name="Settings_OneFolder.Content" xml:space="preserve">
-    <value>Put all files in one directory, no subfolders</value>
+    <value>Поместить все файлы в один каталог, без подпапок</value>
   </data>
   <data name="Settings_CopyProject.Content" xml:space="preserve">
-    <value>Copy project.json and preview image to output folder</value>
+    <value>Копировать project.json и превью в папку вывода</value>
   </data>
   <data name="Settings_IgnoreExt.Content" xml:space="preserve">
-    <value>Ignore extensions</value>
+    <value>Игнорировать расширения</value>
   </data>
   <data name="Settings_IgnoreExt.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Do not extract/copy files with the specified extensions</value>
+    <value>Не извлекать/копировать файлы с указанными расширениями</value>
   </data>
   <data name="Settings_IgnoreExtList.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Separate with commas</value>
+    <value>Разделять запятыми</value>
   </data>
   <data name="Settings_OnlyExt.Content" xml:space="preserve">
-    <value>Only extract extensions</value>
+    <value>Извлекать только определённые расширения</value>
   </data>
   <data name="Settings_OnlyExt.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Only extract/copy files with the specified extensions</value>
+    <value>Извлекать/копировать только файлы с указанными расширениями</value>
   </data>
   <data name="Settings_OnlyExtList.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Separate with commas</value>
+    <value>Разделять запятыми</value>
   </data>
   <data name="Settings_SkipLarger.Text" xml:space="preserve">
-    <value>Skip larger than (KB)</value>
+    <value>Пропускать больше (КБ)</value>
   </data>
   <data name="Settings_SkipSmaller.Text" xml:space="preserve">
-    <value>Skip smaller than (KB)</value>
+    <value>Пропускать меньше (КБ)</value>
   </data>
   <data name="Settings_PkgSettings.Header" xml:space="preserve">
-    <value>PKG Parse Settings</value>
+    <value>Настройки анализа PKG</value>
   </data>
   <data name="Settings_PkgSettings.Description" xml:space="preserve">
-    <value>Only applies to scene wallpapers containing .pkg</value>
+    <value>Применяется только к сценам, содержащим .pkg</value>
   </data>
   <data name="Settings_TexMode.Text" xml:space="preserve">
-    <value>TEX Texture Mode</value>
+    <value>Режим текстур TEX</value>
   </data>
   <data name="Settings_TexExportRaw.Content" xml:space="preserve">
-    <value>Export raw files (keep TEX as-is)</value>
+    <value>Экспортировать исходные файлы（TEX не конвертировать）</value>
   </data>
   <data name="Settings_TexExportConvert.Content" xml:space="preserve">
-    <value>Export files and convert TEX to image</value>
+    <value>Экспортировать и конвертировать TEX в изображение</value>
   </data>
   <data name="Settings_TexExportOnlyImage.Content" xml:space="preserve">
-    <value>Only export TEX converted images</value>
+    <value>Экспортировать только изображения, конвертированные из TEX</value>
   </data>
   <data name="Settings_CpuParallel.Header" xml:space="preserve">
-    <value>Performance</value>
+    <value>Производительность</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Concurrent extractions, process priority, memory control</value>
+    <value>Одновременные извлечения, приоритет процесса, управление памятью</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
-    <value>Max Concurrent Extractions</value>
+    <value>Макс. одновременных извлечений</value>
   </data>
   <data name="Settings_ProcessPriority.Text" xml:space="preserve">
-    <value>Process Priority</value>
+    <value>Приоритет процесса</value>
   </data>
   <data name="Settings_PriorityNormal.Content" xml:space="preserve">
-    <value>Normal</value>
+    <value>Обычный</value>
   </data>
   <data name="Settings_PriorityBelowNormal.Content" xml:space="preserve">
-    <value>Below Normal</value>
+    <value>Ниже обычного</value>
   </data>
   <data name="Settings_PriorityIdle.Content" xml:space="preserve">
-    <value>Idle</value>
+    <value>Простой</value>
   </data>
   <data name="Settings_TextureCacheMode.Text" xml:space="preserve">
-    <value>Texture Cache Mode</value>
+    <value>Режим кэша текстур</value>
   </data>
   <data name="Settings_CacheMemory.Content" xml:space="preserve">
-    <value>Memory First</value>
+    <value>Память в приоритете</value>
   </data>
   <data name="Settings_CacheDisk.Content" xml:space="preserve">
-    <value>Disk Buffer</value>
+    <value>Дисковый буфер</value>
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
-    <value>Auto</value>
+    <value>Авто</value>
   </data>
   <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Chunked parsing (read one by one, reduce memory usage)</value>
+    <value>Чтение по частям（по одному, снижение использования памяти）</value>
   </data>
 </root>

@@ -83,9 +83,45 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial bool CoverAllFiles { get; set; }
 
+        /// <summary>0=覆盖已存在的文件, 1=跳过已提取的壁纸</summary>
+        [ObservableProperty]
+        public partial int OverwriteMode { get; set; }
+
         /// <summary>0=导出原始文件, 1=导出并转换TEX, 2=只导出TEX图片</summary>
         [ObservableProperty]
         public partial int TexExportMode { get; set; }
+
+        // === 性能参数（阶段1） ===
+
+        /// <summary>最大并发提取数，1 到 MaxConcurrentMax</summary>
+        [ObservableProperty]
+        public partial int MaxConcurrentExtractions { get; set; } = 1;
+
+        /// <summary>0=Normal, 1=BelowNormal, 2=Idle</summary>
+        [ObservableProperty]
+        public partial int ProcessPriority { get; set; }
+
+        /// <summary>当前 CPU 逻辑核心数，用作 NumberBox 上限</summary>
+        public int MaxConcurrentMax => Environment.ProcessorCount;
+
+        /// <summary>纹理缓存模式：0=内存优先, 1=磁盘缓冲, 2=自动</summary>
+        [ObservableProperty]
+        public partial int TextureCacheMode { get; set; }
+
+        // === 文件过滤（阶段3） ===
+
+        [ObservableProperty]
+        public partial int MaxEntrySize { get; set; }
+
+        [ObservableProperty]
+        public partial int MinEntrySize { get; set; }
+
+        [ObservableProperty]
+        public partial bool SkipExistingOutput { get; set; }
+
+        /// <summary>分块解析，逐条读取减少内存占用</summary>
+        [ObservableProperty]
+        public partial bool LazyLoad { get; set; }
 
         public SettingsViewModel(IConfigService configService, IPickerService pickerService)
         {
@@ -280,7 +316,16 @@ namespace WE_Tool.ViewModels
             OutProjectJSON = _settings.Extract.OutProjectJSON;
             UseProjectName = _settings.Extract.UseProjectName;
             CoverAllFiles = _settings.Extract.CoverAllFiles;
+            OverwriteMode = _settings.Extract.CoverAllFiles ? 0 : (_settings.Extract.SkipExistingOutput ? 1 : 0);
             TexExportMode = _settings.Extract.TexExportMode;
+
+            MaxConcurrentExtractions = _settings.Extract.MaxConcurrentExtractions;
+            ProcessPriority = _settings.Extract.ProcessPriority;
+            TextureCacheMode = _settings.Extract.TextureCacheMode;
+            MaxEntrySize = _settings.Extract.MaxEntrySize;
+            MinEntrySize = _settings.Extract.MinEntrySize;
+            SkipExistingOutput = _settings.Extract.SkipExistingOutput;
+            LazyLoad = _settings.Extract.LazyLoad;
 
             if (isNewConfig || mode.Contains('1') || string.IsNullOrEmpty(_settings.Path.DownloadPath))
             {
@@ -466,8 +511,16 @@ namespace WE_Tool.ViewModels
                 _settings.Extract.OneFolder = OneFolder;
                 _settings.Extract.OutProjectJSON = OutProjectJSON;
                 _settings.Extract.UseProjectName = UseProjectName;
-                _settings.Extract.CoverAllFiles = CoverAllFiles;
+                _settings.Extract.CoverAllFiles = OverwriteMode == 0;
                 _settings.Extract.TexExportMode = TexExportMode;
+
+                _settings.Extract.MaxConcurrentExtractions = MaxConcurrentExtractions;
+                _settings.Extract.ProcessPriority = ProcessPriority;
+                _settings.Extract.TextureCacheMode = TextureCacheMode;
+                _settings.Extract.MaxEntrySize = MaxEntrySize;
+                _settings.Extract.MinEntrySize = MinEntrySize;
+                _settings.Extract.SkipExistingOutput = OverwriteMode == 1;
+                _settings.Extract.LazyLoad = LazyLoad;
 
                 await _configService.SaveAsync(_settings);
             }

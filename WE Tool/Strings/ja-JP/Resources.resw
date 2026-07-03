@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,612 +118,612 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Rating_Everyone.Content" xml:space="preserve">
-    <value>G-All ages</value>
+    <value>全年齢(G)</value>
   </data>
   <data name="Rating_Questionable.Content" xml:space="preserve">
-    <value>PG13-Parental guidance</value>
+    <value>保護者指導(PG-13)</value>
   </data>
   <data name="Rating_Mature.Content" xml:space="preserve">
-    <value>R-Mature</value>
+    <value>成人向け(R-18)</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
-    <value>Source</value>
+    <value>ソース</value>
   </data>
   <data name="Source_Official.Content" xml:space="preserve">
-    <value>Official</value>
+    <value>公式</value>
   </data>
   <data name="Source_Mine.Content" xml:space="preserve">
-    <value>My Wallpapers</value>
+    <value>マイ壁紙</value>
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
-    <value>Workshop</value>
+    <value>ワークショップ</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
-    <value>Tags</value>
+    <value>タグ</value>
   </data>
   <data name="Tag_Abstract.Content" xml:space="preserve">
-    <value>Abstract</value>
+    <value>抽象</value>
   </data>
   <data name="Tag_Animal.Content" xml:space="preserve">
-    <value>Animal</value>
+    <value>動物</value>
   </data>
   <data name="Tag_Anime.Content" xml:space="preserve">
-    <value>Anime</value>
+    <value>アニメ</value>
   </data>
   <data name="Tag_Cartoon.Content" xml:space="preserve">
-    <value>Cartoon</value>
+    <value>漫画</value>
   </data>
   <data name="Tag_CGI.Content" xml:space="preserve">
     <value>CGI</value>
   </data>
   <data name="Tag_Cyberpunk.Content" xml:space="preserve">
-    <value>Cyberpunk</value>
+    <value>サイバーパンク</value>
   </data>
   <data name="Tag_Fantasy.Content" xml:space="preserve">
-    <value>Fantasy</value>
+    <value>ファンタジー</value>
   </data>
   <data name="Tag_Game.Content" xml:space="preserve">
-    <value>Game</value>
+    <value>ゲーム</value>
   </data>
   <data name="Tag_Girls.Content" xml:space="preserve">
-    <value>Girls</value>
+    <value>女子</value>
   </data>
   <data name="Tag_Guys.Content" xml:space="preserve">
-    <value>Guys</value>
+    <value>男子</value>
   </data>
   <data name="Tag_Landscape.Content" xml:space="preserve">
-    <value>Landscape</value>
+    <value>風景</value>
   </data>
   <data name="Tag_Medieval.Content" xml:space="preserve">
-    <value>Medieval</value>
+    <value>中世</value>
   </data>
   <data name="Tag_Memes.Content" xml:space="preserve">
-    <value>Memes</value>
+    <value>ネタ</value>
   </data>
   <data name="Tag_MMD.Content" xml:space="preserve">
     <value>MMD</value>
   </data>
   <data name="Tag_Music.Content" xml:space="preserve">
-    <value>Music</value>
+    <value>音楽</value>
   </data>
   <data name="Tag_Nature.Content" xml:space="preserve">
-    <value>Nature</value>
+    <value>自然</value>
   </data>
   <data name="Tag_Pixelart.Content" xml:space="preserve">
-    <value>Pixelart</value>
+    <value>ピクセルアート</value>
   </data>
   <data name="Tag_Relaxing.Content" xml:space="preserve">
-    <value>Relaxing</value>
+    <value>リラックス</value>
   </data>
   <data name="Tag_Retro.Content" xml:space="preserve">
-    <value>Retro</value>
+    <value>レトロ</value>
   </data>
   <data name="Tag_SciFi.Content" xml:space="preserve">
-    <value>Sci-Fi</value>
+    <value>SF</value>
   </data>
   <data name="Tag_Sports.Content" xml:space="preserve">
-    <value>Sports</value>
+    <value>スポーツ</value>
   </data>
   <data name="Tag_Technology.Content" xml:space="preserve">
-    <value>Technology</value>
+    <value>テクノロジー</value>
   </data>
   <data name="Tag_Television.Content" xml:space="preserve">
-    <value>Television</value>
+    <value>テレビ</value>
   </data>
   <data name="Tag_Unspecified.Content" xml:space="preserve">
-    <value>Unspecified     genre</value>
+    <value>未指定</value>
   </data>
   <data name="Tag_Vehicle.Content" xml:space="preserve">
-    <value>Vehicle</value>
+    <value>乗り物</value>
   </data>
   <data name="Type.Header" xml:space="preserve">
-    <value>Type</value>
+    <value>タイプ</value>
   </data>
   <data name="Type_Application.Content" xml:space="preserve">
-    <value>Application</value>
+    <value>アプリケーション</value>
   </data>
   <data name="Type_Scene.Content" xml:space="preserve">
-    <value>Scene</value>
+    <value>シーン</value>
   </data>
   <data name="Type_Unknown.Content" xml:space="preserve">
-    <value>Unknown</value>
+    <value>不明</value>
   </data>
   <data name="Type_Video.Content" xml:space="preserve">
-    <value>Video</value>
+    <value>ビデオ</value>
   </data>
   <data name="Type_Web.Content" xml:space="preserve">
-    <value>Web</value>
+    <value>ウェブ</value>
   </data>
   <data name="Rating.Header" xml:space="preserve">
-    <value>Age rating</value>
+    <value>年齢制限</value>
   </data>
   <data name="ResetFilters.Text" xml:space="preserve">
-    <value>Reset Filters</value>
+    <value>フィルターをリセット</value>
   </data>
   <data name="All.Content" xml:space="preserve">
-    <value>All</value>
+    <value>すべて</value>
   </data>
   <data name="None.Content" xml:space="preserve">
-    <value>None</value>
+    <value>なし</value>
   </data>
   <data name="FilterResults.Text" xml:space="preserve">
-    <value>Filter Results</value>
+    <value>検索結果</value>
   </data>
   <data name="SortByName.Text" xml:space="preserve">
-    <value>Name</value>
+    <value>名前順</value>
   </data>
   <data name="SortByLastTime.Text" xml:space="preserve">
-    <value>Last Updated</value>
+    <value>更新日順</value>
   </data>
   <data name="SortByFileSize.Text" xml:space="preserve">
-    <value>File Size</value>
+    <value>ファイルサイズ順</value>
   </data>
   <data name="SortByAcfUpdateTime.Text" xml:space="preserve">
-    <value>Modified</value>
+    <value>変更日順</value>
   </data>
   <data name="SortBySubTime.Text" xml:space="preserve">
-    <value>Sub Date</value>
+    <value>サブスク日順</value>
   </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
-    <value>Details</value>
+    <value>詳細パネル</value>
   </data>
   <data name="SearchBox.PlaceholderText" xml:space="preserve">
-    <value>Search</value>
+    <value>検索</value>
   </data>
   <data name="ExportDirectory.Text" xml:space="preserve">
-    <value>Export Directory</value>
+    <value>出力ディレクトリ</value>
   </data>
   <data name="SelectFolder.Content" xml:space="preserve">
-    <value>Select</value>
+    <value>選択</value>
   </data>
   <data name="OpenFolder.Content" xml:space="preserve">
-    <value>Open</value>
+    <value>開く</value>
   </data>
   <data name="Nodescription" xml:space="preserve">
-    <value>(No description)</value>
+    <value>（説明なし）</value>
   </data>
   <data name="Settings.Text" xml:space="preserve">
-    <value>Settings</value>
+    <value>設定</value>
   </data>
   <data name="Start.Text" xml:space="preserve">
-    <value>Start</value>
+    <value>スタート</value>
   </data>
   <data name="StartPage.Description" xml:space="preserve">
-    <value>Choose the page displayed when launching WE Tool.</value>
+    <value>WE Tool 起動時に表示するページを選択します。</value>
   </data>
   <data name="StartPage.Header" xml:space="preserve">
-    <value>Startup Page</value>
+    <value>スタートアップページ</value>
   </data>
   <data name="InstalledWallpapers.Content" xml:space="preserve">
-    <value>Installed Wallpapers</value>
+    <value>インストール済み壁紙</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Import Wallpapers</value>
+    <value>壁紙をインポート</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>About</value>
   </data>
   <data name="SettingsPage.Content" xml:space="preserve">
-    <value>Settings</value>
+    <value>設定</value>
   </data>
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
-    <value>Enter or Select Path</value>
+    <value>パスを入力または選択</value>
   </data>
   <data name="Type_Preset.Content" xml:space="preserve">
-    <value>Preset</value>
+    <value>プリセット</value>
   </data>
   <data name="NoResultTip1.Text" xml:space="preserve">
-    <value>No wallpapers found</value>
+    <value>壁紙が見つかりません</value>
   </data>
   <data name="NoResultTip3.Text" xml:space="preserve">
-    <value>Or check if the path in settings is correct</value>
+    <value>または設定のパスが正しいか確認してください</value>
   </data>
   <data name="NoResultTip2.Text" xml:space="preserve">
-    <value>Please select other categories in the filter and search other keywords</value>
+    <value>フィルターの他のカテゴリを選択するか、別のキーワードで検索してください</value>
   </data>
   <data name="Programming_Language.Header" xml:space="preserve">
-    <value>Programming Language</value>
+    <value>言語</value>
   </data>
   <data name="Programming_Language.Description" xml:space="preserve">
-    <value>Select the display language for WE Tool. The language of some options will only take effect after restarting the program.</value>
+    <value>WE Tool の表示言語を選択します。一部のオプションは再起動後に反映されます。</value>
   </data>
   <data name="Language_Related.Content" xml:space="preserve">
-    <value>Follow System</value>
+    <value>システムに従う</value>
   </data>
   <data name="Language.Text" xml:space="preserve">
-    <value>Language</value>
+    <value>言語</value>
   </data>
   <data name="Page.Text" xml:space="preserve">
-    <value>Page</value>
+    <value>ページ</value>
   </data>
   <data name="PapersSetting.Header" xml:space="preserve">
-    <value>Existing Wallpaper Page Settings</value>
+    <value>壁紙ページ設定</value>
   </data>
   <data name="PapersSetting.Description" xml:space="preserve">
-    <value>Set Specific Content in Existing Wallpaper Page</value>
+    <value>壁紙ページの表示内容を設定します</value>
   </data>
   <data name="PapersSetting_BottomBarVisibility.Content" xml:space="preserve">
-    <value>Enable Bottom Path Bar</value>
+    <value>下部パスバーを有効化</value>
   </data>
   <data name="PapersSetting_DetailTextSelectMode.Content" xml:space="preserve">
-    <value>Enable Text Selection for Details Panel</value>
+    <value>詳細パネルのテキスト選択を有効化</value>
   </data>
   <data name="PapersSetting_WallpaperAutoPlay.Content" xml:space="preserve">
-    <value>Play GIFs in Wallpaper List</value>
+    <value>壁紙リストでGIFを再生</value>
   </data>
   <data name="PapersSetting_MinimumPixelsForWallpaper.Text" xml:space="preserve">
-    <value>Minimum Wallpaper Pixels</value>
+    <value>壁紙の最小ピクセル数</value>
   </data>
   <data name="Path.Text" xml:space="preserve">
-    <value>Path</value>
+    <value>パス</value>
   </data>
   <data name="ChooseWorkshopPath.Description" xml:space="preserve">
-    <value>Select Location for Workshop Wallpapers</value>
+    <value>ワークショップの壁紙の保存先を選択</value>
   </data>
   <data name="WorkShopPath.Text" xml:space="preserve">
-    <value>Workshop wallpaper path</value>
+    <value>ワークショップ壁紙パス</value>
   </data>
   <data name="ChooseWallpaperExportPath.Description" xml:space="preserve">
-    <value>Select Wallpaper Export Location</value>
+    <value>壁紙のエクスポート先を選択</value>
   </data>
   <data name="ChooseProjectPath.Description" xml:space="preserve">
-    <value>Select Project Location for Wallpaper Editor</value>
+    <value>壁紙エディタのプロジェクト保存先を選択</value>
   </data>
   <data name="ProjectPath.Text" xml:space="preserve">
-    <value>Project Path</value>
+    <value>プロジェクトパス</value>
   </data>
   <data name="OfficialWallpaperPath_TextBlock.Text" xml:space="preserve">
-    <value>Official Wallpaper Path</value>
+    <value>公式壁紙パス</value>
   </data>
   <data name="OfficialWallpaperPath.Description" xml:space="preserve">
-    <value>Or check if the path in settings is correct</value>
+    <value>公式壁紙パス</value>
   </data>
   <data name="AcfPath.Description" xml:space="preserve">
-    <value>File for Storing Workshop Subscription Info</value>
+    <value>ワークショップ購読情報を保存するファイル</value>
   </data>
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
-    <value>ACF file path</value>
+    <value>ACFファイルパス</value>
   </data>
   <data name="SettingPath.Description" xml:space="preserve">
-    <value>File Path for Storing Program Settings</value>
+    <value>プログラム設定を保存するファイルパス</value>
   </data>
   <data name="SettingPath_TextBlock.Text" xml:space="preserve">
-    <value>Config File Path</value>
+    <value>設定ファイルパス</value>
   </data>
   <data name="LogPath.Description" xml:space="preserve">
-    <value>File Path for Storing Program Logs</value>
+    <value>プログラムログを保存するファイルパス</value>
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
-    <value>Log File Path</value>
+    <value>ログファイルパス</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
-    <value>Extract</value>
+    <value>抽出</value>
   </data>
   <data name="ScanningTip.Text" xml:space="preserve">
-    <value>Loading wallpapers</value>
+    <value>壁紙を読み込み中...</value>
   </data>
   <data name="AppBarButton_OpenDirectory.Label" xml:space="preserve">
-    <value>Open Directory</value>
+    <value>ディレクトリを開く</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value>Delete</value>
+    <value>削除</value>
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
-    <value>Select All</value>
+    <value>すべて選択</value>
   </data>
   <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>選択を反転</value>
   </data>
   <data name="MenuFlyoutItem_InvertSelection.Text" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>選択を反転</value>
   </data>
   <data name="AppBarButton_Properties.Label" xml:space="preserve">
-    <value>Properties</value>
+    <value>プロパティ</value>
   </data>
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
-    <value>Extract</value>
+    <value>抽出</value>
   </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
-    <value>Filter Result Delay (ms)</value>
+    <value>フィルター応答遅延(ms)</value>
   </data>
   <data name="AppBarButton_Copy.Label" xml:space="preserve">
-    <value>Copy</value>
+    <value>コピー</value>
   </data>
   <data name="AppBarButton_Cut.Label" xml:space="preserve">
-    <value>Cut</value>
+    <value>カット</value>
   </data>
   <data name="AppBarButton_View.Label" xml:space="preserve">
-    <value>View</value>
+    <value>表示</value>
   </data>
   <data name="AppBarButton_SmallIcon.Text" xml:space="preserve">
-    <value>Small Icons</value>
+    <value>小アイコン</value>
   </data>
   <data name="AppBarButton_MediumIcon.Text" xml:space="preserve">
-    <value>Medium Icons</value>
+    <value>中アイコン</value>
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
-    <value>Large Icons</value>
+    <value>大アイコン</value>
   </data>
   <data name="AppBarButton_IsAnnotatedScrollBarEnabled.Text" xml:space="preserve">
-    <value>Annotated Scroll Bar</value>
+    <value>注釈付きスクロールバー</value>
   </data>
   <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
-    <value>Wallpaper Icon Size</value>
+    <value>壁紙アイコンサイズ</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
-    <value>Select All</value>
+    <value>すべて選択</value>
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
-    <value>View</value>
+    <value>表示</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
-    <value>Sort</value>
+    <value>並び替え</value>
   </data>
   <data name="AppBarButton_Sort.Label" xml:space="preserve">
-    <value>Sort</value>
+    <value>並び替え</value>
   </data>
   <data name="AppBarButton_DeleteForever.Label" xml:space="preserve">
-    <value>Delete Forever</value>
+    <value>完全に削除</value>
   </data>
   <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
-    <value>Multi-Select</value>
+    <value>複数選択</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_SmallIcon.Content" xml:space="preserve">
-    <value>Small</value>
+    <value>小</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_MediumIcon.Content" xml:space="preserve">
-    <value>Medium</value>
+    <value>中</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_LargeIcon.Content" xml:space="preserve">
-    <value>Large</value>
+    <value>大</value>
   </data>
   <data name="PapersSetting_ContextMenuItems.Text" xml:space="preserve">
-    <value>Context Menu Options</value>
+    <value>コンテキストメニュー項目</value>
   </data>
   <data name="AppBarButton_Source.Text" xml:space="preserve">
-    <value>Source</value>
+    <value>ソース</value>
   </data>
   <data name="AppBarButton_Rating.Text" xml:space="preserve">
-    <value>Age Rating</value>
+    <value>年齢制限</value>
   </data>
   <data name="AppBarButton_None.Text" xml:space="preserve">
-    <value>(None)</value>
+    <value>（なし）</value>
   </data>
   <data name="AppBarButton_TagDisplay.Label" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>タグ表示</value>
   </data>
   <data name="MenuFlyoutSubItem_TagDisplay.Text" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>タグ表示</value>
   </data>
   <data name="GridColumnButton_view.Text" xml:space="preserve">
-    <value>View</value>
+    <value>表示</value>
   </data>
   <data name="AppBarButton_Tag.Text" xml:space="preserve">
-    <value>Tag</value>
+    <value>タグ</value>
   </data>
   <data name="Program.Text" xml:space="preserve">
-    <value>Program</value>
+    <value>プログラム</value>
   </data>
   <data name="Theme.Header" xml:space="preserve">
-    <value>Theme</value>
+    <value>テーマ</value>
   </data>
   <data name="Theme.Description" xml:space="preserve">
-    <value>Select the theme to display</value>
+    <value>テーマを選択</value>
   </data>
   <data name="FollowSystem.Content" xml:space="preserve">
-    <value>Follow System</value>
+    <value>システムに従う</value>
   </data>
   <data name="Light.Content" xml:space="preserve">
-    <value>Light</value>
+    <value>ライト</value>
   </data>
   <data name="Dark.Content" xml:space="preserve">
-    <value>Dark</value>
+    <value>ダーク</value>
   </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
-    <value>Wallpaper Mouse Enter Animation</value>
+    <value>マウスオーバーアニメーション</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
-    <value>Refresh</value>
+    <value>更新</value>
   </data>
   <data name="AppBarButton_Type.Text" xml:space="preserve">
-    <value>Type</value>
+    <value>タイプ</value>
   </data>
   <data name="c.Head" xml:space="preserve">
-    <value>Apply Theme</value>
+    <value>テーマを適用</value>
   </data>
   <data name="PropertiesPanel_Header.Text" xml:space="preserve">
-    <value>Properties</value>
+    <value>プロパティ</value>
   </data>
   <data name="PropertiesPanel_BasicInfo.Text" xml:space="preserve">
-    <value>Basic Info</value>
+    <value>基本情報</value>
   </data>
   <data name="PropertiesPanel_FileInfo.Text" xml:space="preserve">
-    <value>File Info</value>
+    <value>ファイル情報</value>
   </data>
   <data name="PropertiesPanel_TimeInfo.Text" xml:space="preserve">
-    <value>Time Info</value>
+    <value>時間情報</value>
   </data>
   <data name="PropertiesPanel_TypeLabel.Text" xml:space="preserve">
-    <value>Type</value>
+    <value>タイプ</value>
   </data>
   <data name="PropertiesPanel_SourceLabel.Text" xml:space="preserve">
-    <value>Source</value>
+    <value>ソース</value>
   </data>
   <data name="PropertiesPanel_RatingLabel.Text" xml:space="preserve">
-    <value>Age Rating</value>
+    <value>年齢制限</value>
   </data>
   <data name="PropertiesPanel_TagLabel.Text" xml:space="preserve">
-    <value>Tags</value>
+    <value>タグ</value>
   </data>
   <data name="WorkshopID.Text" xml:space="preserve">
-    <value>Workshop ID</value>
+    <value>ワークショップID</value>
   </data>
   <data name="Dependency.Text" xml:space="preserve">
-    <value>Dependency</value>
+    <value>依存関係</value>
   </data>
   <data name="CreationTime.Text" xml:space="preserve">
-    <value>Created</value>
+    <value>作成日</value>
   </data>
   <data name="UpdateTime.Text" xml:space="preserve">
-    <value>Updated</value>
+    <value>更新日</value>
   </data>
   <data name="AcfUpdateTime.Text" xml:space="preserve">
-    <value>Workshop Updated</value>
+    <value>ワークショップ更新日</value>
   </data>
   <data name="AcfSize.Text" xml:space="preserve">
-    <value>Wallpaper Size</value>
+    <value>壁紙サイズ</value>
   </data>
   <data name="FileSize.Text" xml:space="preserve">
-    <value>File Size</value>
+    <value>ファイルサイズ</value>
   </data>
   <data name="FolderPath.Text" xml:space="preserve">
-    <value>Folder Path</value>
+    <value>フォルダパス</value>
   </data>
   <data name="Description.Text" xml:space="preserve">
-    <value>Description</value>
+    <value>説明</value>
   </data>
   <data name="PreviewPath.Text" xml:space="preserve">
-    <value>Preview Path</value>
+    <value>プレビューパス</value>
   </data>
   <data name="PropertiesPanel.Close" xml:space="preserve">
-    <value>Close</value>
+    <value>閉じる</value>
   </data>
   <data name="Toolbar_FilterToggle.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Filter Results</value>
+    <value>検索結果</value>
   </data>
   <data name="Toolbar_GridView.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Cut</value>
+    <value>カット</value>
   </data>
   <data name="Toolbar_ListView.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Copy</value>
+    <value>コピー</value>
   </data>
   <data name="Toolbar_Delete.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Delete</value>
+    <value>削除</value>
   </data>
   <data name="Toolbar_DeleteForever.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Delete Forever</value>
+    <value>完全に削除</value>
   </data>
   <data name="Toolbar_SelectAll.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Select All</value>
+    <value>すべて選択</value>
   </data>
   <data name="Toolbar_InvertSelection.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>選択を反転</value>
   </data>
   <data name="Toolbar_Refresh.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Refresh</value>
+    <value>更新</value>
   </data>
   <data name="Toolbar_View.ToolTipService.ToolTip" xml:space="preserve">
-    <value>View</value>
+    <value>表示</value>
   </data>
   <data name="Toolbar_TagDisplay.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>タグ表示</value>
   </data>
   <data name="Toolbar_Sort.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort</value>
+    <value>並び替え</value>
   </data>
   <data name="Toolbar_SortDirection.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort Direction</value>
+    <value>並び順</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Output Settings</value>
+    <value>出力設定</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
-    <value>Applies to all wallpaper types</value>
+    <value>すべての壁紙タイプに適用</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
-    <value>File Conflict Handling</value>
+    <value>ファイル競合の処理</value>
   </data>
   <data name="Settings_OverwriteFiles.Content" xml:space="preserve">
-    <value>Overwrite existing files</value>
+    <value>既存のファイルを上書き</value>
   </data>
   <data name="Settings_SkipExtracted.Content" xml:space="preserve">
-    <value>Skip already extracted wallpapers (skip when output directory is not empty)</value>
+    <value>抽出済みの壁紙をスキップ（出力ディレクトリが空でない場合）</value>
   </data>
   <data name="Settings_UseProjectName.Content" xml:space="preserve">
-    <value>Use wallpaper name as subdirectory name (instead of Workshop ID)</value>
+    <value>壁紙名をサブディレクトリ名として使用（ワークショップIDの代わり）</value>
   </data>
   <data name="Settings_OneFolder.Content" xml:space="preserve">
-    <value>Put all files in one directory, no subfolders</value>
+    <value>すべてのファイルを1つのディレクトリに保存（サブフォルダ不使用）</value>
   </data>
   <data name="Settings_CopyProject.Content" xml:space="preserve">
-    <value>Copy project.json and preview image to output folder</value>
+    <value>project.jsonとプレビュー画像を出力フォルダにコピー</value>
   </data>
   <data name="Settings_IgnoreExt.Content" xml:space="preserve">
-    <value>Ignore extensions</value>
+    <value>拡張子を無視</value>
   </data>
   <data name="Settings_IgnoreExt.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Do not extract/copy files with the specified extensions</value>
+    <value>指定した拡張子のファイルを抽出/コピーしない</value>
   </data>
   <data name="Settings_IgnoreExtList.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Separate with commas</value>
+    <value>カンマ区切り</value>
   </data>
   <data name="Settings_OnlyExt.Content" xml:space="preserve">
-    <value>Only extract extensions</value>
+    <value>特定の拡張子のみ抽出</value>
   </data>
   <data name="Settings_OnlyExt.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Only extract/copy files with the specified extensions</value>
+    <value>指定した拡張子のファイルのみ抽出/コピー</value>
   </data>
   <data name="Settings_OnlyExtList.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Separate with commas</value>
+    <value>カンマ区切り</value>
   </data>
   <data name="Settings_SkipLarger.Text" xml:space="preserve">
-    <value>Skip larger than (KB)</value>
+    <value>次のサイズより大きいファイルをスキップ (KB)</value>
   </data>
   <data name="Settings_SkipSmaller.Text" xml:space="preserve">
-    <value>Skip smaller than (KB)</value>
+    <value>次のサイズより小さいファイルをスキップ (KB)</value>
   </data>
   <data name="Settings_PkgSettings.Header" xml:space="preserve">
-    <value>PKG Parse Settings</value>
+    <value>PKG 解析設定</value>
   </data>
   <data name="Settings_PkgSettings.Description" xml:space="preserve">
-    <value>Only applies to scene wallpapers containing .pkg</value>
+    <value>.pkg を含むシーン壁紙にのみ適用</value>
   </data>
   <data name="Settings_TexMode.Text" xml:space="preserve">
-    <value>TEX Texture Mode</value>
+    <value>TEX テクスチャ処理</value>
   </data>
   <data name="Settings_TexExportRaw.Content" xml:space="preserve">
-    <value>Export raw files (keep TEX as-is)</value>
+    <value>生ファイルを出力（TEXを変換しない）</value>
   </data>
   <data name="Settings_TexExportConvert.Content" xml:space="preserve">
-    <value>Export files and convert TEX to image</value>
+    <value>ファイルを出力しTEXを画像に変換</value>
   </data>
   <data name="Settings_TexExportOnlyImage.Content" xml:space="preserve">
-    <value>Only export TEX converted images</value>
+    <value>TEX変換後の画像のみ出力</value>
   </data>
   <data name="Settings_CpuParallel.Header" xml:space="preserve">
-    <value>Performance</value>
+    <value>パフォーマンス</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Concurrent extractions, process priority, memory control</value>
+    <value>同時抽出数、プロセス優先度、メモリ制御</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
-    <value>Max Concurrent Extractions</value>
+    <value>最大同時抽出数</value>
   </data>
   <data name="Settings_ProcessPriority.Text" xml:space="preserve">
-    <value>Process Priority</value>
+    <value>プロセス優先度</value>
   </data>
   <data name="Settings_PriorityNormal.Content" xml:space="preserve">
-    <value>Normal</value>
+    <value>通常</value>
   </data>
   <data name="Settings_PriorityBelowNormal.Content" xml:space="preserve">
-    <value>Below Normal</value>
+    <value>通常より低い</value>
   </data>
   <data name="Settings_PriorityIdle.Content" xml:space="preserve">
-    <value>Idle</value>
+    <value>アイドル</value>
   </data>
   <data name="Settings_TextureCacheMode.Text" xml:space="preserve">
-    <value>Texture Cache Mode</value>
+    <value>テクスチャキャッシュモード</value>
   </data>
   <data name="Settings_CacheMemory.Content" xml:space="preserve">
-    <value>Memory First</value>
+    <value>メモリ優先</value>
   </data>
   <data name="Settings_CacheDisk.Content" xml:space="preserve">
-    <value>Disk Buffer</value>
+    <value>ディスクバッファ</value>
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
-    <value>Auto</value>
+    <value>自動</value>
   </data>
   <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Chunked parsing (read one by one, reduce memory usage)</value>
+    <value>分割読み込み（1つずつ読み込み、メモリ使用量を削減）</value>
   </data>
 </root>

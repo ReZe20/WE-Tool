@@ -74,10 +74,4 @@ public sealed partial class Settings : Page
     {
 
     }
-
-    private void TexModeRadioButton_Checked(object sender, RoutedEventArgs e)
-    {
-        if (sender is RadioButton rb && rb.Tag is string tag && int.TryParse(tag, out int val))
-            ViewModel.TexExportMode = val;
-    }
 }

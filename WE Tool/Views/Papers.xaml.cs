@@ -30,9 +30,11 @@ using WE_Tool.Helper;
 using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.System;
+using Windows.Storage;
 using Windows.UI.Core;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -66,6 +68,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private int _extractTotalCount;
     private int _extractCompletedCount;
     private HashSet<string> _extractCompletedNames = [];
+    private Dictionary<string, ExtractProgressItem> _extractItemDict = [];
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> _lastProgressTick = new();
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
     public IAsyncRelayCommand ExtractSelectedCommand { get; }
@@ -1524,30 +1528,86 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         
     }
 
-    private void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    private async void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
-        CopyWallpapers();
+        await CopyWallpapersAsync();
     }
-    private void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    private async void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
-        CopyWallpapers();
+        await CopyWallpapersAsync();
     }
-    private void CopyWallpapers()
+    private async Task CopyWallpapersAsync()
     {
         HideWallpaperContextMenu();
+
+        var items = ViewModel.SelectedWallpapers.Count > 0
+            ? ViewModel.SelectedWallpapers.ToList()
+            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
+
+        if (items.Count == 0) return;
+
+        var folders = new List<Windows.Storage.StorageFolder>();
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.FolderPath)) continue;
+            try
+            {
+                var folder = await Windows.Storage.StorageFolder.GetFolderFromPathAsync(item.FolderPath);
+                folders.Add(folder);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "获取文件夹失败: {Path}", item.FolderPath);
+            }
+        }
+
+        if (folders.Count == 0) return;
+
+        var dataPackage = new DataPackage();
+        dataPackage.RequestedOperation = DataPackageOperation.Copy;
+        dataPackage.SetStorageItems(folders);
+        Clipboard.SetContent(dataPackage);
     }
 
-    private void Cut_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    private async void Cut_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
-        CutWallpapers();
+        await CutWallpapersAsync();
     }
-    private void Cut_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    private async void Cut_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
-        CutWallpapers();
+        await CutWallpapersAsync();
     }
-    private void CutWallpapers()
+    private async Task CutWallpapersAsync()
     {
         HideWallpaperContextMenu();
+
+        var items = ViewModel.SelectedWallpapers.Count > 0
+            ? ViewModel.SelectedWallpapers.ToList()
+            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
+
+        if (items.Count == 0) return;
+
+        var folders = new List<Windows.Storage.StorageFolder>();
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.FolderPath)) continue;
+            try
+            {
+                var folder = await Windows.Storage.StorageFolder.GetFolderFromPathAsync(item.FolderPath);
+                folders.Add(folder);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "获取文件夹失败: {Path}", item.FolderPath);
+            }
+        }
+
+        if (folders.Count == 0) return;
+
+        var dataPackage = new DataPackage();
+        dataPackage.RequestedOperation = DataPackageOperation.Move;
+        dataPackage.SetStorageItems(folders);
+        Clipboard.SetContent(dataPackage);
     }
 
     private async void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
@@ -1697,44 +1757,65 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _extractCts = new CancellationTokenSource();
 
             // 初始化进度列表
-            ExtractItems.Clear();
+            var tempItems = new List<ExtractProgressItem>(itemsToExtract.Count);
+            _extractItemDict = new Dictionary<string, ExtractProgressItem>(itemsToExtract.Count);
             foreach (var w in itemsToExtract)
-                ExtractItems.Add(new ExtractProgressItem
+            {
+                var name = w.Title ?? w.WorkshopID ?? (w.FolderPath != null ? new DirectoryInfo(w.FolderPath).Name : "?");
+                var item = new ExtractProgressItem
                 {
-                    Name = w.Title ?? w.WorkshopID ?? (w.FolderPath != null ? new DirectoryInfo(w.FolderPath).Name : "?"),
+                    Name = name,
                     Action = "等待中",
                     Progress = 0
-                });
+                };
+                tempItems.Add(item);
+                _extractItemDict[name] = item;
+            }
+            ExtractItems.Clear();
+            foreach (var item in tempItems)
+                ExtractItems.Add(item);
+            _lastProgressTick.Clear();
 
             var uiQueue = DispatcherQueue;
 
             Action<string> onProgress = msg =>
             {
-                if (!uiQueue.TryEnqueue(() =>
+                var parts = msg.Split('|');
+                if (parts.Length < 3)
                 {
-                    var parts = msg.Split('|');
-                    if (parts.Length >= 3)
+                    uiQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => ExtractStatus = msg);
+                    return;
+                }
+
+                var name = parts[0];
+                var action = parts[1];
+
+                // 节流：非完成/失败状态至少间隔 50ms 再更新 UI
+                if (action != "完成" && action != "失败")
+                {
+                    var now = Environment.TickCount64;
+                    var last = _lastProgressTick.GetOrAdd(name, 0);
+                    if (now - last < 50) return;
+                    _lastProgressTick[name] = now;
+                }
+
+                if (!uiQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+                {
+                    if (_extractItemDict.TryGetValue(name, out var item))
                     {
-                        var item = ExtractItems.FirstOrDefault(x => x.Name == parts[0]);
-                        if (item != null)
+                        item.Action = action;
+                        if (double.TryParse(parts[2], out var p)) item.Progress = p;
+                        // 统计已完成壁纸数，更新总进度
+                        if (action == "完成" && _extractCompletedNames.Add(name))
                         {
-                            item.Action = parts[1];
-                            if (double.TryParse(parts[2], out var p)) item.Progress = p;
-                            // 统计已完成壁纸数，更新总进度
-                            if (parts[1] == "完成" && _extractCompletedNames.Add(parts[0]))
-                            {
-                                _extractCompletedCount++;
-                                ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
-                                OnPropertyChanged(nameof(ExtractProgressText));
-                            }
+                            _extractCompletedCount++;
+                            ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
+                            OnPropertyChanged(nameof(ExtractProgressText));
                         }
-                        else
-                            Log.Warning("未找到进度条目: {Name}", parts[0]);
                     }
                     else
-                        ExtractStatus = msg;
-                }))
-                    Log.Warning("DispatcherQueue.TryEnqueue 失败");
+                        Log.Warning("未找到进度条目: {Name}", name);
+                })) { }
             };
 
             var extractSettings = new ExtractSettings
@@ -1747,8 +1828,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 OnlyExtension = ViewModel.OnlyExtension,
                 OnlyExtensionList = ViewModel.OnlyExtensionList,
                 OutProjectJSON = ViewModel.OutProjectJSON,
-                TexExportMode = ViewModel.TexExportMode
+                TexExportMode = ViewModel.TexExportMode,
+
+                // 性能参数
+                MaxConcurrentExtractions = ViewModel.MaxConcurrentExtractions,
+                ProcessPriority = ViewModel.ProcessPriority,
+                // 文件过滤
+                MaxEntrySize = ViewModel.MaxEntrySize,
+                MinEntrySize = ViewModel.MinEntrySize,
+                SkipExistingOutput = ViewModel.SkipExistingOutput,
+                LazyLoad = ViewModel.LazyLoad,
             };
+
+            // 设置子进程优先级
+            RepkgCliService.SetProcessPriorityLevel(ViewModel.ProcessPriority);
 
             await _extractService.ExtractWallpapersAsync(
                 itemsToExtract, outputPath, extractSettings,

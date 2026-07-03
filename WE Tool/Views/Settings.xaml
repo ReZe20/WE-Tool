@@ -8,9 +8,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:viewmodels="using:WE_Tool.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:converters="using:WE_Tool.Converters">
     <Page.Resources>
-        <converters:IntEqualsConverter x:Key="IntEqualsConverter"/>
     </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -34,8 +34,97 @@
                         <ComboBox SelectedValuePath="Tag"
                                   MinWidth="150" 
                                   SelectedValue="{x:Bind ViewModel.AppSettingsVM.AppLanguage, Mode=TwoWay}">
-                            <ComboBoxItem Tag="en-US" Content="English"/>
+                            <ComboBoxItem Tag="en-US">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="This language is translated by machine"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="English" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
                             <ComboBoxItem Tag="zh-CN" Content="简体中文"/>
+                            <ComboBoxItem Tag="zh-TW">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="此語言由機器翻譯"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="繁體中文" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                            <ComboBoxItem Tag="ja-JP">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="この言語は機械翻訳によるものです"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="日本語" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                            <ComboBoxItem Tag="ko-KR">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="이 언어는 기계 번역되었습니다"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="한국어" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                            <ComboBoxItem Tag="fr-FR">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="Cette langue est traduite automatiquement"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Français" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                            <ComboBoxItem Tag="de-DE">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="Diese Sprache wurde maschinell übersetzt"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Deutsch" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                            <ComboBoxItem Tag="es-ES">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="Este idioma se ha traducido automáticamente"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Español" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                            <ComboBoxItem Tag="it-IT">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="Questa lingua è tradotta automaticamente"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Italiano" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                            <ComboBoxItem Tag="pt-BR">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="Este idioma foi traduzido por máquina"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Português (Brasil)" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                            <ComboBoxItem Tag="ru-RU">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="Этот язык переведён машинным переводом"/>
+                                </ToolTipService.ToolTip>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Русский" VerticalAlignment="Center"/>
+                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </ComboBoxItem>
                             <ComboBoxItem Tag="default" x:Uid="FollowSystem"/>
                         </ComboBox>
                     </controls:SettingsCard>
@@ -65,40 +154,40 @@
                             <FontIcon Glyph="&#xE8B9;"/>
                         </controls:SettingsExpander.HeaderIcon>
                         <controls:SettingsExpander.Items>
-                            <controls:SettingsCard>
-                                <controls:SettingsCard.Header>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
                                     <CheckBox x:Uid="PapersSetting_BottomBarVisibility" 
                                               IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsBottomBarOpen, Mode=TwoWay}"/>
-                                </controls:SettingsCard.Header>
-                            </controls:SettingsCard>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
-                            <controls:SettingsCard>
-                                <controls:SettingsCard.Header>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
                                     <CheckBox x:Uid="PapersSetting_DetailTextSelectMode"
                                               IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=TwoWay}"/>
-                                </controls:SettingsCard.Header>
-                            </controls:SettingsCard>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
-                            <controls:SettingsCard>
-                                <controls:SettingsCard.Header>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <CheckBox x:Uid="PapersSetting_WallpaperAutoPlay"
                                                   IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.AutoPlayGif, Mode=TwoWay}"/>
                                     </StackPanel>
-                                </controls:SettingsCard.Header>
-                            </controls:SettingsCard>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
-                            <controls:SettingsCard>
-                                <controls:SettingsCard.Header>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <CheckBox x:Uid="PapersSetting_IsWallpaperEnterAnimationEnabled"
                                                   IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
                                     </StackPanel>
-                                </controls:SettingsCard.Header>
-                            </controls:SettingsCard>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
-                            <controls:SettingsCard>
-                                <controls:SettingsCard.Header>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal" >
                                         <TextBlock x:Uid="PapersSetting_WallpaperIconSize" Margin="28,0,12,0" VerticalAlignment="Center"/>
                                         <ComboBox SelectedIndex="{x:Bind ViewModel.WallpaperDisplayVM.WallpaperViewIndex, Mode=TwoWay}">
@@ -107,11 +196,11 @@
                                             <ComboBoxItem Tag="2" x:Uid="PapersSetting_ComboBoxItem_LargeIcon"/>
                                         </ComboBox>
                                     </StackPanel>
-                                </controls:SettingsCard.Header>
-                            </controls:SettingsCard>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
-                            <controls:SettingsCard>
-                                <controls:SettingsCard.Header>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock x:Uid="PapersSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
                                         <NumberBox Value="{x:Bind ViewModel.WallpaperDisplayVM.FilterResultResponseDelay, Mode=TwoWay}"
@@ -120,8 +209,8 @@
                                                    SpinButtonPlacementMode="Inline"
                                                    Minimum="0"/>
                                     </StackPanel>
-                                </controls:SettingsCard.Header>
-                            </controls:SettingsCard>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
 
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
@@ -129,63 +218,133 @@
                     <!-- 提取设置 -->
                     <TextBlock x:Uid="Extract" Margin="5,10,0,10"/>
                     <StackPanel>
-                        <controls:SettingsExpander Header="输出设置" Description="对所有壁纸类型生效" Margin="0,0,0,10">
+                        <controls:SettingsExpander x:Uid="Settings_Output" Header="输出设置" Description="对所有壁纸类型生效" Margin="0,0,0,10">
                             <controls:SettingsExpander.HeaderIcon>
                                 <FontIcon Glyph="&#xE756;"/>
                             </controls:SettingsExpander.HeaderIcon>
                             <controls:SettingsExpander.Items>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <CheckBox Content="以壁纸名作为子目录名（而非创意工坊ID）" IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"/>
+                                        <RadioButtons Margin="0,0,0,0" SelectedIndex="{x:Bind ViewModel.OverwriteMode, Mode=TwoWay}">
+                                            <RadioButtons.Header>
+                                                <TextBlock x:Uid="Settings_FileConflict" Text="文件冲突处理" Margin="28,0,12,0"/>
+                                            </RadioButtons.Header>
+                                            <RadioButton x:Uid="Settings_OverwriteFiles" Content="覆盖已存在的文件"/>
+                                            <RadioButton x:Uid="Settings_SkipExtracted" Content="跳过已提取的壁纸（输出目录非空时跳过）"/>
+                                        </RadioButtons>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <CheckBox Content="所有文件放入一个目录，不使用子文件夹" IsChecked="{x:Bind ViewModel.OneFolder, Mode=TwoWay}"/>
+                                        <CheckBox x:Uid="Settings_UseProjectName" Content="以壁纸名作为子目录名（而非创意工坊ID）" IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"/>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <CheckBox Content="覆盖已存在的文件" IsChecked="{x:Bind ViewModel.CoverAllFiles, Mode=TwoWay}"/>
+                                        <CheckBox x:Uid="Settings_OneFolder" Content="所有文件放入一个目录，不使用子文件夹" IsChecked="{x:Bind ViewModel.OneFolder, Mode=TwoWay}"/>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
+                                
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <CheckBox Content="拷贝 project.json 与预览图到输出文件夹" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}"/>
+                                        <CheckBox x:Uid="Settings_CopyProject" Content="拷贝 project.json 与预览图到输出文件夹" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}"/>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
                                         <Grid>
-                                            <CheckBox Content="忽略扩展名" x:Name="IgnoreExtension" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="不提取/拷贝指定扩展名的文件"/>
-                                            <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}" Margin="115,0,20,0" ToolTipService.ToolTip="英文逗号分隔"/>
+                                            <CheckBox x:Uid="Settings_IgnoreExt" Content="忽略扩展名" x:Name="IgnoreExtension" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="不提取/拷贝指定扩展名的文件"/>
+                                            <TextBox x:Uid="Settings_IgnoreExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}" Margin="115,0,20,0" ToolTipService.ToolTip="英文逗号分隔"/>
                                         </Grid>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
                                         <Grid>
-                                            <CheckBox Content="仅提取扩展名" x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" ToolTipService.ToolTip="仅提取/拷贝指定扩展名的文件"/>
-                                            <TextBox HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="115,0,20,0" ToolTipService.ToolTip="英文逗号分隔"/>
+                                            <CheckBox x:Uid="Settings_OnlyExt" Content="仅提取扩展名" x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" ToolTipService.ToolTip="仅提取/拷贝指定扩展名的文件"/>
+                                            <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="115,0,20,0" ToolTipService.ToolTip="英文逗号分隔"/>
                                         </Grid>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
+                                            <TextBlock x:Uid="Settings_SkipLarger" Text="跳过大于 (KB)" VerticalAlignment="Center"/>
+                                            <NumberBox Value="{x:Bind ViewModel.MaxEntrySize, Mode=TwoWay}" Minimum="0" SmallChange="100" LargeChange="1000" SpinButtonPlacementMode="Inline" MinWidth="120"/>
+                                        </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
+                                            <TextBlock x:Uid="Settings_SkipSmaller" Text="跳过小于 (KB)" VerticalAlignment="Center"/>
+                                            <NumberBox Value="{x:Bind ViewModel.MinEntrySize, Mode=TwoWay}" Minimum="0" SmallChange="10" LargeChange="100" SpinButtonPlacementMode="Inline" MinWidth="120"/>
+                                        </StackPanel>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
                             </controls:SettingsExpander.Items>
                         </controls:SettingsExpander>
 
-                        <controls:SettingsExpander Header="PKG 解析设置" Description="仅对含 .pkg 的场景壁纸生效">
+                        <controls:SettingsExpander x:Uid="Settings_PkgSettings" Header="PKG 解析设置" Description="仅对含 .pkg 的场景壁纸生效" Margin="0,0,0,10">
                             <controls:SettingsExpander.HeaderIcon>
                                 <FontIcon Glyph="&#xE90F;"/>
                             </controls:SettingsExpander.HeaderIcon>
                             <controls:SettingsExpander.Items>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <StackPanel Spacing="8">
-                                            <TextBlock Text="TEX 纹理处理方式" FontWeight="SemiBold"/>
-                                            <RadioButton Content="导出原始文件（TEX 不转换）" IsChecked="{x:Bind ViewModel.TexExportMode, Mode=OneWay, Converter={StaticResource IntEqualsConverter}, ConverterParameter=0}" GroupName="TexMode" Tag="0" Checked="TexModeRadioButton_Checked"/>
-                                            <RadioButton Content="导出文件并转换 TEX 为图片" IsChecked="{x:Bind ViewModel.TexExportMode, Mode=OneWay, Converter={StaticResource IntEqualsConverter}, ConverterParameter=1}" GroupName="TexMode" Tag="1" Checked="TexModeRadioButton_Checked"/>
-                                            <RadioButton Content="只导出 TEX 转换后的图片" IsChecked="{x:Bind ViewModel.TexExportMode, Mode=OneWay, Converter={StaticResource IntEqualsConverter}, ConverterParameter=2}" GroupName="TexMode" Tag="2" Checked="TexModeRadioButton_Checked"/>
+                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=TwoWay}">
+                                            <RadioButtons.Header>
+                                                <TextBlock x:Uid="Settings_TexMode" Text="TEX 纹理处理方式" Margin="28,0,12,0"/>
+                                            </RadioButtons.Header>
+                                            <RadioButton x:Uid="Settings_TexExportRaw" Content="导出原始文件（TEX 不转换）"/>
+                                            <RadioButton x:Uid="Settings_TexExportConvert" Content="导出文件并转换 TEX 为图片"/>
+                                            <RadioButton x:Uid="Settings_TexExportOnlyImage" Content="只导出 TEX 转换后的图片"/>
+                                        </RadioButtons>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                            </controls:SettingsExpander.Items>
+                        </controls:SettingsExpander>
+
+                        <controls:SettingsExpander x:Uid="Settings_CpuParallel" Header="性能" Description="并发提取数、进程优先级、内存控制" Margin="0,0,0,10">
+                            <controls:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xE8B9;"/>
+                            </controls:SettingsExpander.HeaderIcon>
+                            <controls:SettingsExpander.Items>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
+                                            <TextBlock x:Uid="Settings_MaxConcurrent" Text="最大并发提取数" VerticalAlignment="Center"/>
+                                            <NumberBox Value="{x:Bind ViewModel.MaxConcurrentExtractions, Mode=TwoWay}" Minimum="1" Maximum="{x:Bind ViewModel.MaxConcurrentMax}" SmallChange="1" LargeChange="2" SpinButtonPlacementMode="Inline" MinWidth="80"/>
                                         </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
+                                            <TextBlock x:Uid="Settings_ProcessPriority" Text="子进程优先级" VerticalAlignment="Center"/>
+                                            <ComboBox SelectedIndex="{x:Bind ViewModel.ProcessPriority, Mode=TwoWay}" MinWidth="120">
+                                                <ComboBoxItem x:Uid="Settings_PriorityNormal" Content="正常"/>
+                                                <ComboBoxItem x:Uid="Settings_PriorityBelowNormal" Content="低于正常"/>
+                                                <ComboBoxItem x:Uid="Settings_PriorityIdle" Content="空闲"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
+                                            <TextBlock x:Uid="Settings_TextureCacheMode" Text="纹理缓存模式" VerticalAlignment="Center"/>
+                                            <ComboBox SelectedIndex="{x:Bind ViewModel.TextureCacheMode, Mode=TwoWay}" MinWidth="140">
+                                                <ComboBoxItem x:Uid="Settings_CacheMemory" Content="内存优先"/>
+                                                <ComboBoxItem x:Uid="Settings_CacheDisk" Content="磁盘缓冲"/>
+                                                <ComboBoxItem x:Uid="Settings_CacheAuto" Content="自动"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                        <CheckBox x:Uid="Settings_LazyLoad" Content="分块解析（逐条读取，减少内存占用）" IsChecked="{x:Bind ViewModel.LazyLoad, Mode=TwoWay}"/>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
                             </controls:SettingsExpander.Items>
@@ -345,8 +504,6 @@
                             <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="LogPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
-                    <TextBlock Text="性能" Margin="5,10,0,10"/>
-                    
                 </StackPanel>
             </ScrollViewer>
         </Grid>

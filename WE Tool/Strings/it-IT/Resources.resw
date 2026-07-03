@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,40 +118,40 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Rating_Everyone.Content" xml:space="preserve">
-    <value>G-All ages</value>
+    <value>Tutti (G)</value>
   </data>
   <data name="Rating_Questionable.Content" xml:space="preserve">
-    <value>PG13-Parental guidance</value>
+    <value>Guida genitori (PG-13)</value>
   </data>
   <data name="Rating_Mature.Content" xml:space="preserve">
-    <value>R-Mature</value>
+    <value>Adulto (R-18)</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
-    <value>Source</value>
+    <value>Fonte</value>
   </data>
   <data name="Source_Official.Content" xml:space="preserve">
-    <value>Official</value>
+    <value>Ufficiale</value>
   </data>
   <data name="Source_Mine.Content" xml:space="preserve">
-    <value>My Wallpapers</value>
+    <value>I miei sfondi</value>
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
-    <value>Workshop</value>
+    <value>Officina</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
-    <value>Tags</value>
+    <value>Tag</value>
   </data>
   <data name="Tag_Abstract.Content" xml:space="preserve">
-    <value>Abstract</value>
+    <value>Astratto</value>
   </data>
   <data name="Tag_Animal.Content" xml:space="preserve">
-    <value>Animal</value>
+    <value>Animale</value>
   </data>
   <data name="Tag_Anime.Content" xml:space="preserve">
     <value>Anime</value>
   </data>
   <data name="Tag_Cartoon.Content" xml:space="preserve">
-    <value>Cartoon</value>
+    <value>Cartone animato</value>
   </data>
   <data name="Tag_CGI.Content" xml:space="preserve">
     <value>CGI</value>
@@ -163,70 +163,70 @@
     <value>Fantasy</value>
   </data>
   <data name="Tag_Game.Content" xml:space="preserve">
-    <value>Game</value>
+    <value>Gioco</value>
   </data>
   <data name="Tag_Girls.Content" xml:space="preserve">
-    <value>Girls</value>
+    <value>Ragazze</value>
   </data>
   <data name="Tag_Guys.Content" xml:space="preserve">
-    <value>Guys</value>
+    <value>Ragazzi</value>
   </data>
   <data name="Tag_Landscape.Content" xml:space="preserve">
-    <value>Landscape</value>
+    <value>Paesaggio</value>
   </data>
   <data name="Tag_Medieval.Content" xml:space="preserve">
-    <value>Medieval</value>
+    <value>Medievale</value>
   </data>
   <data name="Tag_Memes.Content" xml:space="preserve">
-    <value>Memes</value>
+    <value>Meme</value>
   </data>
   <data name="Tag_MMD.Content" xml:space="preserve">
     <value>MMD</value>
   </data>
   <data name="Tag_Music.Content" xml:space="preserve">
-    <value>Music</value>
+    <value>Musica</value>
   </data>
   <data name="Tag_Nature.Content" xml:space="preserve">
-    <value>Nature</value>
+    <value>Natura</value>
   </data>
   <data name="Tag_Pixelart.Content" xml:space="preserve">
-    <value>Pixelart</value>
+    <value>Pixel art</value>
   </data>
   <data name="Tag_Relaxing.Content" xml:space="preserve">
-    <value>Relaxing</value>
+    <value>Rilassante</value>
   </data>
   <data name="Tag_Retro.Content" xml:space="preserve">
-    <value>Retro</value>
+    <value>Retrò</value>
   </data>
   <data name="Tag_SciFi.Content" xml:space="preserve">
-    <value>Sci-Fi</value>
+    <value>Fantascienza</value>
   </data>
   <data name="Tag_Sports.Content" xml:space="preserve">
-    <value>Sports</value>
+    <value>Sport</value>
   </data>
   <data name="Tag_Technology.Content" xml:space="preserve">
-    <value>Technology</value>
+    <value>Tecnologia</value>
   </data>
   <data name="Tag_Television.Content" xml:space="preserve">
-    <value>Television</value>
+    <value>Televisione</value>
   </data>
   <data name="Tag_Unspecified.Content" xml:space="preserve">
-    <value>Unspecified     genre</value>
+    <value>Non specificato</value>
   </data>
   <data name="Tag_Vehicle.Content" xml:space="preserve">
-    <value>Vehicle</value>
+    <value>Veicolo</value>
   </data>
   <data name="Type.Header" xml:space="preserve">
-    <value>Type</value>
+    <value>Tipo</value>
   </data>
   <data name="Type_Application.Content" xml:space="preserve">
-    <value>Application</value>
+    <value>Applicazione</value>
   </data>
   <data name="Type_Scene.Content" xml:space="preserve">
-    <value>Scene</value>
+    <value>Scena</value>
   </data>
   <data name="Type_Unknown.Content" xml:space="preserve">
-    <value>Unknown</value>
+    <value>Sconosciuto</value>
   </data>
   <data name="Type_Video.Content" xml:space="preserve">
     <value>Video</value>
@@ -235,495 +235,495 @@
     <value>Web</value>
   </data>
   <data name="Rating.Header" xml:space="preserve">
-    <value>Age rating</value>
+    <value>Classificazione</value>
   </data>
   <data name="ResetFilters.Text" xml:space="preserve">
-    <value>Reset Filters</value>
+    <value>Reimposta filtri</value>
   </data>
   <data name="All.Content" xml:space="preserve">
-    <value>All</value>
+    <value>Tutti</value>
   </data>
   <data name="None.Content" xml:space="preserve">
-    <value>None</value>
+    <value>Nessuno</value>
   </data>
   <data name="FilterResults.Text" xml:space="preserve">
-    <value>Filter Results</value>
+    <value>Filtra risultati</value>
   </data>
   <data name="SortByName.Text" xml:space="preserve">
-    <value>Name</value>
+    <value>Nome</value>
   </data>
   <data name="SortByLastTime.Text" xml:space="preserve">
-    <value>Last Updated</value>
+    <value>Ultimo aggiornamento</value>
   </data>
   <data name="SortByFileSize.Text" xml:space="preserve">
-    <value>File Size</value>
+    <value>Dimensione</value>
   </data>
   <data name="SortByAcfUpdateTime.Text" xml:space="preserve">
-    <value>Modified</value>
+    <value>Modificato</value>
   </data>
   <data name="SortBySubTime.Text" xml:space="preserve">
-    <value>Sub Date</value>
+    <value>Data iscrizione</value>
   </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
-    <value>Details</value>
+    <value>Dettagli</value>
   </data>
   <data name="SearchBox.PlaceholderText" xml:space="preserve">
-    <value>Search</value>
+    <value>Cerca</value>
   </data>
   <data name="ExportDirectory.Text" xml:space="preserve">
-    <value>Export Directory</value>
+    <value>Directory di esportazione</value>
   </data>
   <data name="SelectFolder.Content" xml:space="preserve">
-    <value>Select</value>
+    <value>Seleziona</value>
   </data>
   <data name="OpenFolder.Content" xml:space="preserve">
-    <value>Open</value>
+    <value>Apri</value>
   </data>
   <data name="Nodescription" xml:space="preserve">
-    <value>(No description)</value>
+    <value>（Nessuna descrizione）</value>
   </data>
   <data name="Settings.Text" xml:space="preserve">
-    <value>Settings</value>
+    <value>Impostazioni</value>
   </data>
   <data name="Start.Text" xml:space="preserve">
-    <value>Start</value>
+    <value>Avvio</value>
   </data>
   <data name="StartPage.Description" xml:space="preserve">
-    <value>Choose the page displayed when launching WE Tool.</value>
+    <value>Scegli la pagina visualizzata all'avvio di WE Tool.</value>
   </data>
   <data name="StartPage.Header" xml:space="preserve">
-    <value>Startup Page</value>
+    <value>Pagina di avvio</value>
   </data>
   <data name="InstalledWallpapers.Content" xml:space="preserve">
-    <value>Installed Wallpapers</value>
+    <value>Sfondi installati</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Import Wallpapers</value>
+    <value>Importa sfondi</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
-    <value>About</value>
+    <value>Informazioni</value>
   </data>
   <data name="SettingsPage.Content" xml:space="preserve">
-    <value>Settings</value>
+    <value>Impostazioni</value>
   </data>
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
-    <value>Enter or Select Path</value>
+    <value>Inserisci o seleziona percorso</value>
   </data>
   <data name="Type_Preset.Content" xml:space="preserve">
-    <value>Preset</value>
+    <value>Predefinito</value>
   </data>
   <data name="NoResultTip1.Text" xml:space="preserve">
-    <value>No wallpapers found</value>
+    <value>Nessuno sfondo trovato</value>
   </data>
   <data name="NoResultTip3.Text" xml:space="preserve">
-    <value>Or check if the path in settings is correct</value>
+    <value>O verifica se il percorso nelle impostazioni è corretto</value>
   </data>
   <data name="NoResultTip2.Text" xml:space="preserve">
-    <value>Please select other categories in the filter and search other keywords</value>
+    <value>Seleziona altre categorie nel filtro o cerca con altre parole chiave</value>
   </data>
   <data name="Programming_Language.Header" xml:space="preserve">
-    <value>Programming Language</value>
+    <value>Lingua</value>
   </data>
   <data name="Programming_Language.Description" xml:space="preserve">
-    <value>Select the display language for WE Tool. The language of some options will only take effect after restarting the program.</value>
+    <value>Seleziona la lingua di visualizzazione di WE Tool. Alcune opzioni verranno applicate solo dopo il riavvio del programma.</value>
   </data>
   <data name="Language_Related.Content" xml:space="preserve">
-    <value>Follow System</value>
+    <value>Segui sistema</value>
   </data>
   <data name="Language.Text" xml:space="preserve">
-    <value>Language</value>
+    <value>Lingua</value>
   </data>
   <data name="Page.Text" xml:space="preserve">
-    <value>Page</value>
+    <value>Pagina</value>
   </data>
   <data name="PapersSetting.Header" xml:space="preserve">
-    <value>Existing Wallpaper Page Settings</value>
+    <value>Impostazioni sfondi esistenti</value>
   </data>
   <data name="PapersSetting.Description" xml:space="preserve">
-    <value>Set Specific Content in Existing Wallpaper Page</value>
+    <value>Imposta i contenuti specifici della pagina degli sfondi</value>
   </data>
   <data name="PapersSetting_BottomBarVisibility.Content" xml:space="preserve">
-    <value>Enable Bottom Path Bar</value>
+    <value>Abilita barra del percorso inferiore</value>
   </data>
   <data name="PapersSetting_DetailTextSelectMode.Content" xml:space="preserve">
-    <value>Enable Text Selection for Details Panel</value>
+    <value>Abilita selezione testo nel pannello dettagli</value>
   </data>
   <data name="PapersSetting_WallpaperAutoPlay.Content" xml:space="preserve">
-    <value>Play GIFs in Wallpaper List</value>
+    <value>Riproduci GIF nella lista sfondi</value>
   </data>
   <data name="PapersSetting_MinimumPixelsForWallpaper.Text" xml:space="preserve">
-    <value>Minimum Wallpaper Pixels</value>
+    <value>Pixel minimi sfondo</value>
   </data>
   <data name="Path.Text" xml:space="preserve">
-    <value>Path</value>
+    <value>Percorso</value>
   </data>
   <data name="ChooseWorkshopPath.Description" xml:space="preserve">
-    <value>Select Location for Workshop Wallpapers</value>
+    <value>Seleziona posizione sfondi dell'Officina</value>
   </data>
   <data name="WorkShopPath.Text" xml:space="preserve">
-    <value>Workshop wallpaper path</value>
+    <value>Percorso sfondi Officina</value>
   </data>
   <data name="ChooseWallpaperExportPath.Description" xml:space="preserve">
-    <value>Select Wallpaper Export Location</value>
+    <value>Seleziona posizione esportazione sfondi</value>
   </data>
   <data name="ChooseProjectPath.Description" xml:space="preserve">
-    <value>Select Project Location for Wallpaper Editor</value>
+    <value>Seleziona posizione progetto editor sfondi</value>
   </data>
   <data name="ProjectPath.Text" xml:space="preserve">
-    <value>Project Path</value>
+    <value>Percorso progetto</value>
   </data>
   <data name="OfficialWallpaperPath_TextBlock.Text" xml:space="preserve">
-    <value>Official Wallpaper Path</value>
+    <value>Percorso sfondi ufficiali</value>
   </data>
   <data name="OfficialWallpaperPath.Description" xml:space="preserve">
-    <value>Or check if the path in settings is correct</value>
+    <value>Percorso sfondi ufficiali</value>
   </data>
   <data name="AcfPath.Description" xml:space="preserve">
-    <value>File for Storing Workshop Subscription Info</value>
+    <value>File con informazioni abbonamento Officina</value>
   </data>
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
-    <value>ACF file path</value>
+    <value>Percorso file ACF</value>
   </data>
   <data name="SettingPath.Description" xml:space="preserve">
-    <value>File Path for Storing Program Settings</value>
+    <value>Percorso file di configurazione programma</value>
   </data>
   <data name="SettingPath_TextBlock.Text" xml:space="preserve">
-    <value>Config File Path</value>
+    <value>Percorso file configurazione</value>
   </data>
   <data name="LogPath.Description" xml:space="preserve">
-    <value>File Path for Storing Program Logs</value>
+    <value>Percorso file di registro programma</value>
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
-    <value>Log File Path</value>
+    <value>Percorso file registro</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
-    <value>Extract</value>
+    <value>Estrazione</value>
   </data>
   <data name="ScanningTip.Text" xml:space="preserve">
-    <value>Loading wallpapers</value>
+    <value>Caricamento sfondi...</value>
   </data>
   <data name="AppBarButton_OpenDirectory.Label" xml:space="preserve">
-    <value>Open Directory</value>
+    <value>Apri directory</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value>Delete</value>
+    <value>Elimina</value>
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
-    <value>Select All</value>
+    <value>Seleziona tutto</value>
   </data>
   <data name="AppBarButton_InvertSelection.Label" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>Inverti selezione</value>
   </data>
   <data name="MenuFlyoutItem_InvertSelection.Text" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>Inverti selezione</value>
   </data>
   <data name="AppBarButton_Properties.Label" xml:space="preserve">
-    <value>Properties</value>
+    <value>Proprietà</value>
   </data>
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
-    <value>Extract</value>
+    <value>Estrai</value>
   </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
-    <value>Filter Result Delay (ms)</value>
+    <value>Ritardo risposta filtro (ms)</value>
   </data>
   <data name="AppBarButton_Copy.Label" xml:space="preserve">
-    <value>Copy</value>
+    <value>Copia</value>
   </data>
   <data name="AppBarButton_Cut.Label" xml:space="preserve">
-    <value>Cut</value>
+    <value>Taglia</value>
   </data>
   <data name="AppBarButton_View.Label" xml:space="preserve">
-    <value>View</value>
+    <value>Visualizza</value>
   </data>
   <data name="AppBarButton_SmallIcon.Text" xml:space="preserve">
-    <value>Small Icons</value>
+    <value>Icone piccole</value>
   </data>
   <data name="AppBarButton_MediumIcon.Text" xml:space="preserve">
-    <value>Medium Icons</value>
+    <value>Icone medie</value>
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
-    <value>Large Icons</value>
+    <value>Icone grandi</value>
   </data>
   <data name="AppBarButton_IsAnnotatedScrollBarEnabled.Text" xml:space="preserve">
-    <value>Annotated Scroll Bar</value>
+    <value>Barra di scorrimento annotata</value>
   </data>
   <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
-    <value>Wallpaper Icon Size</value>
+    <value>Dimensione icona sfondo</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
-    <value>Select All</value>
+    <value>Seleziona tutto</value>
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
-    <value>View</value>
+    <value>Visualizza</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
-    <value>Sort</value>
+    <value>Ordina</value>
   </data>
   <data name="AppBarButton_Sort.Label" xml:space="preserve">
-    <value>Sort</value>
+    <value>Ordina</value>
   </data>
   <data name="AppBarButton_DeleteForever.Label" xml:space="preserve">
-    <value>Delete Forever</value>
+    <value>Elimina definitivamente</value>
   </data>
   <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
-    <value>Multi-Select</value>
+    <value>Selezione multipla</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_SmallIcon.Content" xml:space="preserve">
-    <value>Small</value>
+    <value>Piccolo</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_MediumIcon.Content" xml:space="preserve">
-    <value>Medium</value>
+    <value>Medio</value>
   </data>
   <data name="PapersSetting_ComboBoxItem_LargeIcon.Content" xml:space="preserve">
-    <value>Large</value>
+    <value>Grande</value>
   </data>
   <data name="PapersSetting_ContextMenuItems.Text" xml:space="preserve">
-    <value>Context Menu Options</value>
+    <value>Opzioni menu contestuale</value>
   </data>
   <data name="AppBarButton_Source.Text" xml:space="preserve">
-    <value>Source</value>
+    <value>Fonte</value>
   </data>
   <data name="AppBarButton_Rating.Text" xml:space="preserve">
-    <value>Age Rating</value>
+    <value>Classificazione</value>
   </data>
   <data name="AppBarButton_None.Text" xml:space="preserve">
-    <value>(None)</value>
+    <value>（Nessuno）</value>
   </data>
   <data name="AppBarButton_TagDisplay.Label" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>Mostra tag</value>
   </data>
   <data name="MenuFlyoutSubItem_TagDisplay.Text" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>Mostra tag</value>
   </data>
   <data name="GridColumnButton_view.Text" xml:space="preserve">
-    <value>View</value>
+    <value>Visualizza</value>
   </data>
   <data name="AppBarButton_Tag.Text" xml:space="preserve">
     <value>Tag</value>
   </data>
   <data name="Program.Text" xml:space="preserve">
-    <value>Program</value>
+    <value>Programma</value>
   </data>
   <data name="Theme.Header" xml:space="preserve">
-    <value>Theme</value>
+    <value>Tema</value>
   </data>
   <data name="Theme.Description" xml:space="preserve">
-    <value>Select the theme to display</value>
+    <value>Seleziona il tema da visualizzare</value>
   </data>
   <data name="FollowSystem.Content" xml:space="preserve">
-    <value>Follow System</value>
+    <value>Segui sistema</value>
   </data>
   <data name="Light.Content" xml:space="preserve">
-    <value>Light</value>
+    <value>Chiaro</value>
   </data>
   <data name="Dark.Content" xml:space="preserve">
-    <value>Dark</value>
+    <value>Scuro</value>
   </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
-    <value>Wallpaper Mouse Enter Animation</value>
+    <value>Animazione al passaggio del mouse</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
-    <value>Refresh</value>
+    <value>Aggiorna</value>
   </data>
   <data name="AppBarButton_Type.Text" xml:space="preserve">
-    <value>Type</value>
+    <value>Tipo</value>
   </data>
   <data name="c.Head" xml:space="preserve">
-    <value>Apply Theme</value>
+    <value>Applica tema</value>
   </data>
   <data name="PropertiesPanel_Header.Text" xml:space="preserve">
-    <value>Properties</value>
+    <value>Proprietà</value>
   </data>
   <data name="PropertiesPanel_BasicInfo.Text" xml:space="preserve">
-    <value>Basic Info</value>
+    <value>Informazioni base</value>
   </data>
   <data name="PropertiesPanel_FileInfo.Text" xml:space="preserve">
-    <value>File Info</value>
+    <value>Informazioni file</value>
   </data>
   <data name="PropertiesPanel_TimeInfo.Text" xml:space="preserve">
-    <value>Time Info</value>
+    <value>Informazioni temporali</value>
   </data>
   <data name="PropertiesPanel_TypeLabel.Text" xml:space="preserve">
-    <value>Type</value>
+    <value>Tipo</value>
   </data>
   <data name="PropertiesPanel_SourceLabel.Text" xml:space="preserve">
-    <value>Source</value>
+    <value>Fonte</value>
   </data>
   <data name="PropertiesPanel_RatingLabel.Text" xml:space="preserve">
-    <value>Age Rating</value>
+    <value>Classificazione</value>
   </data>
   <data name="PropertiesPanel_TagLabel.Text" xml:space="preserve">
-    <value>Tags</value>
+    <value>Tag</value>
   </data>
   <data name="WorkshopID.Text" xml:space="preserve">
-    <value>Workshop ID</value>
+    <value>ID Officina</value>
   </data>
   <data name="Dependency.Text" xml:space="preserve">
-    <value>Dependency</value>
+    <value>Dipendenze</value>
   </data>
   <data name="CreationTime.Text" xml:space="preserve">
-    <value>Created</value>
+    <value>Creato</value>
   </data>
   <data name="UpdateTime.Text" xml:space="preserve">
-    <value>Updated</value>
+    <value>Modificato</value>
   </data>
   <data name="AcfUpdateTime.Text" xml:space="preserve">
-    <value>Workshop Updated</value>
+    <value>Officina aggiornato</value>
   </data>
   <data name="AcfSize.Text" xml:space="preserve">
-    <value>Wallpaper Size</value>
+    <value>Dimensione sfondo</value>
   </data>
   <data name="FileSize.Text" xml:space="preserve">
-    <value>File Size</value>
+    <value>Dimensione file</value>
   </data>
   <data name="FolderPath.Text" xml:space="preserve">
-    <value>Folder Path</value>
+    <value>Percorso cartella</value>
   </data>
   <data name="Description.Text" xml:space="preserve">
-    <value>Description</value>
+    <value>Descrizione</value>
   </data>
   <data name="PreviewPath.Text" xml:space="preserve">
-    <value>Preview Path</value>
+    <value>Percorso anteprima</value>
   </data>
   <data name="PropertiesPanel.Close" xml:space="preserve">
-    <value>Close</value>
+    <value>Chiudi</value>
   </data>
   <data name="Toolbar_FilterToggle.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Filter Results</value>
+    <value>Filtra risultati</value>
   </data>
   <data name="Toolbar_GridView.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Cut</value>
+    <value>Taglia</value>
   </data>
   <data name="Toolbar_ListView.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Copy</value>
+    <value>Copia</value>
   </data>
   <data name="Toolbar_Delete.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Delete</value>
+    <value>Elimina</value>
   </data>
   <data name="Toolbar_DeleteForever.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Delete Forever</value>
+    <value>Elimina definitivamente</value>
   </data>
   <data name="Toolbar_SelectAll.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Select All</value>
+    <value>Seleziona tutto</value>
   </data>
   <data name="Toolbar_InvertSelection.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Invert Selection</value>
+    <value>Inverti selezione</value>
   </data>
   <data name="Toolbar_Refresh.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Refresh</value>
+    <value>Aggiorna</value>
   </data>
   <data name="Toolbar_View.ToolTipService.ToolTip" xml:space="preserve">
-    <value>View</value>
+    <value>Visualizza</value>
   </data>
   <data name="Toolbar_TagDisplay.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Tag Display</value>
+    <value>Mostra tag</value>
   </data>
   <data name="Toolbar_Sort.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort</value>
+    <value>Ordina</value>
   </data>
   <data name="Toolbar_SortDirection.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sort Direction</value>
+    <value>Direzione ordinamento</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Output Settings</value>
+    <value>Impostazioni di output</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
-    <value>Applies to all wallpaper types</value>
+    <value>Si applica a tutti i tipi di sfondo</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
-    <value>File Conflict Handling</value>
+    <value>Gestione conflitti file</value>
   </data>
   <data name="Settings_OverwriteFiles.Content" xml:space="preserve">
-    <value>Overwrite existing files</value>
+    <value>Sovrascrivi file esistenti</value>
   </data>
   <data name="Settings_SkipExtracted.Content" xml:space="preserve">
-    <value>Skip already extracted wallpapers (skip when output directory is not empty)</value>
+    <value>Salta sfondi già estratti（salta se directory di output non vuota）</value>
   </data>
   <data name="Settings_UseProjectName.Content" xml:space="preserve">
-    <value>Use wallpaper name as subdirectory name (instead of Workshop ID)</value>
+    <value>Usa nome sfondo come sottodirectory（invece di ID Officina）</value>
   </data>
   <data name="Settings_OneFolder.Content" xml:space="preserve">
-    <value>Put all files in one directory, no subfolders</value>
+    <value>Metti tutti i file in una directory, senza sottocartelle</value>
   </data>
   <data name="Settings_CopyProject.Content" xml:space="preserve">
-    <value>Copy project.json and preview image to output folder</value>
+    <value>Copia project.json e anteprima nella cartella di output</value>
   </data>
   <data name="Settings_IgnoreExt.Content" xml:space="preserve">
-    <value>Ignore extensions</value>
+    <value>Ignora estensioni</value>
   </data>
   <data name="Settings_IgnoreExt.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Do not extract/copy files with the specified extensions</value>
+    <value>Non estrarre/copiare file con le estensioni specificate</value>
   </data>
   <data name="Settings_IgnoreExtList.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Separate with commas</value>
+    <value>Separare con virgole</value>
   </data>
   <data name="Settings_OnlyExt.Content" xml:space="preserve">
-    <value>Only extract extensions</value>
+    <value>Estrai solo estensioni specifiche</value>
   </data>
   <data name="Settings_OnlyExt.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Only extract/copy files with the specified extensions</value>
+    <value>Estrarre/copiare solo file con le estensioni specificate</value>
   </data>
   <data name="Settings_OnlyExtList.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Separate with commas</value>
+    <value>Separare con virgole</value>
   </data>
   <data name="Settings_SkipLarger.Text" xml:space="preserve">
-    <value>Skip larger than (KB)</value>
+    <value>Salta maggiori di (KB)</value>
   </data>
   <data name="Settings_SkipSmaller.Text" xml:space="preserve">
-    <value>Skip smaller than (KB)</value>
+    <value>Salta minori di (KB)</value>
   </data>
   <data name="Settings_PkgSettings.Header" xml:space="preserve">
-    <value>PKG Parse Settings</value>
+    <value>Impostazioni analisi PKG</value>
   </data>
   <data name="Settings_PkgSettings.Description" xml:space="preserve">
-    <value>Only applies to scene wallpapers containing .pkg</value>
+    <value>Si applica solo a scene contenenti .pkg</value>
   </data>
   <data name="Settings_TexMode.Text" xml:space="preserve">
-    <value>TEX Texture Mode</value>
+    <value>Modalità texture TEX</value>
   </data>
   <data name="Settings_TexExportRaw.Content" xml:space="preserve">
-    <value>Export raw files (keep TEX as-is)</value>
+    <value>Esporta file grezzi（TEX non convertito）</value>
   </data>
   <data name="Settings_TexExportConvert.Content" xml:space="preserve">
-    <value>Export files and convert TEX to image</value>
+    <value>Esporta file e converti TEX in immagine</value>
   </data>
   <data name="Settings_TexExportOnlyImage.Content" xml:space="preserve">
-    <value>Only export TEX converted images</value>
+    <value>Esporta solo immagini convertite da TEX</value>
   </data>
   <data name="Settings_CpuParallel.Header" xml:space="preserve">
-    <value>Performance</value>
+    <value>Prestazioni</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Concurrent extractions, process priority, memory control</value>
+    <value>Estrazioni simultanee, priorità processo, controllo memoria</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
-    <value>Max Concurrent Extractions</value>
+    <value>Max estrazioni simultanee</value>
   </data>
   <data name="Settings_ProcessPriority.Text" xml:space="preserve">
-    <value>Process Priority</value>
+    <value>Priorità processo</value>
   </data>
   <data name="Settings_PriorityNormal.Content" xml:space="preserve">
-    <value>Normal</value>
+    <value>Normale</value>
   </data>
   <data name="Settings_PriorityBelowNormal.Content" xml:space="preserve">
-    <value>Below Normal</value>
+    <value>Sotto normale</value>
   </data>
   <data name="Settings_PriorityIdle.Content" xml:space="preserve">
-    <value>Idle</value>
+    <value>Inattivo</value>
   </data>
   <data name="Settings_TextureCacheMode.Text" xml:space="preserve">
-    <value>Texture Cache Mode</value>
+    <value>Modalità cache texture</value>
   </data>
   <data name="Settings_CacheMemory.Content" xml:space="preserve">
-    <value>Memory First</value>
+    <value>Memoria prioritaria</value>
   </data>
   <data name="Settings_CacheDisk.Content" xml:space="preserve">
-    <value>Disk Buffer</value>
+    <value>Buffer disco</value>
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>Auto</value>
   </data>
   <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Chunked parsing (read one by one, reduce memory usage)</value>
+    <value>Caricamento a blocchi（leggi uno per uno, riduci uso memoria）</value>
   </data>
 </root>

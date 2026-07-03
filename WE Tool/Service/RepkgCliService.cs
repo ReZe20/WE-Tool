@@ -79,11 +79,17 @@ public class RepkgCliService
 
         void ReportProgress(string msg) => onProgress?.Invoke(msg);
 
+        int maxDop = settings.MaxConcurrentExtractions > 0
+            ? settings.MaxConcurrentExtractions
+            : Environment.ProcessorCount;
+
         var po = new ParallelOptions
         {
             CancellationToken = ct,
-            MaxDegreeOfParallelism = Environment.ProcessorCount
+            MaxDegreeOfParallelism = maxDop
         };
+
+        Log.Information("[repkg] 开始提取: {Count} 个壁纸, 并发数={Dop}", total, maxDop);
 
         try
         {
@@ -95,7 +101,6 @@ public class RepkgCliService
                 var dir = new DirectoryInfo(wallpaper.FolderPath);
                 if (!dir.Exists) { Interlocked.Increment(ref done); return; }
 
-                var pkgFiles = dir.EnumerateFiles("*.pkg", SearchOption.AllDirectories).ToArray();
                 var wallpaperOutput = GetOutputPath(outputRoot, wallpaper, settings);
                 var name = wallpaper.Title ?? wallpaper.WorkshopID ?? dir.Name;
                 var n = Interlocked.Increment(ref done);
@@ -103,20 +108,44 @@ public class RepkgCliService
                 void ItemProgress(string action, double pct)
                     => ReportProgress($"{name}|{action}|{pct}");
 
+                // 跳过已提取（阶段3）
+                if (settings.SkipExistingOutput && Directory.Exists(wallpaperOutput))
+                {
+                    if (Directory.EnumerateFileSystemEntries(wallpaperOutput).Any())
+                    {
+                        ItemProgress("跳过(已提取)", 100);
+                        return;
+                    }
+                }
+
                 ItemProgress("开始", 0);
 
-                if (pkgFiles.Length > 0)
+                try
                 {
-                    var args = BuildArgs(wallpaper.FolderPath, wallpaperOutput, settings);
-                    await RunRepkgAsync(name, args, pct => ItemProgress("解析PKG", pct), token);
-                }
-                else
-                {
-                    Directory.CreateDirectory(wallpaperOutput);
-                    CopyAllFiles(dir, wallpaperOutput, settings);
-                }
+                    var pkgFiles = dir.EnumerateFiles("*.pkg", SearchOption.AllDirectories).ToArray();
 
-                ItemProgress("完成", 100);
+                    if (pkgFiles.Length > 0)
+                    {
+                        var args = BuildArgs(wallpaper.FolderPath, wallpaperOutput, settings);
+                        await RunRepkgAsync(name, args, pct => ItemProgress("解析PKG", pct), token);
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory(wallpaperOutput);
+                        CopyAllFiles(dir, wallpaperOutput, settings);
+                    }
+
+                    ItemProgress("完成", 100);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "[repkg] 提取失败: {Name}", name);
+                    ItemProgress("失败", 100);
+                }
             });
         }
         catch (OperationCanceledException) { }
@@ -139,6 +168,12 @@ public class RepkgCliService
         if (settings.UseProjectName) sb.Append("-n ");
         if (settings.TexExportMode == 0) sb.Append("--no-tex-convert ");
         if (settings.CoverAllFiles) sb.Append("--overwrite ");
+        // 文件大小过滤（阶段3）
+        if (settings.MaxEntrySize > 0)
+            sb.Append("--max-entry-size ").Append(settings.MaxEntrySize).Append(' ');
+        if (settings.MinEntrySize > 0)
+            sb.Append("--min-entry-size ").Append(settings.MinEntrySize).Append(' ');
+        if (settings.LazyLoad) sb.Append("--lazy ");
         sb.Append("-r"); // recursive
         return sb.ToString();
     }
@@ -160,6 +195,7 @@ public class RepkgCliService
             EnableRaisingEvents = true
         };
 
+        long _lastProgressTick = 0;
         process.OutputDataReceived += (_, e) =>
         {
             if (!string.IsNullOrEmpty(e.Data) && e.Data.StartsWith("{"))
@@ -168,8 +204,33 @@ public class RepkgCliService
                 {
                     using var doc = System.Text.Json.JsonDocument.Parse(e.Data);
                     var root = doc.RootElement;
-                    if (root.TryGetProperty("pos", out var pos) && root.TryGetProperty("total", out var total))
+
+                    // Enhanced progress (Phase 5): wallpaper-level start
+                    if (root.TryGetProperty("type", out var typeProp))
+                    {
+                        var type = typeProp.GetString();
+                        if (type == "wallpaper" && root.TryGetProperty("total_entries", out var totalEnt))
+                        {
+                            Log.Information("[repkg] 开始解析壁纸: {Name}, 共 {Total} 个条目",
+                                wallpaperName, totalEnt.GetInt32());
+                        }
+                        else if (type == "entry" && root.TryGetProperty("entry", out var entryProp))
+                        {
+                            Log.Information("[repkg] 正在转换: {Entry} ({Pos}/{Total})",
+                                entryProp.GetString(),
+                                root.TryGetProperty("pos", out var p) ? p.GetInt32() : 0,
+                                root.TryGetProperty("total", out var t) ? t.GetInt32() : 0);
+                        }
+                    }
+                    else if (root.TryGetProperty("pos", out var pos) && root.TryGetProperty("total", out var total))
+                    {
+                        // 节流：最多每 30ms 触发一次 progress 回调
+                        var now = Environment.TickCount64;
+                        if (now - _lastProgressTick < 30) return;
+                        _lastProgressTick = now;
+
                         progressCb(Math.Round((double)pos.GetInt32() / total.GetInt32() * 100, 1));
+                    }
                 }
                 catch { }
             }
@@ -182,6 +243,18 @@ public class RepkgCliService
         };
 
         process.Start();
+
+        // 设置子进程优先级（阶段1）
+        try
+        {
+            if (_processPriorityLevel >= 0)
+                process.PriorityClass = _processPriorityLevel;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[repkg] 设置进程优先级失败: Pid={Pid}", process.Id);
+        }
+
         var pid = process.Id;
         _runningProcesses[pid] = process;
         JobObjectManager.AddProcess(process.Handle);
@@ -191,7 +264,6 @@ public class RepkgCliService
         process.Exited += (_, _) =>
         {
             _runningProcesses.TryRemove(pid, out _);
-            process.Dispose();
         };
 
         try { await process.WaitForExitAsync(ct); }
@@ -203,9 +275,32 @@ public class RepkgCliService
             throw;
         }
 
-        // Normal exit: Exited event handles cleanup, but if it didn't fire yet:
-        if (_runningProcesses.TryRemove(pid, out _))
-            process.Dispose();
+        // Read exit code before any potential dispose
+        int exitCode = process.ExitCode;
+
+        // Cleanup: dispose once, only if Exited event didn't already do it
+        _runningProcesses.TryRemove(pid, out _);
+        process.Dispose();
+
+        if (exitCode != 0)
+        {
+            Log.Warning("[repkg] 进程退出码非0: {Code}, Name={Name}", exitCode, wallpaperName);
+        }
+    }
+
+    private static ProcessPriorityClass _processPriorityLevel = ProcessPriorityClass.Normal;
+
+    /// <summary>
+    /// 设置后续子进程的优先级。0=Normal, 1=BelowNormal, 2=Idle
+    /// </summary>
+    public static void SetProcessPriorityLevel(int priority)
+    {
+        _processPriorityLevel = priority switch
+        {
+            1 => ProcessPriorityClass.BelowNormal,
+            2 => ProcessPriorityClass.Idle,
+            _ => ProcessPriorityClass.Normal
+        };
     }
 
     private static string GetOutputPath(string outputRoot, WallpaperItem wallpaper, ExtractSettings settings)

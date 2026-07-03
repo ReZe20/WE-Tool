@@ -311,14 +311,16 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
             <AppBarSeparator/>
             <Button Style="{ThemeResource SubtleButtonStyle}"
                     IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
-                    x:Uid="Toolbar_GridView">
+                    x:Uid="Toolbar_GridView"
+                    Click="Cut_Click_ByCommandBarFlyout">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8C6;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
                     IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
-                    x:Uid="Toolbar_ListView">
+                    x:Uid="Toolbar_ListView"
+                    Click="Copy_Click_ByCommandBarFlyout">
                 <Button.Content>
                     <FontIcon Glyph="&#xE8C8;" FontSize="16"/>
                 </Button.Content>
@@ -472,7 +474,6 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
             <ToggleButton x:Name="RightToggleFilterButton"
                           Grid.Row="0"
                           HorizontalAlignment="Right"
-                          Width="118"
                           BorderThickness="0"
                           Background="Transparent"
                           IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}">
