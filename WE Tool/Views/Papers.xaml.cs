@@ -984,6 +984,21 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 scaleAnimation.DampingRatio = 0.6f;
                 scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
                 visual.StartAnimation("Scale", scaleAnimation);
+
+                // Enable ThemeShadow on hover
+                if (grid.Shadow is not ThemeShadow)
+                {
+                    var themeShadow = new ThemeShadow();
+                    if (VisualTreeHelper.GetParent(grid) is Grid parentContainer)
+                    {
+                        var receiverGrid = parentContainer.FindName("ShadowCastGrid") as Grid;
+                        if (receiverGrid != null)
+                        {
+                            themeShadow.Receivers.Add(receiverGrid);
+                        }
+                    }
+                    grid.Shadow = themeShadow;
+                }
             }
 
 
@@ -1003,6 +1018,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             ApplyScaleAnimation(grid, 1.0f);
             UpdateItemCheckBoxOpacity(grid, item);
+
+            grid.Shadow = null;
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -1569,47 +1586,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         Clipboard.SetContent(dataPackage);
     }
 
-    private async void Cut_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-    {
-        await CutWallpapersAsync();
-    }
-    private async void Cut_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
-    {
-        await CutWallpapersAsync();
-    }
-    private async Task CutWallpapersAsync()
-    {
-        HideWallpaperContextMenu();
-
-        var items = ViewModel.SelectedWallpapers.Count > 0
-            ? ViewModel.SelectedWallpapers.ToList()
-            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
-
-        if (items.Count == 0) return;
-
-        var folders = new List<Windows.Storage.StorageFolder>();
-        foreach (var item in items)
-        {
-            if (string.IsNullOrEmpty(item.FolderPath)) continue;
-            try
-            {
-                var folder = await Windows.Storage.StorageFolder.GetFolderFromPathAsync(item.FolderPath);
-                folders.Add(folder);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "获取文件夹失败: {Path}", item.FolderPath);
-            }
-        }
-
-        if (folders.Count == 0) return;
-
-        var dataPackage = new DataPackage();
-        dataPackage.RequestedOperation = DataPackageOperation.Move;
-        dataPackage.SetStorageItems(folders);
-        Clipboard.SetContent(dataPackage);
-    }
-
     private async void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
         e.Handled = true;
@@ -1630,10 +1606,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             Log.Error(ex, "通过删除快捷键执行删除命令时发生异常。");
         }
-    }
-    private void DeleteForever_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-    {
-
     }
 
     private void SelectAllWallpapers_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
@@ -1822,7 +1794,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 UseProjectName = ViewModel.UseProjectName,
                 OneFolder = ViewModel.OneFolder,
-                CoverAllFiles = ViewModel.CoverAllFiles,
+                FlatFileNamingMode = ViewModel.FlatFileNamingMode,
+                KeepSubfolderStructure = ViewModel.KeepSubfolderStructure,
+                CoverAllFiles = ViewModel.OneFolder ? ViewModel.CoverAllFiles : true,
                 IgnoreExtension = ViewModel.IgnoreExtension,
                 IgnoreExtensionList = ViewModel.IgnoreExtensionList,
                 OnlyExtension = ViewModel.OnlyExtension,
@@ -1834,9 +1808,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 MaxConcurrentExtractions = ViewModel.MaxConcurrentExtractions,
                 ProcessPriority = ViewModel.ProcessPriority,
                 // 文件过滤
-                MaxEntrySize = ViewModel.MaxEntrySize,
-                MinEntrySize = ViewModel.MinEntrySize,
-                SkipExistingOutput = ViewModel.SkipExistingOutput,
+                SkipExistingOutput = ViewModel.OneFolder ? ViewModel.SkipExistingOutput : false,
                 LazyLoad = ViewModel.LazyLoad,
             };
 

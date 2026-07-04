@@ -135,6 +135,40 @@ public class RepkgCliService
                         CopyAllFiles(dir, wallpaperOutput, settings);
                     }
 
+                    // 子文件夹模式 + 打乱目录结构：将所有文件移至壁纸子文件夹根目录
+                    if (!settings.OneFolder && settings.KeepSubfolderStructure && Directory.Exists(wallpaperOutput))
+                    {
+                        foreach (var subDir in Directory.EnumerateDirectories(wallpaperOutput))
+                        {
+                            foreach (var f in Directory.EnumerateFiles(subDir, "*", SearchOption.AllDirectories))
+                            {
+                                var dest = Path.Combine(wallpaperOutput, Path.GetFileName(f));
+                                int seq = 2;
+                                while (File.Exists(dest))
+                                    dest = Path.Combine(wallpaperOutput, $"{seq}_{Path.GetFileName(f)}");
+                                File.Move(f, dest);
+                            }
+                        }
+                        foreach (var subDir in Directory.EnumerateDirectories(wallpaperOutput))
+                            Directory.Delete(subDir, true);
+                    }
+
+                    // 平铺模式 + 按壁纸名命名文件：将文件重命名为 壁纸名_原文件名
+                    if (settings.OneFolder && settings.FlatFileNamingMode == 1 && !string.IsNullOrEmpty(wallpaper.Title))
+                    {
+                        var safeTitle = GetSafeName(wallpaper.Title);
+                        foreach (var f in Directory.EnumerateFiles(wallpaperOutput))
+                        {
+                            var fi = new FileInfo(f);
+                            var newName = $"{safeTitle}_{fi.Name}";
+                            var dest = Path.Combine(wallpaperOutput, newName);
+                            int seq = 2;
+                            while (File.Exists(dest))
+                                dest = Path.Combine(wallpaperOutput, $"{safeTitle}_{seq++}_{fi.Name}");
+                            File.Move(f, dest);
+                        }
+                    }
+
                     ItemProgress("完成", 100);
                 }
                 catch (OperationCanceledException)
@@ -168,11 +202,6 @@ public class RepkgCliService
         if (settings.UseProjectName) sb.Append("-n ");
         if (settings.TexExportMode == 0) sb.Append("--no-tex-convert ");
         if (settings.CoverAllFiles) sb.Append("--overwrite ");
-        // 文件大小过滤（阶段3）
-        if (settings.MaxEntrySize > 0)
-            sb.Append("--max-entry-size ").Append(settings.MaxEntrySize).Append(' ');
-        if (settings.MinEntrySize > 0)
-            sb.Append("--min-entry-size ").Append(settings.MinEntrySize).Append(' ');
         if (settings.LazyLoad) sb.Append("--lazy ");
         sb.Append("-r"); // recursive
         return sb.ToString();
@@ -305,9 +334,15 @@ public class RepkgCliService
 
     private static string GetOutputPath(string outputRoot, WallpaperItem wallpaper, ExtractSettings settings)
     {
-        if (settings.OneFolder) return outputRoot;
+        // 平铺模式：所有文件直接放到输出根目录，不建子文件夹
+        if (settings.OneFolder)
+            return outputRoot;
+
+        // 子文件夹模式
+        // 按壁纸标题命名子文件夹
         if (settings.UseProjectName && !string.IsNullOrEmpty(wallpaper.Title))
             return Path.Combine(outputRoot, GetSafeName(wallpaper.Title));
+        // 降级：使用 WorkshopID 或文件夹名
         var sub = !string.IsNullOrEmpty(wallpaper.WorkshopID)
             ? wallpaper.WorkshopID
             : new DirectoryInfo(wallpaper.FolderPath!).Name;
@@ -329,16 +364,23 @@ public class RepkgCliService
     {
         foreach (var file in sourceDir.EnumerateFiles())
         {
-            var relativePath = file.FullName.Substring(sourceDir.FullName.Length).TrimStart('\\', '/');
-            var destPath = Path.Combine(outputDir, relativePath);
-            var destDir = Path.GetDirectoryName(destPath);
-            if (!string.IsNullOrEmpty(destDir)) Directory.CreateDirectory(destDir);
+            var destPath = Path.Combine(outputDir, file.Name);
             if (!settings.CoverAllFiles && File.Exists(destPath)) continue;
             try { File.Copy(file.FullName, destPath, true); }
             catch (Exception ex) { Log.Error(ex, "拷贝文件失败: {File}", file.FullName); }
         }
-        foreach (var subDir in sourceDir.EnumerateDirectories())
-            CopyAllFiles(subDir, Path.Combine(outputDir, subDir.Name), settings);
+        // 勾选2.2时：打乱目录结构，子目录文件扁平放入同一目录
+        if (settings.KeepSubfolderStructure)
+        {
+            foreach (var subDir in sourceDir.EnumerateDirectories())
+                CopyAllFiles(subDir, outputDir, settings);
+        }
+        // 不勾选2.2时：保持子文件夹的目录结构
+        else
+        {
+            foreach (var subDir in sourceDir.EnumerateDirectories())
+                CopyAllFiles(subDir, Path.Combine(outputDir, subDir.Name), settings);
+        }
     }
 
     #region Win32 Process Suspend/Resume

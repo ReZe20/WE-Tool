@@ -135,6 +135,19 @@ namespace WE_Tool
             contentFrame.CacheSize = originalCacheSize;
             
         }
+
+        /// <summary>
+        /// 清除当前页面的 Frame 缓存并重新导航，使页面重新加载绑定值
+        /// </summary>
+        internal void RefreshCurrentPage()
+        {
+            var pageType = MapTagToPageType(CurrentPageTag);
+            contentFrame.BackStack.Clear();
+            int originalCacheSize = contentFrame.CacheSize;
+            contentFrame.CacheSize = 0;
+            contentFrame.Navigate(pageType, null);
+            contentFrame.CacheSize = originalCacheSize;
+        }
     }
 }
  

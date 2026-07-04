@@ -726,4 +726,55 @@
   <data name="Settings_LazyLoad.Content" xml:space="preserve">
     <value>Carga por fragmentos（leer uno por uno, reducir uso de memoria）</value>
   </data>
+  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar ruta predeterminada</value>
+  </data>
+  <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar ruta predeterminada</value>
+  </data>
+  <data name="AutoDetect_ProjectPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar ruta predeterminada</value>
+  </data>
+  <data name="Settings_FlatOutput.Content" xml:space="preserve">
+    <value>Todos los archivos en la carpeta de salida, sin subcarpetas</value>
+  </data>
+  <data name="Settings_FolderStructure.Text" xml:space="preserve">
+    <value>Estructura de la carpeta de salida</value>
+  </data>
+  <data name="Settings_FlatOutput_ByName.Content" xml:space="preserve">
+    <value>Nombrar archivos por nombre del fondo (añadir número para duplicados)</value>
+  </data>
+  <data name="Settings_FlatOutput_KeepName.Content" xml:space="preserve">
+    <value>Conservar nombres de archivo originales</value>
+  </data>
+  <data name="Settings_SubfolderOutput.Content" xml:space="preserve">
+    <value>Usar subcarpetas</value>
+  </data>
+  <data name="Settings_Subfolder_ByName.Content" xml:space="preserve">
+    <value>Nombrar subcarpetas por nombre del fondo</value>
+  </data>
+  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
+    <value>Conservar estructura de subcarpetas</value>
+  </data>
+  <data name="AutoDetect_OfficialPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar ruta predeterminada</value>
+  </data>
+  <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar ruta predeterminada</value>
+  </data>
+  <data name="Settings_FlatFileNaming.Text" xml:space="preserve">
+    <value>文件命名方式</value>
+  </data>
+  <data name="Settings_Output_IgnoreExtText.Text" xml:space="preserve">
+    <value>忽略扩展名</value>
+  </data>
+  <data name="Settings_Output_OnlyExtText.Text" xml:space="preserve">
+    <value>仅提取扩展名</value>
+  </data>
+  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
+    <value>全量输出</value>
+  </data>
+  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
+    <value>自定义</value>
+  </data>
 </root>

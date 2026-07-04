@@ -94,25 +94,11 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                         <FontIcon Glyph="&#xE8C8;" />
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Uid="AppBarButton_Cut" 
-                              Click="Cut_Click_ByCommandBarFlyout"
-                              KeyboardAcceleratorTextOverride="     Ctrl+V">
-                    <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8C6;" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
                 <AppBarButton x:Uid="AppBarButton_Delete" 
                               Command="{x:Bind DeleteSelectedCommand}"
                               KeyboardAcceleratorTextOverride="     Delete">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE74D;"/>
-                    </AppBarButton.Icon>
-                </AppBarButton>
-                <AppBarButton x:Uid="AppBarButton_DeleteForever"
-                              Command="{x:Bind DeleteSelectedCommand}"
-                              KeyboardAcceleratorTextOverride="Shift+Del">
-                    <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE75C;" />
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
@@ -269,15 +255,9 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
         <KeyboardAccelerator Key="C" 
                              Modifiers="Control"
                              Invoked="Copy_Accelerator_Invoked"/>
-        <KeyboardAccelerator Key="X" 
-                             Modifiers="Control"
-                             Invoked="Cut_Accelerator_Invoked"/>
         <KeyboardAccelerator Key="Delete"
                              Modifiers="None"
                              Invoked="Delete_Accelerator_Invoked"/>
-        <KeyboardAccelerator Key="Delete"
-                             Modifiers="Shift"
-                             Invoked="DeleteForever_Accelerator_Invoked"/>
     </Page.KeyboardAccelerators>
 
     <Grid>
@@ -311,14 +291,6 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
             <AppBarSeparator/>
             <Button Style="{ThemeResource SubtleButtonStyle}"
                     IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
-                    x:Uid="Toolbar_GridView"
-                    Click="Cut_Click_ByCommandBarFlyout">
-                <Button.Content>
-                    <FontIcon Glyph="&#xE8C6;" FontSize="16"/>
-                </Button.Content>
-            </Button>
-            <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
                     x:Uid="Toolbar_ListView"
                     Click="Copy_Click_ByCommandBarFlyout">
                 <Button.Content>
@@ -331,14 +303,6 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                     x:Uid="Toolbar_Delete">
                 <Button.Content>
                     <FontIcon Glyph="&#xE74D;" FontSize="16"/>
-                </Button.Content>
-            </Button>
-            <Button Style="{ThemeResource SubtleButtonStyle}"
-                    IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
-                    Command="{x:Bind DeleteSelectedCommand}"
-                    x:Uid="Toolbar_DeleteForever">
-                <Button.Content>
-                    <FontIcon Glyph="&#xE75C;" FontSize="16"/>
                 </Button.Content>
             </Button>
             <Button Style="{ThemeResource SubtleButtonStyle}"
@@ -728,9 +692,6 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ItemContainer">
-                                                        <Grid.Resources>
-                                                            <ThemeShadow x:Name="SharedShadow"/>
-                                                        </Grid.Resources>
                                                         <ProgressRing IsActive="True" Background="Transparent"/>
                                                         <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
                                                         <Grid CornerRadius="8"
@@ -744,7 +705,6 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                                               DataContext="{x:Bind}"
                                                               Translation="0,0,64"
                                                               Loaded="ShadowRect_Loaded"
-                                                              Shadow="{StaticResource SharedShadow}"
                                                               ContextFlyout="{StaticResource WallpaperContextMenu}"
                                                               RightTapped="WallpaperItem_RightTapped">
                                                             <Viewbox Stretch="Uniform" VerticalAlignment="Top">

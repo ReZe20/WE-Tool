@@ -40,6 +40,7 @@ namespace WE_Tool.ViewModels
         private CancellationTokenSource? _saveCts;
         private readonly TimeSpan _saveDelay = TimeSpan.FromMilliseconds(500);
         private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
+        private int _saveGuard;
 
         public IAsyncRelayCommand SaveCommand { get; }
 
@@ -80,12 +81,53 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial bool UseProjectName { get; set; }
 
+        /// <summary>平铺输出时的文件命名模式：0=保持原文件名, 1=按壁纸名命名（重复加序号）</summary>
+        [ObservableProperty]
+        public partial int FlatFileNamingMode { get; set; }
+
+        /// <summary>子文件夹模式下保持源目录结构</summary>
+        [ObservableProperty]
+        public partial bool KeepSubfolderStructure { get; set; }
+
         [ObservableProperty]
         public partial bool CoverAllFiles { get; set; }
 
         /// <summary>0=覆盖已存在的文件, 1=跳过已提取的壁纸</summary>
         [ObservableProperty]
         public partial int OverwriteMode { get; set; }
+
+        partial void OnOverwriteModeChanged(int value)
+        {
+            CoverAllFiles = value == 0;
+            SkipExistingOutput = value == 1;
+        }
+
+        // === 输出设置的 IsEnabled 计算属性 ===
+        /// <summary>子文件夹模式 (OneFolder==true，因 BoolToIndexConverter true→0) 时，冲突处理等才可操作</summary>
+        public bool IsSubfolderModeContentEnabled => OneFolder;
+        /// <summary>IgnoreExtension 勾选时，TextBox 才可编辑（父 CheckBox 禁用时自动级联）</summary>
+        public bool IsIgnoreExtensionTextBoxEnabled => IgnoreExtension;
+        /// <summary>OnlyExtension 勾选时，TextBox 才可编辑（父 CheckBox 禁用时自动级联）</summary>
+        public bool IsOnlyExtensionTextBoxEnabled => OnlyExtension;
+
+        partial void OnOneFolderChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsSubfolderModeContentEnabled));
+        }
+
+        partial void OnIgnoreExtensionChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsIgnoreExtensionTextBoxEnabled));
+        }
+
+        partial void OnOnlyExtensionChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsOnlyExtensionTextBoxEnabled));
+        }
+
+        /// <summary>输出类型：0=自定义, 1=全量输出, 2=仅输出图像</summary>
+        [ObservableProperty]
+        public partial int OutputMode { get; set; }
 
         /// <summary>0=导出原始文件, 1=导出并转换TEX, 2=只导出TEX图片</summary>
         [ObservableProperty]
@@ -109,12 +151,6 @@ namespace WE_Tool.ViewModels
         public partial int TextureCacheMode { get; set; }
 
         // === 文件过滤（阶段3） ===
-
-        [ObservableProperty]
-        public partial int MaxEntrySize { get; set; }
-
-        [ObservableProperty]
-        public partial int MinEntrySize { get; set; }
 
         [ObservableProperty]
         public partial bool SkipExistingOutput { get; set; }
@@ -174,6 +210,15 @@ namespace WE_Tool.ViewModels
                         break;
                 }
             };
+
+            WallpaperDisplayVM.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(WallpaperDisplayViewModel.AutoPlayGif))
+                {
+                    if (App.MainWindowInstance is MainWindow mainWindow)
+                        mainWindow.RefreshCurrentPage();
+                }
+            };
         }
 
         private void OnSubViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -219,10 +264,6 @@ namespace WE_Tool.ViewModels
         public async Task InitializeAsync()
         {
             _isBatchUpdating = true;
-
-            var loadedSettings = await _configService.LoadAsync();
-            bool isNewConfig = loadedSettings == null;
-            _settings = loadedSettings ?? new AppSettings();
 
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
@@ -315,6 +356,9 @@ namespace WE_Tool.ViewModels
             OneFolder = _settings.Extract.OneFolder;
             OutProjectJSON = _settings.Extract.OutProjectJSON;
             UseProjectName = _settings.Extract.UseProjectName;
+            FlatFileNamingMode = _settings.Extract.FlatFileNamingMode;
+            KeepSubfolderStructure = _settings.Extract.KeepSubfolderStructure;
+            OutputMode = _settings.Extract.OutputMode;
             CoverAllFiles = _settings.Extract.CoverAllFiles;
             OverwriteMode = _settings.Extract.CoverAllFiles ? 0 : (_settings.Extract.SkipExistingOutput ? 1 : 0);
             TexExportMode = _settings.Extract.TexExportMode;
@@ -322,12 +366,10 @@ namespace WE_Tool.ViewModels
             MaxConcurrentExtractions = _settings.Extract.MaxConcurrentExtractions;
             ProcessPriority = _settings.Extract.ProcessPriority;
             TextureCacheMode = _settings.Extract.TextureCacheMode;
-            MaxEntrySize = _settings.Extract.MaxEntrySize;
-            MinEntrySize = _settings.Extract.MinEntrySize;
             SkipExistingOutput = _settings.Extract.SkipExistingOutput;
             LazyLoad = _settings.Extract.LazyLoad;
 
-            if (isNewConfig || mode.Contains('1') || string.IsNullOrEmpty(_settings.Path.DownloadPath))
+            if (mode.Contains('1') || string.IsNullOrEmpty(_settings.Path.DownloadPath))
             {
                 PathManagementVM.SyncToSettings(_settings);
                 await _configService.SaveAsync(_settings);
@@ -427,106 +469,129 @@ namespace WE_Tool.ViewModels
         {
             if (_isBatchUpdating) return;
 
-            _saveCts?.Cancel();
-            _saveCts = new CancellationTokenSource();
+            // 守卫：同一时刻只允许一个 SaveAsync 进入执行体，后续冗余调用静默丢弃
+            if (Interlocked.Exchange(ref _saveGuard, 1) == 1)
+                return;
 
-            await _saveSemaphore.WaitAsync();
             try
             {
-                _settings.AppLanguage = AppSettingsVM.AppLanguage ?? "";
+                // 防抖：取消上一次待处理的保存，等 _saveDelay (500ms) 无新变化再执行写盘
+                _saveCts?.Cancel();
+                _saveCts = new CancellationTokenSource();
+                var token = _saveCts.Token;
 
-                _settings.StartPageTag = AppSettingsVM.StartPageTag;
-                _settings.Theme = AppSettingsVM.Theme;
+                try
+                {
+                    await Task.Delay(_saveDelay, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
 
-                _settings.Papers.IsBottomBarOpen = WallpaperDisplayVM.IsBottomBarOpen;
-                _settings.Papers.WallpaperViewIndex = WallpaperDisplayVM.WallpaperViewIndex;
-                _settings.Papers.AutoPlayGif = WallpaperDisplayVM.AutoPlayGif;
-                _settings.Papers.IsWallpaperEnterAnimationEnabled = WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled;
-                _settings.Papers.WallpaperTagDisplayIndex = WallpaperDisplayVM.WallpaperTagDisplayIndex;
-                _settings.Papers.IsAnnotatedScrollBarEnabled = WallpaperDisplayVM.IsAnnotatedScrollBarEnabled;
-                _settings.Papers.WallpaperListMinWidth = WallpaperDisplayVM.WallpaperListMinWidth;
-                _settings.Papers.LeftSplitViewPaneOpen = WallpaperDisplayVM.LeftSplitViewPaneOpen;
-                _settings.Papers.RightSplitViewPaneOpen = WallpaperDisplayVM.RightSplitViewPaneOpen;
+                await _saveSemaphore.WaitAsync();
+                try
+                {
+                    _settings.AppLanguage = AppSettingsVM.AppLanguage ?? "";
 
-                _settings.Papers.IsSortAscending = WallpaperDisplayVM.IsSortAscending;
-                _settings.Papers.SortOrder = WallpaperDisplayVM.SortOrder;
-                _settings.Papers.DetailSelectionEnabled = WallpaperDisplayVM.DetailSelectionEnabled;
-                _settings.Papers.FilterResultResponseDelay = WallpaperDisplayVM.FilterResultResponseDelay;
+                    _settings.StartPageTag = AppSettingsVM.StartPageTag;
+                    _settings.Theme = AppSettingsVM.Theme;
 
-                _settings.Expander.TypeExpander = FilterExpanderVM.TypeExpander;
-                _settings.Expander.Scene = FilterExpanderVM.Scene;
-                _settings.Expander.Video = FilterExpanderVM.Video;
-                _settings.Expander.Web = FilterExpanderVM.Web;
-                _settings.Expander.Application = FilterExpanderVM.Application;
-                _settings.Expander.Preset = FilterExpanderVM.Preset;
-                _settings.Expander.Unknown = FilterExpanderVM.Unknown;
+                    _settings.Papers.IsBottomBarOpen = WallpaperDisplayVM.IsBottomBarOpen;
+                    _settings.Papers.WallpaperViewIndex = WallpaperDisplayVM.WallpaperViewIndex;
+                    _settings.Papers.AutoPlayGif = WallpaperDisplayVM.AutoPlayGif;
+                    _settings.Papers.IsWallpaperEnterAnimationEnabled = WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled;
+                    _settings.Papers.WallpaperTagDisplayIndex = WallpaperDisplayVM.WallpaperTagDisplayIndex;
+                    _settings.Papers.IsAnnotatedScrollBarEnabled = WallpaperDisplayVM.IsAnnotatedScrollBarEnabled;
+                    _settings.Papers.WallpaperListMinWidth = WallpaperDisplayVM.WallpaperListMinWidth;
+                    _settings.Papers.LeftSplitViewPaneOpen = WallpaperDisplayVM.LeftSplitViewPaneOpen;
+                    _settings.Papers.RightSplitViewPaneOpen = WallpaperDisplayVM.RightSplitViewPaneOpen;
 
-                _settings.Expander.RatingExpander = FilterExpanderVM.RatingExpander;
-                _settings.Expander.G = FilterExpanderVM.G;
-                _settings.Expander.Pg = FilterExpanderVM.Pg;
-                _settings.Expander.R = FilterExpanderVM.R;
+                    _settings.Papers.IsSortAscending = WallpaperDisplayVM.IsSortAscending;
+                    _settings.Papers.SortOrder = WallpaperDisplayVM.SortOrder;
+                    _settings.Papers.DetailSelectionEnabled = WallpaperDisplayVM.DetailSelectionEnabled;
+                    _settings.Papers.FilterResultResponseDelay = WallpaperDisplayVM.FilterResultResponseDelay;
 
-                _settings.Expander.SourceExpander = FilterExpanderVM.SourceExpander;
-                _settings.Expander.Official = FilterExpanderVM.Official;
-                _settings.Expander.Workshop = FilterExpanderVM.Workshop;
-                _settings.Expander.Mine = FilterExpanderVM.Mine;
+                    _settings.Expander.TypeExpander = FilterExpanderVM.TypeExpander;
+                    _settings.Expander.Scene = FilterExpanderVM.Scene;
+                    _settings.Expander.Video = FilterExpanderVM.Video;
+                    _settings.Expander.Web = FilterExpanderVM.Web;
+                    _settings.Expander.Application = FilterExpanderVM.Application;
+                    _settings.Expander.Preset = FilterExpanderVM.Preset;
+                    _settings.Expander.Unknown = FilterExpanderVM.Unknown;
 
-                _settings.Expander.TagsExpander = FilterExpanderVM.TagsExpander;
-                _settings.Expander.Abstract = FilterExpanderVM.Abstract;
-                _settings.Expander.Animal = FilterExpanderVM.Animal;
-                _settings.Expander.Anime = FilterExpanderVM.Anime;
-                _settings.Expander.Cartoon = FilterExpanderVM.Cartoon;
-                _settings.Expander.Cgi = FilterExpanderVM.Cgi;
-                _settings.Expander.Cyberpunk = FilterExpanderVM.Cyberpunk;
-                _settings.Expander.Fantasy = FilterExpanderVM.Fantasy;
-                _settings.Expander.Game = FilterExpanderVM.Game;
-                _settings.Expander.Girls = FilterExpanderVM.Girls;
-                _settings.Expander.Guys = FilterExpanderVM.Guys;
-                _settings.Expander.Landscape = FilterExpanderVM.Landscape;
-                _settings.Expander.Medieval = FilterExpanderVM.Medieval;
-                _settings.Expander.Memes = FilterExpanderVM.Memes;
-                _settings.Expander.Mmd = FilterExpanderVM.Mmd;
-                _settings.Expander.Music = FilterExpanderVM.Music;
-                _settings.Expander.Nature = FilterExpanderVM.Nature;
-                _settings.Expander.Pixelart = FilterExpanderVM.Pixelart;
-                _settings.Expander.Relaxing = FilterExpanderVM.Relaxing;
-                _settings.Expander.Retro = FilterExpanderVM.Retro;
-                _settings.Expander.SciFi = FilterExpanderVM.SciFi;
-                _settings.Expander.Sports = FilterExpanderVM.Sports;
-                _settings.Expander.Technology = FilterExpanderVM.Technology;
-                _settings.Expander.Television = FilterExpanderVM.Television;
-                _settings.Expander.Vehicle = FilterExpanderVM.Vehicle;
-                _settings.Expander.Unspecified = FilterExpanderVM.Unspecified;
+                    _settings.Expander.RatingExpander = FilterExpanderVM.RatingExpander;
+                    _settings.Expander.G = FilterExpanderVM.G;
+                    _settings.Expander.Pg = FilterExpanderVM.Pg;
+                    _settings.Expander.R = FilterExpanderVM.R;
 
-                _settings.Path.DownloadPath = PathManagementVM.DownloadPath;
-                _settings.Path.WorkshopPath = PathManagementVM.WorkshopPath;
-                _settings.Path.ProjectPath = PathManagementVM.ProjectPath;
-                _settings.Path.OfficialPath = PathManagementVM.OfficialPath;
-                _settings.Path.AcfPath = PathManagementVM.AcfPath;
+                    _settings.Expander.SourceExpander = FilterExpanderVM.SourceExpander;
+                    _settings.Expander.Official = FilterExpanderVM.Official;
+                    _settings.Expander.Workshop = FilterExpanderVM.Workshop;
+                    _settings.Expander.Mine = FilterExpanderVM.Mine;
 
-                _settings.Extract.IgnoreExtension = IgnoreExtension;
-                _settings.Extract.IgnoreExtensionList = IgnoreExtensionList;
-                _settings.Extract.OnlyExtension = OnlyExtension;
-                _settings.Extract.OnlyExtensionList = OnlyExtensionList;
-                _settings.Extract.OneFolder = OneFolder;
-                _settings.Extract.OutProjectJSON = OutProjectJSON;
-                _settings.Extract.UseProjectName = UseProjectName;
-                _settings.Extract.CoverAllFiles = OverwriteMode == 0;
-                _settings.Extract.TexExportMode = TexExportMode;
+                    _settings.Expander.TagsExpander = FilterExpanderVM.TagsExpander;
+                    _settings.Expander.Abstract = FilterExpanderVM.Abstract;
+                    _settings.Expander.Animal = FilterExpanderVM.Animal;
+                    _settings.Expander.Anime = FilterExpanderVM.Anime;
+                    _settings.Expander.Cartoon = FilterExpanderVM.Cartoon;
+                    _settings.Expander.Cgi = FilterExpanderVM.Cgi;
+                    _settings.Expander.Cyberpunk = FilterExpanderVM.Cyberpunk;
+                    _settings.Expander.Fantasy = FilterExpanderVM.Fantasy;
+                    _settings.Expander.Game = FilterExpanderVM.Game;
+                    _settings.Expander.Girls = FilterExpanderVM.Girls;
+                    _settings.Expander.Guys = FilterExpanderVM.Guys;
+                    _settings.Expander.Landscape = FilterExpanderVM.Landscape;
+                    _settings.Expander.Medieval = FilterExpanderVM.Medieval;
+                    _settings.Expander.Memes = FilterExpanderVM.Memes;
+                    _settings.Expander.Mmd = FilterExpanderVM.Mmd;
+                    _settings.Expander.Music = FilterExpanderVM.Music;
+                    _settings.Expander.Nature = FilterExpanderVM.Nature;
+                    _settings.Expander.Pixelart = FilterExpanderVM.Pixelart;
+                    _settings.Expander.Relaxing = FilterExpanderVM.Relaxing;
+                    _settings.Expander.Retro = FilterExpanderVM.Retro;
+                    _settings.Expander.SciFi = FilterExpanderVM.SciFi;
+                    _settings.Expander.Sports = FilterExpanderVM.Sports;
+                    _settings.Expander.Technology = FilterExpanderVM.Technology;
+                    _settings.Expander.Television = FilterExpanderVM.Television;
+                    _settings.Expander.Vehicle = FilterExpanderVM.Vehicle;
+                    _settings.Expander.Unspecified = FilterExpanderVM.Unspecified;
 
-                _settings.Extract.MaxConcurrentExtractions = MaxConcurrentExtractions;
-                _settings.Extract.ProcessPriority = ProcessPriority;
-                _settings.Extract.TextureCacheMode = TextureCacheMode;
-                _settings.Extract.MaxEntrySize = MaxEntrySize;
-                _settings.Extract.MinEntrySize = MinEntrySize;
-                _settings.Extract.SkipExistingOutput = OverwriteMode == 1;
-                _settings.Extract.LazyLoad = LazyLoad;
+                    _settings.Path.DownloadPath = PathManagementVM.DownloadPath;
+                    _settings.Path.WorkshopPath = PathManagementVM.WorkshopPath;
+                    _settings.Path.ProjectPath = PathManagementVM.ProjectPath;
+                    _settings.Path.OfficialPath = PathManagementVM.OfficialPath;
+                    _settings.Path.AcfPath = PathManagementVM.AcfPath;
 
-                await _configService.SaveAsync(_settings);
+                    _settings.Extract.IgnoreExtension = IgnoreExtension;
+                    _settings.Extract.IgnoreExtensionList = IgnoreExtensionList;
+                    _settings.Extract.OnlyExtension = OnlyExtension;
+                    _settings.Extract.OnlyExtensionList = OnlyExtensionList;
+                    _settings.Extract.OneFolder = OneFolder;
+                    _settings.Extract.OutProjectJSON = OutProjectJSON;
+                    _settings.Extract.UseProjectName = UseProjectName;
+                    _settings.Extract.FlatFileNamingMode = FlatFileNamingMode;
+                    _settings.Extract.KeepSubfolderStructure = KeepSubfolderStructure;
+                    _settings.Extract.CoverAllFiles = OverwriteMode == 0;
+                    _settings.Extract.TexExportMode = TexExportMode;
+                    _settings.Extract.OutputMode = OutputMode;
+
+                    _settings.Extract.MaxConcurrentExtractions = MaxConcurrentExtractions;
+                    _settings.Extract.ProcessPriority = ProcessPriority;
+                    _settings.Extract.TextureCacheMode = TextureCacheMode;
+                    _settings.Extract.SkipExistingOutput = OverwriteMode == 1;
+                    _settings.Extract.LazyLoad = LazyLoad;
+
+                    await _configService.SaveAsync(_settings);
+                }
+                finally
+                {
+                    _saveSemaphore.Release();
+                }
             }
             finally
             {
-                _saveSemaphore.Release();
+                Interlocked.Exchange(ref _saveGuard, 0);
             }
         }
     }

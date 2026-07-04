@@ -95,6 +95,10 @@ namespace WE_Tool.Models
         public bool UseProjectName { get; set; } = false;
         public bool OneFolder { get; set; } = false;
         public bool CoverAllFiles { get; set; } = false;
+        /// <summary>平铺输出时的文件命名模式：0=保持原文件名, 1=按壁纸名命名（重复加序号）</summary>
+        public int FlatFileNamingMode { get; set; } = 0;
+        /// <summary>子文件夹模式下保持源目录结构</summary>
+        public bool KeepSubfolderStructure { get; set; } = false;
 
         // 文件过滤（通用：对 PKG 解析和直接拷贝均生效）
         public bool IgnoreExtension { get; set; } = false;
@@ -106,6 +110,8 @@ namespace WE_Tool.Models
         public bool OutProjectJSON { get; set; } = false;
         /// <summary>0=导出原始文件(TEX不转换), 1=导出并转换TEX为图片, 2=只导出TEX转换后的图片</summary>
         public int TexExportMode { get; set; } = 1;
+        /// <summary>输出类型：0=自定义, 1=全量输出, 2=仅输出图像</summary>
+        public int OutputMode { get; set; } = 1;
 
         // 性能参数（阶段1）
         /// <summary>最大并发提取数，默认 1</summary>
@@ -116,11 +122,6 @@ namespace WE_Tool.Models
         /// <summary>纹理缓存模式：0=内存优先, 1=磁盘缓冲, 2=自动</summary>
         public int TextureCacheMode { get; set; } = 0;
 
-        // 文件大小过滤（阶段3）
-        /// <summary>PKG 条目大小上限（KB），0=不限制</summary>
-        public int MaxEntrySize { get; set; } = 0;
-        /// <summary>PKG 条目大小下限（KB），0=不限制</summary>
-        public int MinEntrySize { get; set; } = 0;
         /// <summary>如果输出目录已存在且非空，跳过该壁纸</summary>
         public bool SkipExistingOutput { get; set; } = false;
         /// <summary>分块解析模式，逐条读取减少内存占用</summary>

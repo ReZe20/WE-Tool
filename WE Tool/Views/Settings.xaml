@@ -11,6 +11,10 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:converters="using:WE_Tool.Converters">
     <Page.Resources>
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <converters:EqualityConverter x:Key="EqualityConverter"/>
+        <converters:BoolToIndexConverter x:Key="BoolToIndexConverter"/>
+        <converters:IndexToValueConverter x:Key="IndexToValueConverter"/>
     </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -225,60 +229,91 @@
                             <controls:SettingsExpander.Items>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <RadioButtons Margin="0,0,0,0" SelectedIndex="{x:Bind ViewModel.OverwriteMode, Mode=TwoWay}">
-                                            <RadioButtons.Header>
-                                                <TextBlock x:Uid="Settings_FileConflict" Text="文件冲突处理" Margin="28,0,12,0"/>
-                                            </RadioButtons.Header>
-                                            <RadioButton x:Uid="Settings_OverwriteFiles" Content="覆盖已存在的文件"/>
-                                            <RadioButton x:Uid="Settings_SkipExtracted" Content="跳过已提取的壁纸（输出目录非空时跳过）"/>
-                                        </RadioButtons>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox x:Uid="Settings_UseProjectName" Content="以壁纸名作为子目录名（而非创意工坊ID）" IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox x:Uid="Settings_OneFolder" Content="所有文件放入一个目录，不使用子文件夹" IsChecked="{x:Bind ViewModel.OneFolder, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox x:Uid="Settings_CopyProject" Content="拷贝 project.json 与预览图到输出文件夹" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <Grid>
-                                            <CheckBox x:Uid="Settings_IgnoreExt" Content="忽略扩展名" x:Name="IgnoreExtension" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTipService.ToolTip="不提取/拷贝指定扩展名的文件"/>
-                                            <TextBox x:Uid="Settings_IgnoreExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}" Margin="115,0,20,0" ToolTipService.ToolTip="英文逗号分隔"/>
-                                        </Grid>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <Grid>
-                                            <CheckBox x:Uid="Settings_OnlyExt" Content="仅提取扩展名" x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" ToolTipService.ToolTip="仅提取/拷贝指定扩展名的文件"/>
-                                            <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="115,0,20,0" ToolTipService.ToolTip="英文逗号分隔"/>
-                                        </Grid>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
-                                            <TextBlock x:Uid="Settings_SkipLarger" Text="跳过大于 (KB)" VerticalAlignment="Center"/>
-                                            <NumberBox Value="{x:Bind ViewModel.MaxEntrySize, Mode=TwoWay}" Minimum="0" SmallChange="100" LargeChange="1000" SpinButtonPlacementMode="Inline" MinWidth="120"/>
+                                        <StackPanel>
+                                            <RadioButtons MaxColumns="3" SelectedIndex="{x:Bind ViewModel.OutputMode, Converter={StaticResource IndexToValueConverter}, ConverterParameter='1,2,0', Mode=TwoWay}">
+                                                <RadioButtons.Header>
+                                                    <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,0,12,0"/>
+                                                </RadioButtons.Header>
+                                                <RadioButton>
+                                                    <RadioButton.Content>
+                                                        <StackPanel>
+                                                            <TextBlock x:Uid="Settings_OutputType_Full"/>
+                                                            <CheckBox x:Uid="Settings_CopyProject" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" IsEnabled="{Binding ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}" Margin="0,12,0,0"/>
+                                                        </StackPanel>
+                                                    </RadioButton.Content>
+                                                </RadioButton>
+                                                <RadioButton x:Uid="Settings_OutputType_ImageOnly"/>
+                                                <RadioButton>
+                                                    <RadioButton.Content>
+                                                        <StackPanel>
+                                                            <TextBlock x:Uid="Settings_OutputType_Custom"/>
+                                                            <CheckBox x:Name="IgnoreExtension" Margin="0,8,0,0" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}">
+                                                                <CheckBox.Content>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock x:Uid="Settings_Output_IgnoreExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                        <TextBox x:Uid="Settings_IgnoreExtList" HorizontalAlignment="Stretch" Margin="8,0,0,0" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}"/>
+                                                                    </StackPanel>
+                                                                </CheckBox.Content>
+                                                            </CheckBox>
+                                                            <CheckBox x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}">
+                                                                <CheckBox.Content>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock x:Uid="Settings_Output_OnlyExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                        <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="8,0,0,0"/>
+                                                                    </StackPanel>
+                                                                </CheckBox.Content>
+                                                            </CheckBox>
+                                                        </StackPanel>
+                                                    </RadioButton.Content>
+                                                </RadioButton>
+                                            </RadioButtons>
+                                            
                                         </StackPanel>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
+
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
-                                            <TextBlock x:Uid="Settings_SkipSmaller" Text="跳过小于 (KB)" VerticalAlignment="Center"/>
-                                            <NumberBox Value="{x:Bind ViewModel.MinEntrySize, Mode=TwoWay}" Minimum="0" SmallChange="10" LargeChange="100" SpinButtonPlacementMode="Inline" MinWidth="120"/>
+                                        <StackPanel>
+                                            <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,0,0,0"/>
+                                            <RadioButtons SelectedIndex="{x:Bind ViewModel.OneFolder, Converter={StaticResource BoolToIndexConverter}, Mode=TwoWay}" MaxColumns="2">
+                                                <RadioButton>
+                                                    <RadioButton.Content>
+                                                        <StackPanel>
+                                                            <TextBlock x:Uid="Settings_SubfolderOutput_Header"/>
+                                                            <RadioButtons Margin="0,0,0,0" SelectedIndex="{x:Bind ViewModel.OverwriteMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}">
+                                                                <RadioButtons.Header>
+                                                                    <TextBlock x:Uid="Settings_FileConflict" FontWeight="SemiBold" Margin="0,12,0,0"/>
+                                                                </RadioButtons.Header>
+                                                                <RadioButton x:Uid="Settings_OverwriteFiles"/>
+                                                                <RadioButton x:Uid="Settings_SkipExtracted"/>
+                                                            </RadioButtons>
+                                                            <CheckBox x:Uid="Settings_Subfolder_ByName"
+                                                                      IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"
+                                                                      IsEnabled="{x:Bind ViewModel.OneFolder, Mode=OneWay}" Margin="0,12,0,0"/>
+                                                            <CheckBox x:Uid="Settings_Subfolder_KeepStructure" Margin="0,4,0,0"
+                                                                      IsChecked="{x:Bind ViewModel.KeepSubfolderStructure, Mode=TwoWay}"
+                                                                      IsEnabled="{x:Bind ViewModel.OneFolder, Mode=OneWay}"/>
+                                                        </StackPanel>
+                                                    </RadioButton.Content>
+                                                </RadioButton>
+                                                <RadioButton>
+                                                    <RadioButton.Content>
+                                                        <StackPanel>
+                                                            <TextBlock x:Uid="Settings_FlatOutput_Header"/>
+                                                            <RadioButtons IsEnabled="{x:Bind ViewModel.OneFolder, Converter={StaticResource InverseBoolConverter}, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.FlatFileNamingMode, Converter={StaticResource IndexToValueConverter}, ConverterParameter='1,0', Mode=TwoWay}">
+                                                                <RadioButtons.Header>
+                                                                    <TextBlock x:Uid="Settings_FlatFileNaming" FontWeight="SemiBold" Margin="0,12,0,0"/>
+                                                                </RadioButtons.Header>
+                                                                <RadioButton x:Uid="Settings_FlatOutput_ByName" Margin="0,8,0,0"/>
+                                                                <RadioButton x:Uid="Settings_FlatOutput_KeepName"/>
+                                                            </RadioButtons>
+                                                        </StackPanel>
+                                                    </RadioButton.Content>
+                                                </RadioButton>
+
+
+                                            </RadioButtons>
                                         </StackPanel>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
@@ -292,13 +327,13 @@
                             <controls:SettingsExpander.Items>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=TwoWay}">
+                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=OneWay}">
                                             <RadioButtons.Header>
-                                                <TextBlock x:Uid="Settings_TexMode" Text="TEX 纹理处理方式" Margin="28,0,12,0"/>
+                                                <TextBlock x:Uid="Settings_TexMode" Margin="28,0,12,0"/>
                                             </RadioButtons.Header>
-                                            <RadioButton x:Uid="Settings_TexExportRaw" Content="导出原始文件（TEX 不转换）"/>
-                                            <RadioButton x:Uid="Settings_TexExportConvert" Content="导出文件并转换 TEX 为图片"/>
-                                            <RadioButton x:Uid="Settings_TexExportOnlyImage" Content="只导出 TEX 转换后的图片"/>
+                                            <RadioButton x:Uid="Settings_TexExportRaw"/>
+                                            <RadioButton x:Uid="Settings_TexExportConvert"/>
+                                            <RadioButton x:Uid="Settings_TexExportOnlyImage"/>
                                         </RadioButtons>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
@@ -313,7 +348,7 @@
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
                                         <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
-                                            <TextBlock x:Uid="Settings_MaxConcurrent" Text="最大并发提取数" VerticalAlignment="Center"/>
+                                            <TextBlock x:Uid="Settings_MaxConcurrent" VerticalAlignment="Center"/>
                                             <NumberBox Value="{x:Bind ViewModel.MaxConcurrentExtractions, Mode=TwoWay}" Minimum="1" Maximum="{x:Bind ViewModel.MaxConcurrentMax}" SmallChange="1" LargeChange="2" SpinButtonPlacementMode="Inline" MinWidth="80"/>
                                         </StackPanel>
                                     </controls:SettingsCard.Header>
@@ -321,11 +356,11 @@
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
                                         <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
-                                            <TextBlock x:Uid="Settings_ProcessPriority" Text="子进程优先级" VerticalAlignment="Center"/>
+                                            <TextBlock x:Uid="Settings_ProcessPriority" VerticalAlignment="Center"/>
                                             <ComboBox SelectedIndex="{x:Bind ViewModel.ProcessPriority, Mode=TwoWay}" MinWidth="120">
-                                                <ComboBoxItem x:Uid="Settings_PriorityNormal" Content="正常"/>
-                                                <ComboBoxItem x:Uid="Settings_PriorityBelowNormal" Content="低于正常"/>
-                                                <ComboBoxItem x:Uid="Settings_PriorityIdle" Content="空闲"/>
+                                                <ComboBoxItem x:Uid="Settings_PriorityNormal"/>
+                                                <ComboBoxItem x:Uid="Settings_PriorityBelowNormal"/>
+                                                <ComboBoxItem x:Uid="Settings_PriorityIdle"/>
                                             </ComboBox>
                                         </StackPanel>
                                     </controls:SettingsCard.Header>
@@ -333,18 +368,18 @@
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
                                         <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
-                                            <TextBlock x:Uid="Settings_TextureCacheMode" Text="纹理缓存模式" VerticalAlignment="Center"/>
+                                            <TextBlock x:Uid="Settings_TextureCacheMode" VerticalAlignment="Center"/>
                                             <ComboBox SelectedIndex="{x:Bind ViewModel.TextureCacheMode, Mode=TwoWay}" MinWidth="140">
-                                                <ComboBoxItem x:Uid="Settings_CacheMemory" Content="内存优先"/>
-                                                <ComboBoxItem x:Uid="Settings_CacheDisk" Content="磁盘缓冲"/>
-                                                <ComboBoxItem x:Uid="Settings_CacheAuto" Content="自动"/>
+                                                <ComboBoxItem x:Uid="Settings_CacheMemory"/>
+                                                <ComboBoxItem x:Uid="Settings_CacheDisk"/>
+                                                <ComboBoxItem x:Uid="Settings_CacheAuto"/>
                                             </ComboBox>
                                         </StackPanel>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <CheckBox x:Uid="Settings_LazyLoad" Content="分块解析（逐条读取，减少内存占用）" IsChecked="{x:Bind ViewModel.LazyLoad, Mode=TwoWay}"/>
+                                        <CheckBox x:Uid="Settings_LazyLoad" IsChecked="{x:Bind ViewModel.LazyLoad, Mode=TwoWay}"/>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
                             </controls:SettingsExpander.Items>
@@ -360,7 +395,8 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="ExportDirectory"/>
                                 <Button Style="{StaticResource SubtleButtonStyle}" 
-                                        Command="{x:Bind ViewModel.PathManagementVM.AutoDetectDownloadPathCommand}">
+                                        Command="{x:Bind ViewModel.PathManagementVM.AutoDetectDownloadPathCommand}"
+                                        x:Uid="AutoDetect_DownloadPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -383,7 +419,8 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="WorkShopPath"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="1000">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="1000"
+                                        x:Uid="AutoDetect_WorkshopPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -406,7 +443,8 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="ProjectPath"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0100">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0100"
+                                        x:Uid="AutoDetect_ProjectPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -429,7 +467,8 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="OfficialWallpaperPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0001">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0001"
+                                        x:Uid="AutoDetect_OfficialPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
@@ -452,7 +491,8 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="AcfPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0010">
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0010"
+                                        x:Uid="AutoDetect_AcfPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
                                     </Button.Content>
