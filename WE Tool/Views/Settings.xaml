@@ -252,7 +252,7 @@
                                                                     </ToolTipService.ToolTip>
                                                                 </FontIcon>
                                                             </StackPanel>
-                                                            <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=TwoWay}" IsEnabled="{Binding ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,24,0,0">
+                                                            <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,24,0,0">
                                                                 <RadioButtons.Header>
                                                                     <TextBlock x:Uid="Settings_TexMode" Margin="28,0,12,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
                                                                 </RadioButtons.Header>
@@ -260,7 +260,7 @@
                                                                 <RadioButton x:Uid="Settings_TexExportConvert"/>
                                                                 <RadioButton x:Uid="Settings_TexExportOnlyImage"/>
                                                             </RadioButtons>
-                                                            <CheckBox x:Uid="Settings_CopyProject" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" IsEnabled="{Binding ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,12,0,0"/>
+                                                            <CheckBox x:Uid="Settings_CopyProject" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,12,0,0"/>
                                                         </StackPanel>
                                                     </RadioButton.Content>
                                                 </RadioButton>
@@ -273,7 +273,7 @@
                                                                 <CheckBox.Content>
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <TextBlock x:Uid="Settings_Output_IgnoreExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
-                                                                        <TextBox x:Uid="Settings_IgnoreExtList" HorizontalAlignment="Stretch" Margin="8,0,0,0" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=IgnoreExtension, Path=IsChecked}"/>
+                                                                        <TextBox x:Uid="Settings_IgnoreExtList" HorizontalAlignment="Stretch" Margin="8,0,0,0" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IgnoreExtension, Mode=OneWay}"/>
                                                                     </StackPanel>
                                                                 </CheckBox.Content>
                                                             </CheckBox>
@@ -281,7 +281,7 @@
                                                                 <CheckBox.Content>
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <TextBlock x:Uid="Settings_Output_OnlyExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
-                                                                        <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding ElementName=OnlyExtension, Path=IsChecked}" Margin="8,0,0,0"/>
+                                                                        <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OnlyExtension, Mode=OneWay}" Margin="8,0,0,0"/>
                                                                     </StackPanel>
                                                                 </CheckBox.Content>
                                                             </CheckBox>
