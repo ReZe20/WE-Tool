@@ -726,17 +726,14 @@
   <data name="Settings_LazyLoad.Content" xml:space="preserve">
     <value>청크 로딩（하나씩 읽어 메모리 사용량 감소）</value>
   </data>
-  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>기본 경로 복원</value>
-  </data>
-  <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>기본 경로 복원</value>
-  </data>
-  <data name="AutoDetect_ProjectPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>기본 경로 복원</value>
-  </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>모든 파일을 출력 폴더에 저장, 하위 폴더 사용 안 함</value>
+  </data>
+  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
+    <value>全量输出</value>
+  </data>
+  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
+    <value>自定义</value>
   </data>
   <data name="Settings_FolderStructure.Text" xml:space="preserve">
     <value>출력 폴더 구조</value>
@@ -753,8 +750,11 @@
   <data name="Settings_Subfolder_ByName.Content" xml:space="preserve">
     <value>하위 폴더를 배경화면 이름으로 명명</value>
   </data>
-  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
-    <value>하위 폴더 디렉터리 구조 유지</value>
+  <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>기본 경로 복원</value>
+  </data>
+  <data name="AutoDetect_ProjectPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>기본 경로 복원</value>
   </data>
   <data name="AutoDetect_OfficialPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>기본 경로 복원</value>
@@ -771,10 +771,10 @@
   <data name="Settings_Output_OnlyExtText.Text" xml:space="preserve">
     <value>仅提取扩展名</value>
   </data>
-  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
-    <value>全量输出</value>
+  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>기본 경로 복원</value>
   </data>
-  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
-    <value>自定义</value>
+  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
+    <value>하위 폴더 디렉터리 구조 유지</value>
   </data>
 </root>

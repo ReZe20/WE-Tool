@@ -762,12 +762,6 @@
   <data name="Settings_Subfolder_ByName.Content" xml:space="preserve">
     <value>子文件夹使用壁纸名字命名</value>
   </data>
-  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
-    <value>打乱原有目录结构，所有文件存放于同一子文件夹</value>
-  </data>
-  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>恢复默认路径</value>
-  </data>
   <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>恢复默认路径</value>
   </data>
@@ -788,5 +782,17 @@
   </data>
   <data name="Settings_Output_OnlyExtText.Text" xml:space="preserve">
     <value>仅提取扩展名</value>
+  </data>
+  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>恢复默认路径</value>
+  </data>
+  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
+    <value>打乱原有目录结构，所有文件存放于同一子文件夹</value>
+  </data>
+  <data name="Settings_KeepStructure.Content" xml:space="preserve">
+    <value>保持原有目录结构</value>
+  </data>
+  <data name="Settings_FlattenStructure.Content" xml:space="preserve">
+    <value>所有文件存于同一文件夹</value>
   </data>
 </root>

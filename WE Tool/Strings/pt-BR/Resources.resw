@@ -726,17 +726,14 @@
   <data name="Settings_LazyLoad.Content" xml:space="preserve">
     <value>Carregamento em partes（ler um por um, reduzir uso de memória）</value>
   </data>
-  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Restaurar caminho padrão</value>
-  </data>
-  <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Restaurar caminho padrão</value>
-  </data>
-  <data name="AutoDetect_ProjectPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Restaurar caminho padrão</value>
-  </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>Todos os arquivos na pasta de saída, sem subpastas</value>
+  </data>
+  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
+    <value>全量输出</value>
+  </data>
+  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
+    <value>自定义</value>
   </data>
   <data name="Settings_FolderStructure.Text" xml:space="preserve">
     <value>Estrutura da pasta de saída</value>
@@ -753,8 +750,11 @@
   <data name="Settings_Subfolder_ByName.Content" xml:space="preserve">
     <value>Nomear subpastas pelo nome do papel de parede</value>
   </data>
-  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
-    <value>Manter estrutura de subpastas</value>
+  <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar caminho padrão</value>
+  </data>
+  <data name="AutoDetect_ProjectPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar caminho padrão</value>
   </data>
   <data name="AutoDetect_OfficialPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>Restaurar caminho padrão</value>
@@ -771,10 +771,10 @@
   <data name="Settings_Output_OnlyExtText.Text" xml:space="preserve">
     <value>仅提取扩展名</value>
   </data>
-  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
-    <value>全量输出</value>
+  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar caminho padrão</value>
   </data>
-  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
-    <value>自定义</value>
+  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
+    <value>Manter estrutura de subpastas</value>
   </data>
 </root>

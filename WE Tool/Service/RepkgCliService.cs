@@ -135,8 +135,12 @@ public class RepkgCliService
                         CopyAllFiles(dir, wallpaperOutput, settings);
                     }
 
-                    // 子文件夹模式 + 打乱目录结构：将所有文件移至壁纸子文件夹根目录
-                    if (!settings.OneFolder && settings.KeepSubfolderStructure && Directory.Exists(wallpaperOutput))
+                    // 统一处理 project.json 和预览图导出（由 WE Tool 负责，不再通过 repkg-Re -c）
+                    if (settings.OutProjectJSON)
+                        CopyProjectFiles(dir, wallpaperOutput, settings);
+
+                    // 子文件夹模式 + 不保持目录结构：打乱，将所有文件移至壁纸子文件夹根目录
+                    if (!settings.OneFolder && !settings.KeepSubfolderStructure && Directory.Exists(wallpaperOutput))
                     {
                         foreach (var subDir in Directory.EnumerateDirectories(wallpaperOutput))
                         {
@@ -197,10 +201,9 @@ public class RepkgCliService
             sb.Append("-i ").Append(settings.IgnoreExtensionList).Append(' ');
         if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
             sb.Append("-e ").Append(settings.OnlyExtensionList).Append(' ');
-        if (settings.OneFolder) sb.Append("-s ");
-        if (settings.OutProjectJSON) sb.Append("-c ");
-        if (settings.UseProjectName) sb.Append("-n ");
-        if (settings.TexExportMode == 0) sb.Append("--no-tex-convert ");
+        if (!settings.KeepSubfolderStructure) sb.Append("-s ");
+        if (settings.TexExportMode == 0 && settings.OutputMode != 2) sb.Append("--no-tex-convert ");
+        if (settings.TexExportMode == 2 || settings.OutputMode == 2) sb.Append("--only-tex-images ");
         if (settings.CoverAllFiles) sb.Append("--overwrite ");
         if (settings.LazyLoad) sb.Append("--lazy ");
         sb.Append("-r"); // recursive
@@ -364,23 +367,118 @@ public class RepkgCliService
     {
         foreach (var file in sourceDir.EnumerateFiles())
         {
+            // 应用扩展名过滤（与 CLI 路径行为一致）
+            if (ShouldSkipExtension(file.Extension, settings)) continue;
+
+            // OutputMode=2（仅输出图像）：非场景壁纸只拷贝图像文件
+            if (settings.OutputMode == 2 && !IsImageExtension(file.Extension)) continue;
+
             var destPath = Path.Combine(outputDir, file.Name);
             if (!settings.CoverAllFiles && File.Exists(destPath)) continue;
             try { File.Copy(file.FullName, destPath, true); }
             catch (Exception ex) { Log.Error(ex, "拷贝文件失败: {File}", file.FullName); }
         }
-        // 勾选2.2时：打乱目录结构，子目录文件扁平放入同一目录
+        // 保持子文件夹的目录结构
         if (settings.KeepSubfolderStructure)
-        {
-            foreach (var subDir in sourceDir.EnumerateDirectories())
-                CopyAllFiles(subDir, outputDir, settings);
-        }
-        // 不勾选2.2时：保持子文件夹的目录结构
-        else
         {
             foreach (var subDir in sourceDir.EnumerateDirectories())
                 CopyAllFiles(subDir, Path.Combine(outputDir, subDir.Name), settings);
         }
+        // 打乱目录结构：子目录文件扁平放入同一目录
+        else
+        {
+            foreach (var subDir in sourceDir.EnumerateDirectories())
+                CopyAllFiles(subDir, outputDir, settings);
+        }
+    }
+
+    private static void CopyProjectFiles(DirectoryInfo sourceDir, string outputDir, ExtractSettings settings)
+    {
+        var projectJsonFile = sourceDir.GetFiles("project.json", SearchOption.TopDirectoryOnly)
+                                       .FirstOrDefault();
+        if (projectJsonFile == null || !projectJsonFile.Exists) return;
+
+        try
+        {
+            // 拷贝 project.json
+            var destProjectJson = Path.Combine(outputDir, "project.json");
+            if (settings.CoverAllFiles || !File.Exists(destProjectJson))
+            {
+                File.Copy(projectJsonFile.FullName, destProjectJson, true);
+                Log.Information("[repkg] 已拷贝 project.json 到 {Dir}", outputDir);
+            }
+
+            // 尝试读取 preview 字段并拷贝预览图
+            try
+            {
+                var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(projectJsonFile.FullName));
+                if (json.RootElement.TryGetProperty("preview", out var previewProp))
+                {
+                    var previewFile = Path.Combine(sourceDir.FullName, previewProp.GetString()!);
+                    if (File.Exists(previewFile))
+                    {
+                        var destPreview = Path.Combine(outputDir, Path.GetFileName(previewFile));
+                        if (settings.CoverAllFiles || !File.Exists(destPreview))
+                        {
+                            File.Copy(previewFile, destPreview, true);
+                            Log.Information("[repkg] 已拷贝预览图 {File} 到 {Dir}", Path.GetFileName(previewFile), outputDir);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[repkg] 读取 project.json preview 字段失败: {File}", projectJsonFile.FullName);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[repkg] 拷贝 project.json 失败: {File}", projectJsonFile.FullName);
+        }
+    }
+
+    private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".ico"
+    };
+
+    private static bool IsImageExtension(string extension)
+    {
+        if (string.IsNullOrEmpty(extension)) return false;
+        var ext = extension.StartsWith('.') ? extension : '.' + extension;
+        return ImageExtensions.Contains(ext);
+    }
+
+    private static bool ShouldSkipExtension(string extension, ExtractSettings settings)
+    {
+        if (string.IsNullOrEmpty(extension)) return false;
+        // 确保扩展名以 . 开头
+        var ext = extension.StartsWith('.') ? extension : '.' + extension;
+
+        if (settings.IgnoreExtension && !string.IsNullOrEmpty(settings.IgnoreExtensionList))
+        {
+            var ignoreList = settings.IgnoreExtensionList.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var ignored in ignoreList)
+            {
+                var normalized = ignored.Trim().StartsWith('.') ? ignored.Trim() : '.' + ignored.Trim();
+                if (string.Equals(ext, normalized, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+
+        if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
+        {
+            var onlyList = settings.OnlyExtensionList.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var only in onlyList)
+            {
+                var normalized = only.Trim().StartsWith('.') ? only.Trim() : '.' + only.Trim();
+                if (string.Equals(ext, normalized, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+            return true; // 不在白名单中 → 跳过
+        }
+
+        return false;
     }
 
     #region Win32 Process Suspend/Resume

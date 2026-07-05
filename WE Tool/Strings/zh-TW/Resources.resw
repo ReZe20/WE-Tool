@@ -729,6 +729,12 @@
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>所有檔案放在輸出資料夾，不用子資料夾</value>
   </data>
+  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
+    <value>全量输出</value>
+  </data>
+  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
+    <value>自定义</value>
+  </data>
   <data name="Settings_FolderStructure.Text" xml:space="preserve">
     <value>輸出資料夾結構</value>
   </data>
@@ -743,12 +749,6 @@
   </data>
   <data name="Settings_Subfolder_ByName.Content" xml:space="preserve">
     <value>子資料夾使用桌布名稱命名</value>
-  </data>
-  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
-    <value>保持子資料夾的目錄結構</value>
-  </data>
-  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>恢復預設路徑</value>
   </data>
   <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>恢復預設路徑</value>
@@ -771,10 +771,10 @@
   <data name="Settings_Output_OnlyExtText.Text" xml:space="preserve">
     <value>仅提取扩展名</value>
   </data>
-  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
-    <value>全量输出</value>
+  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>恢復預設路徑</value>
   </data>
-  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
-    <value>自定义</value>
+  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
+    <value>保持子資料夾的目錄結構</value>
   </data>
 </root>

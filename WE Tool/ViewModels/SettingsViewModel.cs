@@ -103,8 +103,10 @@ namespace WE_Tool.ViewModels
         }
 
         // === 输出设置的 IsEnabled 计算属性 ===
-        /// <summary>子文件夹模式 (OneFolder==true，因 BoolToIndexConverter true→0) 时，冲突处理等才可操作</summary>
-        public bool IsSubfolderModeContentEnabled => OneFolder;
+        /// <summary>子文件夹模式 (OneFolder==false) 时，冲突处理等才可操作</summary>
+        public bool IsSubfolderModeContentEnabled => !OneFolder;
+        /// <summary>全量输出(OutputMode==1)且不使用子文件夹(OneFolder==true)同时选中时，输出目录可能混乱，显示警告图标</summary>
+        public bool IsConflictMode => OutputMode == 1 && OneFolder;
         /// <summary>IgnoreExtension 勾选时，TextBox 才可编辑（父 CheckBox 禁用时自动级联）</summary>
         public bool IsIgnoreExtensionTextBoxEnabled => IgnoreExtension;
         /// <summary>OnlyExtension 勾选时，TextBox 才可编辑（父 CheckBox 禁用时自动级联）</summary>
@@ -113,6 +115,7 @@ namespace WE_Tool.ViewModels
         partial void OnOneFolderChanged(bool value)
         {
             OnPropertyChanged(nameof(IsSubfolderModeContentEnabled));
+            OnPropertyChanged(nameof(IsConflictMode));
         }
 
         partial void OnIgnoreExtensionChanged(bool value)
@@ -128,6 +131,11 @@ namespace WE_Tool.ViewModels
         /// <summary>输出类型：0=自定义, 1=全量输出, 2=仅输出图像</summary>
         [ObservableProperty]
         public partial int OutputMode { get; set; }
+
+        partial void OnOutputModeChanged(int value)
+        {
+            OnPropertyChanged(nameof(IsConflictMode));
+        }
 
         /// <summary>0=导出原始文件, 1=导出并转换TEX, 2=只导出TEX图片</summary>
         [ObservableProperty]

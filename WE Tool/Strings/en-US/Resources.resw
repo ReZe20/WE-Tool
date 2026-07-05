@@ -762,12 +762,6 @@
   <data name="Settings_Subfolder_ByName.Content" xml:space="preserve">
     <value>Name subfolders by wallpaper name</value>
   </data>
-  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
-    <value>Flatten all files into the wallpaper subfolder</value>
-  </data>
-  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Restore Default Path</value>
-  </data>
   <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>Restore Default Path</value>
   </data>
@@ -788,5 +782,11 @@
   </data>
   <data name="Settings_Output_OnlyExtText.Text" xml:space="preserve">
     <value>仅提取扩展名</value>
+  </data>
+  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restore Default Path</value>
+  </data>
+  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
+    <value>Flatten all files into the wallpaper subfolder</value>
   </data>
 </root>

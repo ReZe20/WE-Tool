@@ -232,13 +232,30 @@
                                         <StackPanel>
                                             <RadioButtons MaxColumns="3" SelectedIndex="{x:Bind ViewModel.OutputMode, Converter={StaticResource IndexToValueConverter}, ConverterParameter='1,2,0', Mode=TwoWay}">
                                                 <RadioButtons.Header>
-                                                    <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,0,12,0"/>
+                                                    <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
                                                 </RadioButtons.Header>
                                                 <RadioButton>
                                                     <RadioButton.Content>
                                                         <StackPanel>
-                                                            <TextBlock x:Uid="Settings_OutputType_Full"/>
-                                                            <CheckBox x:Uid="Settings_CopyProject" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" IsEnabled="{Binding ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}" Margin="0,12,0,0"/>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock x:Uid="Settings_OutputType_Full" VerticalAlignment="Top"/>
+                                                                <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
+                                                                          Visibility="{x:Bind ViewModel.IsConflictMode, Mode=OneWay}"
+                                                                          VerticalAlignment="Center">
+                                                                    <ToolTipService.ToolTip>
+                                                                        <ToolTip Content="全量输出与不使用子文件夹同时选中可能导致文件目录混乱，建议关闭其中一项"/>
+                                                                    </ToolTipService.ToolTip>
+                                                                </FontIcon>
+                                                            </StackPanel>
+                                                            <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=TwoWay}" IsEnabled="{Binding ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}" Margin="0,24,0,0">
+                                                                <RadioButtons.Header>
+                                                                    <TextBlock x:Uid="Settings_TexMode" Margin="28,0,12,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                                </RadioButtons.Header>
+                                                                <RadioButton x:Uid="Settings_TexExportRaw"/>
+                                                                <RadioButton x:Uid="Settings_TexExportConvert"/>
+                                                                <RadioButton x:Uid="Settings_TexExportOnlyImage"/>
+                                                            </RadioButtons>
+                                                            <CheckBox x:Uid="Settings_CopyProject" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" IsEnabled="{Binding ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}" Margin="0,24,0,0"/>
                                                         </StackPanel>
                                                     </RadioButton.Content>
                                                 </RadioButton>
@@ -247,7 +264,7 @@
                                                     <RadioButton.Content>
                                                         <StackPanel>
                                                             <TextBlock x:Uid="Settings_OutputType_Custom"/>
-                                                            <CheckBox x:Name="IgnoreExtension" Margin="0,8,0,0" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}">
+                                                            <CheckBox x:Name="IgnoreExtension" Margin="0,24,0,0" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}">
                                                                 <CheckBox.Content>
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <TextBlock x:Uid="Settings_Output_IgnoreExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
@@ -267,7 +284,7 @@
                                                     </RadioButton.Content>
                                                 </RadioButton>
                                             </RadioButtons>
-                                            
+
                                         </StackPanel>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>
@@ -275,35 +292,24 @@
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
                                         <StackPanel>
-                                            <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,0,0,0"/>
+                                            <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
                                             <RadioButtons SelectedIndex="{x:Bind ViewModel.OneFolder, Converter={StaticResource BoolToIndexConverter}, Mode=TwoWay}" MaxColumns="2">
                                                 <RadioButton>
                                                     <RadioButton.Content>
                                                         <StackPanel>
-                                                            <TextBlock x:Uid="Settings_SubfolderOutput_Header"/>
-                                                            <RadioButtons Margin="0,0,0,0" SelectedIndex="{x:Bind ViewModel.OverwriteMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock x:Uid="Settings_FlatOutput_Header"/>
+                                                                <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
+                                                                          Visibility="{x:Bind ViewModel.IsConflictMode, Mode=OneWay}"
+                                                                          VerticalAlignment="Center">
+                                                                    <ToolTipService.ToolTip>
+                                                                        <ToolTip Content="全量输出与不使用子文件夹同时选中可能导致文件目录混乱，建议关闭其中一项"/>
+                                                                    </ToolTipService.ToolTip>
+                                                                </FontIcon>
+                                                            </StackPanel>
+                                                            <RadioButtons IsEnabled="{x:Bind ViewModel.OneFolder, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.FlatFileNamingMode, Converter={StaticResource IndexToValueConverter}, ConverterParameter='1,0', Mode=TwoWay}">
                                                                 <RadioButtons.Header>
-                                                                    <TextBlock x:Uid="Settings_FileConflict" FontWeight="SemiBold" Margin="0,12,0,0"/>
-                                                                </RadioButtons.Header>
-                                                                <RadioButton x:Uid="Settings_OverwriteFiles"/>
-                                                                <RadioButton x:Uid="Settings_SkipExtracted"/>
-                                                            </RadioButtons>
-                                                            <CheckBox x:Uid="Settings_Subfolder_ByName"
-                                                                      IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"
-                                                                      IsEnabled="{x:Bind ViewModel.OneFolder, Mode=OneWay}" Margin="0,12,0,0"/>
-                                                            <CheckBox x:Uid="Settings_Subfolder_KeepStructure" Margin="0,4,0,0"
-                                                                      IsChecked="{x:Bind ViewModel.KeepSubfolderStructure, Mode=TwoWay}"
-                                                                      IsEnabled="{x:Bind ViewModel.OneFolder, Mode=OneWay}"/>
-                                                        </StackPanel>
-                                                    </RadioButton.Content>
-                                                </RadioButton>
-                                                <RadioButton>
-                                                    <RadioButton.Content>
-                                                        <StackPanel>
-                                                            <TextBlock x:Uid="Settings_FlatOutput_Header"/>
-                                                            <RadioButtons IsEnabled="{x:Bind ViewModel.OneFolder, Converter={StaticResource InverseBoolConverter}, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.FlatFileNamingMode, Converter={StaticResource IndexToValueConverter}, ConverterParameter='1,0', Mode=TwoWay}">
-                                                                <RadioButtons.Header>
-                                                                    <TextBlock x:Uid="Settings_FlatFileNaming" FontWeight="SemiBold" Margin="0,12,0,0"/>
+                                                                    <TextBlock x:Uid="Settings_FlatFileNaming" FontWeight="SemiBold" Margin="0,12,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
                                                                 </RadioButtons.Header>
                                                                 <RadioButton x:Uid="Settings_FlatOutput_ByName" Margin="0,8,0,0"/>
                                                                 <RadioButton x:Uid="Settings_FlatOutput_KeepName"/>
@@ -311,8 +317,31 @@
                                                         </StackPanel>
                                                     </RadioButton.Content>
                                                 </RadioButton>
-
-
+                                                <RadioButton>
+                                                    <RadioButton.Content>
+                                                        <StackPanel>
+                                                            <TextBlock x:Uid="Settings_SubfolderOutput_Header"/>
+                                                            <RadioButtons IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}"
+                                                                          SelectedIndex="{x:Bind ViewModel.KeepSubfolderStructure, Converter={StaticResource BoolToIndexConverter}, Mode=TwoWay}">
+                                                                <RadioButtons.Header>
+                                                                    <TextBlock Text="场景类壁纸" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                                </RadioButtons.Header>
+                                                                <RadioButton x:Uid="Settings_KeepStructure"/>
+                                                                <RadioButton x:Uid="Settings_FlattenStructure"/>
+                                                            </RadioButtons>
+                                                            <RadioButtons SelectedIndex="{x:Bind ViewModel.OverwriteMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}">
+                                                                <RadioButtons.Header>
+                                                                    <TextBlock x:Uid="Settings_FileConflict" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                                </RadioButtons.Header>
+                                                                <RadioButton x:Uid="Settings_OverwriteFiles"/>
+                                                                <RadioButton x:Uid="Settings_SkipExtracted"/>
+                                                            </RadioButtons>
+                                                            <CheckBox x:Uid="Settings_Subfolder_ByName"
+                                                                      IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"
+                                                                      IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}" Margin="0,24,0,0"/>
+                                                        </StackPanel>
+                                                    </RadioButton.Content>
+                                                </RadioButton>
                                             </RadioButtons>
                                         </StackPanel>
                                     </controls:SettingsCard.Header>
@@ -320,29 +349,9 @@
                             </controls:SettingsExpander.Items>
                         </controls:SettingsExpander>
 
-                        <controls:SettingsExpander x:Uid="Settings_PkgSettings" Header="PKG 解析设置" Description="仅对含 .pkg 的场景壁纸生效" Margin="0,0,0,10">
-                            <controls:SettingsExpander.HeaderIcon>
-                                <FontIcon Glyph="&#xE90F;"/>
-                            </controls:SettingsExpander.HeaderIcon>
-                            <controls:SettingsExpander.Items>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=OneWay}">
-                                            <RadioButtons.Header>
-                                                <TextBlock x:Uid="Settings_TexMode" Margin="28,0,12,0"/>
-                                            </RadioButtons.Header>
-                                            <RadioButton x:Uid="Settings_TexExportRaw"/>
-                                            <RadioButton x:Uid="Settings_TexExportConvert"/>
-                                            <RadioButton x:Uid="Settings_TexExportOnlyImage"/>
-                                        </RadioButtons>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                            </controls:SettingsExpander.Items>
-                        </controls:SettingsExpander>
-
                         <controls:SettingsExpander x:Uid="Settings_CpuParallel" Header="性能" Description="并发提取数、进程优先级、内存控制" Margin="0,0,0,10">
                             <controls:SettingsExpander.HeaderIcon>
-                                <FontIcon Glyph="&#xE8B9;"/>
+                                <FontIcon Glyph="&#xE950;"/>
                             </controls:SettingsExpander.HeaderIcon>
                             <controls:SettingsExpander.Items>
                                 <controls:SettingsCard>

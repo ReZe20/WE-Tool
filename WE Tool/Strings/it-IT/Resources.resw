@@ -726,17 +726,14 @@
   <data name="Settings_LazyLoad.Content" xml:space="preserve">
     <value>Caricamento a blocchi（leggi uno per uno, riduci uso memoria）</value>
   </data>
-  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Ripristina percorso predefinito</value>
-  </data>
-  <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Ripristina percorso predefinito</value>
-  </data>
-  <data name="AutoDetect_ProjectPath.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Ripristina percorso predefinito</value>
-  </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>Tutti i file nella cartella di output, senza sottocartelle</value>
+  </data>
+  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
+    <value>全量输出</value>
+  </data>
+  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
+    <value>自定义</value>
   </data>
   <data name="Settings_FolderStructure.Text" xml:space="preserve">
     <value>Struttura della cartella di output</value>
@@ -753,8 +750,11 @@
   <data name="Settings_Subfolder_ByName.Content" xml:space="preserve">
     <value>Denominare le sottocartelle con il nome dello sfondo</value>
   </data>
-  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
-    <value>Mantenere la struttura delle sottocartelle</value>
+  <data name="AutoDetect_WorkshopPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ripristina percorso predefinito</value>
+  </data>
+  <data name="AutoDetect_ProjectPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ripristina percorso predefinito</value>
   </data>
   <data name="AutoDetect_OfficialPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>Ripristina percorso predefinito</value>
@@ -771,10 +771,10 @@
   <data name="Settings_Output_OnlyExtText.Text" xml:space="preserve">
     <value>仅提取扩展名</value>
   </data>
-  <data name="Settings_OutputType_Full.Text" xml:space="preserve">
-    <value>全量输出</value>
+  <data name="AutoDetect_DownloadPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ripristina percorso predefinito</value>
   </data>
-  <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
-    <value>自定义</value>
+  <data name="Settings_Subfolder_KeepStructure.Content" xml:space="preserve">
+    <value>Mantenere la struttura delle sottocartelle</value>
   </data>
 </root>
