@@ -73,7 +73,7 @@ namespace WE_Tool.ViewModels
         public partial string OnlyExtensionList { get; set; } = null!;
 
         [ObservableProperty]
-        public partial bool OneFolder { get; set; }
+        public partial int OneFolder { get; set; }
 
         [ObservableProperty]
         public partial bool OutProjectJSON { get; set; }
@@ -85,9 +85,9 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial int FlatFileNamingMode { get; set; }
 
-        /// <summary>子文件夹模式下保持源目录结构</summary>
+        /// <summary>子文件夹模式下保持源目录结构：0=保持, 1=打平</summary>
         [ObservableProperty]
-        public partial bool KeepSubfolderStructure { get; set; }
+        public partial int KeepSubfolderStructure { get; set; }
 
         [ObservableProperty]
         public partial bool CoverAllFiles { get; set; }
@@ -103,19 +103,22 @@ namespace WE_Tool.ViewModels
         }
 
         // === 输出设置的 IsEnabled 计算属性 ===
-        /// <summary>子文件夹模式 (OneFolder==false) 时，冲突处理等才可操作</summary>
-        public bool IsSubfolderModeContentEnabled => !OneFolder;
-        /// <summary>全量输出(OutputMode==1)且不使用子文件夹(OneFolder==true)同时选中时，输出目录可能混乱，显示警告图标</summary>
-        public bool IsConflictMode => OutputMode == 1 && OneFolder;
+        /// <summary>子文件夹模式 (OneFolder==0) 时，冲突处理等才可操作</summary>
+        public bool IsSubfolderModeContentEnabled => OneFolder == 0;
+        /// <summary>全量输出(OutputMode==0)且不使用子文件夹(OneFolder==1)同时选中时，输出目录可能混乱，显示警告图标</summary>
+        public bool IsConflictMode => OutputMode == 0 && OneFolder == 1;
+        /// <summary>平铺模式 (OneFolder==1) 时，平铺相关控件可操作</summary>
+        public bool IsFlatModeContentEnabled => OneFolder == 1;
         /// <summary>IgnoreExtension 勾选时，TextBox 才可编辑（父 CheckBox 禁用时自动级联）</summary>
         public bool IsIgnoreExtensionTextBoxEnabled => IgnoreExtension;
         /// <summary>OnlyExtension 勾选时，TextBox 才可编辑（父 CheckBox 禁用时自动级联）</summary>
         public bool IsOnlyExtensionTextBoxEnabled => OnlyExtension;
 
-        partial void OnOneFolderChanged(bool value)
+        partial void OnOneFolderChanged(int value)
         {
             OnPropertyChanged(nameof(IsSubfolderModeContentEnabled));
             OnPropertyChanged(nameof(IsConflictMode));
+            OnPropertyChanged(nameof(IsFlatModeContentEnabled));
         }
 
         partial void OnIgnoreExtensionChanged(bool value)
@@ -145,7 +148,7 @@ namespace WE_Tool.ViewModels
 
         /// <summary>最大并发提取数，1 到 MaxConcurrentMax</summary>
         [ObservableProperty]
-        public partial int MaxConcurrentExtractions { get; set; } = 1;
+        public partial int MaxConcurrentExtractions { get; set; } = Environment.ProcessorCount;
 
         /// <summary>0=Normal, 1=BelowNormal, 2=Idle</summary>
         [ObservableProperty]
@@ -154,10 +157,6 @@ namespace WE_Tool.ViewModels
         /// <summary>当前 CPU 逻辑核心数，用作 NumberBox 上限</summary>
         public int MaxConcurrentMax => Environment.ProcessorCount;
 
-        /// <summary>纹理缓存模式：0=内存优先, 1=磁盘缓冲, 2=自动</summary>
-        [ObservableProperty]
-        public partial int TextureCacheMode { get; set; }
-
         // === 文件过滤（阶段3） ===
 
         [ObservableProperty]
@@ -165,7 +164,7 @@ namespace WE_Tool.ViewModels
 
         /// <summary>分块解析，逐条读取减少内存占用</summary>
         [ObservableProperty]
-        public partial bool LazyLoad { get; set; }
+        public partial bool LazyLoad { get; set; } = true;
 
         public SettingsViewModel(IConfigService configService, IPickerService pickerService)
         {
@@ -373,7 +372,6 @@ namespace WE_Tool.ViewModels
 
             MaxConcurrentExtractions = _settings.Extract.MaxConcurrentExtractions;
             ProcessPriority = _settings.Extract.ProcessPriority;
-            TextureCacheMode = _settings.Extract.TextureCacheMode;
             SkipExistingOutput = _settings.Extract.SkipExistingOutput;
             LazyLoad = _settings.Extract.LazyLoad;
 
@@ -586,7 +584,6 @@ namespace WE_Tool.ViewModels
 
                     _settings.Extract.MaxConcurrentExtractions = MaxConcurrentExtractions;
                     _settings.Extract.ProcessPriority = ProcessPriority;
-                    _settings.Extract.TextureCacheMode = TextureCacheMode;
                     _settings.Extract.SkipExistingOutput = OverwriteMode == 1;
                     _settings.Extract.LazyLoad = LazyLoad;
 

@@ -108,8 +108,8 @@ public class RepkgCliService
                 void ItemProgress(string action, double pct)
                     => ReportProgress($"{name}|{action}|{pct}");
 
-                // 跳过已提取（阶段3）
-                if (settings.SkipExistingOutput && Directory.Exists(wallpaperOutput))
+                // 跳过已提取 — 仅子文件夹模式下检查（平铺模式共用输出目录，无法按壁纸判断）
+                if (settings.OneFolder == 0 && settings.SkipExistingOutput && Directory.Exists(wallpaperOutput))
                 {
                     if (Directory.EnumerateFileSystemEntries(wallpaperOutput).Any())
                     {
@@ -132,33 +132,16 @@ public class RepkgCliService
                     else
                     {
                         Directory.CreateDirectory(wallpaperOutput);
-                        CopyAllFiles(dir, wallpaperOutput, settings);
+                        CopyAllFiles(dir, wallpaperOutput, settings, wallpaper.Type == "scene");
                     }
 
                     // 统一处理 project.json 和预览图导出（由 WE Tool 负责，不再通过 repkg-Re -c）
-                    if (settings.OutProjectJSON)
+                    // OutputMode==1（仅输出图像）时不复制 project.json/预览图
+                    if (settings.OutProjectJSON && settings.OutputMode != 1)
                         CopyProjectFiles(dir, wallpaperOutput, settings);
 
-                    // 子文件夹模式 + 不保持目录结构：打乱，将所有文件移至壁纸子文件夹根目录
-                    if (!settings.OneFolder && !settings.KeepSubfolderStructure && Directory.Exists(wallpaperOutput))
-                    {
-                        foreach (var subDir in Directory.EnumerateDirectories(wallpaperOutput))
-                        {
-                            foreach (var f in Directory.EnumerateFiles(subDir, "*", SearchOption.AllDirectories))
-                            {
-                                var dest = Path.Combine(wallpaperOutput, Path.GetFileName(f));
-                                int seq = 2;
-                                while (File.Exists(dest))
-                                    dest = Path.Combine(wallpaperOutput, $"{seq}_{Path.GetFileName(f)}");
-                                File.Move(f, dest);
-                            }
-                        }
-                        foreach (var subDir in Directory.EnumerateDirectories(wallpaperOutput))
-                            Directory.Delete(subDir, true);
-                    }
-
                     // 平铺模式 + 按壁纸名命名文件：将文件重命名为 壁纸名_原文件名
-                    if (settings.OneFolder && settings.FlatFileNamingMode == 1 && !string.IsNullOrEmpty(wallpaper.Title))
+                    if (settings.OneFolder == 1 && settings.FlatFileNamingMode == 1 && !string.IsNullOrEmpty(wallpaper.Title))
                     {
                         var safeTitle = GetSafeName(wallpaper.Title);
                         foreach (var f in Directory.EnumerateFiles(wallpaperOutput))
@@ -197,13 +180,26 @@ public class RepkgCliService
         var sb = new StringBuilder();
         sb.Append("extract \""); sb.Append(input); sb.Append("\" ");
         sb.Append("-o \""); sb.Append(output); sb.Append("\" ");
-        if (settings.IgnoreExtension && !string.IsNullOrEmpty(settings.IgnoreExtensionList))
-            sb.Append("-i ").Append(settings.IgnoreExtensionList).Append(' ');
-        if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
-            sb.Append("-e ").Append(settings.OnlyExtensionList).Append(' ');
-        if (!settings.KeepSubfolderStructure) sb.Append("-s ");
-        if (settings.TexExportMode == 0 && settings.OutputMode != 2) sb.Append("--no-tex-convert ");
-        if (settings.TexExportMode == 2 || settings.OutputMode == 2) sb.Append("--only-tex-images ");
+
+        // 扩展名过滤仅在自定义模式(OutputMode==2)下生效，不影响仅输出图像
+        if (settings.OutputMode == 2)
+        {
+            if (settings.IgnoreExtension && !string.IsNullOrEmpty(settings.IgnoreExtensionList))
+                sb.Append("-i ").Append(settings.IgnoreExtensionList).Append(' ');
+            if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
+                sb.Append("-e ").Append(settings.OnlyExtensionList).Append(' ');
+        }
+
+        if (settings.KeepSubfolderStructure == 1) sb.Append("-s ");
+
+        // Tex 处理：OutputMode==1 独立分支，不受 TexExportMode 影响
+        if (settings.OutputMode == 1)
+            sb.Append("--only-tex-images ");
+        else if (settings.TexExportMode == 0)
+            sb.Append("--no-tex-convert ");
+        else if (settings.TexExportMode == 2)
+            sb.Append("--only-tex-images ");
+
         if (settings.CoverAllFiles) sb.Append("--overwrite ");
         if (settings.LazyLoad) sb.Append("--lazy ");
         sb.Append("-r"); // recursive
@@ -338,7 +334,7 @@ public class RepkgCliService
     private static string GetOutputPath(string outputRoot, WallpaperItem wallpaper, ExtractSettings settings)
     {
         // 平铺模式：所有文件直接放到输出根目录，不建子文件夹
-        if (settings.OneFolder)
+        if (settings.OneFolder == 1)
             return outputRoot;
 
         // 子文件夹模式
@@ -363,32 +359,37 @@ public class RepkgCliService
         return safe.ToString().Trim();
     }
 
-    private static void CopyAllFiles(DirectoryInfo sourceDir, string outputDir, ExtractSettings settings)
+    private static void CopyAllFiles(DirectoryInfo sourceDir, string outputDir, ExtractSettings settings, bool isScene = false)
     {
         foreach (var file in sourceDir.EnumerateFiles())
         {
-            // 应用扩展名过滤（与 CLI 路径行为一致）
-            if (ShouldSkipExtension(file.Extension, settings)) continue;
-
-            // OutputMode=2（仅输出图像）：非场景壁纸只拷贝图像文件
-            if (settings.OutputMode == 2 && !IsImageExtension(file.Extension)) continue;
+            // OutputMode==1（仅输出图像）：独立模式，只检查图像扩展名，不受 IgnoreExtension/OnlyExtension 影响
+            if (settings.OutputMode == 1)
+            {
+                if (!IsImageExtension(file.Extension)) continue;
+            }
+            else
+            {
+                // 自定义模式的扩展名过滤
+                if (ShouldSkipExtension(file.Extension, settings)) continue;
+            }
 
             var destPath = Path.Combine(outputDir, file.Name);
             if (!settings.CoverAllFiles && File.Exists(destPath)) continue;
             try { File.Copy(file.FullName, destPath, true); }
             catch (Exception ex) { Log.Error(ex, "拷贝文件失败: {File}", file.FullName); }
         }
-        // 保持子文件夹的目录结构
-        if (settings.KeepSubfolderStructure)
+        // 子目录处理：非场景壁纸始终保持目录结构，场景壁纸由 KeepSubfolderStructure 控制
+        bool flatten = isScene && settings.KeepSubfolderStructure == 1;
+        if (flatten)
         {
             foreach (var subDir in sourceDir.EnumerateDirectories())
-                CopyAllFiles(subDir, Path.Combine(outputDir, subDir.Name), settings);
+                CopyAllFiles(subDir, outputDir, settings, isScene);
         }
-        // 打乱目录结构：子目录文件扁平放入同一目录
         else
         {
             foreach (var subDir in sourceDir.EnumerateDirectories())
-                CopyAllFiles(subDir, outputDir, settings);
+                CopyAllFiles(subDir, Path.Combine(outputDir, subDir.Name), settings, isScene);
         }
     }
 

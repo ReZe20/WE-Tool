@@ -1796,19 +1796,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 OneFolder = ViewModel.OneFolder,
                 FlatFileNamingMode = ViewModel.FlatFileNamingMode,
                 KeepSubfolderStructure = ViewModel.KeepSubfolderStructure,
-                CoverAllFiles = ViewModel.OneFolder ? ViewModel.CoverAllFiles : true,
+                CoverAllFiles = ViewModel.OneFolder == 1 ? ViewModel.CoverAllFiles : true,
                 IgnoreExtension = ViewModel.IgnoreExtension,
                 IgnoreExtensionList = ViewModel.IgnoreExtensionList,
                 OnlyExtension = ViewModel.OnlyExtension,
                 OnlyExtensionList = ViewModel.OnlyExtensionList,
                 OutProjectJSON = ViewModel.OutProjectJSON,
                 TexExportMode = ViewModel.TexExportMode,
+                OutputMode = ViewModel.OutputMode,
 
                 // 性能参数
                 MaxConcurrentExtractions = ViewModel.MaxConcurrentExtractions,
                 ProcessPriority = ViewModel.ProcessPriority,
                 // 文件过滤
-                SkipExistingOutput = ViewModel.OneFolder ? ViewModel.SkipExistingOutput : false,
+                SkipExistingOutput = ViewModel.OneFolder == 1 ? ViewModel.SkipExistingOutput : false,
                 LazyLoad = ViewModel.LazyLoad,
             };
 
