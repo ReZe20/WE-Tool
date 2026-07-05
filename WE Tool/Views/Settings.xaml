@@ -229,9 +229,17 @@
                                         <StackPanel>
                                             <RadioButtons MaxColumns="3" SelectedIndex="{x:Bind ViewModel.OutputMode, Mode=TwoWay}">
                                                 <RadioButtons.Header>
-                                                    <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                            <Button x:Name="OutputTypeHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="OutputTypeHelpButton_Click">
+                                                                <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                                            </Button>
+                                                        </StackPanel>
+                                                        <TeachingTip x:Name="OutputTypeTeachingTip" Title="输出类型" Subtitle="选择壁纸的输出格式。" CloseButtonContent="关闭" ActionButtonContent="继续" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                    </StackPanel>
                                                 </RadioButtons.Header>
-                                                <RadioButton>
+                                                <RadioButton x:Name="OutputTypeFirstRadio">
                                                     <RadioButton.Content>
                                                         <StackPanel>
                                                             <StackPanel Orientation="Horizontal">
@@ -256,8 +264,8 @@
                                                         </StackPanel>
                                                     </RadioButton.Content>
                                                 </RadioButton>
-                                                <RadioButton x:Uid="Settings_OutputType_ImageOnly"/>
-                                                <RadioButton>
+                                                <RadioButton x:Name="OutputTypeImageOnlyRadio" x:Uid="Settings_OutputType_ImageOnly"/>
+                                                <RadioButton x:Name="OutputTypeCustomRadio">
                                                     <RadioButton.Content>
                                                         <StackPanel>
                                                             <TextBlock x:Uid="Settings_OutputType_Custom"/>
@@ -289,9 +297,15 @@
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
                                         <StackPanel>
-                                            <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                <Button x:Name="FolderStructureHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="FolderStructureHelpButton_Click">
+                                                    <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                                </Button>
+                                            </StackPanel>
+                                            <TeachingTip x:Name="FolderStructureTeachingTip" Title="输出文件夹结构" Subtitle="控制文件的组织方式。" CloseButtonContent="关闭" ActionButtonContent="继续" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
                                             <RadioButtons SelectedIndex="{x:Bind ViewModel.OneFolder, Mode=TwoWay}" MaxColumns="2">
-                                                <RadioButton>
+                                                <RadioButton x:Name="FolderStructureFirstRadio">
                                                     <RadioButton.Content>
                                                         <StackPanel>
                                                             <TextBlock x:Uid="Settings_SubfolderOutput_Header"/>
@@ -308,7 +322,7 @@
                                                         </StackPanel>
                                                     </RadioButton.Content>
                                                 </RadioButton>
-                                                <RadioButton>
+                                                <RadioButton x:Name="FolderStructureFlatRadio">
                                                     <RadioButton.Content>
                                                         <StackPanel>
                                                             <StackPanel Orientation="Horizontal">
@@ -339,10 +353,18 @@
                                     <controls:SettingsCard.Header>
                                         <RadioButtons SelectedIndex="{x:Bind ViewModel.KeepSubfolderStructure, Mode=TwoWay}">
                                             <RadioButtons.Header>
-                                                <TextBlock Text="场景类壁纸" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="场景类壁纸" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                        <Button x:Name="SceneWallpaperHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="SceneWallpaperHelpButton_Click">
+                                                            <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                                        </Button>
+                                                    </StackPanel>
+                                                    <TeachingTip x:Name="SceneWallpaperTeachingTip" Title="场景类壁纸" Subtitle="选择场景壁纸的文件夹策略。" CloseButtonContent="关闭" ActionButtonContent="继续" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                </StackPanel>
                                             </RadioButtons.Header>
-                                            <RadioButton x:Uid="Settings_KeepStructure"/>
-                                            <RadioButton x:Uid="Settings_FlattenStructure"/>
+                                            <RadioButton x:Name="SceneWallpaperFirstRadio" x:Uid="Settings_KeepStructure"/>
+                                            <RadioButton x:Name="SceneWallpaperFlattenRadio" x:Uid="Settings_FlattenStructure"/>
                                         </RadioButtons>
                                     </controls:SettingsCard.Header>
                                 </controls:SettingsCard>

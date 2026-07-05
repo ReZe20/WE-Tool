@@ -74,4 +74,71 @@ public sealed partial class Settings : Page
     {
 
     }
+
+    private void OutputTypeHelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        OutputTypeTeachingTip.Target = OutputTypeFirstRadio;
+        OutputTypeTeachingTip.IsOpen = true;
+    }
+
+    private void FolderStructureHelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        FolderStructureTeachingTip.Target = FolderStructureFirstRadio;
+        FolderStructureTeachingTip.IsOpen = true;
+    }
+
+    private void SceneWallpaperHelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        SceneWallpaperTeachingTip.Target = SceneWallpaperFirstRadio;
+        SceneWallpaperTeachingTip.IsOpen = true;
+    }
+
+    private void TeachingTip_ActionButtonClick(TeachingTip sender, object args)
+    {
+        if (sender == OutputTypeTeachingTip)
+        {
+            if (OutputTypeTeachingTip.Target == OutputTypeFirstRadio)
+            {
+                OutputTypeTeachingTip.Target = OutputTypeImageOnlyRadio;
+            }
+            else if (OutputTypeTeachingTip.Target == OutputTypeImageOnlyRadio)
+            {
+                OutputTypeTeachingTip.Target = OutputTypeCustomRadio;
+            }
+            else
+            {
+                OutputTypeTeachingTip.IsOpen = false;
+                return;
+            }
+        }
+        else if (sender == FolderStructureTeachingTip)
+        {
+            if (FolderStructureTeachingTip.Target == FolderStructureFirstRadio)
+            {
+                FolderStructureTeachingTip.Target = FolderStructureFlatRadio;
+            }
+            else
+            {
+                FolderStructureTeachingTip.IsOpen = false;
+                return;
+            }
+        }
+        else if (sender == SceneWallpaperTeachingTip)
+        {
+            if (SceneWallpaperTeachingTip.Target == SceneWallpaperFirstRadio)
+            {
+                SceneWallpaperTeachingTip.Target = SceneWallpaperFlattenRadio;
+            }
+            else
+            {
+                SceneWallpaperTeachingTip.IsOpen = false;
+                return;
+            }
+        }
+    }
+
+    private void TeachingTip_CloseButtonClick(TeachingTip sender, object args)
+    {
+        sender.IsOpen = false;
+    }
 }
