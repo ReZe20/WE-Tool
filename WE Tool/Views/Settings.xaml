@@ -231,24 +231,26 @@
                                                 <RadioButtons.Header>
                                                     <StackPanel>
                                                         <StackPanel Orientation="Horizontal">
-                                                            <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                            <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
                                                             <Button x:Name="OutputTypeHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="OutputTypeHelpButton_Click">
                                                                 <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
                                                             </Button>
                                                         </StackPanel>
-                                                        <TeachingTip x:Name="OutputTypeTeachingTip" Title="输出类型" Subtitle="选择壁纸的输出格式。" CloseButtonContent="关闭" ActionButtonContent="继续" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                        <TeachingTip x:Name="OutputTypeTeachingTip_1" x:Uid="Settings_TeachingTip_Output1" Target="{x:Bind OutputTypeFirstRadio}" Title="{x:Bind OutputTypeFirstRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                        <TeachingTip x:Name="OutputTypeTeachingTip_2" x:Uid="Settings_TeachingTip_Output2" Target="{x:Bind OutputTypeImageOnlyRadio}" Title="{x:Bind OutputTypeImageOnlyRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                        <TeachingTip x:Name="OutputTypeTeachingTip_3" x:Uid="Settings_TeachingTip_Output3" Target="{x:Bind OutputTypeCustomRadio}" Title="{x:Bind OutputTypeCustomRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
                                                     </StackPanel>
                                                 </RadioButtons.Header>
                                                 <RadioButton x:Name="OutputTypeFirstRadio">
                                                     <RadioButton.Content>
                                                         <StackPanel>
                                                             <StackPanel Orientation="Horizontal">
-                                                                <TextBlock x:Uid="Settings_OutputType_Full" VerticalAlignment="Top"/>
+                                                                <TextBlock x:Name="OutputTypeFirstRadioTitle" x:Uid="Settings_OutputType_Full" VerticalAlignment="Top"/>
                                                                 <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
                                                                           Visibility="{x:Bind ViewModel.IsConflictMode, Mode=OneWay}"
                                                                           VerticalAlignment="Center">
                                                                     <ToolTipService.ToolTip>
-                                                                        <ToolTip Content="全量输出与不使用子文件夹同时选中可能导致文件目录混乱，建议关闭其中一项"/>
+                                                                        <ToolTip x:Uid="Settings_ConflictWarning_Output"/>
                                                                     </ToolTipService.ToolTip>
                                                                 </FontIcon>
                                                             </StackPanel>
@@ -268,7 +270,7 @@
                                                 <RadioButton x:Name="OutputTypeCustomRadio">
                                                     <RadioButton.Content>
                                                         <StackPanel>
-                                                            <TextBlock x:Uid="Settings_OutputType_Custom"/>
+                                                            <TextBlock x:Name="OutputTypeCustomRadioTitle" x:Uid="Settings_OutputType_Custom"/>
                                                             <CheckBox x:Name="IgnoreExtension" Margin="0,24,0,0" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
                                                                 <CheckBox.Content>
                                                                     <StackPanel Orientation="Horizontal">
@@ -298,17 +300,18 @@
                                     <controls:SettingsCard.Header>
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
                                                 <Button x:Name="FolderStructureHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="FolderStructureHelpButton_Click">
                                                     <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
                                                 </Button>
                                             </StackPanel>
-                                            <TeachingTip x:Name="FolderStructureTeachingTip" Title="输出文件夹结构" Subtitle="控制文件的组织方式。" CloseButtonContent="关闭" ActionButtonContent="继续" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                            <TeachingTip x:Name="FolderStructureTeachingTip_1" x:Uid="Settings_TeachingTip_Folder1" Target="{x:Bind FolderStructureFirstRadio}" Title="{x:Bind FolderStructureFirstRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                            <TeachingTip x:Name="FolderStructureTeachingTip_2" x:Uid="Settings_TeachingTip_Folder2" Target="{x:Bind FolderStructureFlatRadio}" Title="{x:Bind FolderStructureFlatRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
                                             <RadioButtons SelectedIndex="{x:Bind ViewModel.OneFolder, Mode=TwoWay}" MaxColumns="2">
                                                 <RadioButton x:Name="FolderStructureFirstRadio">
                                                     <RadioButton.Content>
                                                         <StackPanel>
-                                                            <TextBlock x:Uid="Settings_SubfolderOutput_Header"/>
+                                                            <TextBlock x:Name="FolderStructureFirstRadioTitle" x:Uid="Settings_SubfolderOutput_Header"/>
                                                             <RadioButtons SelectedIndex="{x:Bind ViewModel.OverwriteMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}">
                                                                 <RadioButtons.Header>
                                                                     <TextBlock x:Uid="Settings_FileConflict" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
@@ -326,12 +329,12 @@
                                                     <RadioButton.Content>
                                                         <StackPanel>
                                                             <StackPanel Orientation="Horizontal">
-                                                                <TextBlock x:Uid="Settings_FlatOutput_Header"/>
+                                                                <TextBlock x:Name="FolderStructureFlatRadioTitle" x:Uid="Settings_FlatOutput_Header"/>
                                                                 <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
                                                                           Visibility="{x:Bind ViewModel.IsConflictMode, Mode=OneWay}"
                                                                           VerticalAlignment="Center">
                                                                     <ToolTipService.ToolTip>
-                                                                        <ToolTip Content="全量输出与不使用子文件夹同时选中可能导致文件目录混乱，建议关闭其中一项"/>
+                                                                        <ToolTip x:Uid="Settings_ConflictWarning_Flat"/>
                                                                     </ToolTipService.ToolTip>
                                                                 </FontIcon>
                                                             </StackPanel>
@@ -355,12 +358,13 @@
                                             <RadioButtons.Header>
                                                 <StackPanel>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="场景类壁纸" FontWeight="SemiBold" Margin="28,12,12,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                        <TextBlock x:Uid="Settings_SceneHeader" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
                                                         <Button x:Name="SceneWallpaperHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="SceneWallpaperHelpButton_Click">
                                                             <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
                                                         </Button>
                                                     </StackPanel>
-                                                    <TeachingTip x:Name="SceneWallpaperTeachingTip" Title="场景类壁纸" Subtitle="选择场景壁纸的文件夹策略。" CloseButtonContent="关闭" ActionButtonContent="继续" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                    <TeachingTip x:Name="SceneWallpaperTeachingTip_1" x:Uid="Settings_TeachingTip_Scene1" Target="{x:Bind SceneWallpaperFirstRadio}" Title="{x:Bind SceneWallpaperFirstRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                    <TeachingTip x:Name="SceneWallpaperTeachingTip_2" x:Uid="Settings_TeachingTip_Scene2" Target="{x:Bind SceneWallpaperFlattenRadio}" Title="{x:Bind SceneWallpaperFlattenRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
                                                 </StackPanel>
                                             </RadioButtons.Header>
                                             <RadioButton x:Name="SceneWallpaperFirstRadio" x:Uid="Settings_KeepStructure"/>

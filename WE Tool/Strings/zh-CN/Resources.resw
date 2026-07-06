@@ -729,9 +729,6 @@
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>所有文件放在输出文件夹，不用子文件夹</value>
   </data>
-  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
-    <value>不使用子文件夹</value>
-  </data>
   <data name="Settings_OutputType.Text" xml:space="preserve">
     <value>输出类型</value>
   </data>
@@ -794,5 +791,93 @@
   </data>
   <data name="Settings_FlattenStructure.Content" xml:space="preserve">
     <value>所有文件存于同一文件夹</value>
+  </data>
+  <data name="Settings_SceneHeader.Text" xml:space="preserve">
+    <value>场景壁纸目录结构</value>
+  </data>
+  <data name="Settings_TeachingTip_Output1.Subtitle" xml:space="preserve">
+    <value>将壁纸中的全部文件完全输出，不按扩展名过滤。
+
+纹理处理模式
+控制场景类壁纸中 TEX 文件的转换行为。
+
+拷贝 project.json 与预览图
+选中后将额外输出 project.json 文件和壁纸预览图。</value>
+  </data>
+  <data name="Settings_TeachingTip_Output1.CloseButtonContent" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Settings_TeachingTip_Output1.ActionButtonContent" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
+    <value>仅输出 .png/.jpg/.gif 等图像文件，不输出 project.json 和预览图，场景类壁纸中的 TEX 纹理自动转换为图片输出。</value>
+  </data>
+  <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Settings_TeachingTip_Output2.ActionButtonContent" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
+    <value>按扩展名筛选输出文件。
+
+排除扩展名
+可跳过指定类型文件。
+
+仅保留扩展名
+则只输出指定类型文件。
+
+场景类壁纸提取时也会应用扩展名过滤。</value>
+  </data>
+  <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Settings_TeachingTip_Output3.ActionButtonContent" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Settings_TeachingTip_Folder1.Subtitle" xml:space="preserve">
+    <value>每个壁纸创建独立子文件夹，文件按壁纸分组存放。子文件夹名可用壁纸标题或 Workshop ID。支持按壁纸粒度跳过已提取项，可选择文件重名时的处理方式：覆盖或跳过。</value>
+  </data>
+  <data name="Settings_TeachingTip_Folder1.CloseButtonContent" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Settings_TeachingTip_Folder1.ActionButtonContent" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Settings_TeachingTip_Folder2.Subtitle" xml:space="preserve">
+    <value>所有壁纸文件直接输出到同一目录，不建子文件夹。重名文件自动覆盖（无法按壁纸粒度跳过）。可通过子选项为文件名添加壁纸名前缀避免冲突。
+
+注意：与全量输出同时启用可能导致文件混乱。</value>
+  </data>
+  <data name="Settings_TeachingTip_Folder2.CloseButtonContent" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Settings_TeachingTip_Folder2.ActionButtonContent" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Settings_TeachingTip_Scene1.Subtitle" xml:space="preserve">
+    <value>场景壁纸的源目录结构被完整保留——多层子文件夹在输出中保持相同层级。此选项仅影响场景类型壁纸，非场景壁纸始终保留目录结构。</value>
+  </data>
+  <data name="Settings_TeachingTip_Scene1.CloseButtonContent" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Settings_TeachingTip_Scene1.ActionButtonContent" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Settings_TeachingTip_Scene2.Subtitle" xml:space="preserve">
+    <value>场景壁纸的子文件夹内容全部打平到同一输出目录，忽略源目录层级。此选项仅影响场景类型壁纸，非场景壁纸不受影响。</value>
+  </data>
+  <data name="Settings_TeachingTip_Scene2.CloseButtonContent" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Settings_TeachingTip_Scene2.ActionButtonContent" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Settings_ConflictWarning_Output.Content" xml:space="preserve">
+    <value>全量输出与不使用子文件夹同时选中可能导致文件目录混乱，建议关闭其中一项</value>
+  </data>
+  <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
+    <value>全量输出与不使用子文件夹同时选中可能导致文件目录混乱，建议关闭其中一项</value>
   </data>
 </root>

@@ -34,6 +34,7 @@ public sealed partial class Settings : Page
     public SettingsViewModel ViewModel { get; }
     private CancellationTokenSource? _pathChangedCts;
     static int firstClickSettingsPage = 0;
+    private readonly Dictionary<TeachingTip, TeachingTip?> _nextTeachingTip;
 
     public Settings()
     {
@@ -41,6 +42,17 @@ public sealed partial class Settings : Page
         ViewModel = app?.ViewModel ?? new SettingsViewModel(new ConfigService(), new PickerService());
         InitializeComponent();
         DataContext = this;
+
+        _nextTeachingTip = new()
+        {
+            { OutputTypeTeachingTip_1, OutputTypeTeachingTip_2 },
+            { OutputTypeTeachingTip_2, OutputTypeTeachingTip_3 },
+            { OutputTypeTeachingTip_3, null! },
+            { FolderStructureTeachingTip_1, FolderStructureTeachingTip_2 },
+            { FolderStructureTeachingTip_2, null! },
+            { SceneWallpaperTeachingTip_1, SceneWallpaperTeachingTip_2 },
+            { SceneWallpaperTeachingTip_2, null! },
+        };
     }
 
     private async void WallpapersPath_TextChanged(object sender, TextChangedEventArgs e)
@@ -77,63 +89,25 @@ public sealed partial class Settings : Page
 
     private void OutputTypeHelpButton_Click(object sender, RoutedEventArgs e)
     {
-        OutputTypeTeachingTip.Target = OutputTypeFirstRadio;
-        OutputTypeTeachingTip.IsOpen = true;
+        OutputTypeTeachingTip_1.IsOpen = true;
     }
 
     private void FolderStructureHelpButton_Click(object sender, RoutedEventArgs e)
     {
-        FolderStructureTeachingTip.Target = FolderStructureFirstRadio;
-        FolderStructureTeachingTip.IsOpen = true;
+        FolderStructureTeachingTip_1.IsOpen = true;
     }
 
     private void SceneWallpaperHelpButton_Click(object sender, RoutedEventArgs e)
     {
-        SceneWallpaperTeachingTip.Target = SceneWallpaperFirstRadio;
-        SceneWallpaperTeachingTip.IsOpen = true;
+        SceneWallpaperTeachingTip_1.IsOpen = true;
     }
 
     private void TeachingTip_ActionButtonClick(TeachingTip sender, object args)
     {
-        if (sender == OutputTypeTeachingTip)
+        sender.IsOpen = false;
+        if (_nextTeachingTip.TryGetValue(sender, out var next) && next is not null)
         {
-            if (OutputTypeTeachingTip.Target == OutputTypeFirstRadio)
-            {
-                OutputTypeTeachingTip.Target = OutputTypeImageOnlyRadio;
-            }
-            else if (OutputTypeTeachingTip.Target == OutputTypeImageOnlyRadio)
-            {
-                OutputTypeTeachingTip.Target = OutputTypeCustomRadio;
-            }
-            else
-            {
-                OutputTypeTeachingTip.IsOpen = false;
-                return;
-            }
-        }
-        else if (sender == FolderStructureTeachingTip)
-        {
-            if (FolderStructureTeachingTip.Target == FolderStructureFirstRadio)
-            {
-                FolderStructureTeachingTip.Target = FolderStructureFlatRadio;
-            }
-            else
-            {
-                FolderStructureTeachingTip.IsOpen = false;
-                return;
-            }
-        }
-        else if (sender == SceneWallpaperTeachingTip)
-        {
-            if (SceneWallpaperTeachingTip.Target == SceneWallpaperFirstRadio)
-            {
-                SceneWallpaperTeachingTip.Target = SceneWallpaperFlattenRadio;
-            }
-            else
-            {
-                SceneWallpaperTeachingTip.IsOpen = false;
-                return;
-            }
+            next.IsOpen = true;
         }
     }
 
