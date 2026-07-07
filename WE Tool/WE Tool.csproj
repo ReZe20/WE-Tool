@@ -162,4 +162,20 @@
     </ItemGroup>
     <Copy SourceFiles="@(RepkgOutput)" DestinationFolder="$(OutputPath)\repkg" />
   </Target>
+
+  <!-- Post-publish: restructure with .NET Framework launcher -->
+  <Target Name="PackageWithLauncher" AfterTargets="Publish">
+    <PropertyGroup>
+      <LauncherProj>$(ProjectDir)..\WE_Tool.Launcher\WE_Tool.Launcher.csproj</LauncherProj>
+      <LauncherExe>$(ProjectDir)..\WE_Tool.Launcher\bin\Release\WE_Tool.exe</LauncherExe>
+    </PropertyGroup>
+    <!-- Build launcher -->
+    <Exec Command="dotnet build &quot;$(LauncherProj)&quot; -c Release" />
+    <!-- Create app/ and move all files into it in one PowerShell call -->
+    <Exec Command="powershell -NoProfile -Command &quot;$p='$(PublishDir)'; $a=Join-Path $p 'app'; New-Item -ItemType Directory -Force -Path $a | Out-Null; Get-ChildItem $p -Exclude app | Move-Item -Destination $a -Force&quot;" />
+    <!-- Copy launcher EXE to root -->
+    <Copy SourceFiles="$(LauncherExe)" DestinationFiles="$(PublishDir)WE_Tool.exe" />
+    <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (launcher) + app/" />
+  </Target>
+
 </Project>

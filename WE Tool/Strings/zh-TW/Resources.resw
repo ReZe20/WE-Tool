@@ -880,4 +880,7 @@
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>完整輸出與不使用子資料夾同時選中可能導致檔案目錄混亂，建議關閉其中一項。</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>不使用子資料夾</value>
+  </data>
 </root>

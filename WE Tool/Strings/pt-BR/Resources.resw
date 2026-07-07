@@ -880,4 +880,7 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>O uso simultâneo de saída completa e sem subpastas pode causar desorganização de arquivos. Recomenda-se desativar um deles.</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>Sem subpastas</value>
+  </data>
 </root>

@@ -880,4 +880,7 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>Using Full Output together with No Subfolders may cause file clutter. It is recommended to disable one of them.</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>No subfolders</value>
+  </data>
 </root>

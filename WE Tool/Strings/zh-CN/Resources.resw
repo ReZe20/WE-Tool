@@ -880,4 +880,7 @@
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>全量输出与不使用子文件夹同时选中可能导致文件目录混乱，建议关闭其中一项</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>不使用子文件夹</value>
+  </data>
 </root>

@@ -880,4 +880,7 @@ project.json とプレビューをコピー
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>フル出力とサブフォルダ不使用を同時に有効にすると、ファイルが整理されなくなる可能性があります。いずれかを無効にすることをお勧めします。</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>サブフォルダなし</value>
+  </data>
 </root>

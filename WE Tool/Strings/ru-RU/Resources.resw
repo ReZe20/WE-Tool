@@ -880,4 +880,7 @@
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>Одновременное использование полного вывода и без подпапок может привести к беспорядку в файлах. Рекомендуется отключить одну из опций.</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>Без подпапок</value>
+  </data>
 </root>

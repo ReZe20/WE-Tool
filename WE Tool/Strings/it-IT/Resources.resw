@@ -880,4 +880,7 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>L'uso contemporaneo di output completo e senza sottocartelle può causare disordine di file. Si consiglia di disabilitare una delle due.</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>Senza sottocartelle</value>
+  </data>
 </root>

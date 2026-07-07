@@ -880,4 +880,7 @@ project.json 및 미리보기 복사
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>전체 출력과 하위 폴더 사용 안 함을 동시에 사용하면 파일이 혼잡해질 수 있습니다. 하나를 비활성화하는 것이 좋습니다.</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>하위 폴더 사용 안 함</value>
+  </data>
 </root>

@@ -880,4 +880,7 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>El uso simultáneo de salida completa y sin subcarpetas puede causar desorden de archivos. Se recomienda desactivar una de ellas.</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>Sin subcarpetas</value>
+  </data>
 </root>

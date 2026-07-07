@@ -11,4 +11,5 @@
     <Platform Solution="*|x86" Project="x86" />
     <Deploy />
   </Project>
+  <Project Path="WE_Tool.Launcher/WE_Tool.Launcher.csproj" />
 </Solution>

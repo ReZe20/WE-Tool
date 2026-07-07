@@ -880,4 +880,7 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>Die gleichzeitige Verwendung von vollständiger Ausgabe und ohne Unterordner kann zu Dateiunordnung führen. Es wird empfohlen, eine der Optionen zu deaktivieren.</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>Keine Unterordner</value>
+  </data>
 </root>

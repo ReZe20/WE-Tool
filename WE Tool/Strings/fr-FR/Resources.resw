@@ -880,4 +880,7 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
   <data name="Settings_ConflictWarning_Flat.Content" xml:space="preserve">
     <value>L'utilisation simultanée de la sortie complète et sans sous-dossiers peut entraîner un désordre de fichiers. Il est recommandé de désactiver l'une d'elles.</value>
   </data>
+  <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
+    <value>Sans sous-dossiers</value>
+  </data>
 </root>
