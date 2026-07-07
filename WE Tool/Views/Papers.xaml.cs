@@ -57,6 +57,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 {
     private readonly IPickerService _pickerService;
     private List<WallpaperItem> _allWallpapers = [];
+    private bool _isFirstLoad = true;
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<WallpaperItem> Wallpapers { get; set; } = [];
     public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
@@ -218,17 +219,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (_isScanning == value) return;
             _isScanning = value;
             OnPropertyChanged();
-
-            // 在 UI 线程上更新覆盖层显示与交互拦截
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                if (ScanOverlay != null && BackgroundProgressRing != null)
-                {
-                    ScanOverlay.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
-                    ScanOverlay.IsHitTestVisible = value; // 扫描时拦截点击，非扫描时允许交互
-                    BackgroundProgressRing.IsActive = value;
-                }
-            });
         }
     }
     public bool IsMultiSelectMode
@@ -281,7 +271,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         };
         App.ScanCompleted += App_ScanCompleted;
 
-        this.Unloaded += (s, e) => {
+        this.Unloaded += (s, e) =>
+        {
             App.ScanCompleted -= App_ScanCompleted;
         };
 
@@ -289,10 +280,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         this.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(Global_PointerReleased), true);
         this.AddHandler(UIElement.PointerCanceledEvent, new PointerEventHandler(Global_PointerReleased), true);
 
-        ViewModel.PropertyChanged += (s, e) => {
+        ViewModel.PropertyChanged += (s, e) =>
+        {
             if (ViewModel._isBatchUpdating) return;
 
-            if (e.PropertyName == "SteamWorkshopPath" 
+            if (e.PropertyName == "SteamWorkshopPath"
                 || e.PropertyName?.EndsWith("Expander") == true
                 || e.PropertyName?.Contains("Pane") == true
                 || e.PropertyName == "SortIndex"
@@ -302,14 +294,19 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _ = ApplyFilters();
         };
 
-        // 筛选/排序/显示属性现在在子 VM 中，订阅它们的 PropertyChanged 来触发筛选刷新
         ViewModel.FilterExpanderVM.PropertyChanged += (s, e) => _ = ApplyFilters();
         ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) => _ = ApplyFilters();
 
         this.Loaded += async (s, e) =>
         {
-            await ViewModel.InitializeAsync();
-            await RefreshWallpaperList();
+            App.ScanCompleted += App_ScanCompleted;
+
+            if (_isFirstLoad)
+            {
+                _isFirstLoad = false;
+                await ViewModel.InitializeAsync();
+                await RefreshWallpaperList();
+            }
 
             var presenter = WallpapersScrollView.ScrollPresenter;
             _originalVerticalScrollController = presenter.VerticalScrollController;
@@ -431,12 +428,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     public async Task RefreshWallpaperList()
     {
-        bool scanRunning = App.ScanTask != null && !App.ScanTask.IsCompleted;
-        if (scanRunning)
-        {
-            IsScanning = true;
-        }
-
         try
         {
             if (App.ScanTask != null)
@@ -451,14 +442,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 _allWallpapers = [.. App.GlobalAllWallpapers];
             }
 
+            Wallpapers.Clear();
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                SelectedWallpapers.Clear();
+                IsMultiSelectMode = false;
+                ViewModel.SelectedWallpaper = null;
+            });
+
             await ApplyFilters();
         }
-        finally
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
         {
-            if (scanRunning)
-            {
-                IsScanning = false;
-            }
+            Log.Error(ex,"筛选结果时出现异常。");
         }
     }
 
@@ -557,6 +554,17 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 return sortedQuery.ToList();
             }, token);
 
+            if (_allWallpapers.Count == 0)
+            {
+                Wallpapers.Clear();
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    NoScanResultTip.Visibility = Visibility.Visible;
+                    NoResultTip.Visibility = Visibility.Collapsed;
+                });
+                return;
+            }
+
             if (IsListEqual(Wallpapers, filteredResult)) return;
 
             if (!token.IsCancellationRequested)
@@ -565,12 +573,19 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
                 DispatcherQueue.TryEnqueue(() =>
                 {
-                    if (filteredResult.Count == 0)
+                    if (_allWallpapers.Count == 0)
                     {
+                        NoScanResultTip.Visibility = Visibility.Visible;
+                        NoResultTip.Visibility = Visibility.Collapsed;
+                    }
+                    else if (filteredResult.Count == 0)
+                    {
+                        NoScanResultTip.Visibility = Visibility.Collapsed;
                         NoResultTip.Visibility = Visibility.Visible;
                     }
                     else
                     {
+                        NoScanResultTip.Visibility = Visibility.Collapsed;
                         NoResultTip.Visibility = Visibility.Collapsed;
                     }
                 });
@@ -596,6 +611,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             Log.Error(ex,"筛选结果时出现异常。");
         }
+    }
+
+    private void GoToSettings_Click(object sender, RoutedEventArgs e)
+    {
+        Frame?.Navigate(typeof(Settings));
     }
 
     private void ShadowRect_Loaded(object sender, RoutedEventArgs e)

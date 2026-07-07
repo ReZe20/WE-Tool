@@ -22,7 +22,7 @@
         <Grid Height="40" VerticalAlignment="Top" IsHitTestVisible="False">
             <TextBlock Text="WE Tool" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
-        <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="NvSample_ItemInvoked" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="False">
+        <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="NvSample_ItemInvoked" IsSettingsVisible="True" IsBackButtonVisible="Collapsed" IsPaneOpen="False">
             <NavigationView.MenuItems>
                 <NavigationViewItem x:Uid="InstalledWallpapers" Tag="Papers">
                     <NavigationViewItem.Icon>
@@ -40,11 +40,6 @@
                 <NavigationViewItem x:Uid="AboutPage" Tag="Info">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="SettingsPage" Tag="Settings">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE713;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>

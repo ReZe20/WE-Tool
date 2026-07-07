@@ -33,7 +33,7 @@ public sealed partial class Settings : Page
 {
     public SettingsViewModel ViewModel { get; }
     private CancellationTokenSource? _pathChangedCts;
-    static int firstClickSettingsPage = 0;
+    private bool _suppressPathScan = true;
     private readonly Dictionary<TeachingTip, TeachingTip?> _nextTeachingTip;
 
     public Settings()
@@ -53,15 +53,17 @@ public sealed partial class Settings : Page
             { SceneWallpaperTeachingTip_1, SceneWallpaperTeachingTip_2 },
             { SceneWallpaperTeachingTip_2, null! },
         };
+
+        Loaded += async (s, e) =>
+        {
+            await Task.Delay(500);
+            _suppressPathScan = false;
+        };
     }
 
     private async void WallpapersPath_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (firstClickSettingsPage < 3)
-        {
-            firstClickSettingsPage += 1;
-            return;
-        }
+        if (_suppressPathScan) return;
         _pathChangedCts?.Cancel();
         _pathChangedCts = new CancellationTokenSource();
 

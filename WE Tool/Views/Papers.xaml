@@ -659,6 +659,17 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                             ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                             Tapped="WallpaperList_Tapped">
                                     <StackPanel Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}">
+                                        <StackPanel x:Name="NoScanResultTip" Visibility="Collapsed" Margin="0,100,0,0" HorizontalAlignment="Center">
+                                            <TextBlock Text="程序未扫描到任何壁纸，请前往设置修正扫描路径"
+                                                       Style="{StaticResource TitleTextBlockStyle}"
+                                                       FontSize="20"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,0,0,20"/>
+                                            <Button Content="前往设置"
+                                                    Click="GoToSettings_Click"
+                                                    Style="{StaticResource AccentButtonStyle}"
+                                                    HorizontalAlignment="Center"/>
+                                        </StackPanel>
                                         <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
                                             <TextBlock x:Uid="NoResultTip1"
                                                    Style="{StaticResource TitleTextBlockStyle}" 
@@ -814,18 +825,6 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                 <Button Margin="4,0,8,0" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
-        <Grid x:Name="ScanOverlay"
-              Visibility="Collapsed"
-              Grid.RowSpan="3"
-              HorizontalAlignment="Stretch"
-              VerticalAlignment="Stretch"
-              IsHitTestVisible="False">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-                <ProgressRing x:Name="BackgroundProgressRing" Width="72" Height="72" IsActive="True"/>
-                <TextBlock x:Uid="ScanningTip" Style="{ThemeResource DisplayTextBlockStyle}"  FontSize="14" HorizontalAlignment="Center"/>
-            </StackPanel>
-        </Grid>
-
         <!-- 提取进度覆盖 -->
         <Grid x:Name="ExtractOverlay"
               Visibility="{x:Bind ExtractOverlayVisibility, Mode=OneWay}"
