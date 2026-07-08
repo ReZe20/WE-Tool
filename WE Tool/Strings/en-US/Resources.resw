@@ -889,4 +889,7 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
     <value>Content</value>
   </data>
+  <data name="AppBarButton_ListMode.Text" xml:space="preserve">
+    <value>List</value>
+  </data>
 </root>

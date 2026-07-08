@@ -889,4 +889,7 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
     <value>Inhalt</value>
   </data>
+  <data name="AppBarButton_ListMode.Text" xml:space="preserve">
+    <value>Liste</value>
+  </data>
 </root>

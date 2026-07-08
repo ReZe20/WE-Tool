@@ -8,7 +8,8 @@ namespace WE_Tool.ViewModels
     public enum WallpaperDisplayModes
     {
         Icon = 0,
-        Content = 1
+        Content = 1,
+        List = 2
     }
 
     public partial class WallpaperDisplayViewModel : ObservableObject
@@ -146,7 +147,12 @@ namespace WE_Tool.ViewModels
             if (!_isUpdatingViewMode)
             {
                 _isUpdatingViewMode = true;
-                ViewModeIndex = WallpaperDisplayMode == (int)WallpaperDisplayModes.Content ? 3 : value;
+                ViewModeIndex = WallpaperDisplayMode switch
+                {
+                    (int)WallpaperDisplayModes.Content => 3,
+                    (int)WallpaperDisplayModes.List => 4,
+                    _ => value
+                };
                 _isUpdatingViewMode = false;
             }
         }
@@ -186,11 +192,14 @@ namespace WE_Tool.ViewModels
             if (_isUpdatingViewMode) return;
             _isUpdatingViewMode = true;
 
-            WallpaperDisplayMode = value == 3
-                ? (int)WallpaperDisplayModes.Content
-                : (int)WallpaperDisplayModes.Icon;
+            WallpaperDisplayMode = value switch
+            {
+                3 => (int)WallpaperDisplayModes.Content,
+                4 => (int)WallpaperDisplayModes.List,
+                _ => (int)WallpaperDisplayModes.Icon
+            };
 
-            WallpaperViewIndex = value == 3 ? 0 : value;
+            WallpaperViewIndex = (value == 3 || value == 4) ? 0 : value;
 
             _isUpdatingViewMode = false;
 
@@ -198,6 +207,7 @@ namespace WE_Tool.ViewModels
             OnPropertyChanged(nameof(MediumIconViewItem));
             OnPropertyChanged(nameof(LargeIconViewItem));
             OnPropertyChanged(nameof(ContentViewItem));
+            OnPropertyChanged(nameof(ListViewItem));
         }
 
         public bool SmallIconViewItem
@@ -220,6 +230,11 @@ namespace WE_Tool.ViewModels
             get => ViewModeIndex == 3;
             set { if (value) ViewModeIndex = 3; }
         }
+        public bool ListViewItem
+        {
+            get => ViewModeIndex == 4;
+            set { if (value) ViewModeIndex = 4; }
+        }
 
         [ObservableProperty]
         public partial int WallpaperDisplayMode { get; set; }
@@ -228,13 +243,20 @@ namespace WE_Tool.ViewModels
         {
             OnPropertyChanged(nameof(IsIconMode));
             OnPropertyChanged(nameof(IsContentMode));
+            OnPropertyChanged(nameof(IsListMode));
             OnPropertyChanged(nameof(IconModeVisibility));
             OnPropertyChanged(nameof(ContentModeVisibility));
+            OnPropertyChanged(nameof(ListModeVisibility));
 
             if (!_isUpdatingViewMode)
             {
                 _isUpdatingViewMode = true;
-                ViewModeIndex = value == (int)WallpaperDisplayModes.Content ? 3 : WallpaperViewIndex;
+                ViewModeIndex = value switch
+                {
+                    (int)WallpaperDisplayModes.Content => 3,
+                    (int)WallpaperDisplayModes.List => 4,
+                    _ => WallpaperViewIndex
+                };
                 _isUpdatingViewMode = false;
             }
         }
@@ -257,6 +279,15 @@ namespace WE_Tool.ViewModels
             }
         }
 
+        public bool IsListMode
+        {
+            get => WallpaperDisplayMode == (int)WallpaperDisplayModes.List;
+            set
+            {
+                if (value) WallpaperDisplayMode = (int)WallpaperDisplayModes.List;
+            }
+        }
+
         public Microsoft.UI.Xaml.Visibility IconModeVisibility
         {
             get => IsIconMode ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
@@ -265,6 +296,11 @@ namespace WE_Tool.ViewModels
         public Microsoft.UI.Xaml.Visibility ContentModeVisibility
         {
             get => IsContentMode ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+        }
+
+        public Microsoft.UI.Xaml.Visibility ListModeVisibility
+        {
+            get => IsListMode ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
         }
 
         [ObservableProperty]

@@ -711,6 +711,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         // 先查直接子级
         var cb = grid.Children.OfType<CheckBox>().FirstOrDefault();
         if (cb != null) return cb;
+        // 查 StackPanel 子级
+        foreach (var sp in grid.Children.OfType<StackPanel>())
+        {
+            cb = sp.Children.OfType<CheckBox>().FirstOrDefault();
+            if (cb != null) return cb;
+        }
         // 再递归查子 Grid
         foreach (var childGrid in grid.Children.OfType<Grid>())
         {
@@ -722,7 +728,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     private void UpdateAllVisibleCheckBoxes()
     {
-        foreach (var repeater in new ItemsRepeater[] { WallpapersRepeater, WallpapersContentRepeater })
+        foreach (var repeater in new ItemsRepeater[] { WallpapersRepeater, WallpapersContentRepeater, WallpapersListRepeater })
         {
             if (repeater == null || repeater.ItemsSourceView == null) continue;
             for (int i = 0; i < repeater.ItemsSourceView.Count; i++)
@@ -1005,8 +1011,28 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (sender is Grid grid)
         {
-            var cb = FindCheckBoxInGrid(grid);
-            if (cb != null) cb.Opacity = 1;
+            var checkBox = FindCheckBoxInGrid(grid);
+            if (checkBox != null) checkBox.Opacity = 1;
+
+            Visual visual = ElementCompositionPreview.GetElementVisual(grid);
+            visual.CenterPoint = new Vector3((float)grid.ActualWidth / 2, (float)grid.ActualHeight / 2, 0f);
+
+            if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
+            {
+                ContentItem_PointerPressed(sender, e);
+                ViewModel.SelectedWallpaper = item;
+                PlayDrillInAnimation();
+                if (IsMultiSelectMode)
+                {
+                    item.IsSelected = !item.IsSelected;
+                    if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                        SelectedWallpapers.Add(item);
+                    else if (!item.IsSelected)
+                        SelectedWallpapers.Remove(item);
+                    UpdateMultiSelectCount();
+                }
+                return;
+            }
         }
     }
     private void ContentItem_PointerExited(object sender, PointerRoutedEventArgs e)
@@ -1014,16 +1040,88 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (sender is Grid grid && grid.DataContext is WallpaperItem item)
         {
             UpdateItemCheckBoxOpacity(grid, item);
+            ApplyScaleAnimation(grid, 1.0f);
+            UpdateItemCheckBoxOpacity(grid, item);
+
+            Visual visual = ElementCompositionPreview.GetElementVisual(grid);
+            var scaleAnim = visual.Compositor.CreateSpringVector3Animation();
+            scaleAnim.Target = "Scale";
+            scaleAnim.FinalValue = new Vector3(1.0f, 1.0f, 1.0f);
+            scaleAnim.DampingRatio = 0.6f;
+            scaleAnim.Period = TimeSpan.FromMilliseconds(50);
+            visual.StartAnimation("Scale", scaleAnim);
         }
     }
     private void ContentItem_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        _isWallpaperItemTapped = true;
+        if (sender is Grid grid)
+        {
+            _isWallpaperItemTapped = true;
+
+            Visual visual = ElementCompositionPreview.GetElementVisual(grid);
+            visual.CenterPoint = new Vector3((float)grid.ActualWidth / 2, (float)grid.ActualHeight / 2, 0f);
+
+            var scaleAnim = visual.Compositor.CreateSpringVector3Animation();
+            scaleAnim.Target = "Scale";
+            scaleAnim.FinalValue = new Vector3(0.95f, 0.95f, 1.0f);
+            scaleAnim.DampingRatio = 0.8f;
+            scaleAnim.Period = TimeSpan.FromMilliseconds(50);
+            visual.StartAnimation("Scale", scaleAnim);
+
+            var pointerPoint = e.GetCurrentPoint(sender as UIElement);
+            var properties = pointerPoint.Properties;
+
+            if (properties.PointerUpdateKind is Microsoft.UI.Input.PointerUpdateKind.LeftButtonPressed)
+            {
+                if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
+                {
+                    var modifiers = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+                    if (modifiers && !_isMultiSelectMode)
+                    {
+                        ViewModel.SelectedWallpaper = item;
+                        IsMultiSelectMode = true;
+                        item.IsSelected = !item.IsSelected;
+                        if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                            SelectedWallpapers.Add(item);
+                    }
+
+                    if (_isMultiSelectMode)
+                    {
+                        ViewModel.SelectedWallpaper = item;
+                        item.IsSelected = !item.IsSelected;
+                        if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                            SelectedWallpapers.Add(item);
+                        else if (!item.IsSelected)
+                            SelectedWallpapers.Remove(item);
+                        UpdateMultiSelectCount();
+                        if (sender is Grid g)
+                        {
+                            var cb = FindCheckBoxInGrid(g);
+                            if (cb != null) cb.Opacity = 1;
+                        }
+                        return;
+                    }
+                }
+            }
+        }
     }
     private void ContentItem_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        var pp = e.GetCurrentPoint(sender as UIElement);
-        if (pp.Properties.PointerUpdateKind == Microsoft.UI.Input.PointerUpdateKind.LeftButtonReleased)
+        if (sender is Grid grid)
+        {
+            Visual visual = ElementCompositionPreview.GetElementVisual(grid);
+            var scaleAnim = visual.Compositor.CreateSpringVector3Animation();
+            scaleAnim.Target = "Scale";
+            scaleAnim.FinalValue = new Vector3(1.0f, 1.0f, 1.0f);
+            scaleAnim.DampingRatio = 0.6f;
+            scaleAnim.Period = TimeSpan.FromMilliseconds(50);
+            visual.StartAnimation("Scale", scaleAnim);
+        }
+
+        var pointerPoint = e.GetCurrentPoint(sender as UIElement);
+        var properties = pointerPoint.Properties;
+
+        if (properties.PointerUpdateKind is Microsoft.UI.Input.PointerUpdateKind.LeftButtonReleased)
         {
             if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
             {
@@ -1035,21 +1133,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                         PlayDrillInAnimation();
                     }
                 }
-                else
-                {
-                    item.IsSelected = !item.IsSelected;
-                    if (item.IsSelected && !SelectedWallpapers.Contains(item))
-                        SelectedWallpapers.Add(item);
-                    else if (!item.IsSelected)
-                        SelectedWallpapers.Remove(item);
-                    UpdateMultiSelectCount();
-                    var g = sender as Grid;
-                    if (g != null)
-                    {
-                        var cb = FindCheckBoxInGrid(g);
-                        if (cb != null) cb.Opacity = 1;
-                    }
-                }
+                e.Handled = true;
             }
         }
     }
@@ -1085,7 +1169,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 Canvas.SetZIndex(parent, 10000);
             }
 
-            if (_isLeftMouseButtonPressed && !_isWallpaperItemTapped && grid.DataContext is WallpaperItem item)
+            if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
                 Item_PointerPressed(sender,e);
                 ViewModel.SelectedWallpaper = item;

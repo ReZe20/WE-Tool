@@ -889,4 +889,7 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
     <value>Contenuto</value>
   </data>
+  <data name="AppBarButton_ListMode.Text" xml:space="preserve">
+    <value>Elenco</value>
+  </data>
 </root>

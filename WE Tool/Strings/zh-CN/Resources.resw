@@ -889,4 +889,7 @@
   <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
     <value>内容</value>
   </data>
+  <data name="AppBarButton_ListMode.Text" xml:space="preserve">
+    <value>列表</value>
+  </data>
 </root>

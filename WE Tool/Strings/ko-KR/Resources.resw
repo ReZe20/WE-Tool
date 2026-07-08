@@ -889,4 +889,7 @@ project.json 및 미리보기 복사
   <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
     <value>콘텐츠</value>
   </data>
+  <data name="AppBarButton_ListMode.Text" xml:space="preserve">
+    <value>목록</value>
+  </data>
 </root>

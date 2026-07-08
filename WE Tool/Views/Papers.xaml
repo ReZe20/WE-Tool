@@ -167,6 +167,9 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_ContentMode"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.ContentViewItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.ListViewItem,Mode=TwoWay}"
+                                     GroupName="MenuViewGroup"/>
                     <MenuFlyoutSeparator/>
                 <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
@@ -344,6 +347,9 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                              GroupName="ViewGroup"/>
                         <RadioMenuFlyoutItem x:Uid="AppBarButton_ContentMode"
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.ContentViewItem,Mode=TwoWay}"
+                                             GroupName="ViewGroup"/>
+                        <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.ListViewItem,Mode=TwoWay}"
                                              GroupName="ViewGroup"/>
                         <MenuFlyoutSeparator/>
                         <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
@@ -792,7 +798,7 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ContentItemContainer"
-                                                          Height="56"
+                                                          Height="86"
                                                           CornerRadius="4"
                                                           Padding="8,4"
                                                           Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -806,6 +812,7 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                                           RightTapped="ContentItem_RightTapped"
                                                           ContextFlyout="{StaticResource WallpaperContextMenu}">
                                                         <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="40"/>
                                                             <ColumnDefinition Width="80"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
@@ -815,33 +822,33 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="120"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <!-- 缩略图 + 选择框 -->
-                                                        <Grid Grid.Column="0" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                                        <!-- 选择框 -->
+                                                        <CheckBox x:Name="ContentSelectionCheckBox"
+                                                                  Grid.Column="0"
+                                                                  HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
+                                                                  Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
+                                                                  IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                                  Click="SelectionCheckBox_Click"
+                                                                  Background="Transparent"
+                                                                  CornerRadius="4"
+                                                                  MinWidth="0" MinHeight="0" Padding="0" Width="20" Height="20"
+                                                                  UseLayoutRounding="True"
+                                                                  Content="{x:Null}" 
+                                                                  HorizontalContentAlignment="Center"
+                                                                  VerticalContentAlignment="Center"/>
+                                                        <!-- 缩略图 -->
+                                                        <Grid Grid.Column="1" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                                                             <ProgressRing IsActive="True" Background="Transparent" Width="20" Height="20"/>
-                                                            <Image Stretch="UniformToFill" Width="80" Height="45">
+                                                            <Image Stretch="UniformToFill" Width="80" Height="80">
                                                                 <Image.Source>
                                                                     <BitmapImage UriSource="{x:Bind Preview}" 
                                                                          AutoPlay="{Binding DataContext.ViewModel.WallpaperDisplayVM.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
                                                                 </Image.Source>
                                                             </Image>
-                                                            <!-- 选择框 - 覆盖在缩略图左上角 -->
-                                                            <CheckBox x:Name="ContentSelectionCheckBox"
-                                                                      HorizontalAlignment="Left"
-                                                                      VerticalAlignment="Top"
-                                                                      Margin="2,2,0,0"
-                                                                      Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
-                                                                      IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
-                                                                      Click="SelectionCheckBox_Click"
-                                                                      Background="Transparent"
-                                                                      CornerRadius="4"
-                                                                      MinWidth="0" MinHeight="0" Padding="0" Width="20" Height="20"
-                                                                      UseLayoutRounding="True"
-                                                                      Content="{x:Null}" 
-                                                                      HorizontalContentAlignment="Center"
-                                                                      VerticalContentAlignment="Center"/>
                                                         </Grid>
                                                         <!-- 标题 -->
-                                                        <TextBlock Grid.Column="1" 
+                                                        <TextBlock Grid.Column="2" 
                                                                    Text="{x:Bind Title}" 
                                                                    VerticalAlignment="Center"
                                                                    Margin="8,0,8,0"
@@ -849,34 +856,34 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                                                    FontWeight="SemiBold"
                                                                    TextTrimming="CharacterEllipsis"/>
                                                         <!-- 类型 -->
-                                                        <TextBlock Grid.Column="2" 
+                                                        <TextBlock Grid.Column="3" 
                                                                    Text="{x:Bind Type, Converter={StaticResource TypeToDisplay}}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="4,0"
                                                                    FontSize="12"
                                                                    Foreground="{ThemeResource SystemAccentColor}"/>
                                                         <!-- 分级 -->
-                                                        <TextBlock Grid.Column="3" 
+                                                        <TextBlock Grid.Column="4" 
                                                                    Text="{x:Bind ContentRating, Converter={StaticResource RatingToDisplay}}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="4,0"
                                                                    FontSize="12"/>
                                                         <!-- 来源 -->
-                                                        <TextBlock Grid.Column="4" 
+                                                        <TextBlock Grid.Column="5" 
                                                                    Text="{x:Bind Source, Converter={StaticResource SourceToDisplay}}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="4,0"
                                                                    FontSize="12"
                                                                    Foreground="Gray"/>
                                                         <!-- 文件大小 -->
-                                                        <TextBlock Grid.Column="5" 
+                                                        <TextBlock Grid.Column="6" 
                                                                    Text="{x:Bind FileSize, Converter={StaticResource FileSizeToString}}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="4,0"
                                                                    FontSize="12"
                                                                    TextAlignment="Right"/>
                                                         <!-- 标签 -->
-                                                        <TextBlock Grid.Column="6" 
+                                                        <TextBlock Grid.Column="7" 
                                                                    Text="{x:Bind Tags, Converter={StaticResource TagToDisplay}}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="4,0"
@@ -884,13 +891,65 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                                                    MaxWidth="150"
                                                                    TextTrimming="CharacterEllipsis"/>
                                                         <!-- 更新时间 -->
-                                                        <TextBlock Grid.Column="7" 
+                                                        <TextBlock Grid.Column="8" 
                                                                    Text="{x:Bind UpdateTime, Converter={StaticResource DateTimeToString}}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="4,0"
                                                                    FontSize="12"
                                                                    Foreground="Gray"
                                                                    TextAlignment="Right"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                        <ItemsRepeater ItemsSource="{x:Bind Wallpapers}"
+                                               Margin="8,0,8,0"
+                                               x:Name="WallpapersListRepeater"
+                                               Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ListModeVisibility, Mode=OneWay}"
+                                               ContextFlyout="{StaticResource WallpaperContextMenu}">
+                                            <ItemsRepeater.Layout>
+                                                <UniformGridLayout
+                                                    MinItemWidth="400"
+                                                    MinColumnSpacing="6"
+                                                    MinRowSpacing="6"
+                                                    ItemsStretch="Fill"
+                                                    Orientation="Horizontal"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="models:WallpaperItem">
+                                                    <Grid x:Name="ListItemContainer"
+                                                          Height="36"
+                                                          CornerRadius="4"
+                                                          Padding="8,4"
+                                                          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                          DataContext="{x:Bind}"
+                                                          RenderTransformOrigin="0.5,0.5"
+                                                          Loaded="ShadowRect_Loaded"
+                                                          PointerEntered="ContentItem_PointerEntered"
+                                                          PointerExited="ContentItem_PointerExited"
+                                                          PointerReleased="ContentItem_PointerReleased"
+                                                          PointerPressed="ContentItem_PointerPressed"
+                                                          RightTapped="ContentItem_RightTapped"
+                                                          ContextFlyout="{StaticResource WallpaperContextMenu}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <CheckBox x:Name="ListSelectionCheckBox"
+                                                                      VerticalAlignment="Center"
+                                                                      Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
+                                                                      IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                                      Click="SelectionCheckBox_Click"
+                                                                      Background="Transparent"
+                                                                      CornerRadius="4"
+                                                                      MinWidth="0" MinHeight="0" Padding="0"
+                                                                      UseLayoutRounding="True"
+                                                                      Content="{x:Null}" 
+                                                                      HorizontalContentAlignment="Center"
+                                                                      VerticalContentAlignment="Center"/>
+                                                            <TextBlock Text="{x:Bind Title}"
+                                                                       VerticalAlignment="Center"
+                                                                       FontSize="13"
+                                                                       FontWeight="Normal"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                        </StackPanel>
                                                     </Grid>
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>

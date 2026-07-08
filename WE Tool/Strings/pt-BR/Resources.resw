@@ -889,4 +889,7 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
   <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
     <value>Conteúdo</value>
   </data>
+  <data name="AppBarButton_ListMode.Text" xml:space="preserve">
+    <value>Lista</value>
+  </data>
 </root>

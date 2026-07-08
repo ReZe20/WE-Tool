@@ -889,4 +889,7 @@
   <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
     <value>Содержимое</value>
   </data>
+  <data name="AppBarButton_ListMode.Text" xml:space="preserve">
+    <value>Список</value>
+  </data>
 </root>
