@@ -883,4 +883,10 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
     <value>Keine Unterordner</value>
   </data>
+  <data name="AppBarButton_IconMode.Text" xml:space="preserve">
+    <value>Symbole</value>
+  </data>
+  <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
+    <value>Inhalt</value>
+  </data>
 </root>

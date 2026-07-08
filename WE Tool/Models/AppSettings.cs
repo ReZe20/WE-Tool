@@ -24,6 +24,7 @@ namespace WE_Tool.Models
         public bool IsAnnotatedScrollBarEnabled { get; set; } = false;
         public int WallpaperTagDisplayIndex { get; set; } = 0;
         public int WallpaperViewIndex { get; set; } = 0;
+        public int WallpaperDisplayMode { get; set; } = 0;
         public int WallpaperListMinWidth { get; set; } = 180;
         public bool LeftSplitViewPaneOpen { get; set; } = true;
         public bool RightSplitViewPaneOpen { get; set; } = true;

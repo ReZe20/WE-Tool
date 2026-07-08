@@ -883,4 +883,10 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
   <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
     <value>Sans sous-dossiers</value>
   </data>
+  <data name="AppBarButton_IconMode.Text" xml:space="preserve">
+    <value>Icônes</value>
+  </data>
+  <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
+    <value>Contenu</value>
+  </data>
 </root>

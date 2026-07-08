@@ -883,4 +883,10 @@
   <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
     <value>Без подпапок</value>
   </data>
+  <data name="AppBarButton_IconMode.Text" xml:space="preserve">
+    <value>Значки</value>
+  </data>
+  <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
+    <value>Содержимое</value>
+  </data>
 </root>

@@ -5,6 +5,12 @@ using WE_Tool.Helper;
 
 namespace WE_Tool.ViewModels
 {
+    public enum WallpaperDisplayModes
+    {
+        Icon = 0,
+        Content = 1
+    }
+
     public partial class WallpaperDisplayViewModel : ObservableObject
     {
         [ObservableProperty]
@@ -136,6 +142,13 @@ namespace WE_Tool.ViewModels
             OnPropertyChanged(nameof(SmallIconItem));
             OnPropertyChanged(nameof(MediumIconItem));
             OnPropertyChanged(nameof(LargeIconItem));
+
+            if (!_isUpdatingViewMode)
+            {
+                _isUpdatingViewMode = true;
+                ViewModeIndex = WallpaperDisplayMode == (int)WallpaperDisplayModes.Content ? 3 : value;
+                _isUpdatingViewMode = false;
+            }
         }
 
         public bool SmallIconItem
@@ -161,6 +174,97 @@ namespace WE_Tool.ViewModels
             {
                 if (value) WallpaperViewIndex = 2;
             }
+        }
+
+        private bool _isUpdatingViewMode;
+
+        [ObservableProperty]
+        public partial int ViewModeIndex { get; set; }
+
+        partial void OnViewModeIndexChanged(int value)
+        {
+            if (_isUpdatingViewMode) return;
+            _isUpdatingViewMode = true;
+
+            WallpaperDisplayMode = value == 3
+                ? (int)WallpaperDisplayModes.Content
+                : (int)WallpaperDisplayModes.Icon;
+
+            WallpaperViewIndex = value == 3 ? 0 : value;
+
+            _isUpdatingViewMode = false;
+
+            OnPropertyChanged(nameof(SmallIconViewItem));
+            OnPropertyChanged(nameof(MediumIconViewItem));
+            OnPropertyChanged(nameof(LargeIconViewItem));
+            OnPropertyChanged(nameof(ContentViewItem));
+        }
+
+        public bool SmallIconViewItem
+        {
+            get => ViewModeIndex == 0;
+            set { if (value) ViewModeIndex = 0; }
+        }
+        public bool MediumIconViewItem
+        {
+            get => ViewModeIndex == 1;
+            set { if (value) ViewModeIndex = 1; }
+        }
+        public bool LargeIconViewItem
+        {
+            get => ViewModeIndex == 2;
+            set { if (value) ViewModeIndex = 2; }
+        }
+        public bool ContentViewItem
+        {
+            get => ViewModeIndex == 3;
+            set { if (value) ViewModeIndex = 3; }
+        }
+
+        [ObservableProperty]
+        public partial int WallpaperDisplayMode { get; set; }
+
+        partial void OnWallpaperDisplayModeChanged(int value)
+        {
+            OnPropertyChanged(nameof(IsIconMode));
+            OnPropertyChanged(nameof(IsContentMode));
+            OnPropertyChanged(nameof(IconModeVisibility));
+            OnPropertyChanged(nameof(ContentModeVisibility));
+
+            if (!_isUpdatingViewMode)
+            {
+                _isUpdatingViewMode = true;
+                ViewModeIndex = value == (int)WallpaperDisplayModes.Content ? 3 : WallpaperViewIndex;
+                _isUpdatingViewMode = false;
+            }
+        }
+
+        public bool IsIconMode
+        {
+            get => WallpaperDisplayMode == (int)WallpaperDisplayModes.Icon;
+            set
+            {
+                if (value) WallpaperDisplayMode = (int)WallpaperDisplayModes.Icon;
+            }
+        }
+
+        public bool IsContentMode
+        {
+            get => WallpaperDisplayMode == (int)WallpaperDisplayModes.Content;
+            set
+            {
+                if (value) WallpaperDisplayMode = (int)WallpaperDisplayModes.Content;
+            }
+        }
+
+        public Microsoft.UI.Xaml.Visibility IconModeVisibility
+        {
+            get => IsIconMode ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+        }
+
+        public Microsoft.UI.Xaml.Visibility ContentModeVisibility
+        {
+            get => IsContentMode ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
         }
 
         [ObservableProperty]

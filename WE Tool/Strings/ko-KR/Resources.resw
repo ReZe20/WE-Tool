@@ -883,4 +883,10 @@ project.json 및 미리보기 복사
   <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
     <value>하위 폴더 사용 안 함</value>
   </data>
+  <data name="AppBarButton_IconMode.Text" xml:space="preserve">
+    <value>아이콘</value>
+  </data>
+  <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
+    <value>콘텐츠</value>
+  </data>
 </root>

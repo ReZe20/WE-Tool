@@ -883,4 +883,10 @@
   <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
     <value>不使用子文件夹</value>
   </data>
+  <data name="AppBarButton_IconMode.Text" xml:space="preserve">
+    <value>图标</value>
+  </data>
+  <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
+    <value>内容</value>
+  </data>
 </root>

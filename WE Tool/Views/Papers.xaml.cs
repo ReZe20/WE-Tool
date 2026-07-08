@@ -240,6 +240,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 }
                 UpdateStackVisuals();
                 ToggleMultiSelectVisuals(_isMultiSelectMode);
+                UpdateAllVisibleCheckBoxes();
             }
         }
     }
@@ -701,8 +702,53 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (grid == null || item == null) return;
 
-        var checkBox = grid.Children.OfType<CheckBox>().FirstOrDefault();
-        checkBox?.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
+        var checkBox = FindCheckBoxInGrid(grid);
+        checkBox.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
+    }
+
+    private static CheckBox? FindCheckBoxInGrid(Grid grid)
+    {
+        // 先查直接子级
+        var cb = grid.Children.OfType<CheckBox>().FirstOrDefault();
+        if (cb != null) return cb;
+        // 再递归查子 Grid
+        foreach (var childGrid in grid.Children.OfType<Grid>())
+        {
+            cb = FindCheckBoxInGrid(childGrid);
+            if (cb != null) return cb;
+        }
+        return null;
+    }
+
+    private void UpdateAllVisibleCheckBoxes()
+    {
+        foreach (var repeater in new ItemsRepeater[] { WallpapersRepeater, WallpapersContentRepeater })
+        {
+            if (repeater == null || repeater.ItemsSourceView == null) continue;
+            for (int i = 0; i < repeater.ItemsSourceView.Count; i++)
+            {
+                var element = repeater.TryGetElement(i) as FrameworkElement;
+                if (element == null) continue;
+                var grid = element as Grid ?? FindChildGrid(element);
+                if (grid?.DataContext is WallpaperItem item)
+                    UpdateItemCheckBoxOpacity(grid, item);
+            }
+        }
+    }
+
+    private static Grid? FindChildGrid(FrameworkElement element)
+    {
+        if (element is Grid g) return g;
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++)
+        {
+            var child = VisualTreeHelper.GetChild(element, i) as FrameworkElement;
+            if (child != null)
+            {
+                var result = FindChildGrid(child);
+                if (result != null) return result;
+            }
+        }
+        return null;
     }
     private void RefreshDisplayedSelectedWallpapers(bool forceRebuild = false)
     {
@@ -955,12 +1001,75 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             UpdateMultiSelectCount();
         }
     }
+    private void ContentItem_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is Grid grid)
+        {
+            var cb = FindCheckBoxInGrid(grid);
+            if (cb != null) cb.Opacity = 1;
+        }
+    }
+    private void ContentItem_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is Grid grid && grid.DataContext is WallpaperItem item)
+        {
+            UpdateItemCheckBoxOpacity(grid, item);
+        }
+    }
+    private void ContentItem_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _isWallpaperItemTapped = true;
+    }
+    private void ContentItem_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        var pp = e.GetCurrentPoint(sender as UIElement);
+        if (pp.Properties.PointerUpdateKind == Microsoft.UI.Input.PointerUpdateKind.LeftButtonReleased)
+        {
+            if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
+            {
+                if (!_isMultiSelectMode)
+                {
+                    if (ViewModel.SelectedWallpaper != item)
+                    {
+                        ViewModel.SelectedWallpaper = item;
+                        PlayDrillInAnimation();
+                    }
+                }
+                else
+                {
+                    item.IsSelected = !item.IsSelected;
+                    if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                        SelectedWallpapers.Add(item);
+                    else if (!item.IsSelected)
+                        SelectedWallpapers.Remove(item);
+                    UpdateMultiSelectCount();
+                    var g = sender as Grid;
+                    if (g != null)
+                    {
+                        var cb = FindCheckBoxInGrid(g);
+                        if (cb != null) cb.Opacity = 1;
+                    }
+                }
+            }
+        }
+    }
+    private void ContentItem_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
+        {
+            _rightClickedWallpaperElement = element;
+            if (!_isMultiSelectMode)
+            {
+                ViewModel.SelectedWallpaper = item;
+            }
+        }
+    }
     private void Item_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
         if (sender is Grid grid)
         {
-            var checkBox = grid.Children.OfType<CheckBox>().FirstOrDefault();
-            checkBox?.Opacity = 1;
+            var checkBox = FindCheckBoxInGrid(grid);
+            if (checkBox != null) checkBox.Opacity = 1;
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -976,7 +1085,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 Canvas.SetZIndex(parent, 10000);
             }
 
-            if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
+            if (_isLeftMouseButtonPressed && !_isWallpaperItemTapped && grid.DataContext is WallpaperItem item)
             {
                 Item_PointerPressed(sender,e);
                 ViewModel.SelectedWallpaper = item;
@@ -1167,8 +1276,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
                         if (sender is Grid g)
                         {
-                            var cb = g.Children.OfType<CheckBox>().FirstOrDefault();
-                            cb?.Opacity = 1;
+                            var cb = FindCheckBoxInGrid(g);
+                            if (cb != null) cb.Opacity = 1;
                         }
                         return;
                     }
@@ -1685,6 +1794,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private async void OnIconSizeChanged(object sender, RoutedEventArgs e)
     {
         await Task.Delay(100);
+        HideWallpaperContextMenu();
+    }
+    private void OnDisplayModeChanged(object sender, RoutedEventArgs e)
+    {
         HideWallpaperContextMenu();
     }
     private async void OnTagDisplayChanged(object sender, RoutedEventArgs e)

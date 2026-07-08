@@ -883,4 +883,10 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
     <value>Senza sottocartelle</value>
   </data>
+  <data name="AppBarButton_IconMode.Text" xml:space="preserve">
+    <value>Icone</value>
+  </data>
+  <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
+    <value>Contenuto</value>
+  </data>
 </root>

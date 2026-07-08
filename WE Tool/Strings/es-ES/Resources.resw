@@ -883,4 +883,10 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
   <data name="Settings_FlatOutput_Header.Text" xml:space="preserve">
     <value>Sin subcarpetas</value>
   </data>
+  <data name="AppBarButton_IconMode.Text" xml:space="preserve">
+    <value>Iconos</value>
+  </data>
+  <data name="AppBarButton_ContentMode.Text" xml:space="preserve">
+    <value>Contenido</value>
+  </data>
 </root>

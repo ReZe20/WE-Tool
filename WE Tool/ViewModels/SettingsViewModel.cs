@@ -285,6 +285,7 @@ namespace WE_Tool.ViewModels
             WallpaperDisplayVM.IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
             WallpaperDisplayVM.WallpaperTagDisplayIndex = _settings.Papers.WallpaperTagDisplayIndex;
             WallpaperDisplayVM.WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
+            WallpaperDisplayVM.WallpaperDisplayMode = _settings.Papers.WallpaperDisplayMode;
             WallpaperDisplayVM.WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
             WallpaperDisplayVM.LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
             WallpaperDisplayVM.RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
@@ -505,6 +506,7 @@ namespace WE_Tool.ViewModels
 
                     _settings.Papers.IsBottomBarOpen = WallpaperDisplayVM.IsBottomBarOpen;
                     _settings.Papers.WallpaperViewIndex = WallpaperDisplayVM.WallpaperViewIndex;
+                    _settings.Papers.WallpaperDisplayMode = WallpaperDisplayVM.WallpaperDisplayMode;
                     _settings.Papers.AutoPlayGif = WallpaperDisplayVM.AutoPlayGif;
                     _settings.Papers.IsWallpaperEnterAnimationEnabled = WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled;
                     _settings.Papers.WallpaperTagDisplayIndex = WallpaperDisplayVM.WallpaperTagDisplayIndex;
