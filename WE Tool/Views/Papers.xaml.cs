@@ -70,7 +70,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private int _extractCompletedCount;
     private HashSet<string> _extractCompletedNames = [];
     private Dictionary<string, ExtractProgressItem> _extractItemDict = [];
-    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> _lastProgressTick = new();
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
     public IAsyncRelayCommand ExtractSelectedCommand { get; }
@@ -1963,47 +1962,37 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             ExtractItems.Clear();
             foreach (var item in tempItems)
                 ExtractItems.Add(item);
-            _lastProgressTick.Clear();
-
             var uiQueue = DispatcherQueue;
 
             Action<string> onProgress = msg =>
             {
                 var parts = msg.Split('|');
-                if (parts.Length < 3)
-                {
-                    uiQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => ExtractStatus = msg);
-                    return;
-                }
-
                 var name = parts[0];
                 var action = parts[1];
 
-                // 节流：非完成/失败状态至少间隔 50ms 再更新 UI
-                if (action != "完成" && action != "失败")
-                {
-                    var now = Environment.TickCount64;
-                    var last = _lastProgressTick.GetOrAdd(name, 0);
-                    if (now - last < 50) return;
-                    _lastProgressTick[name] = now;
-                }
-
                 if (!uiQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
                 {
-                    if (_extractItemDict.TryGetValue(name, out var item))
+                    if (!_extractItemDict.TryGetValue(name, out var item)) return;
+
+                    if (action == "完成")
                     {
-                        item.Action = action;
-                        if (double.TryParse(parts[2], out var p)) item.Progress = p;
-                        // 统计已完成壁纸数，更新总进度
-                        if (action == "完成" && _extractCompletedNames.Add(name))
+                        item.Action = "完成";
+                        item.Progress = 100;
+                        if (_extractCompletedNames.Add(name))
                         {
                             _extractCompletedCount++;
                             ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
                             OnPropertyChanged(nameof(ExtractProgressText));
                         }
                     }
-                    else
-                        Log.Warning("未找到进度条目: {Name}", name);
+                    else if (action == "失败")
+                    {
+                        item.Action = "失败";
+                    }
+                    else if (item.Action != "完成" && item.Action != "失败" && item.Action != "处理中")
+                    {
+                        item.Action = "处理中";
+                    }
                 })) { }
             };
 

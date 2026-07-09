@@ -851,10 +851,9 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                                                         <TextBlock Grid.Column="2" 
                                                                    Text="{x:Bind Title}" 
                                                                    VerticalAlignment="Center"
-                                                                   Margin="8,0,8,0"
-                                                                   FontSize="14"
-                                                                   FontWeight="SemiBold"
-                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                   Margin="12,0,8,0"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Style="{ThemeResource SubtitleTextBlockStyle}"/>
                                                         <!-- 类型 -->
                                                         <TextBlock Grid.Column="3" 
                                                                    Text="{x:Bind Type, Converter={StaticResource TypeToDisplay}}"
@@ -1048,18 +1047,15 @@ xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
                             <ItemsControl ItemsSource="{x:Bind ExtractItems}" Margin="0,8,0,0">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="models:ExtractProgressItem">
-                                        <StackPanel Spacing="2" Margin="0,4">
-                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis"/>
-                                            <Grid ColumnSpacing="8">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <ProgressBar Value="{x:Bind Progress, Mode=OneWay}" Minimum="0" Maximum="100" Height="4" Grid.Column="0"/>
-                                                <TextBlock Text="{x:Bind Action, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" 
-                                                           FontSize="10" Grid.Column="1" Width="60" TextAlignment="Right"/>
-                                            </Grid>
-                                        </StackPanel>
+                                        <Grid ColumnSpacing="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" Grid.Column="0"/>
+                                            <TextBlock Text="{x:Bind Action, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" 
+                                                       FontSize="10" Grid.Column="1" Width="60" TextAlignment="Right"/>
+                                        </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
