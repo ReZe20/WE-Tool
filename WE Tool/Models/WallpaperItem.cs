@@ -42,6 +42,21 @@ namespace WE_Tool.Models
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+        
+        private bool _shouldNotExist;
+        public bool ShouldNotExist
+        {
+            get => _shouldNotExist;
+            set
+            {
+                if (_shouldNotExist != value)
+                {
+                    _shouldNotExist = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         private bool _isMultiSelectMode;
         public bool IsInMultiSelectMode
         {

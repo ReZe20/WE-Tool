@@ -365,3 +365,4 @@ MigrationBackup/
 FodyWeavers.xsd
 # Reasonix agent workspace files (AI assistant artifacts)
 .reasonix/
+.hermes/

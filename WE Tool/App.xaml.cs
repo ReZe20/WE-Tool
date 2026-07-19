@@ -112,7 +112,8 @@ namespace WE_Tool
                         settings.Path.WorkshopPath,
                         settings.Path.OfficialPath,
                         settings.Path.ProjectPath,
-                        settings.Path.AcfPath
+                        settings.Path.AcfPath,
+                        settings.Path.VdfPath
                         );
                 }
             }
@@ -121,7 +122,7 @@ namespace WE_Tool
                 Log.Error(ex, "初始化失败。");
             }
         }
-        public static void StartBackgroundScan(string workShopPath, string officialPath, string projectPath, string acfPath)
+        public static void StartBackgroundScan(string workShopPath, string officialPath, string projectPath, string acfPath, string? vdfPath = null)
         {
             ScanProgressChanged?.Invoke(null, 0);
 
@@ -142,7 +143,7 @@ namespace WE_Tool
                         });
                     }
 
-                    var workShopListTask = WallpaperScanner.ScanWallpapers(workShopPath ?? "", "workshop", acfPath, makeProgress(0));
+                    var workShopListTask = WallpaperScanner.ScanWallpapers(workShopPath ?? "", "workshop", acfPath, makeProgress(0), vdfPath: vdfPath);
                     var officialListTask = WallpaperScanner.ScanWallpapers(officialPath ?? "", "official", "", makeProgress(1));
                     var projectListTask = WallpaperScanner.ScanWallpapers(projectPath ?? "", "mine", "", makeProgress(2));
 

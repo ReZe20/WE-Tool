@@ -341,7 +341,7 @@
                                 </controls:SettingsCard>
                                 <controls:SettingsCard>
                                     <controls:SettingsCard.Header>
-                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.KeepSubfolderStructure, Mode=TwoWay}">
+                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.KeepSubfolderStructure, Mode=TwoWay}" MaxColumns="2">
                                             <RadioButtons.Header>
                                                 <StackPanel>
                                                     <StackPanel Orientation="Horizontal">

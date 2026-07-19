@@ -457,6 +457,8 @@ namespace WE_Tool.ViewModels
             finally
             {
                 _isBatchUpdating = false;
+                // 手动触发一次筛选更新（批处理期间跳过的所有 FilterExpanderVM 事件在此一次性触发）
+                OnPropertyChanged(nameof(FilterExpanderVM));
                 await SaveAsync();
             }
         }

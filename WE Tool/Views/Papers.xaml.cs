@@ -280,6 +280,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         this.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(Global_PointerReleased), true);
         this.AddHandler(UIElement.PointerCanceledEvent, new PointerEventHandler(Global_PointerReleased), true);
 
+        // CommandBarFlyout.SecondaryCommands 内部的 AppBarButton 位于独立弹窗中，
+        // 不自动随 rootElement 主题变更，打开时应用当前主题
+        WallpaperContextMenu.Opened += (s, e) =>
+        {
+            var theme = App.MainWindowInstance?.Content is FrameworkElement root
+                ? root.ActualTheme
+                : ElementTheme.Default;
+            foreach (var item in WallpaperContextMenu.SecondaryCommands)
+            {
+                if (item is AppBarButton btn)
+                    btn.RequestedTheme = theme;
+            }
+        };
+
         ViewModel.PropertyChanged += (s, e) =>
         {
             if (ViewModel._isBatchUpdating) return;
@@ -294,7 +308,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _ = ApplyFilters();
         };
 
-        ViewModel.FilterExpanderVM.PropertyChanged += (s, e) => _ = ApplyFilters();
+        ViewModel.FilterExpanderVM.PropertyChanged += (s, e) =>
+        {
+            if (ViewModel._isBatchUpdating) return;
+            _ = ApplyFilters();
+        };
         ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) => _ = ApplyFilters();
 
         this.Loaded += async (s, e) =>
@@ -437,7 +455,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
             else
             {
-                App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath, ViewModel.PathManagementVM.AcfPath);
+                App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath, ViewModel.PathManagementVM.AcfPath, ViewModel.PathManagementVM.VdfPath);
                 await App.ScanTask;
                 _allWallpapers = [.. App.GlobalAllWallpapers];
             }
@@ -665,19 +683,44 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (sender is MenuFlyout flyout)
         {
             _currentFilterExpander = flyout.Target as Expander;
+            // Popup 不自动继承运行时主题变更，需要在打开时显式应用当前主题
+            flyout.Opened -= OnContextFlyoutThemeRefresh;
+            flyout.Opened += OnContextFlyoutThemeRefresh;
+        }
+    }
+
+    private void OnContextFlyoutThemeRefresh(object? sender, object e)
+    {
+        if (sender is MenuFlyout flyout)
+        {
+            flyout.Opened -= OnContextFlyoutThemeRefresh;
+            var theme = App.MainWindowInstance?.Content is FrameworkElement root
+                ? root.ActualTheme
+                : ElementTheme.Default;
+            foreach (var item in flyout.Items)
+            {
+                if (item is MenuFlyoutItem menuItem)
+                    menuItem.RequestedTheme = theme;
+            }
         }
     }
 
     private void FilterExpanderSelectAll_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentFilterExpander != null)
-            ExpandCheckBoxes(_currentFilterExpander, true);
+        if (_currentFilterExpander == null) return;
+        ViewModel._isBatchUpdating = true;
+        ExpandCheckBoxes(_currentFilterExpander, true);
+        ViewModel._isBatchUpdating = false;
+        _ = ApplyFilters();
     }
 
     private void FilterExpanderInvert_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentFilterExpander != null)
-            ExpandCheckBoxes(_currentFilterExpander, null);
+        if (_currentFilterExpander == null) return;
+        ViewModel._isBatchUpdating = true;
+        ExpandCheckBoxes(_currentFilterExpander, null);
+        ViewModel._isBatchUpdating = false;
+        _ = ApplyFilters();
     }
 
     private static void ExpandCheckBoxes(Expander expander, bool? isChecked)
@@ -1838,7 +1881,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private async void WallpaperListRefresh_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
-        App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath,ViewModel.PathManagementVM.AcfPath);
+        App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath,ViewModel.PathManagementVM.AcfPath, ViewModel.PathManagementVM.VdfPath);
         _ = RefreshWallpaperList();
     }
     private void Property_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)

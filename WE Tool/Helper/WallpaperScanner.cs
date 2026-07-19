@@ -31,6 +31,15 @@ internal class WallpaperScanner
         @"""(\d+)""\s*\{[^}]*""size""\s*""(\d+)""[^}]*\}",
         RegexOptions.Compiled | RegexOptions.Multiline);
 
+    /// <summary>
+    /// 匹配 VDF 订阅文件中每个条目的 publishedfileid 和 disabled_locally 值。
+    /// 匹配格式: "0" { ... "publishedfileid" "12345" ... "disabled_locally" "0" ... }
+    /// 捕获组: [1]=publishedfileid, [2]=disabled_locally
+    /// </summary>
+    private static readonly Regex VdfEntryRegex = new(
+        @"""publishedfileid""\s+""(\d+)""[^}]*""disabled_locally""\s+""(\d+)""",
+        RegexOptions.Compiled);
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -204,6 +213,7 @@ internal class WallpaperScanner
         string acfPath,
         IProgress<int>? progress = null,
         string? cacheDbPath = null,
+        string? vdfPath = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
@@ -216,6 +226,8 @@ internal class WallpaperScanner
         var installedIDs = GetInstalledWorkshopIDs(acfPath);
         var acfUpdateTimes = GetAcfUpdateTimes(acfPath);
         var acfSizes = GetAcfSizes(acfPath);
+        // 只对 workshop 源解析 VDF；VDF 不存在时返回 null（不进行校验）
+        var activeSubscribedIDs = source == "workshop" ? GetActiveSubscribedIDs(vdfPath ?? "") : null;
         var resultsBag = new ConcurrentBag<WallpaperItem>();
         var parsedItems = new ConcurrentBag<WallpaperItem>();
         var sw = Stopwatch.StartNew();
@@ -268,7 +280,7 @@ internal class WallpaperScanner
 
                 await Parallel.ForEachAsync(toParse, parallelOptions, async (current, token) =>
                 {
-                    var item = await ParseWallpaperAsync(current, installedIDs, source, acfUpdateTimes, acfSizes, token);
+                    var item = await ParseWallpaperAsync(current, installedIDs, source, acfUpdateTimes, acfSizes, activeSubscribedIDs, token);
                     if (item is not null)
                     {
                         resultsBag.Add(item);
@@ -280,6 +292,16 @@ internal class WallpaperScanner
             // === 保存新增/修改的壁纸到缓存 ===
             if (parsedItems.Count > 0)
                 SaveItemsToCache(effectiveCachePath, parsedItems);
+
+            // === 对 workshop 源：统一校准所有壁纸（含缓存命中）的 ShouldNotExist ===
+            if (source == "workshop" && activeSubscribedIDs != null)
+            {
+                foreach (var item in resultsBag)
+                {
+                    item.ShouldNotExist = string.IsNullOrEmpty(item.WorkshopID)
+                        || !activeSubscribedIDs.Contains(item.WorkshopID);
+                }
+            }
         }
         catch (OperationCanceledException)
         {
@@ -391,6 +413,40 @@ internal class WallpaperScanner
         return result;
     }
 
+    /// <summary>
+    /// 从 .vdf 文件中解析有效订阅的工坊壁纸 ID 集合。
+    /// 返回在 VDF 中存在且 disabled_locally != "1" 的 publishedfileid。
+    /// 当 VDF 文件不存在或解析失败时返回 null。
+    /// </summary>
+    private static FrozenSet<string>? GetActiveSubscribedIDs(string vdfPath)
+    {
+        if (string.IsNullOrEmpty(vdfPath) || !File.Exists(vdfPath))
+            return null;
+
+        try
+        {
+            var content = File.ReadAllText(vdfPath);
+            var matches = VdfEntryRegex.Matches(content);
+            var result = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (Match match in matches)
+            {
+                var id = match.Groups[1].Value;
+                var disabled = match.Groups[2].Value;
+                if (disabled != "1")
+                    result.Add(id);
+            }
+
+            Log.Information($"VDF 解析完成: 有效订阅 {result.Count} 个工坊壁纸");
+            return result.ToFrozenSet();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "解析 .vdf 文件出现异常，将不对订阅状态进行校验。");
+            return null;
+        }
+    }
+
     private record ProjectMetadata
     {
         public string? Type { get; init; }
@@ -411,6 +467,7 @@ internal class WallpaperScanner
         string source,
         Dictionary<string, DateTime> acfUpdateTimes,
         Dictionary<string, long> acfSizes,
+        FrozenSet<string>? activeSubscribedIDs,
         CancellationToken ct)
     {
         try
@@ -511,7 +568,10 @@ internal class WallpaperScanner
                 Tags = tagsString,
                 Type = finalType,
                 Source = source,
-                Dependency = dependency
+                Dependency = dependency,
+                ShouldNotExist = source == "workshop" && activeSubscribedIDs != null
+                    ? (string.IsNullOrEmpty(matchedID) || !activeSubscribedIDs.Contains(matchedID))
+                    : false
             };
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
