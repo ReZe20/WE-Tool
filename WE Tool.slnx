@@ -12,4 +12,5 @@
     <Deploy />
   </Project>
   <Project Path="WE_Tool.Launcher/WE_Tool.Launcher.csproj" />
+  <Project Path="TestSteamUnsub/TestSteamUnsub.csproj" />
 </Solution>

@@ -88,6 +88,7 @@ namespace WE_Tool.Models
         public string ProjectPath { get; set; } = "";
         public string OfficialPath { get; set; } = "";
         public string AcfPath { get; set; } = "";
+        public string VdfPath { get; set; } = "";
     }
 
     public class ExtractSettings

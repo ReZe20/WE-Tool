@@ -384,6 +384,12 @@
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
     <value>ACF文件路径</value>
   </data>
+  <data name="VdfPath.Description" xml:space="preserve">
+    <value>存储创意工坊订阅信息的文件</value>
+  </data>
+  <data name="VdfPath_TextBlock.Text" xml:space="preserve">
+    <value>VDF文件路径</value>
+  </data>
   <data name="SettingPath.Description" xml:space="preserve">
     <value>存储程序设置的文件路径</value>
   </data>
@@ -769,6 +775,9 @@
     <value>恢复默认路径</value>
   </data>
   <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>恢复默认路径</value>
+  </data>
+  <data name="AutoDetect_VdfPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>恢复默认路径</value>
   </data>
   <data name="Settings_FlatFileNaming.Text" xml:space="preserve">

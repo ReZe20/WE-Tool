@@ -344,7 +344,7 @@ namespace WE_Tool.ViewModels
             if (string.IsNullOrEmpty(PathManagementVM.DownloadPath))
                 await PathManagementVM.AutoDetectDownloadPathAsync();
 
-            string mode = "0000";
+            string mode = "00000";
             if (string.IsNullOrEmpty(PathManagementVM.WorkshopPath))
                 mode = mode.Remove(0, 1).Insert(0, "1");
             if (string.IsNullOrEmpty(PathManagementVM.ProjectPath))
@@ -353,6 +353,8 @@ namespace WE_Tool.ViewModels
                 mode = mode.Remove(2, 1).Insert(2, "1");
             if (string.IsNullOrEmpty(PathManagementVM.OfficialPath))
                 mode = mode.Remove(3, 1).Insert(3, "1");
+            if (string.IsNullOrEmpty(PathManagementVM.VdfPath))
+                mode = mode.Remove(4, 1).Insert(4, "1");
 
             if (mode.Contains('1'))
                 await PathManagementVM.AutoDetectWorkshopPathAsync(mode);

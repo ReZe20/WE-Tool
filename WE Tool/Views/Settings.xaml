@@ -429,7 +429,7 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="WorkShopPath"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="1000"
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="10000"
                                         x:Uid="AutoDetect_WorkshopPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
@@ -453,7 +453,7 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="ProjectPath"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0100"
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="01000"
                                         x:Uid="AutoDetect_ProjectPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
@@ -477,7 +477,7 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="OfficialWallpaperPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0001"
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00010"
                                         x:Uid="AutoDetect_OfficialPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
@@ -501,7 +501,7 @@
                         <controls:SettingsCard.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Uid="AcfPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="0010"
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00100"
                                         x:Uid="AutoDetect_AcfPath">
                                     <Button.Content>
                                         <FontIcon Glyph="&#xE72C;" FontSize="12"/>
@@ -516,6 +516,30 @@
                             </Grid.ColumnDefinitions>
                             <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.AcfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
                             <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="AcfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </controls:SettingsCard>
+                    <controls:SettingsCard x:Uid="VdfPath" Margin="0,0,0,10">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE9F9;" />
+                        </controls:SettingsCard.HeaderIcon>
+                        <controls:SettingsCard.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Uid="VdfPath_TextBlock"/>
+                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00001"
+                                        x:Uid="AutoDetect_VdfPath">
+                                    <Button.Content>
+                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                    </Button.Content>
+                                </Button>
+                            </StackPanel>
+                        </controls:SettingsCard.Header>
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.VdfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="VdfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                     <controls:SettingsCard x:Uid="SettingPath" Margin="0,0,0,10">

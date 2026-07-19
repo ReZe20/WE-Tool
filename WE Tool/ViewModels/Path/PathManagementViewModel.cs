@@ -4,6 +4,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Models;
@@ -14,6 +15,8 @@ namespace WE_Tool.ViewModels
 {
     public partial class PathManagementViewModel : ObservableObject
     {
+        private const ulong SteamId64Base = 76561197960265728;
+
         private readonly IPickerService _pickerService;
 
         public event Action? SaveRequested;
@@ -34,6 +37,9 @@ namespace WE_Tool.ViewModels
 
         [ObservableProperty]
         public partial string AcfPath { get; set; } = null!;
+
+        [ObservableProperty]
+        public partial string VdfPath { get; set; } = null!;
 
         [ObservableProperty]
         public partial string OfficialPath { get; set; } = null!;
@@ -72,6 +78,9 @@ namespace WE_Tool.ViewModels
                     case "AcfPath":
                         AcfPath = path;
                         break;
+                    case "VdfPath":
+                        VdfPath = path;
+                        break;
                     case "OfficialPath":
                         OfficialPath = path;
                         break;
@@ -89,7 +98,16 @@ namespace WE_Tool.ViewModels
 
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath) && parameter != null)
             {
-                AcfPath = filePath;
+                string key = parameter as string ?? "";
+                switch (key)
+                {
+                    case "VdfPath":
+                        VdfPath = filePath;
+                        break;
+                    default:
+                        AcfPath = filePath;
+                        break;
+                }
                 SaveRequested?.Invoke();
             }
         }
@@ -115,6 +133,7 @@ namespace WE_Tool.ViewModels
                 "WorkshopPath" => WorkshopPath,
                 "ProjectPath" => ProjectPath,
                 "AcfPath" => AcfPath,
+                "VdfPath" => VdfPath,
                 "OfficialPath" => OfficialPath,
                 "ConfigPath" => AppSettingsHelper.ConfigPath,
                 "LogPath" => AppSettingsHelper.LogPath,
@@ -213,7 +232,7 @@ namespace WE_Tool.ViewModels
                 return;
             }
 
-            if (mode == "0000") return;
+            if (mode == "00000") return;
 
             var result = await Task.Run(() =>
             {
@@ -261,6 +280,73 @@ namespace WE_Tool.ViewModels
 
                 SaveRequested?.Invoke();
             }
+
+            // VDF 路径走独立逻辑：从 Steam 安装目录 + 当前账号 ID 拼接
+            if (mode[4] == '1')
+            {
+                string? steamPath = GetSteamInstallPath();
+                uint? accountId = GetCurrentAccountId();
+                if (steamPath != null && accountId.HasValue)
+                {
+                    VdfPath = Path.Combine(steamPath, "userdata", accountId.Value.ToString(), "ugc", "431960_subscriptions.vdf");
+                    SaveRequested?.Invoke();
+                }
+                else
+                {
+                    Log.Warning("无法自动检测 VDF 路径：未能获取 Steam 安装路径或当前账号 ID");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 从注册表读取 Steam 安装路径
+        /// </summary>
+        private static string? GetSteamInstallPath()
+        {
+            try
+            {
+                using var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\Valve\Steam");
+                if (key?.GetValue("InstallPath") is string path && Directory.Exists(path))
+                    return path;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "读取 Steam 注册表路径失败");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 从 loginusers.vdf 获取当前登录账号的 SteamID32 (AccountID)
+        /// </summary>
+        private static uint? GetCurrentAccountId()
+        {
+            string? steamPath = GetSteamInstallPath();
+            if (steamPath == null) return null;
+
+            string loginUsersPath = Path.Combine(steamPath, "config", "loginusers.vdf");
+            if (!File.Exists(loginUsersPath)) return null;
+
+            try
+            {
+                string content = File.ReadAllText(loginUsersPath);
+
+                // 找到 "MostRecent" "1" 所在的块，提取其 SteamID64
+                var match = Regex.Match(content, @"""(\d{17})""\s*\{[^}]*""MostRecent""\s*""1""[^}]*\}");
+                if (!match.Success) return null;
+
+                string steamId64Str = match.Groups[1].Value;
+                if (!ulong.TryParse(steamId64Str, out var steamId64)) return null;
+
+                // SteamID32 = SteamID64 - 基数
+                ulong accountId = steamId64 - SteamId64Base;
+                return (uint)accountId;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "解析 loginusers.vdf 失败");
+                return null;
+            }
         }
 
         public async Task AutoDetectDownloadPathAsync()
@@ -286,6 +372,7 @@ namespace WE_Tool.ViewModels
             settings.Path.WorkshopPath = WorkshopPath;
             settings.Path.ProjectPath = ProjectPath;
             settings.Path.AcfPath = AcfPath;
+            settings.Path.VdfPath = VdfPath;
             settings.Path.OfficialPath = OfficialPath;
         }
 
@@ -295,6 +382,7 @@ namespace WE_Tool.ViewModels
             WorkshopPath = settings.Path.WorkshopPath;
             ProjectPath = settings.Path.ProjectPath;
             AcfPath = settings.Path.AcfPath;
+            VdfPath = settings.Path.VdfPath;
             OfficialPath = settings.Path.OfficialPath;
         }
     }
