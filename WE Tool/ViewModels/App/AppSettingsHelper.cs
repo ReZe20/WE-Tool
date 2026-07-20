@@ -19,5 +19,14 @@ namespace WE_Tool.ViewModels
                 return System.IO.Path.Combine(App.GetAppDataRoot(), "logs");
             }
         }
+
+        /// <summary>缓存文件所在目录（wallpaper_cache.db）</summary>
+        public static string CachePath
+        {
+            get
+            {
+                return System.IO.Path.Combine(App.GetAppDataRoot());
+            }
+        }
     }
 }

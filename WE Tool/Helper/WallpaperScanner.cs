@@ -214,14 +214,11 @@ internal class WallpaperScanner
         IProgress<int>? progress = null,
         string? cacheDbPath = null,
         string? vdfPath = null,
+        bool useCache = true,
         CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
             return [];
-
-        var effectiveCachePath = string.IsNullOrEmpty(cacheDbPath)
-            ? GetDefaultCachePath()
-            : cacheDbPath;
 
         var installedIDs = GetInstalledWorkshopIDs(acfPath);
         var acfUpdateTimes = GetAcfUpdateTimes(acfPath);
@@ -236,8 +233,9 @@ internal class WallpaperScanner
 
         try
         {
-            EnsureDatabaseInitialized(effectiveCachePath);
-            var cacheDict = LoadCacheDictionary(effectiveCachePath);
+            var effectiveCachePath = useCache
+                ? (string.IsNullOrEmpty(cacheDbPath) ? GetDefaultCachePath() : cacheDbPath)
+                : null;
 
             var enumOptions = new EnumerationOptions
             {
@@ -250,24 +248,38 @@ internal class WallpaperScanner
                 .Where(dir => File.Exists(Path.Combine(dir, "project.json")))
                 .ToList();
 
-            // 缓存命中判断（基于文件修改时间）
-            var toParse = new List<string>();
-            foreach (var current in wallpaperDirs)
+            List<string> toParse;
+
+            if (useCache)
             {
-                var currentUpdateTime = Directory.GetLastWriteTime(current);
+                EnsureDatabaseInitialized(effectiveCachePath!);
+                var cacheDict = LoadCacheDictionary(effectiveCachePath!);
 
-                if (cacheDict.TryGetValue(current, out var entry) &&
-                    entry.UpdateTime == currentUpdateTime)
+                // 缓存命中判断（基于文件修改时间）
+                toParse = [];
+                foreach (var current in wallpaperDirs)
                 {
-                    resultsBag.Add(entry.Item);
+                    var currentUpdateTime = Directory.GetLastWriteTime(current);
+
+                    if (cacheDict.TryGetValue(current, out var entry) &&
+                        entry.UpdateTime == currentUpdateTime)
+                    {
+                        resultsBag.Add(entry.Item);
+                    }
+                    else
+                    {
+                        toParse.Add(current);
+                    }
                 }
-                else
-                {
-                    toParse.Add(current);
-                }
+
+                Log.Information($"SQLite 缓存命中 {resultsBag.Count} 个壁纸，需解析 {toParse.Count} 个新/更新壁纸");
             }
-
-            Log.Information($"SQLite 缓存命中 {resultsBag.Count} 个壁纸，需解析 {toParse.Count} 个新/更新壁纸");
+            else
+            {
+                // 缓存关闭：全部重新解析
+                toParse = wallpaperDirs;
+                Log.Information($"缓存已关闭，将解析全部 {toParse.Count} 个壁纸");
+            }
 
             // 并行解析新增/修改的壁纸
             if (toParse.Count > 0)
@@ -290,8 +302,8 @@ internal class WallpaperScanner
             }
 
             // === 保存新增/修改的壁纸到缓存 ===
-            if (parsedItems.Count > 0)
-                SaveItemsToCache(effectiveCachePath, parsedItems);
+            if (useCache && parsedItems.Count > 0)
+                SaveItemsToCache(effectiveCachePath!, parsedItems);
 
             // === 对 workshop 源：统一校准所有壁纸（含缓存命中）的 ShouldNotExist ===
             if (source == "workshop" && activeSubscribedIDs != null)

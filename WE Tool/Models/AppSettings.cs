@@ -14,6 +14,7 @@ namespace WE_Tool.Models
         public PapersConfig.Expander Expander { get; set; } = new PapersConfig.Expander();
         public PathConfig Path { get; set; } = new PathConfig();
         public ExtractSettings Extract { get; set; } = new ExtractSettings();
+        public string ScanCacheEnabled { get; set; } = "1";
     }
 
     public class PapersConfig

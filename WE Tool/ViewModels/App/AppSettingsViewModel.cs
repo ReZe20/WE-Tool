@@ -14,6 +14,10 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial string Theme { get; set; } = null!;
 
+        /// <summary>扫描缓存开关："0"=关闭, "1"=启用</summary>
+        [ObservableProperty]
+        public partial string ScanCacheEnabled { get; set; } = "1";
+
 #pragma warning disable CA1822 // ConfigPath在之后需要实例访问，不标记static
         public string ConfigPath
         {
@@ -30,6 +34,15 @@ namespace WE_Tool.ViewModels
             get
             {
                 return System.IO.Path.Combine(App.GetAppDataRoot(), "logs");
+            }
+            set { }
+        }
+
+        public string CachePath
+        {
+            get
+            {
+                return AppSettingsHelper.CachePath;
             }
             set { }
         }

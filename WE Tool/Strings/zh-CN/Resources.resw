@@ -402,6 +402,12 @@
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
     <value>日志文件路径</value>
   </data>
+  <data name="CachePath.Description" xml:space="preserve">
+    <value>存储扫描缓存数据的文件路径</value>
+  </data>
+  <data name="CachePath_TextBlock.Text" xml:space="preserve">
+    <value>缓存文件路径</value>
+  </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>提取</value>
   </data>
@@ -524,6 +530,15 @@
   </data>
   <data name="Dark.Content" xml:space="preserve">
     <value>深色</value>
+  </data>
+  <data name="ScanCache.Header" xml:space="preserve">
+    <value>扫描缓存</value>
+  </data>
+  <data name="Enabled.Content" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="Disabled.Content" xml:space="preserve">
+    <value>关闭</value>
   </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>鼠标进入壁纸图标动画</value>

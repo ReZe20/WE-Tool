@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    NavigationCacheMode="Enabled"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:viewmodels="using:WE_Tool.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:converters="using:WE_Tool.Converters">
@@ -146,6 +147,16 @@
                             <ComboBoxItem Tag="Default" x:Uid="FollowSystem"/>
                             <ComboBoxItem Tag="Light" x:Uid="Light"/>
                             <ComboBoxItem Tag="Dark" x:Uid="Dark"/>
+                        </ComboBox>
+                    </controls:SettingsCard>
+                    
+                    <controls:SettingsCard x:Uid="ScanCache" Margin="0,0,0,10" Description="扫描缓存可用于程序加速扫描速度">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xEE94;"/>
+                        </controls:SettingsCard.HeaderIcon>
+                        <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.ScanCacheEnabled, Mode=TwoWay}" SelectedValuePath="Tag" MinWidth="150">
+                            <ComboBoxItem Tag="1" x:Uid="Enabled"/>
+                            <ComboBoxItem Tag="0" x:Uid="Disabled"/>
                         </ComboBox>
                     </controls:SettingsCard>
                     
@@ -576,6 +587,24 @@
                             </Grid.ColumnDefinitions>
                             <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.LogPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
                             <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="LogPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </controls:SettingsCard>
+                    <controls:SettingsCard x:Uid="CachePath" Margin="0,0,0,10">
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8DA;"/>
+                        </controls:SettingsCard.HeaderIcon>
+                        <controls:SettingsCard.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Uid="CachePath_TextBlock"/>
+                            </StackPanel>
+                        </controls:SettingsCard.Header>
+                        <Grid MinWidth="300" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.CachePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="CachePath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
                 </StackPanel>

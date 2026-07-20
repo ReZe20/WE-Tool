@@ -137,6 +137,7 @@ namespace WE_Tool.ViewModels
                 "OfficialPath" => OfficialPath,
                 "ConfigPath" => AppSettingsHelper.ConfigPath,
                 "LogPath" => AppSettingsHelper.LogPath,
+                "CachePath" => AppSettingsHelper.CachePath,
                 "DownloadPath" => DownloadPath,
                 _ => key
             };

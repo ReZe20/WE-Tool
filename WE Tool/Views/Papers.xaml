@@ -11,7 +11,7 @@
     xmlns:converters="using:WE_Tool.Converters"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     x:Name="PageRoot"
     NavigationCacheMode="Enabled">
     <Page.Resources>
