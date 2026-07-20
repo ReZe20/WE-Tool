@@ -108,6 +108,9 @@ public class RepkgCliService
                 void ItemProgress(string action, double pct)
                     => ReportProgress($"{name}|{action}|{pct}");
 
+                void ItemProgressWithEntry(string action, double pct, string? entry)
+                    => ReportProgress($"{name}|{action}|{pct}|{entry}");
+
                 // 跳过已提取 — 仅子文件夹模式下检查（平铺模式共用输出目录，无法按壁纸判断）
                 if (settings.OneFolder == 0 && settings.SkipExistingOutput && Directory.Exists(wallpaperOutput))
                 {
@@ -127,7 +130,7 @@ public class RepkgCliService
                     if (pkgFiles.Length > 0)
                     {
                         var args = BuildArgs(wallpaper.FolderPath, wallpaperOutput, settings);
-                        await RunRepkgAsync(name, args, pct => ItemProgress("解析PKG", pct), token);
+                        await RunRepkgAsync(name, args, (pct, entry) => ItemProgressWithEntry("解析PKG", pct, entry), token);
                     }
                     else
                     {
@@ -206,7 +209,7 @@ public class RepkgCliService
         return sb.ToString();
     }
 
-    private async Task RunRepkgAsync(string wallpaperName, string args, Action<double> progressCb, CancellationToken ct)
+    private async Task RunRepkgAsync(string wallpaperName, string args, Action<double, string?> progressCb, CancellationToken ct)
     {
         var process = new Process
         {
@@ -248,6 +251,13 @@ public class RepkgCliService
                                 entryProp.GetString(),
                                 root.TryGetProperty("pos", out var p) ? p.GetInt32() : 0,
                                 root.TryGetProperty("total", out var t) ? t.GetInt32() : 0);
+
+                            // 将条目名传给 UI（同时携带当前进度）
+                            if (root.TryGetProperty("pos", out var pos) && root.TryGetProperty("total", out var total))
+                            {
+                                progressCb(Math.Round((double)pos.GetInt32() / total.GetInt32() * 100, 1),
+                                    entryProp.GetString());
+                            }
                         }
                     }
                     else if (root.TryGetProperty("pos", out var pos) && root.TryGetProperty("total", out var total))
@@ -257,7 +267,8 @@ public class RepkgCliService
                         if (now - _lastProgressTick < 30) return;
                         _lastProgressTick = now;
 
-                        progressCb(Math.Round((double)pos.GetInt32() / total.GetInt32() * 100, 1));
+                        var entryName = root.TryGetProperty("entry", out var entryProp) ? entryProp.GetString() : null;
+                        progressCb(Math.Round((double)pos.GetInt32() / total.GetInt32() * 100, 1), entryName);
                     }
                 }
                 catch { }

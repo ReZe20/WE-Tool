@@ -435,6 +435,9 @@
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
     <value>提取</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>取消订阅</value>
+  </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
     <value>筛选结果响应延迟(ms)</value>
   </data>

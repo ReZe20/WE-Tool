@@ -78,11 +78,11 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton x:Uid="AppBarButton_Delete" 
-                              Command="{x:Bind DeleteSelectedCommand}"
-                              CommandParameter="{Binding}">
+                <AppBarButton x:Uid="AppBarButton_Unsubscribe"
+                              Command="{x:Bind UnsubscribeSelectedCommand}"
+                              IsEnabled="{x:Bind IsUnsubscribeEnabled, Mode=OneWay}">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE74D;"/>
+                        <FontIcon Glyph="&#xE711;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBarFlyout.PrimaryCommands>
@@ -1016,7 +1016,8 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <!-- 标题栏 -->
@@ -1027,7 +1028,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <FontIcon Glyph="&#xE118;" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="正在提取壁纸" Style="{StaticResource TitleTextBlockStyle}" 
+                        <TextBlock Text="{x:Bind ExtractTitleText, Mode=OneWay}" Style="{StaticResource TitleTextBlockStyle}" 
                                    FontSize="18" VerticalAlignment="Center" Margin="8,0,0,0" Grid.Column="1"/>
                         <Button Grid.Column="2"
                                 x:Name="ExtractCloseButton"
@@ -1037,32 +1038,41 @@
                             <FontIcon Glyph="&#xE711;" FontSize="9"/>
                         </Button>
                     </Grid>
-                    <!-- 进度列表 -->
-                    <ScrollViewer Grid.Row="1" MaxHeight="300" Margin="0,8,0,8">
-                        <StackPanel Margin="12,0">
-                            <TextBlock Text="{x:Bind ExtractStatus, Mode=OneWay}" 
-                                       FontSize="12" HorizontalAlignment="Center"
-                                       Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                       Visibility="{x:Bind ExtractStatusVisibility, Mode=OneWay}"/>
-                            <ItemsControl ItemsSource="{x:Bind ExtractItems}" Margin="0,8,0,0">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="models:ExtractProgressItem">
-                                        <Grid ColumnSpacing="8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" Grid.Column="0"/>
-                                            <TextBlock Text="{x:Bind Action, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" 
-                                                       FontSize="10" Grid.Column="1" Width="60" TextAlignment="Right"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </ScrollViewer>
+                    <!-- 进度条区域 -->
+                    <StackPanel Grid.Row="1" Margin="24,16,24,0">
+                        <!-- 预览图 -->
+                        <Border x:Name="ExtractPreviewBorder" Width="160" Height="160" HorizontalAlignment="Center" CornerRadius="8" Margin="0,0,0,4"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                Visibility="{x:Bind ExtractPreviewVisibility, Mode=OneWay}">
+                            <Image x:Name="ExtractPreviewImage" Stretch="UniformToFill"/>
+                        </Border>
+                        <TextBlock x:Name="ExtractPreviewTitle" Text="" FontSize="13" HorizontalAlignment="Center" Margin="0,0,0,12"
+                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="280"
+                                   Visibility="{x:Bind ExtractPreviewVisibility, Mode=OneWay}"/>
+                        <ProgressBar x:Name="ExtractProgressBar"
+                                     Value="{x:Bind ExtractProgress, Mode=OneWay}"
+                                     Maximum="100"
+                                     ShowPaused="{x:Bind IsPaused, Mode=OneWay}"
+                                     Height="6"/>
+                        <TextBlock Text="{x:Bind ExtractSubText, Mode=OneWay}" 
+                                   FontSize="13" HorizontalAlignment="Center" Margin="0,8,0,0"
+                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                        <TextBlock Text="{x:Bind ExtractStatus, Mode=OneWay}" 
+                                   FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"
+                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                   Visibility="{x:Bind ExtractStatusVisibility, Mode=OneWay}"/>
+                    </StackPanel>
+                    <!-- 当前提取项信息（单壁纸模式下显示当前处理的文件） -->
+                    <StackPanel Grid.Row="2" Margin="24,4,24,12">
+                        <TextBlock Text="{x:Bind ExtractEntryText, Mode=OneWay}"
+                                   FontSize="12" HorizontalAlignment="Center"
+                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Visibility="{x:Bind ExtractEntryVisibility, Mode=OneWay}"/>
+                    </StackPanel>
                     <!-- 按钮栏 -->
-                    <Grid Grid.Row="2" Padding="12,8,12,12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" ColumnSpacing="8">
+                    <Grid Grid.Row="3" Padding="12,8,12,12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>

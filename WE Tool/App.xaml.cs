@@ -57,6 +57,12 @@ namespace WE_Tool
 
             Log.Information($"====应用程序已启动。路径：{appDataRoot}====", appDataRoot);
 
+            // 进程退出时释放 Steamworks 原生资源
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                Service.SteamWorkshopService.GetInstance().Dispose();
+            };
+
             LoadInitialLanguage();
         }
 

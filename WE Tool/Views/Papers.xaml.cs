@@ -73,6 +73,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
     public IAsyncRelayCommand ExtractSelectedCommand { get; }
+    public IAsyncRelayCommand UnsubscribeSelectedCommand { get; }
     private bool _isWallpaperItemTapped = false;
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
@@ -85,6 +86,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (_isExtracting == value) return;
             _isExtracting = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(ExtractPreviewVisibility));
             ExtractOverlayVisibility = value ? Visibility.Visible : Visibility.Collapsed;
             if (!value) ExtractState = ExtractState.Completed;
             if (value)
@@ -175,6 +177,54 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     public string ExtractProgressText => $"{_extractCompletedCount}/{_extractTotalCount}";
 
+    private bool _isSingleExtract;
+
+    private string _extractTitleText = "";
+    public string ExtractTitleText
+    {
+        get => _extractTitleText;
+        set
+        {
+            if (_extractTitleText != value)
+            {
+                _extractTitleText = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    private string _extractSubText = "";
+    public string ExtractSubText
+    {
+        get => _extractSubText;
+        set
+        {
+            if (_extractSubText != value)
+            {
+                _extractSubText = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    private string _extractEntryText = "";
+    public string ExtractEntryText
+    {
+        get => _extractEntryText;
+        set
+        {
+            if (_extractEntryText != value)
+            {
+                _extractEntryText = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public Visibility ExtractEntryVisibility => _isSingleExtract ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility ExtractPreviewVisibility => IsExtracting ? Visibility.Visible : Visibility.Collapsed;
+
     public ObservableCollection<ExtractProgressItem> ExtractItems { get; } = [];
 
     private bool _isMultiSelectMode = false;
@@ -244,6 +294,18 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
     }
     public IAsyncRelayCommand<WallpaperItem> DeleteWallpaperCommand { get; }
+
+    /// <summary>取消订阅按钮是否可用（单选/多选中包含创意工坊壁纸）</summary>
+    public bool IsUnsubscribeEnabled
+    {
+        get
+        {
+            if (SelectedWallpapers.Count > 0)
+                return SelectedWallpapers.Any(w => w.Source == "workshop");
+            return ViewModel?.SelectedWallpaper?.Source == "workshop";
+        }
+    }
+
     public Papers()
     {
         var app = Application.Current as App;
@@ -303,7 +365,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 || e.PropertyName?.Contains("Pane") == true
                 || e.PropertyName == "SortIndex"
                 || e.PropertyName == nameof(ViewModel.SelectedWallpaper))
+            {
+                if (e.PropertyName == nameof(ViewModel.SelectedWallpaper))
+                    OnPropertyChanged(nameof(IsUnsubscribeEnabled));
                 return;
+            }
 
             _ = ApplyFilters();
         };
@@ -377,6 +443,28 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             await ExtractSelectedWallpapersAsync();
         });
 
+        UnsubscribeSelectedCommand = new AsyncRelayCommand(async () =>
+        {
+            HideWallpaperContextMenu();
+
+            var itemsToUnsubscribe = SelectedWallpapers.Count > 0
+                ? SelectedWallpapers.Where(w => w.Source == "workshop").ToList()
+                : ViewModel.SelectedWallpaper is WallpaperItem wp && wp.Source == "workshop"
+                    ? [wp]
+                    : [];
+
+            if (itemsToUnsubscribe.Count == 0) return;
+
+            bool confirmed = await DialogHelper.ShowConfirmDialogAsync(
+                "取消订阅",
+                $"确定要取消订阅选中的 {itemsToUnsubscribe.Count} 个创意工坊壁纸吗？\n\n操作将同步删除本地的壁纸文件。",
+                "确定",
+                "取消");
+            if (!confirmed) return;
+
+            await UnsubscribeWallpapersAsync(itemsToUnsubscribe);
+        });
+
         WallpapersScrollView.SizeChanged += (s, e) =>
         {
             DispatcherQueue.TryEnqueue(() =>
@@ -402,6 +490,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         RefreshDisplayedSelectedWallpapers();
         UpdateStackVisuals();
+        OnPropertyChanged(nameof(IsUnsubscribeEnabled));
     }
     private void Global_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
@@ -1955,6 +2044,23 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         WallpaperContextMenu?.Hide();
     }
 
+    private void SetExtractPreviewImage(string? previewPath, string title)
+    {
+        ExtractPreviewTitle.Text = title;
+        if (string.IsNullOrEmpty(previewPath) || previewPath == "ms-appx:///Assets/NoPreview.png" || !File.Exists(previewPath))
+        {
+            ExtractPreviewImage.Source = null;
+            return;
+        }
+        try
+        {
+            ExtractPreviewImage.Source = new BitmapImage(new Uri("file:///" + previewPath.Replace('\\', '/')));
+        }
+        catch
+        {
+            ExtractPreviewImage.Source = null;
+        }
+    }
     private async Task ExtractSelectedWallpapersAsync()
     {
         // Collect selected wallpapers
@@ -1984,60 +2090,102 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             ExtractProgress = 0;
             ExtractStatus = "正在提取...";
 
+            // 判断单/多模式
+            _isSingleExtract = itemsToExtract.Count == 1;
+            ExtractTitleText = $"正在提取壁纸{(itemsToExtract.Count > 1 ? $" (共 {itemsToExtract.Count} 个)" : "")}";
+            ExtractSubText = _isSingleExtract ? "准备中..." : $"已完成 0/{itemsToExtract.Count} 个壁纸";
+            ExtractEntryText = "";
+            OnPropertyChanged(nameof(ExtractEntryVisibility));
+
             _extractService = new RepkgCliService();
             _extractCts = new CancellationTokenSource();
 
-            // 初始化进度列表
-            var tempItems = new List<ExtractProgressItem>(itemsToExtract.Count);
-            _extractItemDict = new Dictionary<string, ExtractProgressItem>(itemsToExtract.Count);
+            var uiQueue = DispatcherQueue;
+
+            // 构建 名称→WallpaperItem 映射，用于预览图切换
+            var extractNameToItem = new Dictionary<string, WallpaperItem>(itemsToExtract.Count);
             foreach (var w in itemsToExtract)
             {
-                var name = w.Title ?? w.WorkshopID ?? (w.FolderPath != null ? new DirectoryInfo(w.FolderPath).Name : "?");
-                var item = new ExtractProgressItem
-                {
-                    Name = name,
-                    Action = "等待中",
-                    Progress = 0
-                };
-                tempItems.Add(item);
-                _extractItemDict[name] = item;
+                var key = w.Title ?? w.WorkshopID ?? (w.FolderPath != null ? new DirectoryInfo(w.FolderPath).Name : "?");
+                extractNameToItem[key] = w;
             }
-            ExtractItems.Clear();
-            foreach (var item in tempItems)
-                ExtractItems.Add(item);
-            var uiQueue = DispatcherQueue;
+
+            // 设置初始预览图
+            var firstName = itemsToExtract[0].Title ?? itemsToExtract[0].WorkshopID ?? "壁纸";
+            SetExtractPreviewImage(itemsToExtract[0].Preview, firstName);
+
+            // 多壁纸模式：通过 _extractCompletedCount 跟踪总体进度
+            _extractItemDict = [];
 
             Action<string> onProgress = msg =>
             {
                 var parts = msg.Split('|');
                 var name = parts[0];
                 var action = parts[1];
+                double pct = parts.Length > 2 && double.TryParse(parts[2], out var parsed) ? parsed : 0;
 
-                if (!uiQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+                uiQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
                 {
-                    if (!_extractItemDict.TryGetValue(name, out var item)) return;
-
-                    if (action == "完成")
+                    if (_isSingleExtract)
                     {
-                        item.Action = "完成";
-                        item.Progress = 100;
-                        if (_extractCompletedNames.Add(name))
+                        // 单壁纸模式：进度条跟随单壁纸内部的条目进度
+                        if (action == "解析PKG" || action == "开始")
+                        {
+                            ExtractProgress = pct;
+                            ExtractSubText = $"正在解析... {pct:F0}%";
+                        }
+                        else if (action == "跳过(已提取)")
+                        {
+                            ExtractProgress = 100;
+                            ExtractSubText = "壁纸已提取，跳过";
+                        }
+                        else if (action == "完成")
+                        {
+                            ExtractProgress = 100;
+                            ExtractSubText = "提取完成";
+                            if (_extractCompletedNames.Add(name))
+                            {
+                                _extractCompletedCount = 1;
+                                OnPropertyChanged(nameof(ExtractProgressText));
+                            }
+                        }
+                        else if (action == "失败")
+                        {
+                            ExtractSubText = "提取失败";
+                        }
+                    }
+                    else
+                    {
+                        // 多壁纸模式：进度条反映已完成壁纸数 / 总壁纸数
+                        if ((action == "开始" || action == "解析PKG") && !_extractCompletedNames.Contains(name))
+                        {
+                            // 切换到当前壁纸的预览图 + 标题
+                            if (extractNameToItem.TryGetValue(name, out var currentItem))
+                                SetExtractPreviewImage(currentItem.Preview, currentItem.Title ?? name);
+                        }
+                        else if (action == "完成" && _extractCompletedNames.Add(name))
                         {
                             _extractCompletedCount++;
                             ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
+                            ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
                             OnPropertyChanged(nameof(ExtractProgressText));
                         }
                     }
-                    else if (action == "失败")
+
+                    // 尝试提取当前处理的条目名（单壁纸模式时显示在 ExtractEntryText）
+                    if (action == "解析PKG" && parts.Length > 3)
                     {
-                        item.Action = "失败";
+                        ExtractEntryText = $"正在处理: {parts[3]}";
                     }
-                    else if (item.Action != "完成" && item.Action != "失败" && item.Action != "处理中")
-                    {
-                        item.Action = "处理中";
-                    }
-                })) { }
+                });
             };
+
+            // 监听 RePKG_Re 的进程输出，捕获当前条目名
+            // 在 onProgress 回调中，如果有条目信息，通过额外段传入：
+            // RepkgCliService.RunRepkgAsync 中 OutputDataReceived 已解析 "entry" 字段，
+            // 但当前只传了 pos/total。需要修改 RunRepkgAsync 将 entry 名也传入 progressCb。
+            // 临时方案：从 msg 中取第4段（如果有）
+            // 已通过上述 parts[3] 逻辑支持
 
             var extractSettings = new ExtractSettings
             {
@@ -2053,16 +2201,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 OutProjectJSON = ViewModel.OutProjectJSON,
                 TexExportMode = ViewModel.TexExportMode,
                 OutputMode = ViewModel.OutputMode,
-
-                // 性能参数
                 MaxConcurrentExtractions = ViewModel.MaxConcurrentExtractions,
                 ProcessPriority = ViewModel.ProcessPriority,
-                // 文件过滤
                 SkipExistingOutput = ViewModel.OneFolder == 1 ? ViewModel.SkipExistingOutput : false,
                 LazyLoad = ViewModel.LazyLoad,
             };
 
-            // 设置子进程优先级
             RepkgCliService.SetProcessPriorityLevel(ViewModel.ProcessPriority);
 
             await _extractService.ExtractWallpapersAsync(
@@ -2075,6 +2219,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 ExtractState = ExtractState.Completed;
                 IsExtracting = false;
                 ExtractStatus = "提取完成";
+                if (!_isSingleExtract)
+                    ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
                 Log.Information("提取完成: {Count} 个壁纸 → {Output}", itemsToExtract.Count, outputPath);
             }
             else
@@ -2156,6 +2302,36 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             UpdateMultiSelectCount();
             Log.Information($"壁纸 {item.Title} 已从列表和磁盘中彻底移除。");
+        }
+    }
+    private async Task UnsubscribeWallpapersAsync(List<WallpaperItem> items)
+    {
+        var service = SteamWorkshopService.GetInstance();
+        if (!service.IsAvailable)
+        {
+            await DialogHelper.ShowMessageAsync(
+                "Steamworks 初始化失败",
+                "无法连接到 Steam，请确认 Steam 已在运行。\n\n如果问题持续，请尝试以管理员身份运行本程序。");
+            return;
+        }
+
+        int success = 0;
+        foreach (var item in items)
+        {
+            if (ulong.TryParse(item.WorkshopID, out var wid))
+            {
+                if (await service.UnsubscribeAsync(wid))
+                    success++;
+            }
+        }
+
+        await DialogHelper.ShowMessageAsync("取消订阅完成",
+            $"成功向 Steam 发送取消订阅请求: {success}/{items.Count} 个壁纸。\n\n正在同步删除本地壁纸文件...");
+
+        // 删除本地文件并清出列表（沿用 DeleteItemAsync 的逻辑）
+        foreach (var item in items)
+        {
+            await DeleteItemAsync(item, skipConfirm: true);
         }
     }
     private void RefreshScrollBarLabels()
