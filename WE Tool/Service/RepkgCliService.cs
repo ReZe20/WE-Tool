@@ -143,7 +143,7 @@ public class RepkgCliService
                     if (settings.OutProjectJSON && settings.OutputMode != 1)
                         CopyProjectFiles(dir, wallpaperOutput, settings);
 
-                    // 平铺模式 + 按壁纸名命名文件：将文件重命名为 壁纸名_原文件名
+                    // 平铺模式
                     if (settings.OneFolder == 1 && settings.FlatFileNamingMode == 1 && !string.IsNullOrEmpty(wallpaper.Title))
                     {
                         var safeTitle = GetSafeName(wallpaper.Title);
@@ -202,6 +202,7 @@ public class RepkgCliService
             sb.Append("--no-tex-convert ");
         else if (settings.TexExportMode == 2)
             sb.Append("--only-tex-images ");
+        // TexExportMode==1（导出并转换）：无额外参数，默认行为 = 提取全部 + TEX 转图片 + 保留 TEX
 
         if (settings.CoverAllFiles) sb.Append("--overwrite ");
         if (settings.LazyLoad) sb.Append("--lazy ");

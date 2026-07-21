@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -225,6 +226,19 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     public Visibility ExtractPreviewVisibility => IsExtracting ? Visibility.Visible : Visibility.Collapsed;
 
+    /// <summary>导入壁纸编辑器按钮可见性（仅场景类且非项目的壁纸）</summary>
+    public Visibility IsImportToEditorVisible
+    {
+        get
+        {
+            if (ViewModel?.SelectedWallpaper is WallpaperItem item)
+                return "scene".Equals(item.Type, StringComparison.OrdinalIgnoreCase)
+                    && !"mine".Equals(item.Source, StringComparison.OrdinalIgnoreCase)
+                        ? Visibility.Visible : Visibility.Collapsed;
+            return Visibility.Collapsed;
+        }
+    }
+
     public ObservableCollection<ExtractProgressItem> ExtractItems { get; } = [];
 
     private bool _isMultiSelectMode = false;
@@ -367,7 +381,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 || e.PropertyName == nameof(ViewModel.SelectedWallpaper))
             {
                 if (e.PropertyName == nameof(ViewModel.SelectedWallpaper))
+                {
                     OnPropertyChanged(nameof(IsUnsubscribeEnabled));
+                    OnPropertyChanged(nameof(IsImportToEditorVisible));
+                    SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
+                        ? Visibility.Visible : Visibility.Collapsed;
+                }
                 return;
             }
 
@@ -390,6 +409,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 _isFirstLoad = false;
                 await ViewModel.InitializeAsync();
                 await RefreshWallpaperList();
+                // 初始状态：无选中壁纸时隐藏详情面板
+                SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
+                    ? Visibility.Visible : Visibility.Collapsed;
             }
 
             var presenter = WallpapersScrollView.ScrollPresenter;
@@ -1151,8 +1173,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
                 ContentItem_PointerPressed(sender, e);
-                ViewModel.SelectedWallpaper = item;
-                PlayDrillInAnimation();
+                if (!_isMultiSelectMode)
+                {
+                    ViewModel.SelectedWallpaper = item;
+                    PlayDrillInAnimation();
+                }
                 if (IsMultiSelectMode)
                 {
                     item.IsSelected = !item.IsSelected;
@@ -1209,7 +1234,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     var modifiers = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
                     if (modifiers && !_isMultiSelectMode)
                     {
-                        ViewModel.SelectedWallpaper = item;
                         IsMultiSelectMode = true;
                         item.IsSelected = !item.IsSelected;
                         if (item.IsSelected && !SelectedWallpapers.Contains(item))
@@ -1218,7 +1242,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
                     if (_isMultiSelectMode)
                     {
-                        ViewModel.SelectedWallpaper = item;
                         item.IsSelected = !item.IsSelected;
                         if (item.IsSelected && !SelectedWallpapers.Contains(item))
                             SelectedWallpapers.Add(item);
@@ -1303,8 +1326,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
                 Item_PointerPressed(sender,e);
-                ViewModel.SelectedWallpaper = item;
-                PlayDrillInAnimation();
+                if (!_isMultiSelectMode)
+                {
+                    ViewModel.SelectedWallpaper = item;
+                    PlayDrillInAnimation();
+                }
                 if (IsMultiSelectMode)
                 {
                     item.IsSelected = !item.IsSelected;
@@ -1469,7 +1495,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     var modifiers = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
                     if (modifiers && !_isMultiSelectMode)
                     {
-                        ViewModel.SelectedWallpaper = item;
                         IsMultiSelectMode = true;
                         item.IsSelected = !item.IsSelected;
 
@@ -1479,7 +1504,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
                     if (_isMultiSelectMode)
                     {
-                        ViewModel.SelectedWallpaper = item;
                         item.IsSelected = !item.IsSelected;
 
                         if (item.IsSelected && !SelectedWallpapers.Contains(item))
@@ -1516,7 +1540,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             UpdateMultiSelectCount();
-            ViewModel.SelectedWallpaper = item;
+            if (!_isMultiSelectMode)
+                ViewModel.SelectedWallpaper = item;
             _rightClickedWallpaperElement = element;
         }
     }
@@ -1928,6 +1953,143 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         dataPackage.RequestedOperation = DataPackageOperation.Copy;
         dataPackage.SetStorageItems(folders);
         Clipboard.SetContent(dataPackage);
+    }
+
+    private async void ImportToEditor_Click(object sender, RoutedEventArgs e)
+    {
+        var item = ViewModel.SelectedWallpaper;
+        if (item == null || string.IsNullOrEmpty(item.FolderPath)) return;
+        if (!Directory.Exists(item.FolderPath)) return;
+
+        var projectPath = ViewModel.PathManagementVM?.ProjectPath;
+        if (string.IsNullOrEmpty(projectPath))
+        {
+            Log.Warning("[导入编辑器] 项目路径未设置");
+            return;
+        }
+
+        // 输出目录：项目路径/壁纸名（子文件夹 + 壁纸名命名）
+        var safeName = GetSafeWallpaperName(item.Title ?? item.WorkshopID ?? "untitled");
+        var outputDir = Path.Combine(projectPath, safeName);
+        Directory.CreateDirectory(outputDir);
+
+        var sourceDir = new DirectoryInfo(item.FolderPath);
+        var pkgFiles = sourceDir.EnumerateFiles("*.pkg", SearchOption.AllDirectories).ToArray();
+
+        try
+        {
+            if (pkgFiles.Length > 0)
+            {
+                // PKG 文件：调用 RePKG_Re 解析，仅输出图像
+                var args = BuildImportEditorArgs(item.FolderPath, outputDir);
+                Log.Information("[导入编辑器] 解析 PKG: {Args}", args);
+
+                var repkgDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "repkg");
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = Path.Combine(repkgDir, "RePKG_Re.exe"),
+                        Arguments = args,
+                        WorkingDirectory = repkgDir,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    },
+                    EnableRaisingEvents = true
+                };
+                process.Start();
+                await process.WaitForExitAsync();
+            }
+            else
+            {
+                // 无 PKG：手动拷贝文件，仅输出图像，保持原有目录结构
+                CopyImageFilesOnly(sourceDir, outputDir, isScene: item.Type == "scene");
+            }
+
+            // 拷贝 project.json 和预览图
+            CopyProjectJsonAndPreview(sourceDir, outputDir);
+
+            Log.Information("[导入编辑器] 壁纸已导入到: {Path}", outputDir);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[导入编辑器] 导入失败: {Name}", item.Title);
+        }
+    }
+
+    private static string GetSafeWallpaperName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var sb = new StringBuilder(name);
+        foreach (var c in new[] { '<', '>', ':', '\"', '/', '\\', '|', '?', '*' })
+            sb.Replace(c, '_');
+        for (int i = 0; i < sb.Length; i++)
+            if (invalid.Contains(sb[i])) sb[i] = '_';
+        return sb.ToString().Trim();
+    }
+
+    private static string BuildImportEditorArgs(string input, string output)
+    {
+        var sb = new StringBuilder();
+        sb.Append("extract \""); sb.Append(input); sb.Append("\" ");
+        sb.Append("-o \""); sb.Append(output); sb.Append("\" ");
+        sb.Append("--only-tex-images ");  // 仅输出图像（等同 OutputMode==1）
+        sb.Append("--overwrite ");        // 覆盖已有文件
+        sb.Append("--lazy ");             // 分块解析
+        sb.Append("-r");                  // 递归
+        // 不加 -s：保持原有目录结构（KeepSubfolderStructure=0）
+        return sb.ToString();
+    }
+
+    private static void CopyImageFilesOnly(DirectoryInfo sourceDir, string outputDir, bool isScene)
+    {
+        var imageExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".psd", ".webp", ".svg", ".ico", ".dds"
+        };
+
+        foreach (var file in sourceDir.EnumerateFiles())
+        {
+            if (!imageExtensions.Contains(file.Extension)) continue;
+            var destPath = Path.Combine(outputDir, file.Name);
+            try { File.Copy(file.FullName, destPath, true); }
+            catch (Exception ex) { Log.Warning(ex, "[导入编辑器] 拷贝文件失败: {File}", file.FullName); }
+        }
+
+        // 场景壁纸保持原有目录结构（KeepSubfolderStructure=0 → 不拍平）
+        bool flatten = false;
+        foreach (var subDir in sourceDir.EnumerateDirectories())
+        {
+            if (flatten)
+                CopyImageFilesOnly(subDir, outputDir, isScene);  // 拍平到同一目录
+            else
+                CopyImageFilesOnly(subDir, Path.Combine(outputDir, subDir.Name), isScene);  // 保持子目录
+        }
+    }
+
+    private static void CopyProjectJsonAndPreview(DirectoryInfo sourceDir, string outputDir)
+    {
+        var projectJsonFile = sourceDir.GetFiles("project.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
+        if (projectJsonFile?.Exists != true) return;
+
+        try
+        {
+            // 拷贝 project.json
+            File.Copy(projectJsonFile.FullName, Path.Combine(outputDir, "project.json"), true);
+
+            // 读取 preview 字段并拷贝预览图
+            var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(projectJsonFile.FullName));
+            if (json.RootElement.TryGetProperty("preview", out var previewProp))
+            {
+                var previewFile = Path.Combine(sourceDir.FullName, previewProp.GetString()!);
+                if (File.Exists(previewFile))
+                    File.Copy(previewFile, Path.Combine(outputDir, Path.GetFileName(previewFile)), true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[导入编辑器] 拷贝 project.json/预览图失败");
+        }
     }
 
     private async void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)

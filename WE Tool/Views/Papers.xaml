@@ -495,12 +495,56 @@
                                            TextWrapping="Wrap"
                                            FontSize="20"
                                            Margin="10,0,0,0"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
+                                    <Button Command="{x:Bind ExtractSelectedCommand}" HorizontalAlignment="Left">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE72D;" FontSize="14"/>
+                                            <TextBlock Text="提取" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Click="Copy_Click_ByCommandBarFlyout">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon Glyph="&#xE8C8;" FontSize="14"/>
+                                            <TextBlock Text="复制" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{x:Bind UnsubscribeSelectedCommand}"
+                                            IsEnabled="{x:Bind IsUnsubscribeEnabled, Mode=OneWay}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon Glyph="&#xE711;" FontSize="14"/>
+                                            <TextBlock Text="取消订阅" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
+                                    <Button Click="ImportToEditor_Click"
+                                        Visibility="{x:Bind IsImportToEditorVisible, Mode=OneWay}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon Glyph="&#xE822;" FontSize="14"/>
+                                            <TextBlock Text="导入壁纸编辑器" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                                 <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay, FallbackValue=''}" 
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" 
                                            TextWrapping="Wrap"
                                            IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"
                                            Margin="10,0,0,0"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
+                                    <Button Command="{x:Bind OpenSelectedFoldersCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon Glyph="&#xE838;" FontSize="14"/>
+                                            <TextBlock Text="打开目录" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Click="Properties_Click_ByCommandBarFlyout">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon Glyph="&#xE90F;" FontSize="14"/>
+                                            <TextBlock Text="属性" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                     <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue=''}"
                                                Style="{StaticResource CaptionTextBlockStyle}"
@@ -537,8 +581,7 @@
                                 <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Description, FallbackValue='', Mode=OneWay, Converter={StaticResource DescriptionToDisplay}}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"
-                                           MaxHeight="150"
-                                           TextTrimming="CharacterEllipsis"
+                                           TextTrimming="None"
                                            IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"
                                            Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
                                            Margin="10,0,0,0"/>
@@ -1233,7 +1276,7 @@
                                            Text="{x:Bind ViewModel.SelectedWallpaper.Description, Mode=OneWay, Converter={StaticResource DescriptionToDisplay}, FallbackValue='-'}" 
                                            Style="{StaticResource BodyTextBlockStyle}" 
                                            TextWrapping="Wrap"
-                                           MaxHeight="80"
+                                           TextTrimming="None"
                                            Margin="0,4,0,4"/>
                             </Grid>
 
