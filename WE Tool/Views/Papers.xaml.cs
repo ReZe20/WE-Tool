@@ -78,6 +78,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private bool _isWallpaperItemTapped = false;
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
+    private DateTime _lastDrillInAnimationTime = DateTime.MinValue;
     private bool _isExtracting;
     public bool IsExtracting
     {
@@ -232,8 +233,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         get
         {
             if (ViewModel?.SelectedWallpaper is WallpaperItem item)
-                return "scene".Equals(item.Type, StringComparison.OrdinalIgnoreCase)
-                    && !"mine".Equals(item.Source, StringComparison.OrdinalIgnoreCase)
+                return item.IsTypeScene && !item.IsSourceMine
                         ? Visibility.Visible : Visibility.Collapsed;
             return Visibility.Collapsed;
         }
@@ -1175,8 +1175,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 ContentItem_PointerPressed(sender, e);
                 if (!_isMultiSelectMode)
                 {
+                    // 拖拽滑过时更新预览图和标题，但不播放钻入动画避免卡顿
                     ViewModel.SelectedWallpaper = item;
-                    PlayDrillInAnimation();
                 }
                 if (IsMultiSelectMode)
                 {
@@ -1328,8 +1328,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 Item_PointerPressed(sender,e);
                 if (!_isMultiSelectMode)
                 {
+                    // 拖拽滑过时更新预览图和标题，但不播放钻入动画避免卡顿
                     ViewModel.SelectedWallpaper = item;
-                    PlayDrillInAnimation();
                 }
                 if (IsMultiSelectMode)
                 {
@@ -1567,6 +1567,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void PlayDrillInAnimation()
     {
+        // 防抖：距上次播放不足 200ms 时跳过，避免快速连续调用造成 compositor 资源竞争
+        var now = DateTime.UtcNow;
+        if ((now - _lastDrillInAnimationTime).TotalMilliseconds < 200) return;
+        _lastDrillInAnimationTime = now;
+
         // 获取 Visual 层进行高性能动画
         Visual imageVisual = ElementCompositionPreview.GetElementVisual(SinglePreviewImage);
         Compositor compositor = imageVisual.Compositor;

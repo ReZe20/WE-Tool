@@ -73,6 +73,10 @@ namespace WE_Tool.Models
         }
 
         public double CheckBoxOpacity => (IsSelected || IsInMultiSelectMode) ? 1.0 : 0.0;
+
+        public bool IsTypeScene => string.Equals(Type, "scene", StringComparison.OrdinalIgnoreCase);
+        public bool IsSourceMine => string.Equals(Source, "mine", StringComparison.OrdinalIgnoreCase);
+
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
