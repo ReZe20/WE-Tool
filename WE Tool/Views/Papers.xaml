@@ -518,7 +518,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
                                     <Button Click="ImportToEditor_Click"
-                                        Visibility="{x:Bind IsImportToEditorVisible, Mode=OneWay}">
+                                            IsEnabled="{x:Bind IsImportToEditorEnabled, Mode=OneWay}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <FontIcon Glyph="&#xE822;" FontSize="14"/>
                                             <TextBlock Text="导入壁纸编辑器" VerticalAlignment="Center" FontSize="12"/>

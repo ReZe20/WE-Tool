@@ -227,18 +227,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     public Visibility ExtractPreviewVisibility => IsExtracting ? Visibility.Visible : Visibility.Collapsed;
 
-    /// <summary>导入壁纸编辑器按钮可见性（仅场景类且非项目的壁纸）</summary>
-    public Visibility IsImportToEditorVisible
+    /// <summary>导入壁纸编辑器按钮可用性（仅场景类且非项目的壁纸）</summary>
+    public bool IsImportToEditorEnabled
     {
         get
         {
             if (ViewModel?.SelectedWallpaper is WallpaperItem item)
-                return item.IsTypeScene && !item.IsSourceMine
-                        ? Visibility.Visible : Visibility.Collapsed;
-            return Visibility.Collapsed;
+                return item.IsTypeScene && !item.IsSourceMine;
+            return false;
         }
     }
-
     public ObservableCollection<ExtractProgressItem> ExtractItems { get; } = [];
 
     private bool _isMultiSelectMode = false;
@@ -383,7 +381,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 if (e.PropertyName == nameof(ViewModel.SelectedWallpaper))
                 {
                     OnPropertyChanged(nameof(IsUnsubscribeEnabled));
-                    OnPropertyChanged(nameof(IsImportToEditorVisible));
+                    OnPropertyChanged(nameof(IsImportToEditorEnabled));
                     SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
                         ? Visibility.Visible : Visibility.Collapsed;
                 }
@@ -1973,52 +1971,87 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return;
         }
 
-        // 输出目录：项目路径/壁纸名（子文件夹 + 壁纸名命名）
-        var safeName = GetSafeWallpaperName(item.Title ?? item.WorkshopID ?? "untitled");
-        var outputDir = Path.Combine(projectPath, safeName);
-        Directory.CreateDirectory(outputDir);
+        // 完全复用提取进度面板
+        _isSingleExtract = true;
+        _extractTotalCount = 1;
+        _extractCompletedCount = 0;
+        ExtractTitleText = "正在导入壁纸编辑器";
+        ExtractProgress = 0;
+        ExtractSubText = "";
+        ExtractEntryText = "";
+        SetExtractPreviewImage(item.Preview, item.Title ?? item.WorkshopID ?? "壁纸");
+        OnPropertyChanged(nameof(ExtractTitleText));
+        OnPropertyChanged(nameof(ExtractProgress));
+        OnPropertyChanged(nameof(ExtractProgressText));
+        OnPropertyChanged(nameof(ExtractSubText));
+        OnPropertyChanged(nameof(ExtractEntryText));
+        OnPropertyChanged(nameof(ExtractEntryVisibility));
+        ExtractState = ExtractState.Running;
+        IsExtracting = true;
 
-        var sourceDir = new DirectoryInfo(item.FolderPath);
-        var pkgFiles = sourceDir.EnumerateFiles("*.pkg", SearchOption.AllDirectories).ToArray();
+        _extractService = new RepkgCliService();
+        _extractCts = new CancellationTokenSource();
+
+        var extractSettings = new ExtractSettings
+        {
+            OutputMode = 0,
+            TexExportMode = 2,
+            OutProjectJSON = true,
+            UseProjectName = true,
+            OneFolder = 0,
+            CoverAllFiles = true,
+            KeepSubfolderStructure = 0,
+            LazyLoad = true,
+        };
 
         try
         {
-            if (pkgFiles.Length > 0)
-            {
-                // PKG 文件：调用 RePKG_Re 解析，仅输出图像
-                var args = BuildImportEditorArgs(item.FolderPath, outputDir);
-                Log.Information("[导入编辑器] 解析 PKG: {Args}", args);
-
-                var repkgDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "repkg");
-                var process = new Process
+            await _extractService.ExtractWallpapersAsync(
+                new[] { item },
+                projectPath,
+                extractSettings,
+                msg =>
                 {
-                    StartInfo = new ProcessStartInfo
+                    var parts = msg.Split('|');
+                    var action = parts.Length > 1 ? parts[1] : "";
+                    double pct = parts.Length > 2 && double.TryParse(parts[2], out var parsed) ? parsed : 0;
+
+                    _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
                     {
-                        FileName = Path.Combine(repkgDir, "RePKG_Re.exe"),
-                        Arguments = args,
-                        WorkingDirectory = repkgDir,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                    },
-                    EnableRaisingEvents = true
-                };
-                process.Start();
-                await process.WaitForExitAsync();
-            }
-            else
-            {
-                // 无 PKG：手动拷贝文件，仅输出图像，保持原有目录结构
-                CopyImageFilesOnly(sourceDir, outputDir, isScene: item.Type == "scene");
-            }
+                        if (action == "解析PKG" && pct > 0)
+                        {
+                            ExtractProgress = pct;
+                            OnPropertyChanged(nameof(ExtractProgress));
+                        }
+                        if (action == "完成")
+                        {
+                            _extractCompletedCount = 1;
+                            ExtractProgress = 100;
+                            OnPropertyChanged(nameof(ExtractProgress));
+                            OnPropertyChanged(nameof(ExtractProgressText));
+                        }
+                        ExtractSubText = action == "完成" ? "已完成" : $"{pct:F0}%";
+                        OnPropertyChanged(nameof(ExtractSubText));
+                    });
+                },
+                _extractCts.Token);
 
-            // 拷贝 project.json 和预览图
-            CopyProjectJsonAndPreview(sourceDir, outputDir);
-
-            Log.Information("[导入编辑器] 壁纸已导入到: {Path}", outputDir);
+            var safeName = GetSafeWallpaperName(item.Title ?? item.WorkshopID ?? "untitled");
+            Log.Information("[导入编辑器] 壁纸已导入到: {Path}", Path.Combine(projectPath, safeName));
+        }
+        catch (OperationCanceledException)
+        {
+            Log.Information("[导入编辑器] 用户取消");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[导入编辑器] 导入失败: {Name}", item.Title);
+        }
+        finally
+        {
+            _extractService = null;
+            _extractCts = null;
+            IsExtracting = false;
         }
     }
 
@@ -2031,70 +2064,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         for (int i = 0; i < sb.Length; i++)
             if (invalid.Contains(sb[i])) sb[i] = '_';
         return sb.ToString().Trim();
-    }
-
-    private static string BuildImportEditorArgs(string input, string output)
-    {
-        var sb = new StringBuilder();
-        sb.Append("extract \""); sb.Append(input); sb.Append("\" ");
-        sb.Append("-o \""); sb.Append(output); sb.Append("\" ");
-        sb.Append("--only-tex-images ");  // 仅输出图像（等同 OutputMode==1）
-        sb.Append("--overwrite ");        // 覆盖已有文件
-        sb.Append("--lazy ");             // 分块解析
-        sb.Append("-r");                  // 递归
-        // 不加 -s：保持原有目录结构（KeepSubfolderStructure=0）
-        return sb.ToString();
-    }
-
-    private static void CopyImageFilesOnly(DirectoryInfo sourceDir, string outputDir, bool isScene)
-    {
-        var imageExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".psd", ".webp", ".svg", ".ico", ".dds"
-        };
-
-        foreach (var file in sourceDir.EnumerateFiles())
-        {
-            if (!imageExtensions.Contains(file.Extension)) continue;
-            var destPath = Path.Combine(outputDir, file.Name);
-            try { File.Copy(file.FullName, destPath, true); }
-            catch (Exception ex) { Log.Warning(ex, "[导入编辑器] 拷贝文件失败: {File}", file.FullName); }
-        }
-
-        // 场景壁纸保持原有目录结构（KeepSubfolderStructure=0 → 不拍平）
-        bool flatten = false;
-        foreach (var subDir in sourceDir.EnumerateDirectories())
-        {
-            if (flatten)
-                CopyImageFilesOnly(subDir, outputDir, isScene);  // 拍平到同一目录
-            else
-                CopyImageFilesOnly(subDir, Path.Combine(outputDir, subDir.Name), isScene);  // 保持子目录
-        }
-    }
-
-    private static void CopyProjectJsonAndPreview(DirectoryInfo sourceDir, string outputDir)
-    {
-        var projectJsonFile = sourceDir.GetFiles("project.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
-        if (projectJsonFile?.Exists != true) return;
-
-        try
-        {
-            // 拷贝 project.json
-            File.Copy(projectJsonFile.FullName, Path.Combine(outputDir, "project.json"), true);
-
-            // 读取 preview 字段并拷贝预览图
-            var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(projectJsonFile.FullName));
-            if (json.RootElement.TryGetProperty("preview", out var previewProp))
-            {
-                var previewFile = Path.Combine(sourceDir.FullName, previewProp.GetString()!);
-                if (File.Exists(previewFile))
-                    File.Copy(previewFile, Path.Combine(outputDir, Path.GetFileName(previewFile)), true);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "[导入编辑器] 拷贝 project.json/预览图失败");
-        }
     }
 
     private async void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
