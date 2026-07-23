@@ -102,6 +102,14 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
+                <AppBarButton Label="导入项目"
+                              Click="ImportToEditor_Click"
+                              IsEnabled="{x:Bind IsImportToEditorEnabled, Mode=OneWay}">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE70F;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_SelectAll" 
                               Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
                               KeyboardAcceleratorTextOverride="     Ctrl+A">
@@ -520,8 +528,14 @@
                                     <Button Click="ImportToEditor_Click"
                                             IsEnabled="{x:Bind IsImportToEditorEnabled, Mode=OneWay}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <FontIcon Glyph="&#xE822;" FontSize="14"/>
+                                            <FontIcon Glyph="&#xE70F;" FontSize="14"/>
                                             <TextBlock Text="导入壁纸编辑器" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{x:Bind DeleteSelectedCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="14"/>
+                                            <TextBlock Text="删除壁纸" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
