@@ -242,8 +242,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private bool _isMultiSelectMode = false;
     private bool _isScanning = false;
     private FrameworkElement? _rightClickedWallpaperElement;
-    private Microsoft.UI.Xaml.Controls.Primitives.IScrollController? _originalVerticalScrollController;
-    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _sizeChangedDebounceTimer;
     private static readonly FrozenDictionary<string, Func<SettingsViewModel, bool>> _tagGetters = new Dictionary<string, Func<SettingsViewModel, bool>>
     {
         ["Abstract"] = vm => vm.FilterExpanderVM.Abstract,
@@ -336,13 +334,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         this.InitializeComponent();
         this.DataContext = this;
-        _sizeChangedDebounceTimer = DispatcherQueue.CreateTimer();
-        _sizeChangedDebounceTimer.Interval = TimeSpan.FromMilliseconds(500);
-        _sizeChangedDebounceTimer.IsRepeating = false;
-        _sizeChangedDebounceTimer.Tick += async (sender, args) =>
-        {
-            RefreshScrollBarLabels();
-        };
         App.ScanCompleted += App_ScanCompleted;
 
         this.Unloaded += (s, e) =>
@@ -413,15 +404,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
 
             var presenter = WallpapersScrollView.ScrollPresenter;
-            _originalVerticalScrollController = presenter.VerticalScrollController;
-            if (ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled && presenter != null)
-            {
-                presenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
-            }
-            else if (!ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled && presenter != null)
-            {
-                presenter.VerticalScrollController = _originalVerticalScrollController;
-            }
         };
 
         OpenSelectedFoldersCommand = new AsyncRelayCommand(async () =>
@@ -485,15 +467,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             await UnsubscribeWallpapersAsync(itemsToUnsubscribe);
         });
 
-        WallpapersScrollView.SizeChanged += (s, e) =>
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                _sizeChangedDebounceTimer?.Stop();
-                _sizeChangedDebounceTimer?.Start();
-            });
-        };
-        
         _pickerService = new PickerService();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
 
@@ -1886,7 +1859,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void ChangeSort(object sender, RoutedEventArgs e)
     {
-        RefreshScrollBarLabels();
     }
     private void SelectAllWallpaper_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
@@ -2160,16 +2132,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private async void ChangeAnnotatedScrollBarEnabled(object sender, RoutedEventArgs e)
     {
         HideWallpaperContextMenu();
-
-        var presenter = WallpapersScrollView.ScrollPresenter;
-        if (ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled && presenter != null)
-        {
-            presenter.VerticalScrollController = Papers_AnnotatedScrollBarControl.ScrollController;
-        }
-        else if(!ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled && presenter != null)
-        {
-            presenter.VerticalScrollController = _originalVerticalScrollController;
-        }
     }
     private void CancelMultiSelect_Click(object sender, RoutedEventArgs e)
     {
@@ -2470,70 +2432,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             await DeleteItemAsync(item, skipConfirm: true);
         }
     }
-    private void RefreshScrollBarLabels()
-    {
-        DispatcherQueue.TryEnqueue(async () =>
-        {
-            // 1. 彻底清空现有标签
-            Papers_AnnotatedScrollBarControl.Labels.Clear();
-
-            if (Wallpapers == null || Wallpapers.Count == 0) return;
-
-            var presenter = WallpapersScrollView.ScrollPresenter;
-            // 关键：如果内容高度还没计算出来，标签无法定位，必须跳过
-            if (presenter == null || presenter.ExtentHeight <= 0) return;
-
-            // 计算可滚动的总行程
-            double maxScroll = presenter.ExtentHeight - presenter.ViewportHeight;
-            if (maxScroll <= 0) return;
-
-            var labelGroups = new Dictionary<string, int>();
-
-            for (int i = 0; i < Wallpapers.Count; i++)
-            {
-                var item = Wallpapers[i];
-                string labelText = "#";
-
-                switch (ViewModel.WallpaperDisplayVM.SortOrder)
-                {
-                    case 0: 
-                        string group = _zhGroupings.Lookup(item.Title ?? "");
-                        char letter = group.FirstOrDefault(c => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
-                        labelText = letter != default(char) ? char.ToUpper(letter).ToString() : "#";
-                        break;
-                    case 1:
-                        labelText = item.CreationTime.ToString("yy/MM");
-                        break;
-                    case 2:
-                        labelText = item.UpdateTime.ToString("yy/MM");
-                        break;
-                    case 3:
-                        labelText = item.FileSize.ToString();
-                        break;
-                    case 4:
-                        labelText = item.AcfUpdateTime?.ToString("yy/MM") ?? "??";
-                        break;
-                    default:
-                        continue;
-                }
-
-                if (!labelGroups.ContainsKey(labelText))
-                {
-                    labelGroups[labelText] = i;
-                }
-            }
-
-            // 2. 批量添加标签
-            foreach (var kvp in labelGroups)
-            {
-                double ratio = (double)kvp.Value / Wallpapers.Count;
-                double offset = ratio * maxScroll;
-
-                // 使用构造函数初始化只读属性
-                Papers_AnnotatedScrollBarControl.Labels.Add(new AnnotatedScrollBarLabel(kvp.Key, offset));
-            }
-        });
-    }
     private void WallpaperScrollView_ContextRequested(FrameworkElement sender, ContextRequestedEventArgs args)
     {
         // 1. 阻止事件进一步冒泡，防止触发多次弹出逻辑
@@ -2615,8 +2513,4 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    private void AnnotatedScrollBarControl_DetailLabelRequested(AnnotatedScrollBar sender, AnnotatedScrollBarDetailLabelRequestedEventArgs args)
-    {
-
-    }
 }
