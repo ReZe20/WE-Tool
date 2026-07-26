@@ -300,6 +300,9 @@
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>배경화면 가져오기</value>
   </data>
+  <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>설치된 구성 요소</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>정보</value>
   </data>

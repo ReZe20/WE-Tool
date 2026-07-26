@@ -300,6 +300,9 @@
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>导入壁纸</value>
   </data>
+  <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>已安装组件</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>关于</value>
   </data>

@@ -35,6 +35,12 @@
                         <FontIcon Glyph="&#xE8B5;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
+                <NavigationViewItem x:Uid="InstalledComponentsPage" Tag="InstalledComponents">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xF4A5;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
                 <NavigationViewItem x:Uid="AboutPage" Tag="Info">

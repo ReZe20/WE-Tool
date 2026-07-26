@@ -298,7 +298,10 @@
     <value>已安裝桌布</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>匯入桌布</value>
+    <value>導入桌布</value>
+  </data>
+  <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>已安裝組件</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>關於</value>

@@ -90,6 +90,7 @@ namespace WE_Tool
             {
                 "Papers" => typeof(Papers),
                 "LoadPapers" => typeof(LoadPapers),
+                "InstalledComponents" => typeof(InstalledComponents),
                 "Info" => typeof(Info),
                 "Settings" => typeof(Settings),
                 _ => typeof(Papers)
@@ -106,6 +107,7 @@ namespace WE_Tool
             {
                 "Papers" => contentFrame.Navigate(typeof(Papers), null),
                 "LoadPapers" => contentFrame.Navigate(typeof(LoadPapers), null),
+                "InstalledComponents" => contentFrame.Navigate(typeof(InstalledComponents), null),
                 "Info" => contentFrame.Navigate(typeof(Info), null),
                 "Settings" => contentFrame.Navigate(typeof(Settings), null),
                 _ => contentFrame.Navigate(typeof(Papers), null)

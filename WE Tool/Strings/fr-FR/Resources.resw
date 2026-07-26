@@ -300,6 +300,9 @@
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>Importer des fonds d'écran</value>
   </data>
+  <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>Composants installés</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>À propos</value>
   </data>

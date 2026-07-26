@@ -300,6 +300,9 @@
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>Импортировать обои</value>
   </data>
+  <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>Установленные компоненты</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>О программе</value>
   </data>

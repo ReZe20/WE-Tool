@@ -300,6 +300,9 @@
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>壁紙をインポート</value>
   </data>
+  <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>インストール済みコンポーネント</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>このアプリについて</value>
   </data>
