@@ -283,77 +283,83 @@
             </Grid.ColumnDefinitions>
             <!-- 底部装饰线（全宽） -->
             <Rectangle Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="1" Fill="{ThemeResource DividerStrokeColorDefault}"/>
-            <!-- 左侧：始终可见的控件 -->
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <AutoSuggestBox x:Name="WallpaperSearchBox"
-                                Height="38"
-                                Width="208"
-                                QueryIcon="Find"
-                                x:Uid="SearchBox"
-                                HorizontalAlignment="Left"
-                                Margin="3,0,0,0"
-                                FontSize="16"
-                                CornerRadius="6"
-                                FontWeight="Light"
-                                VerticalAlignment="Center"
-                                TextChanged="WallpaperSearchBox_TextChanged"/>
-                <ToggleButton x:Name="LeftToggleFilterButton" Height="35" HorizontalAlignment="Left" BorderThickness="0" Background="Transparent" IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}" Margin="3,0,0,0" x:Uid="Toolbar_FilterToggle">
-                    <ToggleButton.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <FontIcon Glyph="&#xE71D;" Margin="0,0,5,0" FontSize="16"/>
-                            <TextBlock x:Uid="FilterResults"/>
-                        </StackPanel>
-                    </ToggleButton.Content>
-                </ToggleButton>
-            </StackPanel>
+            <!-- 左侧：搜索框 -->
+            <AutoSuggestBox x:Name="WallpaperSearchBox"
+                            Height="37"
+                            Width="208"
+                            QueryIcon="Find"
+                            x:Uid="SearchBox"
+                            HorizontalAlignment="Left"
+                            Margin="3,3,0,0"
+                            FontSize="16"
+                            CornerRadius="6"
+                            FontWeight="Light"
+                            VerticalAlignment="Top"
+                            TextChanged="WallpaperSearchBox_TextChanged"/>
             <!-- 中间：CommandBar（* 列，受限于窗口宽度） -->
             <CommandBar Grid.Column="1" x:Name="ToolbarCommands"
-                        VerticalAlignment="Top"
+                        VerticalAlignment="Bottom"
                         Background="Transparent"
                         DefaultLabelPosition="Right"
                         IsDynamicOverflowEnabled="True"
                         OverflowButtonVisibility="Auto"
-                        Margin="0"
-                        Padding="0,0,0,0"
                         HorizontalAlignment="Left">
+                <AppBarToggleButton x:Name="LeftToggleFilterButton"
+                                    x:Uid="Toolbar_FilterToggle"
+                                    IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}"
+                                    Label="筛选结果">
+                    <AppBarToggleButton.Icon>
+                        <FontIcon Glyph="&#xE71D;" FontSize="16"/>
+                    </AppBarToggleButton.Icon>
+                </AppBarToggleButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="Toolbar_ListView"
                               IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
-                              Click="Copy_Click_ByCommandBarFlyout">
+                              Click="Copy_Click_ByCommandBarFlyout"
+                              Width="45"
+                              LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8C8;" FontSize="16"/>
+                        <FontIcon Glyph="&#xE8C8;" HorizontalAlignment="Right"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_Delete"
                               IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
-                              Command="{x:Bind DeleteSelectedCommand}">
+                              Command="{x:Bind DeleteSelectedCommand}"
+                              Width="45"
+                              LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE74D;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_SelectAll"
-                              Click="SelectAllWallpapers_Click_ByCommandBarFlyout">
+                              Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
+                              Width="45"
+                              LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8B3;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_InvertSelection"
-                              Click="InvertSelection_CLick_ByCommandBarFlyout">
+                              Click="InvertSelection_CLick_ByCommandBarFlyout"
+                              Width="45"
+                              LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_Refresh"
-                              Click="WallpaperListRefresh_Click_ByCommandBarFlyout">
+                              Click="WallpaperListRefresh_Click_ByCommandBarFlyout"
+                              Width="45"
+                              LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE777;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="Toolbar_View"
-                              Label="视图">
+                              Label="查看▾">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE890;" FontSize="16"/>
+                        <FontIcon Glyph="&#xE71D;" FontSize="16"/>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
                         <MenuFlyout>
@@ -376,41 +382,34 @@
                             <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
                                                   IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
                                                   Click="ChangeAnnotatedScrollBarEnabled"/>
-                        </MenuFlyout>
-                    </AppBarButton.Flyout>
-                </AppBarButton>
-                <AppBarButton x:Uid="Toolbar_TagDisplay"
-                              Label="标签显示">
-                    <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8EC;" FontSize="16"/>
-                    </AppBarButton.Icon>
-                    <AppBarButton.Flyout>
-                        <MenuFlyout>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_Type"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_Rating"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_Source"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_Tag"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem GroupName="LabelGroup"
-                                                 x:Uid="AppBarButton_None"
-                                                 Click="OnTagDisplayChanged"
-                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem Text="标签">
+                                <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                     x:Uid="AppBarButton_Type"
+                                                     Click="OnTagDisplayChanged"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                     x:Uid="AppBarButton_Rating"
+                                                     Click="OnTagDisplayChanged"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                     x:Uid="AppBarButton_Source"
+                                                     Click="OnTagDisplayChanged"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                     x:Uid="AppBarButton_Tag"
+                                                     Click="OnTagDisplayChanged"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="LabelGroup"
+                                                     x:Uid="AppBarButton_None"
+                                                     Click="OnTagDisplayChanged"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
+                            </MenuFlyoutSubItem>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_Sort"
-                              Label="排序">
+                              Label="排序▾">
                     <AppBarButton.Icon>
                         <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortGlyph, Mode=OneWay}" FontSize="16"/>
                     </AppBarButton.Icon>
@@ -445,7 +444,9 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarToggleButton x:Uid="Toolbar_SortDirection"
-                                    IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending, Mode=TwoWay}">
+                                    IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending, Mode=TwoWay}"
+                                    Width="65"
+                                    LabelPosition="Collapsed">
                     <AppBarToggleButton.Icon>
                         <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
                     </AppBarToggleButton.Icon>
@@ -456,7 +457,8 @@
                 <ToggleButton x:Name="RightToggleFilterButton"
                               BorderThickness="0"
                               Background="Transparent"
-                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}">
+                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}"
+                              Margin="0,0,5,0">
                     <ToggleButton.Content>
                         <StackPanel Orientation="Horizontal">
                             <FontIcon Glyph="&#xE90D;" Margin="0,0,5,0"/>
