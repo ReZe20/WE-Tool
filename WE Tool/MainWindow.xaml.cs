@@ -68,8 +68,8 @@ namespace WE_Tool
                 }
 
                 // 恢复窗口位置和大小（在导航之后执行，确保窗口布局已完成）
-                bool hasPosition = settings is { WindowX: >= 0, WindowY: >= 0 };
-                bool hasSize = settings is { WindowWidth: > 0, WindowHeight: > 0 };
+                bool hasPosition = settings.RestoreWindowPosition && settings is { WindowX: >= 0, WindowY: >= 0 };
+                bool hasSize = settings.RestoreWindowSize && settings is { WindowWidth: > 0, WindowHeight: > 0 };
 
                 if (hasPosition || hasSize)
                 {

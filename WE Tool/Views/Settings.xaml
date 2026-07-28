@@ -159,7 +159,27 @@
                             <ComboBoxItem Tag="0" x:Uid="Disabled"/>
                         </ComboBox>
                     </controls:SettingsCard>
-                    
+
+                    <controls:SettingsExpander Header="窗口行为" Description="控制程序启动时的窗口状态" Margin="0,0,0,10">
+                        <controls:SettingsExpander.HeaderIcon>
+                            <FontIcon Glyph="&#xE73F;"/>
+                        </controls:SettingsExpander.HeaderIcon>
+                        <controls:SettingsExpander.Items>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <CheckBox Content="启动时恢复到上次的位置"
+                                              IsChecked="{x:Bind ViewModel.AppSettingsVM.RestoreWindowPosition, Mode=TwoWay}"/>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <CheckBox Content="启动时恢复到上次的窗口大小"
+                                              IsChecked="{x:Bind ViewModel.AppSettingsVM.RestoreWindowSize, Mode=TwoWay}"/>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                        </controls:SettingsExpander.Items>
+                    </controls:SettingsExpander>
+
                     <TextBlock x:Uid="Page" Margin="5,10,0,10"/>
                     <controls:SettingsExpander x:Uid="PapersSetting">
                         <controls:SettingsExpander.HeaderIcon>

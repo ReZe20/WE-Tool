@@ -19,6 +19,8 @@ namespace WE_Tool.Models
         public PathConfig Path { get; set; } = new PathConfig();
         public ExtractSettings Extract { get; set; } = new ExtractSettings();
         public string ScanCacheEnabled { get; set; } = "1";
+        public bool RestoreWindowPosition { get; set; } = true;
+        public bool RestoreWindowSize { get; set; } = true;
     }
 
     public class PapersConfig

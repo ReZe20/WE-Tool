@@ -18,6 +18,12 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial string ScanCacheEnabled { get; set; } = "1";
 
+        [ObservableProperty]
+        public partial bool RestoreWindowPosition { get; set; } = true;
+
+        [ObservableProperty]
+        public partial bool RestoreWindowSize { get; set; } = true;
+
 #pragma warning disable CA1822 // ConfigPath在之后需要实例访问，不标记static
         public string ConfigPath
         {
