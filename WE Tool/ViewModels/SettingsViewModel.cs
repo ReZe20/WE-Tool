@@ -279,8 +279,7 @@ namespace WE_Tool.ViewModels
             AppSettingsVM.StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
             AppSettingsVM.Theme = _settings.Theme;
             AppSettingsVM.ScanCacheEnabled = _settings.ScanCacheEnabled;
-            AppSettingsVM.RestoreWindowPosition = _settings.RestoreWindowPosition;
-            AppSettingsVM.RestoreWindowSize = _settings.RestoreWindowSize;
+            AppSettingsVM.RestoreWindowGeometry = _settings.RestoreWindowGeometry;
 
             WallpaperDisplayVM.IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             WallpaperDisplayVM.AutoPlayGif = _settings.Papers.AutoPlayGif;
@@ -511,8 +510,7 @@ namespace WE_Tool.ViewModels
                     _settings.StartPageTag = AppSettingsVM.StartPageTag;
                     _settings.Theme = AppSettingsVM.Theme;
                     _settings.ScanCacheEnabled = AppSettingsVM.ScanCacheEnabled;
-                    _settings.RestoreWindowPosition = AppSettingsVM.RestoreWindowPosition;
-                    _settings.RestoreWindowSize = AppSettingsVM.RestoreWindowSize;
+                    _settings.RestoreWindowGeometry = AppSettingsVM.RestoreWindowGeometry;
 
                     _settings.Papers.IsBottomBarOpen = WallpaperDisplayVM.IsBottomBarOpen;
                     _settings.Papers.WallpaperViewIndex = WallpaperDisplayVM.WallpaperViewIndex;

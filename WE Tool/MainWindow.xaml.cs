@@ -68,8 +68,8 @@ namespace WE_Tool
                 }
 
                 // 恢复窗口位置和大小（在导航之后执行，确保窗口布局已完成）
-                bool hasPosition = settings.RestoreWindowPosition && settings is { WindowX: >= 0, WindowY: >= 0 };
-                bool hasSize = settings.RestoreWindowSize && settings is { WindowWidth: > 0, WindowHeight: > 0 };
+                bool hasPosition = settings.RestoreWindowGeometry && settings is { WindowX: >= 0, WindowY: >= 0 };
+                bool hasSize = settings.RestoreWindowGeometry && settings is { WindowWidth: > 0, WindowHeight: > 0 };
 
                 if (hasPosition || hasSize)
                 {
@@ -91,6 +91,20 @@ namespace WE_Tool
                     catch (Exception ex)
                     {
                         Log.Warning(ex, "恢复窗口位置/大小时异常，将使用默认值。");
+                    }
+                }
+
+                // 恢复最大化状态（放在位置/大小之后，确保 restore bounds 先设置好）
+                if (settings.RestoreWindowGeometry && settings.WindowMaximized)
+                {
+                    try
+                    {
+                        if (this.AppWindow.Presenter is OverlappedPresenter op)
+                            op.Maximize();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "恢复窗口最大化状态失败。");
                     }
                 }
             }
@@ -186,7 +200,7 @@ namespace WE_Tool
 
         private async void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
         {
-            if (!args.DidPositionChange && !args.DidSizeChange) return;
+            if (!args.DidPositionChange && !args.DidSizeChange && !args.DidPresenterChange) return;
 
             // 防抖：用户拖拽过程中会连续触发，只取最后一次停止后 500ms 写入
             _positionSaveCts?.Cancel();
@@ -215,11 +229,15 @@ namespace WE_Tool
                     settings.WindowWidth = sender.Size.Width;
                     settings.WindowHeight = sender.Size.Height;
                 }
+                // 无论触发原因，始终记录当前窗口最大化状态
+                settings.WindowMaximized =
+                    sender.Presenter is OverlappedPresenter op &&
+                    op.State == OverlappedPresenterState.Maximized;
                 await _configService.SaveAsync(settings);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "保存窗口位置/大小失败");
+                Log.Error(ex, "保存窗口位置/大小/状态失败");
             }
         }
     }
