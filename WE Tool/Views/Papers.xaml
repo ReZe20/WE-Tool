@@ -506,6 +506,16 @@
                                 </ItemsControl>
                             </Grid>
 
+                            <TextBlock x:Name="NoSelectionHintText"
+                                       Text="选择一张或多张壁纸"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       FontSize="16"
+                                       Margin="0,20,0,0"
+                                       TextWrapping="Wrap"
+                                       Visibility="Visible"/>
+
                             <StackPanel x:Name="SingleSelectionInfoPanel" Spacing="15">
                                 <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay, FallbackValue=''}" 
                                            IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}" 

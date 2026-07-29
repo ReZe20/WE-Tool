@@ -375,6 +375,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     OnPropertyChanged(nameof(IsImportToEditorEnabled));
                     SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
                         ? Visibility.Visible : Visibility.Collapsed;
+                    NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
+                        ? Visibility.Collapsed : Visibility.Visible;
                 }
                 return;
             }
@@ -398,9 +400,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 _isFirstLoad = false;
                 await ViewModel.InitializeAsync();
                 await RefreshWallpaperList();
-                // 初始状态：无选中壁纸时隐藏详情面板
+                // 初始状态：无选中壁纸时隐藏详情面板并显示提示
                 SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
                     ? Visibility.Visible : Visibility.Collapsed;
+                NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
+                    ? Visibility.Collapsed : Visibility.Visible;
             }
 
             var presenter = WallpapersScrollView.ScrollPresenter;
@@ -985,6 +989,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             SinglePreviewBorder.Visibility = Visibility.Collapsed;
             SingleSelectionInfoPanel.Visibility = Visibility.Collapsed;
             MultiSelectionInfoPanel.Visibility = Visibility.Visible;
+            NoSelectionHintText.Visibility = Visibility.Collapsed;
 
             UpdateMultiSelectCount();
         }
@@ -995,7 +1000,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             ViewModel.SuspendSelectedWallpapersCollectionChanged();
 
             SinglePreviewBorder.Visibility = Visibility.Visible;
-            SingleSelectionInfoPanel.Visibility = Visibility.Visible;
+            SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
+                ? Visibility.Visible : Visibility.Collapsed;
+            NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
+                ? Visibility.Collapsed : Visibility.Visible;
 
             StackedImagesControl.Visibility = Visibility.Collapsed;
             MultiSelectionInfoPanel.Visibility = Visibility.Collapsed;
