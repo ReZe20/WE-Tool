@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Controls;
-using WE_Tool.Helper;
 
 namespace WE_Tool.ViewModels
 {
@@ -323,34 +322,11 @@ namespace WE_Tool.ViewModels
 
         partial void OnSortOrderChanged(int value)
         {
-            OnPropertyChanged(nameof(SortText));
-            OnPropertyChanged(nameof(SortGlyph));
-        }
-
-        public string SortGlyph
-        {
-            get => SortOrder switch
-            {
-                0 => "\uE8D2",
-                1 => "\uED0E",
-                2 => "\uF738",
-                3 => "\uEDA2",
-                4 => "\uE8F7",
-                _ => "\uE8D2"
-            };
-        }
-
-        public string SortText
-        {
-            get => LanguageHelper.GetResource(SortOrder switch
-            {
-                0 => "SortByName.Text",
-                1 => "SortBySubTime.Text",
-                2 => "SortByLastTime.Text",
-                3 => "SortByFileSize.Text",
-                4 => "SortByAcfUpdateTime.Text",
-                _ => "SortByName.Text"
-            });
+            OnPropertyChanged(nameof(SortByName));
+            OnPropertyChanged(nameof(SortBySubTime));
+            OnPropertyChanged(nameof(SortByLastTime));
+            OnPropertyChanged(nameof(SortByFileSize));
+            OnPropertyChanged(nameof(SortByAcfUpdateTime));
         }
 
         public bool SortByName

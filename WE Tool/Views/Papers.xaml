@@ -161,7 +161,7 @@
             <MenuFlyoutSeparator/>
             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_View">
                 <MenuFlyoutSubItem.Icon>
-                    <FontIcon Glyph="&#xE890;"/>
+                    <FontIcon Glyph="&#xE71D;"/>
                 </MenuFlyoutSubItem.Icon>
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" 
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SmallIconViewItem,Mode=TwoWay}"
@@ -182,64 +182,58 @@
                 <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
                                      Click="ChangeAnnotatedScrollBarEnabled"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutSubItem Text="标签">
+                    <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                         x:Uid="AppBarButton_Type"
+                                         Click="OnTagDisplayChanged"
+                                         IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
+                    <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                         x:Uid="AppBarButton_Rating"
+                                         Click="OnTagDisplayChanged"
+                                         IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
+                    <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                         x:Uid="AppBarButton_Source"
+                                         Click="OnTagDisplayChanged"
+                                         IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
+                    <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                         x:Uid="AppBarButton_Tag"
+                                         Click="OnTagDisplayChanged"
+                                         IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
+                    <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
+                                         x:Uid="AppBarButton_None"
+                                         Click="OnTagDisplayChanged"
+                                         IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
+                </MenuFlyoutSubItem>
             </MenuFlyoutSubItem>
-            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
-                <MenuFlyoutSubItem.Icon>
-                    <FontIcon Glyph="&#xE8EC;"/>
-                </MenuFlyoutSubItem.Icon>
-                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
-                                     x:Uid="AppBarButton_Type"
-                                     Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
-                                     x:Uid="AppBarButton_Rating"
-                                     Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
-                                     x:Uid="AppBarButton_Source"
-                                     Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
-                                     x:Uid="AppBarButton_Tag"
-                                     Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
-                                     x:Uid="AppBarButton_None"
-                                     Click="OnTagDisplayChanged"
-                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
-            </MenuFlyoutSubItem>
+            <!-- 排序已在查看菜单内置标签，此处仅保留排序 -->
             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_Sort">
                 <MenuFlyoutSubItem.Icon>
                     <FontIcon Glyph="&#xE8CB;"/>
                 </MenuFlyoutSubItem.Icon>
-                <RadioMenuFlyoutItem x:Uid="SortByName" 
-                                     x:Name="SortByNameItem"
-                                     Tag="Small"
-                                     Click="OnIconSizeChanged"
+                <RadioMenuFlyoutItem x:Uid="SortByName"
+                                     Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="0"
+                                     Click="ChangeSort"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByName,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortBySubTime"
-                                     x:Name="SortBySubTimeItem"
-                                     Tag="Medium"
-                                     Click="OnIconSizeChanged"
+                                     Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="1"
+                                     Click="ChangeSort"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortBySubTime,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortByLastTime"
-                                     x:Name="SortByLastTime"
-                                     Tag="Large"
-                                     Click="OnIconSizeChanged"
+                                     Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="2"
+                                     Click="ChangeSort"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByLastTime,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortByAcfUpdateTime"
-                                     x:Name="SortByAcfUpdateTimeItem"
-                                     Tag="Large"
-                                     Click="OnIconSizeChanged"
+                                     Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="4"
+                                     Click="ChangeSort"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByAcfUpdateTime,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
                 <RadioMenuFlyoutItem x:Uid="SortByFileSize"
-                                     x:Name="SortByFileSizeItem"
-                                     Tag="Large"
-                                     Click="OnIconSizeChanged"
+                                     Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="3"
+                                     Click="ChangeSort"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByFileSize,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
             </MenuFlyoutSubItem>
@@ -316,7 +310,7 @@
                 <AppBarButton x:Uid="Toolbar_ListView"
                               IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
                               Click="Copy_Click_ByCommandBarFlyout"
-                              Width="45"
+                              Label="列表视图"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8C8;" HorizontalAlignment="Right"/>
@@ -325,7 +319,7 @@
                 <AppBarButton x:Uid="Toolbar_Delete"
                               IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
                               Command="{x:Bind DeleteSelectedCommand}"
-                              Width="45"
+                              Label="删除"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE74D;" FontSize="16"/>
@@ -333,7 +327,7 @@
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_SelectAll"
                               Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
-                              Width="45"
+                              Label="全选"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8B3;" FontSize="16"/>
@@ -341,7 +335,7 @@
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_InvertSelection"
                               Click="InvertSelection_CLick_ByCommandBarFlyout"
-                              Width="45"
+                              Label="反选"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
@@ -349,7 +343,7 @@
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_Refresh"
                               Click="WallpaperListRefresh_Click_ByCommandBarFlyout"
-                              Width="45"
+                              Label="刷新"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE777;" FontSize="16"/>
@@ -362,7 +356,7 @@
                         <FontIcon Glyph="&#xE71D;" FontSize="16"/>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
-                        <MenuFlyout>
+                        <MenuFlyout Placement="Bottom">
                             <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon"
                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SmallIconViewItem,Mode=TwoWay}"
                                                  GroupName="ViewGroup"/>
@@ -411,41 +405,46 @@
                 <AppBarButton x:Uid="Toolbar_Sort"
                               Label="排序▾">
                     <AppBarButton.Icon>
-                        <FontIcon x:Name="sortButtonIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortGlyph, Mode=OneWay}" FontSize="16"/>
+                        <FontIcon Glyph="&#xE8CB;" FontSize="16"/>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
                         <MenuFlyout Placement="Bottom">
-                            <MenuFlyoutItem x:Uid="SortByName" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="0" Click="ChangeSort">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon Glyph="&#xE8D2;" FontSize="16"/>
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="SortBySubTime" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="1" Click="ChangeSort">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon Glyph="&#xED0E;" FontSize="16"/>
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="SortByLastTime" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="2" Click="ChangeSort">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon Glyph="&#xF738;" FontSize="16"/>
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="SortByAcfUpdateTime" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="4" Click="ChangeSort">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon Glyph="&#xE8F7;" FontSize="16"/>
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="SortByFileSize" Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="3" Click="ChangeSort">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon Glyph="&#xEDA2;" FontSize="16"/>
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
+                            <RadioMenuFlyoutItem GroupName="SortGroup"
+                                                 x:Uid="SortByName"
+                                                 Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="0"
+                                                 Click="ChangeSort"
+                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByName, Mode=TwoWay}">
+                            </RadioMenuFlyoutItem>
+                            <RadioMenuFlyoutItem GroupName="SortGroup"
+                                                 x:Uid="SortBySubTime"
+                                                 Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="1"
+                                                 Click="ChangeSort"
+                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortBySubTime, Mode=TwoWay}">
+                            </RadioMenuFlyoutItem>
+                            <RadioMenuFlyoutItem GroupName="SortGroup"
+                                                 x:Uid="SortByLastTime"
+                                                 Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="2"
+                                                 Click="ChangeSort"
+                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByLastTime, Mode=TwoWay}">
+                            </RadioMenuFlyoutItem>
+                            <RadioMenuFlyoutItem GroupName="SortGroup"
+                                                 x:Uid="SortByAcfUpdateTime"
+                                                 Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="4"
+                                                 Click="ChangeSort"
+                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByAcfUpdateTime, Mode=TwoWay}">
+                            </RadioMenuFlyoutItem>
+                            <RadioMenuFlyoutItem GroupName="SortGroup"
+                                                 x:Uid="SortByFileSize"
+                                                 Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="3"
+                                                 Click="ChangeSort"
+                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByFileSize, Mode=TwoWay}">
+                            </RadioMenuFlyoutItem>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarToggleButton x:Uid="Toolbar_SortDirection"
                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending, Mode=TwoWay}"
-                                    Width="65"
+                                    Label="排序方向"
                                     LabelPosition="Collapsed">
                     <AppBarToggleButton.Icon>
                         <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>

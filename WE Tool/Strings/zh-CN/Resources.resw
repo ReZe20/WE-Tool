@@ -250,19 +250,19 @@
     <value>筛选结果</value>
   </data>
   <data name="SortByName.Text" xml:space="preserve">
-    <value>按名称排序</value>
+    <value>名称</value>
   </data>
   <data name="SortByLastTime.Text" xml:space="preserve">
-    <value>按更新时间</value>
+    <value>更新时间</value>
   </data>
   <data name="SortByFileSize.Text" xml:space="preserve">
-    <value>按大小排序</value>
+    <value>大小</value>
   </data>
   <data name="SortByAcfUpdateTime.Text" xml:space="preserve">
-    <value>按修改时间</value>
+    <value>修改时间</value>
   </data>
   <data name="SortBySubTime.Text" xml:space="preserve">
-    <value>按订阅时间</value>
+    <value>订阅时间</value>
   </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>详情面板</value>
