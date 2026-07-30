@@ -7,12 +7,667 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:models="using:WE_Tool.Models"
+    xmlns:converters="using:WE_Tool.Converters"
+    x:Name="PageRoot"
     NavigationCacheMode="Enabled">
 
+    <Page.Resources>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+
+        <!-- 右键菜单 -->
+        <CommandBarFlyout x:Name="ComponentContextMenuFlyout" AlwaysExpanded="True">
+            <CommandBarFlyout.PrimaryCommands>
+                <AppBarButton Label="打开目录">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE838;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton Label="删除">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE74D;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+            </CommandBarFlyout.PrimaryCommands>
+            <CommandBarFlyout.SecondaryCommands>
+                <AppBarButton Label="复制">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8C8;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Label="删除">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE74D;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton Label="全选">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8B3;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Label="反选">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8E6;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton Label="属性">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE90F;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+            </CommandBarFlyout.SecondaryCommands>
+        </CommandBarFlyout>
+
+        <MenuFlyout x:Name="ScrollViewBackgroundMenu">
+            <MenuFlyoutItem Text="刷新">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE777;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+            <MenuFlyoutSeparator/>
+            <MenuFlyoutItem Text="全选">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8B3;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+            <MenuFlyoutItem Text="反选">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8E6;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+            <MenuFlyoutSeparator/>
+            <MenuFlyoutSubItem Text="查看">
+                <MenuFlyoutSubItem.Icon>
+                    <FontIcon Glyph="&#xE71D;"/>
+                </MenuFlyoutSubItem.Icon>
+                <RadioMenuFlyoutItem Text="小图标" GroupName="CompViewGroup"/>
+                <RadioMenuFlyoutItem Text="中图标" GroupName="CompViewGroup"/>
+                <RadioMenuFlyoutItem Text="大图标" GroupName="CompViewGroup"/>
+                <RadioMenuFlyoutItem Text="内容模式" GroupName="CompViewGroup"/>
+                <RadioMenuFlyoutItem Text="列表模式" GroupName="CompViewGroup"/>
+                <MenuFlyoutSeparator/>
+                <ToggleMenuFlyoutItem Text="注释滚动条"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutSubItem Text="标签">
+                    <RadioMenuFlyoutItem Text="类型" GroupName="CompLabelGroup"/>
+                    <RadioMenuFlyoutItem Text="分级" GroupName="CompLabelGroup"/>
+                    <RadioMenuFlyoutItem Text="来源" GroupName="CompLabelGroup"/>
+                    <RadioMenuFlyoutItem Text="标签" GroupName="CompLabelGroup"/>
+                    <RadioMenuFlyoutItem Text="无" GroupName="CompLabelGroup"/>
+                </MenuFlyoutSubItem>
+            </MenuFlyoutSubItem>
+            <MenuFlyoutSubItem Text="排序">
+                <MenuFlyoutSubItem.Icon>
+                    <FontIcon Glyph="&#xE8CB;"/>
+                </MenuFlyoutSubItem.Icon>
+                <RadioMenuFlyoutItem Text="名称" GroupName="CompSortGroup"/>
+                <RadioMenuFlyoutItem Text="更新时间" GroupName="CompSortGroup"/>
+                <RadioMenuFlyoutItem Text="大小" GroupName="CompSortGroup"/>
+            </MenuFlyoutSubItem>
+        </MenuFlyout>
+
+        <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening">
+            <MenuFlyoutItem Text="全选" Click="FilterExpanderSelectAll_Click">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8B3;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+            <MenuFlyoutItem Text="反选" Click="FilterExpanderInvert_Click">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8E6;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+        </MenuFlyout>
+    </Page.Resources>
+
     <Grid>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <FontIcon Glyph="&#xF4A5;" FontSize="48" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
-            <TextBlock Text="正在开发" FontSize="20" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,12,0,0"/>
-        </StackPanel>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="45"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: 工具栏 -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Rectangle Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="1" Fill="{ThemeResource DividerStrokeColorDefault}"/>
+
+            <!-- 搜索框 -->
+            <AutoSuggestBox x:Name="ComponentSearchBox"
+                            Height="37" Width="208"
+                            QueryIcon="Find"
+                            HorizontalAlignment="Left"
+                            Margin="3,3,0,0"
+                            FontSize="16"
+                            CornerRadius="6"
+                            FontWeight="Light"
+                            VerticalAlignment="Top"
+                            TextChanged="ComponentSearchBox_TextChanged"/>
+
+            <!-- CommandBar -->
+            <CommandBar Grid.Column="1" x:Name="ToolbarCommands"
+                        VerticalAlignment="Bottom"
+                        Background="Transparent"
+                        DefaultLabelPosition="Right"
+                        IsDynamicOverflowEnabled="True"
+                        OverflowButtonVisibility="Auto"
+                        HorizontalAlignment="Left">
+                <AppBarToggleButton x:Name="LeftToggleFilterButton"
+                                    Label="筛选"
+                                    IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}">
+                    <AppBarToggleButton.Icon>
+                        <FontIcon Glyph="&#xE71D;" FontSize="16"/>
+                    </AppBarToggleButton.Icon>
+                </AppBarToggleButton>
+                <AppBarSeparator/>
+                <AppBarButton Label="列表视图" LabelPosition="Collapsed">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8C8;" HorizontalAlignment="Right"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Label="删除" LabelPosition="Collapsed">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Label="全选" LabelPosition="Collapsed">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8B3;" FontSize="16"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Label="反选" LabelPosition="Collapsed">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Label="刷新" LabelPosition="Collapsed">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE777;" FontSize="16"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton Label="查看▾">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE71D;" FontSize="16"/>
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <RadioMenuFlyoutItem Text="小图标" GroupName="ViewGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SmallIconViewItem, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem Text="中图标" GroupName="ViewGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.MediumIconViewItem, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem Text="大图标" GroupName="ViewGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.LargeIconViewItem, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem Text="内容模式" GroupName="ViewGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ContentViewItem, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem Text="列表模式" GroupName="ViewGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ListViewItem, Mode=TwoWay}"/>
+                            <MenuFlyoutSeparator/>
+                            <ToggleMenuFlyoutItem Text="注释滚动条"
+                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsAnnotatedScrollBarEnabled, Mode=TwoWay}"/>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem Text="标签">
+                                <RadioMenuFlyoutItem Text="类型" GroupName="LabelGroup"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem Text="分级" GroupName="LabelGroup"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem Text="来源" GroupName="LabelGroup"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem Text="标签" GroupName="LabelGroup"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem Text="无" GroupName="LabelGroup"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
+                            </MenuFlyoutSubItem>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarButton Label="排序▾">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8CB;" FontSize="16"/>
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <RadioMenuFlyoutItem Text="名称" GroupName="SortGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByName, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem Text="更新时间" GroupName="SortGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByUpdateTime, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem Text="大小" GroupName="SortGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortBySize, Mode=TwoWay}"/>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarToggleButton Label="排序方向" LabelPosition="Collapsed"
+                                    IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsSortAscending, Mode=TwoWay}">
+                    <AppBarToggleButton.Icon>
+                        <FontIcon Glyph="&#xE70D;" FontSize="16"/>
+                    </AppBarToggleButton.Icon>
+                </AppBarToggleButton>
+            </CommandBar>
+
+            <!-- 右侧详情切换 -->
+            <StackPanel Grid.Column="2" x:Name="RightToolbarPanel" Orientation="Horizontal" VerticalAlignment="Center">
+                <ToggleButton x:Name="RightToggleFilterButton"
+                              BorderThickness="0" Background="Transparent"
+                              IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}"
+                              Margin="0,0,5,0"
+                              Click="RightToggleFilterButton_Click">
+                    <ToggleButton.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon Glyph="&#xE90D;" Margin="0,0,5,0"/>
+                            <TextBlock Text="详情" Margin="5,0,5,0"/>
+                        </StackPanel>
+                    </ToggleButton.Content>
+                </ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- Row 1: 主体 -->
+        <SplitView x:Name="RightSplitView"
+                   PanePlacement="Right" OpenPaneLength="304"
+                   DisplayMode="Inline" Grid.Row="1"
+                   IsPaneOpen="{x:Bind ViewModel.ComponentsDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}">
+            <SplitView.Pane>
+                <ScrollViewer>
+                    <Grid Padding="15,15,15,15"
+                          Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+                          BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                          BorderThickness="1,0,0,0">
+                        <StackPanel Spacing="15">
+                            <!-- 预览图 -->
+                            <Grid x:Name="PreviewImageContainer" Height="250" Width="250" HorizontalAlignment="Center">
+                                <Border x:Name="SinglePreviewBorder"
+                                        Width="250" Height="250"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        CornerRadius="0"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                    <Image x:Name="ComponentPreviewImage" Stretch="UniformToFill"/>
+                                </Border>
+                                <ItemsControl x:Name="StackedImagesControl"
+                                              Visibility="Collapsed"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Grid/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Height="150" Width="150" CornerRadius="8"
+                                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                    BorderThickness="1"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+
+                            <!-- 无选中提示 -->
+                            <TextBlock x:Name="NoSelectionHintText"
+                                       Text="选择组件以查看详情"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       FontSize="16" Margin="0,20,0,0"
+                                       TextWrapping="Wrap"
+                                       Visibility="Visible"/>
+
+                            <!-- 单选信息面板 -->
+                            <StackPanel x:Name="SingleSelectionInfoPanel" Spacing="15" Visibility="Collapsed">
+                                <TextBlock x:Name="ComponentTitle"
+                                           Style="{StaticResource TitleTextBlockStyle}"
+                                           TextWrapping="Wrap" FontSize="20" Margin="10,0,0,0"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
+                                    <Button>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE838;" FontSize="14"/>
+                                            <TextBlock Text="打开目录" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button>
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="14"/>
+                                            <TextBlock Text="删除" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                                <TextBlock x:Name="ComponentFolderPath"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="Gray" TextWrapping="Wrap" Margin="10,0,0,0"/>
+                            </StackPanel>
+
+                            <!-- 多选信息面板 -->
+                            <StackPanel x:Name="MultiSelectionInfoPanel"
+                                        Spacing="10" Visibility="Collapsed"
+                                        HorizontalAlignment="Stretch">
+                                <TextBlock x:Name="MultiSelectCountText"
+                                           Style="{StaticResource TitleTextBlockStyle}"
+                                           HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                <Grid>
+                                    <Button Content="全选" Width="130" Margin="0,0,4,0" HorizontalAlignment="Left"/>
+                                    <Button Content="反选" Width="130" Margin="14,0,0,0" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Button Content="取消多选" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </SplitView.Pane>
+
+            <!-- 内容区 -->
+            <SplitView.Content>
+                <Grid>
+                    <!-- 左 SplitView 筛选面板 -->
+                    <SplitView x:Name="LeftSplitView"
+                               PanePlacement="Left" OpenPaneLength="210"
+                               DisplayMode="Inline"
+                               IsPaneOpen="{x:Bind ViewModel.ComponentsDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}">
+                        <SplitView.Pane>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel x:Name="FilterStackPanel" Padding="15,0,15,10">
+                                        <Button Margin="0,10,0,5"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource AccentButtonStyle}"
+                                                Click="ResetFilter_Click">
+                                            <Button.Content>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <FontIcon Glyph="&#xE895;" Margin="10,0,10,0"/>
+                                                    <TextBlock Text="重置筛选"/>
+                                                </StackPanel>
+                                            </Button.Content>
+                                        </Button>
+                                        <Expander Header="类型" HorizontalAlignment="Stretch" Margin="0,4,0,4"
+                                                  IsExpanded="{x:Bind ViewModel.ComponentsFilterVM.TypeExpander, Mode=TwoWay}"
+                                                  ContextFlyout="{StaticResource FilterExpanderContextMenu}">
+                                            <StackPanel>
+                                                <CheckBox Content="Layers" Tag="Layers"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Layers, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="scripts" Tag="scripts"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Scripts, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="effects" Tag="effects"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Effects, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </StackPanel>
+                                        </Expander>
+                                        <Expander Header="年龄" HorizontalAlignment="Stretch" Margin="0,4,0,4"
+                                                  IsExpanded="{x:Bind ViewModel.ComponentsFilterVM.RatingExpander, Mode=TwoWay}"
+                                                  ContextFlyout="{StaticResource FilterExpanderContextMenu}">
+                                            <StackPanel>
+                                                <CheckBox Content="Everyone" Tag="Everyone"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Everyone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Questionable" Tag="Questionable"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Questionable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Mature" Tag="Mature"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Mature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </StackPanel>
+                                        </Expander>
+                                        <Expander Header="标签" HorizontalAlignment="Stretch" Margin="0,4,0,4"
+                                                  IsExpanded="{x:Bind ViewModel.ComponentsFilterVM.TagsExpander, Mode=TwoWay}"
+                                                  ContextFlyout="{StaticResource FilterExpanderContextMenu}">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Content="全选" HorizontalAlignment="Stretch" Grid.Column="0"
+                                                            Click="SelectAllTags_Click"/>
+                                                    <Button Content="无" HorizontalAlignment="Stretch" Grid.Column="1"
+                                                            Click="DeselectAllTags_Click"/>
+                                                </Grid>
+                                                <CheckBox Content="Unspecified genre" Tag="Unspecified genre"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.UnspecifiedGenre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Abstract" Tag="Abstract"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Abstract, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Anime" Tag="Anime"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Anime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Audio visualizer" Tag="Audio visualizer"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.AudioVisualizer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Background" Tag="Background"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Background, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="CGI" Tag="CGI"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Cgi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Character" Tag="Character"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Character, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Clock" Tag="Clock"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Clock, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Fire" Tag="Fire"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Fire, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Interactive" Tag="Interactive"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Interactive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Magic" Tag="Magic"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Magic, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Memes" Tag="Memes"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Memes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Nature" Tag="Nature"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Nature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Post-processing" Tag="Post-processing"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.PostProcessing, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Smoke" Tag="Smoke"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Smoke, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Space" Tag="Space"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Space, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Sports" Tag="Sports"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Sports, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Technology" Tag="Technology"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Technology, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Content="Vehicle" Tag="Vehicle"
+                                                          IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Vehicle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </StackPanel>
+                                        </Expander>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </SplitView.Pane>
+
+                        <!-- 内容 -->
+                        <SplitView.Content>
+                            <Grid>
+                                <ScrollViewer x:Name="ComponentsScrollView"
+                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}">
+                                    <StackPanel>
+                                        <!-- 暂无结果提示 -->
+                                        <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
+                                            <TextBlock Text="没有匹配的组件"
+                                                       Style="{StaticResource TitleTextBlockStyle}"
+                                                       TextWrapping="Wrap" FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="请调整筛选条件"
+                                                       Style="{StaticResource TitleTextBlockStyle}"
+                                                       TextWrapping="Wrap" FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <!-- 图标模式 -->
+                                        <ItemsRepeater ItemsSource="{x:Bind FilteredComponents}"
+                                                       Margin="8,0,8,0"
+                                                       x:Name="ComponentsRepeater"
+                                                       Visibility="Visible"
+                                                       ContextFlyout="{StaticResource ComponentContextMenuFlyout}">
+                                            <ItemsRepeater.Layout>
+                                                <UniformGridLayout
+                                                    MinItemWidth="180"
+                                                    MinColumnSpacing="10" MinRowSpacing="10"
+                                                    ItemsStretch="Fill" Orientation="Horizontal"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="models:ComponentInfo">
+                                                    <Grid CornerRadius="8"
+                                                          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                                        <!-- 加载指示器 -->
+                                                        <ProgressRing IsActive="True"
+                                                                      HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
+
+                                                        <!-- 预览图 -->
+                                                        <Image Source="{x:Bind Preview, Mode=OneWay}"
+                                                               Stretch="UniformToFill"/>
+
+                                                        <!-- 底部渐变 + 标题 -->
+                                                        <Grid VerticalAlignment="Bottom" Height="45">
+                                                            <Grid.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                    <GradientStop Color="Transparent" Offset="0"/>
+                                                                    <GradientStop Color="#CC000000" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Grid.Background>
+                                                            <TextBlock Text="{x:Bind Title, Mode=OneWay}"
+                                                                       Foreground="White"
+                                                                       FontSize="12"
+                                                                       VerticalAlignment="Bottom"
+                                                                       Margin="10,0,10,8"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                        </Grid>
+
+                                                        <!-- 类型标签（右上角） -->
+                                                        <Border HorizontalAlignment="Right"
+                                                                VerticalAlignment="Top"
+                                                                CornerRadius="0,7,0,7"
+                                                                MinWidth="40"
+                                                                MinHeight="20"
+                                                                Padding="6,2"
+                                                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                                            <TextBlock Text="{x:Bind ComponentType, Mode=OneWay}"
+                                                                       HorizontalAlignment="Center"
+                                                                       FontSize="11"
+                                                                       VerticalAlignment="Center"/>
+                                                        </Border>
+
+                                                        <!-- 选中复选框（左上角） -->
+                                                        <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                                  VerticalAlignment="Top"
+                                                                  HorizontalAlignment="Left"
+                                                                  Margin="6,4,0,0"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+
+                                        <!-- 内容模式 -->
+                                        <ItemsRepeater ItemsSource="{x:Bind FilteredComponents}"
+                                                       Margin="8,0,8,0"
+                                                       x:Name="ComponentsContentRepeater"
+                                                       Visibility="Collapsed"
+                                                       ContextFlyout="{StaticResource ComponentContextMenuFlyout}">
+                                            <ItemsRepeater.Layout>
+                                                <StackLayout Orientation="Vertical" Spacing="2"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="models:ComponentInfo">
+                                                    <Grid Height="50" CornerRadius="4" Padding="8,4"
+                                                          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="40"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <CheckBox Grid.Column="0"
+                                                                  IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="0,0,8,0"/>
+                                                        <Image Grid.Column="1"
+                                                               Source="{x:Bind Preview, Mode=OneWay}"
+                                                               Stretch="UniformToFill" Width="36" Height="36"
+                                                               VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="2"
+                                                                   Text="{x:Bind Title, Mode=OneWay}"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="12,0,8,0"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                                                        <Border Grid.Column="3"
+                                                                CornerRadius="4"
+                                                                Padding="6,2"
+                                                                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                                                            <TextBlock Text="{x:Bind ComponentType, Mode=OneWay}"
+                                                                       FontSize="11"
+                                                                       VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+
+                                        <!-- 列表模式 -->
+                                        <ItemsRepeater ItemsSource="{x:Bind FilteredComponents}"
+                                                       Margin="8,0,8,0"
+                                                       x:Name="ComponentsListRepeater"
+                                                       Visibility="Collapsed"
+                                                       ContextFlyout="{StaticResource ComponentContextMenuFlyout}">
+                                            <ItemsRepeater.Layout>
+                                                <UniformGridLayout
+                                                    MinItemWidth="400"
+                                                    MinColumnSpacing="6" MinRowSpacing="6"
+                                                    ItemsStretch="Fill" Orientation="Horizontal"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="models:ComponentInfo">
+                                                    <Grid Height="36" CornerRadius="4" Padding="8,4"
+                                                          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <CheckBox Grid.Column="0"
+                                                                  IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="0,0,8,0"/>
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{x:Bind Title, Mode=OneWay}"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="13"
+                                                                   FontWeight="Normal"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Column="2"
+                                                                   Text="{x:Bind ComponentType, Mode=OneWay}"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="8,0"
+                                                                   FontSize="12"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </SplitView.Content>
+                    </SplitView>
+                </Grid>
+            </SplitView.Content>
+        </SplitView>
+
+        <!-- Row 2: 底部栏 -->
+        <Grid Grid.Row="2" MinWidth="300" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <FontIcon Glyph="&#xE74E;" Margin="15,0,0,0"/>
+                <TextBlock Text="组件目录" Margin="4,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <TextBox Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+            <StackPanel VerticalAlignment="Center" Grid.Column="2" Orientation="Horizontal">
+                <Button Margin="0,0,0,0" Content="选择文件夹"
+                        Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                <Button Margin="4,0,8,0" Content="打开"
+                        Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>

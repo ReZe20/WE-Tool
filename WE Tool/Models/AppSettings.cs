@@ -15,7 +15,7 @@ namespace WE_Tool.Models
         public int WindowWidth { get; set; } = -1;
         public int WindowHeight { get; set; } = -1;
         public PapersConfig Papers { get; set; } = new PapersConfig();
-        public PapersConfig.Expander Expander { get; set; } = new PapersConfig.Expander();
+        public ComponentsConfig Components { get; set; } = new ComponentsConfig();
         public PathConfig Path { get; set; } = new PathConfig();
         public ExtractSettings Extract { get; set; } = new ExtractSettings();
         public string ScanCacheEnabled { get; set; } = "1";
@@ -39,7 +39,8 @@ namespace WE_Tool.Models
         public bool IsSortAscending { get; set; } = true;
         public bool DetailSelectionEnabled { get; set; } = true;
         public int FilterResultResponseDelay { get; set; } = 1000;
-        public class Expander
+        public ExpanderConfig Expander { get; set; } = new ExpanderConfig();
+        public class ExpanderConfig
         {
             public bool TypeExpander { get; set; } = true;
             public bool Scene { get; set; } = true;
@@ -133,5 +134,57 @@ namespace WE_Tool.Models
         /// <summary>分块解析模式，逐条读取减少内存占用</summary>
         public bool LazyLoad { get; set; } = true;
 
+    }
+
+    public class ComponentsConfig
+    {
+        public bool IsAnnotatedScrollBarEnabled { get; set; } = false;
+        public int ComponentViewIndex { get; set; } = 0;
+        public int ComponentTagDisplayIndex { get; set; } = 0;
+        public bool LeftSplitViewPaneOpen { get; set; } = true;
+        public bool RightSplitViewPaneOpen { get; set; } = true;
+        public int SortOrder { get; set; } = 0;
+        public bool IsSortAscending { get; set; } = true;
+        public bool DetailSelectionEnabled { get; set; } = true;
+        public ComponentsExpanderConfig Expander { get; set; } = new();
+    }
+
+    public class ComponentsExpanderConfig
+    {
+        // --- Expander 展开状态 ---
+        public bool TypeExpander { get; set; } = true;
+        public bool RatingExpander { get; set; } = true;
+        public bool TagsExpander { get; set; } = true;
+
+        // --- 类型 ---
+        public bool Layers { get; set; } = true;
+        public bool Scripts { get; set; } = true;
+        public bool Effects { get; set; } = true;
+
+        // --- 年龄 ---
+        public bool Everyone { get; set; } = true;
+        public bool Questionable { get; set; } = true;
+        public bool Mature { get; set; } = true;
+
+        // --- 标签 ---
+        public bool UnspecifiedGenre { get; set; } = false;
+        public bool Abstract { get; set; } = false;
+        public bool Anime { get; set; } = false;
+        public bool AudioVisualizer { get; set; } = false;
+        public bool Background { get; set; } = false;
+        public bool Cgi { get; set; } = false;
+        public bool Character { get; set; } = false;
+        public bool Clock { get; set; } = false;
+        public bool Fire { get; set; } = false;
+        public bool Interactive { get; set; } = false;
+        public bool Magic { get; set; } = false;
+        public bool Memes { get; set; } = false;
+        public bool Nature { get; set; } = false;
+        public bool PostProcessing { get; set; } = false;
+        public bool Smoke { get; set; } = false;
+        public bool Space { get; set; } = false;
+        public bool Sports { get; set; } = false;
+        public bool Technology { get; set; } = false;
+        public bool Vehicle { get; set; } = false;
     }
 }

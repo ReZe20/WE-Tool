@@ -20,6 +20,8 @@ namespace WE_Tool.Helper;
 
 internal class WallpaperScanner
 {
+    /// <summary>最近一次扫描收集到的组件列表（仅 workshop 源）。</summary>
+    public static List<ComponentInfo>? LastComponents { get; private set; }
     private static readonly Regex WorkshopIdRegex = new(
         @"\""(\d+)\""\s+\{", RegexOptions.Compiled | RegexOptions.Multiline);
 
@@ -314,6 +316,30 @@ internal class WallpaperScanner
                         || !activeSubscribedIDs.Contains(item.WorkshopID);
                 }
             }
+
+            // === 扫描组件（仅 workshop 源） ===
+            // 组件和壁纸都在 workshop 根目录下同级，各有独立的 project.json
+            if (source == "workshop" && resultsBag.Count > 0)
+            {
+                var componentBag = new ConcurrentBag<ComponentInfo>();
+                await Parallel.ForEachAsync(wallpaperDirs, new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = Environment.ProcessorCount,
+                    CancellationToken = ct
+                }, async (dir, token) =>
+                {
+                    if (token.IsCancellationRequested) return;
+                    try
+                    {
+                        var comp = await ParseComponentAsync(dir, "", token);
+                        if (comp != null) componentBag.Add(comp);
+                    }
+                    catch { }
+                });
+
+                LastComponents = [.. componentBag];
+                Log.Information("组件扫描完成，共 {Count} 个", componentBag.Count);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -472,6 +498,7 @@ internal class WallpaperScanner
         public string? Contentrating { get; init; }
         public string? Description { get; init; }
         public JsonElement? Tags { get; init; }
+        public string? Workshopid { get; init; }
     }
     private static async Task<WallpaperItem?> ParseWallpaperAsync(
         string current,
@@ -591,5 +618,141 @@ internal class WallpaperScanner
             Log.Error(ex, $"解析壁纸文件夹失败: {current}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// 扫描创意工坊壁纸目录下的所有组件（category == "Asset"）。
+    /// </summary>
+    public static async Task<List<ComponentInfo>> ScanComponentsAsync(
+        string workshopPath,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
+            return [];
+
+        var results = new List<ComponentInfo>();
+
+        try
+        {
+            var wallpaperDirs = Directory.EnumerateDirectories(workshopPath, "*", new EnumerationOptions
+            {
+                RecurseSubdirectories = false,
+                IgnoreInaccessible = true
+            });
+
+            foreach (var wallpaperDir in wallpaperDirs)
+            {
+                if (ct.IsCancellationRequested) break;
+
+                try
+                {
+                    var component = await ParseComponentAsync(wallpaperDir, "", ct);
+                    if (component != null)
+                        results.Add(component);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    Log.Warning(ex, "扫描组件失败: {Path}", wallpaperDir);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Log.Information("组件扫描被取消。已扫描 {Count} 个组件", results.Count);
+            return results;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "扫描组件时出现严重错误");
+        }
+
+        Log.Information("组件扫描完成，共 {Count} 个组件", results.Count);
+        return results;
+    }
+
+    private static async Task<ComponentInfo?> ParseComponentAsync(
+        string componentDir,
+        string parentWallpaperDir,
+        CancellationToken ct)
+    {
+        var jsonPath = Path.Combine(componentDir, "project.json");
+        if (!File.Exists(jsonPath)) return null;
+
+        await using var fileStream = File.OpenRead(jsonPath);
+        var metadata = await JsonSerializer.DeserializeAsync<ProjectMetadata>(fileStream, JsonOptions, ct);
+
+        if (metadata == null || metadata.Category != "Asset")
+            return null;
+
+        var componentType = DetermineComponentType(metadata.File ?? "");
+
+        var previewFile = metadata.Preview ?? "";
+        var previewFullPath = string.IsNullOrEmpty(previewFile)
+            ? "ms-appx:///Assets/NoPreview.png"
+            : Path.Combine(componentDir, previewFile);
+
+        if (!File.Exists(previewFullPath))
+            previewFullPath = "ms-appx:///Assets/NoPreview.png";
+
+        string tagsString = "Unspecified";
+        if (metadata.Tags.HasValue)
+        {
+            var tok = metadata.Tags.Value;
+            if (tok.ValueKind == JsonValueKind.String)
+                tagsString = tok.GetString() ?? "Unspecified";
+            else if (tok.ValueKind == JsonValueKind.Array)
+            {
+                var tags = tok.EnumerateArray()
+                    .Select(e => e.GetString())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToList();
+                tagsString = tags.Count > 0 ? string.Join(", ", tags) : "Unspecified";
+            }
+        }
+
+        long fileSize = 0;
+        try
+        {
+            fileSize = new DirectoryInfo(componentDir)
+                .EnumerateFiles("*", SearchOption.AllDirectories)
+                .Sum(fi => fi.Length);
+        }
+        catch { }
+
+        return new ComponentInfo
+        {
+            Title = metadata.Title ?? "无标题",
+            FilePath = metadata.File ?? "",
+            ComponentType = componentType,
+            FolderPath = componentDir,
+            ParentWallpaperPath = parentWallpaperDir,
+            WorkshopID = metadata.Workshopid ?? "",
+            Preview = previewFullPath,
+            FileSize = fileSize,
+            InstallDate = Directory.GetLastWriteTime(componentDir),
+            ContentRating = metadata.Contentrating ?? "Everyone",
+            Tags = tagsString,
+            Description = metadata.Description ?? ""
+        };
+    }
+
+    /// <summary>
+    /// 根据 project.json 的 "file" 属性判断组件类型。
+    /// 规则：script.json → Script, effect.json → Effect, assets.json → Layer
+    /// </summary>
+    public static ComponentType DetermineComponentType(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+            return ComponentType.Unknown;
+
+        var fileName = Path.GetFileName(filePath.Replace('\\', '/').ToLowerInvariant());
+
+        return fileName switch
+        {
+            "script.json" => ComponentType.Script,
+            "effect.json" => ComponentType.Effect,
+            "assets.json" => ComponentType.Layer,
+            _ => ComponentType.Unknown
+        };
     }
 }

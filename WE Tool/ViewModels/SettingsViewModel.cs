@@ -45,8 +45,10 @@ namespace WE_Tool.ViewModels
         public IAsyncRelayCommand SaveCommand { get; }
 
         public FilterExpanderViewModel FilterExpanderVM { get; } = new();
+        public ComponentsFilterViewModel ComponentsFilterVM { get; } = new();
         public AppSettingsViewModel AppSettingsVM { get; } = new();
         public WallpaperDisplayViewModel WallpaperDisplayVM { get; } = new();
+        public ComponentsDisplayViewModel ComponentsDisplayVM { get; } = new();
         public PathManagementViewModel PathManagementVM { get; }
 
         [ObservableProperty]
@@ -189,7 +191,9 @@ namespace WE_Tool.ViewModels
             // 任意子 VM 的属性变化都触发保存
             AppSettingsVM.PropertyChanged += OnSubViewModelPropertyChanged;
             FilterExpanderVM.PropertyChanged += OnSubViewModelPropertyChanged;
+            ComponentsFilterVM.PropertyChanged += OnSubViewModelPropertyChanged;
             WallpaperDisplayVM.PropertyChanged += OnSubViewModelPropertyChanged;
+            ComponentsDisplayVM.PropertyChanged += OnSubViewModelPropertyChanged;
             PathManagementVM.PropertyChanged += OnSubViewModelPropertyChanged;
 
             AppSettingsVM.PropertyChanged += (s, e) =>
@@ -297,50 +301,89 @@ namespace WE_Tool.ViewModels
             WallpaperDisplayVM.IsSortAscending = _settings.Papers.IsSortAscending;
             WallpaperDisplayVM.SortOrder = _settings.Papers.SortOrder;
 
-            FilterExpanderVM.TypeExpander = _settings.Expander.TypeExpander;
-            FilterExpanderVM.Scene = _settings.Expander.Scene;
-            FilterExpanderVM.Video = _settings.Expander.Video;
-            FilterExpanderVM.Web = _settings.Expander.Web;
-            FilterExpanderVM.Application = _settings.Expander.Application;
-            FilterExpanderVM.Preset = _settings.Expander.Preset;
-            FilterExpanderVM.Unknown = _settings.Expander.Unknown;
+            FilterExpanderVM.TypeExpander = _settings.Papers.Expander.TypeExpander;
+            FilterExpanderVM.Scene = _settings.Papers.Expander.Scene;
+            FilterExpanderVM.Video = _settings.Papers.Expander.Video;
+            FilterExpanderVM.Web = _settings.Papers.Expander.Web;
+            FilterExpanderVM.Application = _settings.Papers.Expander.Application;
+            FilterExpanderVM.Preset = _settings.Papers.Expander.Preset;
+            FilterExpanderVM.Unknown = _settings.Papers.Expander.Unknown;
 
-            FilterExpanderVM.RatingExpander = _settings.Expander.RatingExpander;
-            FilterExpanderVM.G = _settings.Expander.G;
-            FilterExpanderVM.Pg = _settings.Expander.Pg;
-            FilterExpanderVM.R = _settings.Expander.R;
+            FilterExpanderVM.RatingExpander = _settings.Papers.Expander.RatingExpander;
+            FilterExpanderVM.G = _settings.Papers.Expander.G;
+            FilterExpanderVM.Pg = _settings.Papers.Expander.Pg;
+            FilterExpanderVM.R = _settings.Papers.Expander.R;
 
-            FilterExpanderVM.SourceExpander = _settings.Expander.SourceExpander;
-            FilterExpanderVM.Official = _settings.Expander.Official;
-            FilterExpanderVM.Workshop = _settings.Expander.Workshop;
-            FilterExpanderVM.Mine = _settings.Expander.Mine;
+            FilterExpanderVM.SourceExpander = _settings.Papers.Expander.SourceExpander;
+            FilterExpanderVM.Official = _settings.Papers.Expander.Official;
+            FilterExpanderVM.Workshop = _settings.Papers.Expander.Workshop;
+            FilterExpanderVM.Mine = _settings.Papers.Expander.Mine;
 
-            FilterExpanderVM.TagsExpander = _settings.Expander.TagsExpander;
-            FilterExpanderVM.Abstract = _settings.Expander.Abstract;
-            FilterExpanderVM.Animal = _settings.Expander.Animal;
-            FilterExpanderVM.Anime = _settings.Expander.Anime;
-            FilterExpanderVM.Cartoon = _settings.Expander.Cartoon;
-            FilterExpanderVM.Cgi = _settings.Expander.Cgi;
-            FilterExpanderVM.Cyberpunk = _settings.Expander.Cyberpunk;
-            FilterExpanderVM.Fantasy = _settings.Expander.Fantasy;
-            FilterExpanderVM.Game = _settings.Expander.Game;
-            FilterExpanderVM.Girls = _settings.Expander.Girls;
-            FilterExpanderVM.Guys = _settings.Expander.Guys;
-            FilterExpanderVM.Landscape = _settings.Expander.Landscape;
-            FilterExpanderVM.Medieval = _settings.Expander.Medieval;
-            FilterExpanderVM.Memes = _settings.Expander.Memes;
-            FilterExpanderVM.Mmd = _settings.Expander.Mmd;
-            FilterExpanderVM.Music = _settings.Expander.Music;
-            FilterExpanderVM.Nature = _settings.Expander.Nature;
-            FilterExpanderVM.Pixelart = _settings.Expander.Pixelart;
-            FilterExpanderVM.Relaxing = _settings.Expander.Relaxing;
-            FilterExpanderVM.Retro = _settings.Expander.Retro;
-            FilterExpanderVM.SciFi = _settings.Expander.SciFi;
-            FilterExpanderVM.Sports = _settings.Expander.Sports;
-            FilterExpanderVM.Technology = _settings.Expander.Technology;
-            FilterExpanderVM.Television = _settings.Expander.Television;
-            FilterExpanderVM.Vehicle = _settings.Expander.Vehicle;
-            FilterExpanderVM.Unspecified = _settings.Expander.Unspecified;
+            FilterExpanderVM.TagsExpander = _settings.Papers.Expander.TagsExpander;
+            FilterExpanderVM.Abstract = _settings.Papers.Expander.Abstract;
+            FilterExpanderVM.Animal = _settings.Papers.Expander.Animal;
+            FilterExpanderVM.Anime = _settings.Papers.Expander.Anime;
+            FilterExpanderVM.Cartoon = _settings.Papers.Expander.Cartoon;
+            FilterExpanderVM.Cgi = _settings.Papers.Expander.Cgi;
+            FilterExpanderVM.Cyberpunk = _settings.Papers.Expander.Cyberpunk;
+            FilterExpanderVM.Fantasy = _settings.Papers.Expander.Fantasy;
+            FilterExpanderVM.Game = _settings.Papers.Expander.Game;
+            FilterExpanderVM.Girls = _settings.Papers.Expander.Girls;
+            FilterExpanderVM.Guys = _settings.Papers.Expander.Guys;
+            FilterExpanderVM.Landscape = _settings.Papers.Expander.Landscape;
+            FilterExpanderVM.Medieval = _settings.Papers.Expander.Medieval;
+            FilterExpanderVM.Memes = _settings.Papers.Expander.Memes;
+            FilterExpanderVM.Mmd = _settings.Papers.Expander.Mmd;
+            FilterExpanderVM.Music = _settings.Papers.Expander.Music;
+            FilterExpanderVM.Nature = _settings.Papers.Expander.Nature;
+            FilterExpanderVM.Pixelart = _settings.Papers.Expander.Pixelart;
+            FilterExpanderVM.Relaxing = _settings.Papers.Expander.Relaxing;
+            FilterExpanderVM.Retro = _settings.Papers.Expander.Retro;
+            FilterExpanderVM.SciFi = _settings.Papers.Expander.SciFi;
+            FilterExpanderVM.Sports = _settings.Papers.Expander.Sports;
+            FilterExpanderVM.Technology = _settings.Papers.Expander.Technology;
+            FilterExpanderVM.Television = _settings.Papers.Expander.Television;
+            FilterExpanderVM.Vehicle = _settings.Papers.Expander.Vehicle;
+            FilterExpanderVM.Unspecified = _settings.Papers.Expander.Unspecified;
+
+            // === Components 加载 ===
+            var compExpander = _settings.Components.Expander;
+            ComponentsFilterVM.TypeExpander = compExpander.TypeExpander;
+            ComponentsFilterVM.RatingExpander = compExpander.RatingExpander;
+            ComponentsFilterVM.TagsExpander = compExpander.TagsExpander;
+            ComponentsFilterVM.Layers = compExpander.Layers;
+            ComponentsFilterVM.Scripts = compExpander.Scripts;
+            ComponentsFilterVM.Effects = compExpander.Effects;
+            ComponentsFilterVM.Everyone = compExpander.Everyone;
+            ComponentsFilterVM.Questionable = compExpander.Questionable;
+            ComponentsFilterVM.Mature = compExpander.Mature;
+            ComponentsFilterVM.UnspecifiedGenre = compExpander.UnspecifiedGenre;
+            ComponentsFilterVM.Abstract = compExpander.Abstract;
+            ComponentsFilterVM.Anime = compExpander.Anime;
+            ComponentsFilterVM.AudioVisualizer = compExpander.AudioVisualizer;
+            ComponentsFilterVM.Background = compExpander.Background;
+            ComponentsFilterVM.Cgi = compExpander.Cgi;
+            ComponentsFilterVM.Character = compExpander.Character;
+            ComponentsFilterVM.Clock = compExpander.Clock;
+            ComponentsFilterVM.Fire = compExpander.Fire;
+            ComponentsFilterVM.Interactive = compExpander.Interactive;
+            ComponentsFilterVM.Magic = compExpander.Magic;
+            ComponentsFilterVM.Memes = compExpander.Memes;
+            ComponentsFilterVM.Nature = compExpander.Nature;
+            ComponentsFilterVM.PostProcessing = compExpander.PostProcessing;
+            ComponentsFilterVM.Smoke = compExpander.Smoke;
+            ComponentsFilterVM.Space = compExpander.Space;
+            ComponentsFilterVM.Sports = compExpander.Sports;
+            ComponentsFilterVM.Technology = compExpander.Technology;
+            ComponentsFilterVM.Vehicle = compExpander.Vehicle;
+
+            ComponentsDisplayVM.ComponentViewIndex = _settings.Components.ComponentViewIndex;
+            ComponentsDisplayVM.ComponentTagDisplayIndex = _settings.Components.ComponentTagDisplayIndex;
+            ComponentsDisplayVM.LeftSplitViewPaneOpen = _settings.Components.LeftSplitViewPaneOpen;
+            ComponentsDisplayVM.RightSplitViewPaneOpen = _settings.Components.RightSplitViewPaneOpen;
+            ComponentsDisplayVM.SortOrder = _settings.Components.SortOrder;
+            ComponentsDisplayVM.IsSortAscending = _settings.Components.IsSortAscending;
+            ComponentsDisplayVM.IsAnnotatedScrollBarEnabled = _settings.Components.IsAnnotatedScrollBarEnabled;
 
             PathManagementVM.LoadFromSettings(_settings);
             if (string.IsNullOrEmpty(PathManagementVM.DownloadPath))
@@ -464,6 +507,84 @@ namespace WE_Tool.ViewModels
                 await SaveAsync();
             }
         }
+
+        public void ResetComponentsFilters()
+        {
+            if (_isBatchUpdating) return;
+            _isBatchUpdating = true;
+
+            try
+            {
+                var f = ComponentsFilterVM;
+                // 类型全选、年龄全选、标签全否
+                f.Layers = true;
+                f.Scripts = true;
+                f.Effects = true;
+                f.Everyone = true;
+                f.Questionable = true;
+                f.Mature = true;
+                f.UnspecifiedGenre = false;
+                f.Abstract = false;
+                f.Anime = false;
+                f.AudioVisualizer = false;
+                f.Background = false;
+                f.Cgi = false;
+                f.Character = false;
+                f.Clock = false;
+                f.Fire = false;
+                f.Interactive = false;
+                f.Magic = false;
+                f.Memes = false;
+                f.Nature = false;
+                f.PostProcessing = false;
+                f.Smoke = false;
+                f.Space = false;
+                f.Sports = false;
+                f.Technology = false;
+                f.Vehicle = false;
+            }
+            finally
+            {
+                _isBatchUpdating = false;
+                OnPropertyChanged(nameof(ComponentsFilterVM));
+            }
+        }
+
+        public void SetAllComponentTags(bool select)
+        {
+            if (_isBatchUpdating) return;
+            _isBatchUpdating = true;
+
+            try
+            {
+                var f = ComponentsFilterVM;
+                f.UnspecifiedGenre = select;
+                f.Abstract = select;
+                f.Anime = select;
+                f.AudioVisualizer = select;
+                f.Background = select;
+                f.Cgi = select;
+                f.Character = select;
+                f.Clock = select;
+                f.Fire = select;
+                f.Interactive = select;
+                f.Magic = select;
+                f.Memes = select;
+                f.Nature = select;
+                f.PostProcessing = select;
+                f.Smoke = select;
+                f.Space = select;
+                f.Sports = select;
+                f.Technology = select;
+                f.Vehicle = select;
+            }
+            finally
+            {
+                _isBatchUpdating = false;
+                OnPropertyChanged(nameof(ComponentsFilterVM));
+            }
+        }
+
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);
@@ -528,50 +649,89 @@ namespace WE_Tool.ViewModels
                     _settings.Papers.DetailSelectionEnabled = WallpaperDisplayVM.DetailSelectionEnabled;
                     _settings.Papers.FilterResultResponseDelay = WallpaperDisplayVM.FilterResultResponseDelay;
 
-                    _settings.Expander.TypeExpander = FilterExpanderVM.TypeExpander;
-                    _settings.Expander.Scene = FilterExpanderVM.Scene;
-                    _settings.Expander.Video = FilterExpanderVM.Video;
-                    _settings.Expander.Web = FilterExpanderVM.Web;
-                    _settings.Expander.Application = FilterExpanderVM.Application;
-                    _settings.Expander.Preset = FilterExpanderVM.Preset;
-                    _settings.Expander.Unknown = FilterExpanderVM.Unknown;
+                    _settings.Papers.Expander.TypeExpander = FilterExpanderVM.TypeExpander;
+                    _settings.Papers.Expander.Scene = FilterExpanderVM.Scene;
+                    _settings.Papers.Expander.Video = FilterExpanderVM.Video;
+                    _settings.Papers.Expander.Web = FilterExpanderVM.Web;
+                    _settings.Papers.Expander.Application = FilterExpanderVM.Application;
+                    _settings.Papers.Expander.Preset = FilterExpanderVM.Preset;
+                    _settings.Papers.Expander.Unknown = FilterExpanderVM.Unknown;
 
-                    _settings.Expander.RatingExpander = FilterExpanderVM.RatingExpander;
-                    _settings.Expander.G = FilterExpanderVM.G;
-                    _settings.Expander.Pg = FilterExpanderVM.Pg;
-                    _settings.Expander.R = FilterExpanderVM.R;
+                    _settings.Papers.Expander.RatingExpander = FilterExpanderVM.RatingExpander;
+                    _settings.Papers.Expander.G = FilterExpanderVM.G;
+                    _settings.Papers.Expander.Pg = FilterExpanderVM.Pg;
+                    _settings.Papers.Expander.R = FilterExpanderVM.R;
 
-                    _settings.Expander.SourceExpander = FilterExpanderVM.SourceExpander;
-                    _settings.Expander.Official = FilterExpanderVM.Official;
-                    _settings.Expander.Workshop = FilterExpanderVM.Workshop;
-                    _settings.Expander.Mine = FilterExpanderVM.Mine;
+                    _settings.Papers.Expander.SourceExpander = FilterExpanderVM.SourceExpander;
+                    _settings.Papers.Expander.Official = FilterExpanderVM.Official;
+                    _settings.Papers.Expander.Workshop = FilterExpanderVM.Workshop;
+                    _settings.Papers.Expander.Mine = FilterExpanderVM.Mine;
 
-                    _settings.Expander.TagsExpander = FilterExpanderVM.TagsExpander;
-                    _settings.Expander.Abstract = FilterExpanderVM.Abstract;
-                    _settings.Expander.Animal = FilterExpanderVM.Animal;
-                    _settings.Expander.Anime = FilterExpanderVM.Anime;
-                    _settings.Expander.Cartoon = FilterExpanderVM.Cartoon;
-                    _settings.Expander.Cgi = FilterExpanderVM.Cgi;
-                    _settings.Expander.Cyberpunk = FilterExpanderVM.Cyberpunk;
-                    _settings.Expander.Fantasy = FilterExpanderVM.Fantasy;
-                    _settings.Expander.Game = FilterExpanderVM.Game;
-                    _settings.Expander.Girls = FilterExpanderVM.Girls;
-                    _settings.Expander.Guys = FilterExpanderVM.Guys;
-                    _settings.Expander.Landscape = FilterExpanderVM.Landscape;
-                    _settings.Expander.Medieval = FilterExpanderVM.Medieval;
-                    _settings.Expander.Memes = FilterExpanderVM.Memes;
-                    _settings.Expander.Mmd = FilterExpanderVM.Mmd;
-                    _settings.Expander.Music = FilterExpanderVM.Music;
-                    _settings.Expander.Nature = FilterExpanderVM.Nature;
-                    _settings.Expander.Pixelart = FilterExpanderVM.Pixelart;
-                    _settings.Expander.Relaxing = FilterExpanderVM.Relaxing;
-                    _settings.Expander.Retro = FilterExpanderVM.Retro;
-                    _settings.Expander.SciFi = FilterExpanderVM.SciFi;
-                    _settings.Expander.Sports = FilterExpanderVM.Sports;
-                    _settings.Expander.Technology = FilterExpanderVM.Technology;
-                    _settings.Expander.Television = FilterExpanderVM.Television;
-                    _settings.Expander.Vehicle = FilterExpanderVM.Vehicle;
-                    _settings.Expander.Unspecified = FilterExpanderVM.Unspecified;
+                    _settings.Papers.Expander.TagsExpander = FilterExpanderVM.TagsExpander;
+                    _settings.Papers.Expander.Abstract = FilterExpanderVM.Abstract;
+                    _settings.Papers.Expander.Animal = FilterExpanderVM.Animal;
+                    _settings.Papers.Expander.Anime = FilterExpanderVM.Anime;
+                    _settings.Papers.Expander.Cartoon = FilterExpanderVM.Cartoon;
+                    _settings.Papers.Expander.Cgi = FilterExpanderVM.Cgi;
+                    _settings.Papers.Expander.Cyberpunk = FilterExpanderVM.Cyberpunk;
+                    _settings.Papers.Expander.Fantasy = FilterExpanderVM.Fantasy;
+                    _settings.Papers.Expander.Game = FilterExpanderVM.Game;
+                    _settings.Papers.Expander.Girls = FilterExpanderVM.Girls;
+                    _settings.Papers.Expander.Guys = FilterExpanderVM.Guys;
+                    _settings.Papers.Expander.Landscape = FilterExpanderVM.Landscape;
+                    _settings.Papers.Expander.Medieval = FilterExpanderVM.Medieval;
+                    _settings.Papers.Expander.Memes = FilterExpanderVM.Memes;
+                    _settings.Papers.Expander.Mmd = FilterExpanderVM.Mmd;
+                    _settings.Papers.Expander.Music = FilterExpanderVM.Music;
+                    _settings.Papers.Expander.Nature = FilterExpanderVM.Nature;
+                    _settings.Papers.Expander.Pixelart = FilterExpanderVM.Pixelart;
+                    _settings.Papers.Expander.Relaxing = FilterExpanderVM.Relaxing;
+                    _settings.Papers.Expander.Retro = FilterExpanderVM.Retro;
+                    _settings.Papers.Expander.SciFi = FilterExpanderVM.SciFi;
+                    _settings.Papers.Expander.Sports = FilterExpanderVM.Sports;
+                    _settings.Papers.Expander.Technology = FilterExpanderVM.Technology;
+                    _settings.Papers.Expander.Television = FilterExpanderVM.Television;
+                    _settings.Papers.Expander.Vehicle = FilterExpanderVM.Vehicle;
+                    _settings.Papers.Expander.Unspecified = FilterExpanderVM.Unspecified;
+
+                    // === Components 保存 ===
+                    var compExpander = _settings.Components.Expander;
+                    compExpander.TypeExpander = ComponentsFilterVM.TypeExpander;
+                    compExpander.RatingExpander = ComponentsFilterVM.RatingExpander;
+                    compExpander.TagsExpander = ComponentsFilterVM.TagsExpander;
+                    compExpander.Layers = ComponentsFilterVM.Layers;
+                    compExpander.Scripts = ComponentsFilterVM.Scripts;
+                    compExpander.Effects = ComponentsFilterVM.Effects;
+                    compExpander.Everyone = ComponentsFilterVM.Everyone;
+                    compExpander.Questionable = ComponentsFilterVM.Questionable;
+                    compExpander.Mature = ComponentsFilterVM.Mature;
+                    compExpander.UnspecifiedGenre = ComponentsFilterVM.UnspecifiedGenre;
+                    compExpander.Abstract = ComponentsFilterVM.Abstract;
+                    compExpander.Anime = ComponentsFilterVM.Anime;
+                    compExpander.AudioVisualizer = ComponentsFilterVM.AudioVisualizer;
+                    compExpander.Background = ComponentsFilterVM.Background;
+                    compExpander.Cgi = ComponentsFilterVM.Cgi;
+                    compExpander.Character = ComponentsFilterVM.Character;
+                    compExpander.Clock = ComponentsFilterVM.Clock;
+                    compExpander.Fire = ComponentsFilterVM.Fire;
+                    compExpander.Interactive = ComponentsFilterVM.Interactive;
+                    compExpander.Magic = ComponentsFilterVM.Magic;
+                    compExpander.Memes = ComponentsFilterVM.Memes;
+                    compExpander.Nature = ComponentsFilterVM.Nature;
+                    compExpander.PostProcessing = ComponentsFilterVM.PostProcessing;
+                    compExpander.Smoke = ComponentsFilterVM.Smoke;
+                    compExpander.Space = ComponentsFilterVM.Space;
+                    compExpander.Sports = ComponentsFilterVM.Sports;
+                    compExpander.Technology = ComponentsFilterVM.Technology;
+                    compExpander.Vehicle = ComponentsFilterVM.Vehicle;
+
+                    _settings.Components.ComponentViewIndex = ComponentsDisplayVM.ComponentViewIndex;
+                    _settings.Components.ComponentTagDisplayIndex = ComponentsDisplayVM.ComponentTagDisplayIndex;
+                    _settings.Components.LeftSplitViewPaneOpen = ComponentsDisplayVM.LeftSplitViewPaneOpen;
+                    _settings.Components.RightSplitViewPaneOpen = ComponentsDisplayVM.RightSplitViewPaneOpen;
+                    _settings.Components.SortOrder = ComponentsDisplayVM.SortOrder;
+                    _settings.Components.IsSortAscending = ComponentsDisplayVM.IsSortAscending;
+                    _settings.Components.IsAnnotatedScrollBarEnabled = ComponentsDisplayVM.IsAnnotatedScrollBarEnabled;
 
                     _settings.Path.DownloadPath = PathManagementVM.DownloadPath;
                     _settings.Path.WorkshopPath = PathManagementVM.WorkshopPath;
