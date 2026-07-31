@@ -94,6 +94,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
         var app = Application.Current as App;
         ViewModel = app?.ViewModel ?? new SettingsViewModel(new Service.ConfigService(), new Service.PickerService());
+        // 让角标可见性等 {Binding ... ElementName=PageRoot} 能解析到 ViewModel（照抄 Papers）
+        this.DataContext = this;
 
         // 全局跟踪鼠标按下状态，用于拖拽滑过多选
         this.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(Global_PointerPressed), true);
@@ -102,8 +104,17 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
         ViewModel.ComponentsFilterVM.PropertyChanged += (s, e) =>
         {
-            if (_isUpdating) return;
+            // 批量操作（全选/无/重置/右键全选反选）期间跳过中间事件，结束后统一触发一次
+            if (_isUpdating || ViewModel._isBatchUpdating) return;
             _ = ApplyFilters();
+        };
+
+        // ViewModel 批量方法结束时只发一次 ComponentsFilterVM 通知，在这里统一响应（照抄 Papers）
+        ViewModel.PropertyChanged += (s, e) =>
+        {
+            if (ViewModel._isBatchUpdating) return;
+            if (e.PropertyName == nameof(SettingsViewModel.ComponentsFilterVM))
+                _ = ApplyFilters();
         };
 
         ViewModel.ComponentsDisplayVM.PropertyChanged += (s, e) =>
@@ -303,75 +314,112 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             await Task.Delay(ViewModel.ComponentsDisplayVM.FilterResultResponseDelay, token);
 
             var filter = ViewModel.ComponentsFilterVM;
-            var filtered = _allComponents.AsEnumerable();
 
-        // 类型
-        var activeTypes = new HashSet<string>();
-        if (filter.Layers) activeTypes.Add("Layers");
-        if (filter.Scripts) activeTypes.Add("scripts");
-        if (filter.Effects) activeTypes.Add("effects");
+            // 先捕获筛选状态（UI 线程），再在后台线程执行查询，避免大列表阻塞界面（照抄 Papers）
+            var activeTypes = new HashSet<string>();
+            if (filter.Layers) activeTypes.Add("Layers");
+            if (filter.Scripts) activeTypes.Add("scripts");
+            if (filter.Effects) activeTypes.Add("effects");
 
-        filtered = filtered.Where(c =>
-        {
-            var typeName = c.ComponentType switch
+            var activeRatings = new HashSet<string>();
+            if (filter.Everyone) activeRatings.Add("Everyone");
+            if (filter.Questionable) activeRatings.Add("Questionable");
+            if (filter.Mature) activeRatings.Add("Mature");
+
+            var activeTags = GetActiveTags();
+            var searchText = _searchText;
+            var sortOrder = ViewModel.ComponentsDisplayVM.SortOrder;
+            var isSortAscending = ViewModel.ComponentsDisplayVM.IsSortAscending;
+
+            var filteredResult = await Task.Run(() =>
             {
-                ComponentType.Layer => "Layers",
-                ComponentType.Script => "scripts",
-                ComponentType.Effect => "effects",
-                _ => ""
-            };
-            return activeTypes.Contains(typeName);
-        });
+                var filtered = _allComponents.AsEnumerable();
 
-        // 年龄
-        var activeRatings = new HashSet<string>();
-        if (filter.Everyone) activeRatings.Add("Everyone");
-        if (filter.Questionable) activeRatings.Add("Questionable");
-        if (filter.Mature) activeRatings.Add("Mature");
+                // 类型
+                filtered = filtered.Where(c =>
+                {
+                    var typeName = c.ComponentType switch
+                    {
+                        ComponentType.Layer => "Layers",
+                        ComponentType.Script => "scripts",
+                        ComponentType.Effect => "effects",
+                        _ => ""
+                    };
+                    return activeTypes.Contains(typeName);
+                });
 
-        filtered = filtered.Where(c =>
-            activeRatings.Contains(c.ContentRating ?? "Everyone"));
+                // 年龄
+                filtered = filtered.Where(c =>
+                    activeRatings.Contains(c.ContentRating ?? "Everyone"));
 
-        // 标签：无勾选时不显示任何组件（与 Papers 一致）
-        var activeTags = GetActiveTags();
-        filtered = filtered.Where(c =>
-        {
-            if (string.IsNullOrEmpty(c.Tags)) return false;
-            return activeTags.Any(tag =>
-                c.Tags!.Contains(tag, StringComparison.OrdinalIgnoreCase));
-        });
+                // 标签：无勾选时不显示任何组件（与 Papers 一致）
+                filtered = filtered.Where(c =>
+                {
+                    if (string.IsNullOrEmpty(c.Tags)) return false;
+                    return activeTags.Any(tag =>
+                        c.Tags!.Contains(tag, StringComparison.OrdinalIgnoreCase));
+                });
 
-        // 搜索
-        if (!string.IsNullOrEmpty(_searchText))
-        {
-            filtered = filtered.Where(c =>
-                c.Title?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) == true);
-        }
+                // 搜索
+                if (!string.IsNullOrEmpty(searchText))
+                {
+                    filtered = filtered.Where(c =>
+                        c.Title?.Contains(searchText, StringComparison.OrdinalIgnoreCase) == true);
+                }
 
-        // 排序
-        var display = ViewModel.ComponentsDisplayVM;
-        filtered = display.SortOrder switch
-        {
-            0 => display.IsSortAscending
-                ? filtered.OrderBy(c => c.Title ?? "")
-                : filtered.OrderByDescending(c => c.Title ?? ""),
-            1 => display.IsSortAscending
-                ? filtered.OrderBy(c => c.InstallDate)
-                : filtered.OrderByDescending(c => c.InstallDate),
-            2 => display.IsSortAscending
-                ? filtered.OrderBy(c => c.FileSize)
-                : filtered.OrderByDescending(c => c.FileSize),
-            _ => filtered
-        };
+                // 排序
+                filtered = sortOrder switch
+                {
+                    0 => isSortAscending
+                        ? filtered.OrderBy(c => c.Title ?? "")
+                        : filtered.OrderByDescending(c => c.Title ?? ""),
+                    1 => isSortAscending
+                        ? filtered.OrderBy(c => c.InstallDate)
+                        : filtered.OrderByDescending(c => c.InstallDate),
+                    2 => isSortAscending
+                        ? filtered.OrderBy(c => c.FileSize)
+                        : filtered.OrderByDescending(c => c.FileSize),
+                    _ => filtered
+                };
 
-        FilteredComponents.Clear();
-        foreach (var item in filtered)
-            FilteredComponents.Add(item);
+                return filtered.ToList();
+            }, token);
 
-        NoResultTip.Visibility = FilteredComponents.Count == 0
-            ? Visibility.Visible : Visibility.Collapsed;
+            if (token.IsCancellationRequested) return;
+
+            // 结果未变化时跳过，避免 Clear + 逐项 Add 的布局风暴（照抄 Papers.IsListEqual）
+            if (IsComponentListEqual(FilteredComponents, filteredResult)) return;
+
+            FilteredComponents.Clear();
+            NoResultTip.Visibility = filteredResult.Count == 0
+                ? Visibility.Visible : Visibility.Collapsed;
+
+            // 分批填充结果，给 UI 线程喘息机会（照抄 Papers 的 batchSize = 40）
+            var uiQueue = DispatcherQueue;
+            uiQueue.TryEnqueue(async () =>
+            {
+                const int batchSize = 40;
+                for (int i = 0; i < filteredResult.Count; i += batchSize)
+                {
+                    if (token.IsCancellationRequested) return;
+                    foreach (var item in filteredResult.Skip(i).Take(batchSize))
+                        FilteredComponents.Add(item);
+                    await Task.Delay(1);
+                }
+            });
         }
         catch (OperationCanceledException) { }
+    }
+
+    /// <summary>比较当前结果与新一轮筛选结果是否一致（照抄 Papers.IsListEqual）</summary>
+    private static bool IsComponentListEqual(ObservableCollection<ComponentInfo> current, List<ComponentInfo> next)
+    {
+        if (current.Count != next.Count) return false;
+        for (int i = 0; i < current.Count; i++)
+        {
+            if (current[i].FolderPath != next[i].FolderPath) return false;
+        }
+        return true;
     }
 
     private HashSet<string> GetActiveTags()
@@ -411,14 +459,14 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private void SelectAllTags_Click(object sender, RoutedEventArgs e)
     {
+        // SetAllComponentTags 内部是批量操作，结束后通过 ViewModel.PropertyChanged 统一触发一次筛选
         ViewModel.SetAllComponentTags(true);
-        _ = ApplyFilters();
     }
 
     private void DeselectAllTags_Click(object sender, RoutedEventArgs e)
     {
+        // SetAllComponentTags 内部是批量操作，结束后通过 ViewModel.PropertyChanged 统一触发一次筛选
         ViewModel.SetAllComponentTags(false);
-        _ = ApplyFilters();
     }
 
     private void ComponentSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
@@ -445,18 +493,32 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void FilterExpanderSelectAll_Click(object sender, RoutedEventArgs e)
     {
         if (_currentFilterExpander == null) return;
-        _isUpdating = true;
-        SetExpandCheckBoxes(_currentFilterExpander, true);
-        _isUpdating = false;
+        // 右键全选：批处理期间抑制逐项 PropertyChanged，结束后只触发一次筛选（照抄 Papers）
+        ViewModel._isBatchUpdating = true;
+        try
+        {
+            SetExpandCheckBoxes(_currentFilterExpander, true);
+        }
+        finally
+        {
+            ViewModel._isBatchUpdating = false;
+        }
         _ = ApplyFilters();
     }
 
     private void FilterExpanderInvert_Click(object sender, RoutedEventArgs e)
     {
         if (_currentFilterExpander == null) return;
-        _isUpdating = true;
-        SetExpandCheckBoxes(_currentFilterExpander, null);
-        _isUpdating = false;
+        // 右键反选：批处理期间抑制逐项 PropertyChanged，结束后只触发一次筛选（照抄 Papers）
+        ViewModel._isBatchUpdating = true;
+        try
+        {
+            SetExpandCheckBoxes(_currentFilterExpander, null);
+        }
+        finally
+        {
+            ViewModel._isBatchUpdating = false;
+        }
         _ = ApplyFilters();
     }
 
@@ -579,6 +641,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private async void UnsubscribeComponent_Click(object sender, RoutedEventArgs e)
     {
+        // 照抄 Papers：执行前先收起右键菜单，避免菜单停留在确认对话框上方
+        HideComponentContextMenu();
+
         var items = GetTargetItems().Where(i => !string.IsNullOrEmpty(i.WorkshopID)).ToList();
         if (items.Count == 0) return;
 

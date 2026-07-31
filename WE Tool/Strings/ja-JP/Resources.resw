@@ -895,4 +895,7 @@ project.json とプレビューをコピー
   <data name="AppBarButton_ListMode.Text" xml:space="preserve">
     <value>リスト</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>購読を解除</value>
+  </data>
 </root>

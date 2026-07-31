@@ -895,4 +895,7 @@
   <data name="AppBarButton_ListMode.Text" xml:space="preserve">
     <value>列表</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>取消訂閱</value>
+  </data>
 </root>

@@ -229,7 +229,7 @@
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
 
-                    <controls:SettingsExpander x:Uid="ComponentsSetting">
+                    <controls:SettingsExpander x:Uid="ComponentsSetting" Margin="0,0,0,10">
                         <controls:SettingsExpander.HeaderIcon>
                             <FontIcon Glyph="&#xF4A5;"/>
                         </controls:SettingsExpander.HeaderIcon>

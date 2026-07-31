@@ -332,11 +332,14 @@ namespace WE_Tool.ViewModels
             {
                 string content = File.ReadAllText(loginUsersPath);
 
-                // 找到 "MostRecent" "1" 所在的块，提取其 SteamID64
+                // 优先：找到 "MostRecent" "1" 所在的块，提取其 SteamID64
                 var match = Regex.Match(content, @"""(\d{17})""\s*\{[^}]*""MostRecent""\s*""1""[^}]*\}");
-                if (!match.Success) return null;
+                // MostRecent 未检测到（新版 Steam 的 loginusers.vdf 可能不再写入该字段）时走兜底分支
+                string? steamId64Str = match.Success
+                    ? match.Groups[1].Value
+                    : GetFallbackAccountId64(content);
+                if (steamId64Str == null) return null;
 
-                string steamId64Str = match.Groups[1].Value;
                 if (!ulong.TryParse(steamId64Str, out var steamId64)) return null;
 
                 // SteamID32 = SteamID64 - 基数
@@ -348,6 +351,30 @@ namespace WE_Tool.ViewModels
                 Log.Warning(ex, "解析 loginusers.vdf 失败");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// MostRecent 未检测到时的兜底：优先取 AutoLogin=1 的账号（自动登录即当前账号），
+        /// 否则当 loginusers.vdf 里只有一个账号时直接使用该账号，仍无法确定时返回 null。
+        /// </summary>
+        private static string? GetFallbackAccountId64(string content)
+        {
+            var accountBlocks = Regex.Matches(content, @"""(\d{17})""\s*\{([^}]*)\}");
+            if (accountBlocks.Count == 0) return null;
+
+            // 新版 loginusers.vdf 通常用 "AutoLogin" "1" 标识当前自动登录的账号
+            // （参考：单账号文件如 "76561199023010042" 块内 AutoLogin="1"）
+            foreach (Match block in accountBlocks)
+            {
+                if (Regex.IsMatch(block.Groups[2].Value, @"""AutoLogin""\s*""1"""))
+                    return block.Groups[1].Value;
+            }
+
+            // 没有任何 AutoLogin 标记时，若只存在一个账号则直接使用，避免多账号时误判
+            if (accountBlocks.Count == 1)
+                return accountBlocks[0].Groups[1].Value;
+
+            return null;
         }
 
         public async Task AutoDetectDownloadPathAsync()

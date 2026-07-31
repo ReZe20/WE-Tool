@@ -895,4 +895,7 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="AppBarButton_ListMode.Text" xml:space="preserve">
     <value>Liste</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>Abbestellen</value>
+  </data>
 </root>

@@ -895,4 +895,7 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="AppBarButton_ListMode.Text" xml:space="preserve">
     <value>Elenco</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>Annulla iscrizione</value>
+  </data>
 </root>

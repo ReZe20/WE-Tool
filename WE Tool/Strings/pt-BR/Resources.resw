@@ -895,4 +895,7 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
   <data name="AppBarButton_ListMode.Text" xml:space="preserve">
     <value>Lista</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>Cancelar inscrição</value>
+  </data>
 </root>
