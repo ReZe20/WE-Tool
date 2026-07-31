@@ -297,6 +297,7 @@ namespace WE_Tool.ViewModels
             WallpaperDisplayVM.RightSplitViewPaneOpen = _settings.Papers.RightSplitViewPaneOpen;
             WallpaperDisplayVM.DetailSelectionEnabled = _settings.Papers.DetailSelectionEnabled;
             WallpaperDisplayVM.FilterResultResponseDelay = _settings.Papers.FilterResultResponseDelay;
+            WallpaperDisplayVM.PaginationMode = _settings.Papers.PaginationMode;
 
             WallpaperDisplayVM.IsSortAscending = _settings.Papers.IsSortAscending;
             WallpaperDisplayVM.SortOrder = _settings.Papers.SortOrder;
@@ -388,6 +389,7 @@ namespace WE_Tool.ViewModels
             ComponentsDisplayVM.RightSplitViewPaneOpen = _settings.Components.RightSplitViewPaneOpen;
             ComponentsDisplayVM.SortOrder = _settings.Components.SortOrder;
             ComponentsDisplayVM.IsSortAscending = _settings.Components.IsSortAscending;
+            ComponentsDisplayVM.PaginationMode = _settings.Components.PaginationMode;
             ComponentsDisplayVM.IsAnnotatedScrollBarEnabled = _settings.Components.IsAnnotatedScrollBarEnabled;
 
             PathManagementVM.LoadFromSettings(_settings);
@@ -653,6 +655,7 @@ namespace WE_Tool.ViewModels
                     _settings.Papers.SortOrder = WallpaperDisplayVM.SortOrder;
                     _settings.Papers.DetailSelectionEnabled = WallpaperDisplayVM.DetailSelectionEnabled;
                     _settings.Papers.FilterResultResponseDelay = WallpaperDisplayVM.FilterResultResponseDelay;
+                    _settings.Papers.PaginationMode = WallpaperDisplayVM.PaginationMode;
 
                     _settings.Papers.Expander.TypeExpander = FilterExpanderVM.TypeExpander;
                     _settings.Papers.Expander.Scene = FilterExpanderVM.Scene;
@@ -741,6 +744,7 @@ namespace WE_Tool.ViewModels
                     _settings.Components.RightSplitViewPaneOpen = ComponentsDisplayVM.RightSplitViewPaneOpen;
                     _settings.Components.SortOrder = ComponentsDisplayVM.SortOrder;
                     _settings.Components.IsSortAscending = ComponentsDisplayVM.IsSortAscending;
+                    _settings.Components.PaginationMode = ComponentsDisplayVM.PaginationMode;
                     _settings.Components.IsAnnotatedScrollBarEnabled = ComponentsDisplayVM.IsAnnotatedScrollBarEnabled;
 
                     _settings.Path.DownloadPath = PathManagementVM.DownloadPath;

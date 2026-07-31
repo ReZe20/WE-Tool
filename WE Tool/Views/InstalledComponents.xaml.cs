@@ -47,6 +47,143 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     public ObservableCollection<ComponentInfo> FilteredComponents { get; } = [];
     public ObservableCollection<ComponentInfo> SelectedComponents { get; } = [];
     public ObservableCollection<ComponentInfo> DisplayedSelectedComponents { get; } = [];
+    private List<ComponentInfo> _filteredComponents = [];
+    private int _currentPage = 1;
+
+    /// <summary>当前页码（1 起）</summary>
+    public int CurrentPage
+    {
+        get => _currentPage;
+        private set
+        {
+            if (_currentPage == value) return;
+            _currentPage = value;
+            NotifyPagerStateChanged();
+        }
+    }
+
+    public bool ComponentsCanGoPrevious => CurrentPage > 1;
+
+    public bool ComponentsCanGoNext => CurrentPage < ComputeTotalPages(_filteredComponents.Count);
+
+    private int ComputeTotalPages(int itemCount)
+    {
+        int size = ViewModel.ComponentsDisplayVM.PageSize;
+        if (size <= 0) size = 30;
+        return Math.Max(1, (int)Math.Ceiling(itemCount / (double)size));
+    }
+
+    private void NotifyPagerStateChanged()
+    {
+        OnPropertyChanged(nameof(ComponentsCanGoPrevious));
+        OnPropertyChanged(nameof(ComponentsCanGoNext));
+        RebuildComponentsPageNumberButtons();
+    }
+
+    /// <summary>重建底部翻页栏的页码按钮（当前页高亮，超出窗口显示省略号；照抄 Papers）</summary>
+    private void RebuildComponentsPageNumberButtons()
+    {
+        if (ComponentsPageNumbersPanel == null) return;
+        ComponentsPageNumbersPanel.Children.Clear();
+
+        int total = ComputeTotalPages(_filteredComponents.Count);
+        var subtle = Application.Current.Resources["SubtleButtonStyle"] as Style;
+        var accent = Application.Current.Resources["AccentButtonStyle"] as Style;
+
+        foreach (int page in GetVisiblePages(CurrentPage, total))
+        {
+            if (page < 0)
+            {
+                // 省略号分隔
+                ComponentsPageNumbersPanel.Children.Add(new TextBlock
+                {
+                    Text = "…",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = 14,
+                    Foreground = Application.Current.Resources["TextFillColorSecondaryBrush"] as Brush
+                                 ?? new SolidColorBrush(Microsoft.UI.Colors.Gray)
+                });
+                continue;
+            }
+
+            var button = new Button
+            {
+                Content = page.ToString(),
+                Tag = page,
+                Width = 32,
+                Height = 32,
+                Padding = new Thickness(0),
+                FontSize = 13,
+                Style = page == CurrentPage ? accent : subtle
+            };
+            button.Click += ComponentsPageNumber_Click;
+            ComponentsPageNumbersPanel.Children.Add(button);
+        }
+    }
+
+    /// <summary>页码窗口：始终含首页/末页，当前页 ±2，中间用负数占位表示省略号（照抄 Papers）</summary>
+    private static IEnumerable<int> GetVisiblePages(int current, int total)
+    {
+        if (total <= 1) return [1];
+
+        var pages = new List<int>();
+        pages.Add(1);
+
+        int start = Math.Max(2, current - 2);
+        int end = Math.Min(total - 1, current + 2);
+
+        if (start > 2) pages.Add(-1);   // 左省略号
+        for (int i = start; i <= end; i++) pages.Add(i);
+        if (end < total - 1) pages.Add(-2);  // 右省略号
+        if (total > 1) pages.Add(total);
+
+        return pages;
+    }
+
+    private void ComponentsPageNumber_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: int page })
+        {
+            GoToPage(page);
+        }
+    }
+
+    private void ComponentsPrevPage_Click(object sender, RoutedEventArgs e)
+    {
+        GoToPage(CurrentPage - 1);
+    }
+
+    private void ComponentsNextPage_Click(object sender, RoutedEventArgs e)
+    {
+        GoToPage(CurrentPage + 1);
+    }
+
+    /// <summary>跳转到指定页并重填列表（分页模式；照抄 Papers.GoToPage）</summary>
+    private void GoToPage(int page)
+    {
+        int totalPages = ComputeTotalPages(_filteredComponents.Count);
+        page = Math.Clamp(page, 1, totalPages);
+        if (page == CurrentPage) return;
+
+        CurrentPage = page;
+        var pageItems = GetCurrentPageItems(_filteredComponents);
+        FilteredComponents.Clear();
+        foreach (var item in pageItems)
+        {
+            FilteredComponents.Add(item);
+        }
+        ComponentsScrollView.ChangeView(0, 0, null);
+    }
+
+    /// <summary>取当前页应显示的组件；分页关闭时返回完整列表（照抄 Papers）</summary>
+    private List<ComponentInfo> GetCurrentPageItems(List<ComponentInfo> source)
+    {
+        if (!ViewModel.ComponentsDisplayVM.PaginationEnabled) return source;
+        int size = ViewModel.ComponentsDisplayVM.PageSize;
+        if (size <= 0) size = 30;
+        int skip = (CurrentPage - 1) * size;
+        return source.Skip(skip).Take(size).ToList();
+    }
 
     private ComponentInfo? _selectedComponent;
     public ComponentInfo? SelectedComponent
@@ -123,6 +260,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (e.PropertyName == nameof(ComponentsDisplayViewModel.SortOrder)
                 || e.PropertyName == nameof(ComponentsDisplayViewModel.IsSortAscending))
             {
+                _ = ApplyFilters();
+            }
+            else if (e.PropertyName == nameof(ComponentsDisplayViewModel.PaginationMode))
+            {
+                // 分页开关/每页数量变化：立即刷新翻页栏状态（ApplyFilters 有延迟，先同步一次；照抄 Papers）
+                NotifyPagerStateChanged();
                 _ = ApplyFilters();
             }
             else if (e.PropertyName == nameof(ComponentsDisplayViewModel.LeftSplitViewPaneOpen)
@@ -387,32 +530,39 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
             if (token.IsCancellationRequested) return;
 
+            // === 分页 ===
+            bool listUnchanged = IsComponentListEqual(_filteredComponents, filteredResult);
+            _filteredComponents = filteredResult;
+
+            // 筛选/排序变化后回到第一页
+            if (!listUnchanged) CurrentPage = 1;
+            // 每页数量变小等情况下钳制页码
+            int totalPages = ComputeTotalPages(_filteredComponents.Count);
+            if (CurrentPage > totalPages) CurrentPage = totalPages;
+            NotifyPagerStateChanged();
+
+            var pageItems = GetCurrentPageItems(_filteredComponents);
             // 结果未变化时跳过，避免 Clear + 逐项 Add 的布局风暴（照抄 Papers.IsListEqual）
-            if (IsComponentListEqual(FilteredComponents, filteredResult)) return;
+            if (listUnchanged && IsComponentListEqual(FilteredComponents, pageItems)) return;
 
             FilteredComponents.Clear();
             NoResultTip.Visibility = filteredResult.Count == 0
                 ? Visibility.Visible : Visibility.Collapsed;
 
-            // 分批填充结果，给 UI 线程喘息机会（照抄 Papers 的 batchSize = 40）
+            // 填充当前页（分页模式每页最多 90 项，无需分批；照抄 Papers）
             var uiQueue = DispatcherQueue;
-            uiQueue.TryEnqueue(async () =>
+            uiQueue.TryEnqueue(() =>
             {
-                const int batchSize = 40;
-                for (int i = 0; i < filteredResult.Count; i += batchSize)
-                {
-                    if (token.IsCancellationRequested) return;
-                    foreach (var item in filteredResult.Skip(i).Take(batchSize))
-                        FilteredComponents.Add(item);
-                    await Task.Delay(1);
-                }
+                if (token.IsCancellationRequested) return;
+                foreach (var item in pageItems)
+                    FilteredComponents.Add(item);
             });
         }
         catch (OperationCanceledException) { }
     }
 
     /// <summary>比较当前结果与新一轮筛选结果是否一致（照抄 Papers.IsListEqual）</summary>
-    private static bool IsComponentListEqual(ObservableCollection<ComponentInfo> current, List<ComponentInfo> next)
+    private static bool IsComponentListEqual(IReadOnlyList<ComponentInfo> current, IReadOnlyList<ComponentInfo> next)
     {
         if (current.Count != next.Count) return false;
         for (int i = 0; i < current.Count; i++)
@@ -713,9 +863,21 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (isFolderDeleted)
         {
             _allComponents.Remove(item);
+            _filteredComponents.Remove(item);
             FilteredComponents.Remove(item);
             SelectedComponents.Remove(item);
             if (SelectedComponent == item) SelectedComponent = null;
+
+            // 当前页被删空且不是第一页时回退一页（分页模式）
+            if (FilteredComponents.Count == 0 && CurrentPage > 1)
+            {
+                CurrentPage--;
+                foreach (var it in GetCurrentPageItems(_filteredComponents))
+                {
+                    FilteredComponents.Add(it);
+                }
+            }
+            NotifyPagerStateChanged();
 
             UpdateMultiSelectCount();
             Log.Information("组件 {Title} 已从列表和磁盘中彻底移除", item.Title);

@@ -898,4 +898,28 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
     <value>Abbestellen</value>
   </data>
+  <data name="Pagination.Text" xml:space="preserve">
+    <value>Paginierung</value>
+  </data>
+  <data name="Pagination_PrevPage.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Vorherige Seite</value>
+  </data>
+  <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Nächste Seite</value>
+  </data>
+  <data name="Pagination_None.Text" xml:space="preserve">
+    <value>Keine Paginierung</value>
+  </data>
+  <data name="Pagination_30.Text" xml:space="preserve">
+    <value>30 pro Seite</value>
+  </data>
+  <data name="Pagination_50.Text" xml:space="preserve">
+    <value>50 pro Seite</value>
+  </data>
+  <data name="Pagination_70.Text" xml:space="preserve">
+    <value>70 pro Seite</value>
+  </data>
+  <data name="Pagination_90.Text" xml:space="preserve">
+    <value>90 pro Seite</value>
+  </data>
 </root>

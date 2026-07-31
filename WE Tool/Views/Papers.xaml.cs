@@ -63,6 +63,106 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public ObservableCollection<WallpaperItem> Wallpapers { get; set; } = [];
     public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
     public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
+    private List<WallpaperItem> _filteredWallpapers = [];
+    private int _currentPage = 1;
+
+    /// <summary>当前页码（1 起）</summary>
+    public int CurrentPage
+    {
+        get => _currentPage;
+        private set
+        {
+            if (_currentPage == value) return;
+            _currentPage = value;
+            NotifyPagerStateChanged();
+        }
+    }
+
+    public bool CanGoPrevious => CurrentPage > 1;
+
+    public bool CanGoNext => CurrentPage < ComputeTotalPages(_filteredWallpapers.Count);
+
+    private int ComputeTotalPages(int itemCount)
+    {
+        int size = ViewModel.WallpaperDisplayVM.PageSize;
+        if (size <= 0) size = 30;
+        return Math.Max(1, (int)Math.Ceiling(itemCount / (double)size));
+    }
+
+    private void NotifyPagerStateChanged()
+    {
+        OnPropertyChanged(nameof(CanGoPrevious));
+        OnPropertyChanged(nameof(CanGoNext));
+        RebuildPageNumberButtons();
+    }
+
+    /// <summary>重建底部翻页栏的页码按钮（当前页高亮，超出窗口显示省略号）</summary>
+    private void RebuildPageNumberButtons()
+    {
+        if (PageNumbersPanel == null) return;
+        PageNumbersPanel.Children.Clear();
+
+        int total = ComputeTotalPages(_filteredWallpapers.Count);
+        var subtle = Application.Current.Resources["SubtleButtonStyle"] as Style;
+        var accent = Application.Current.Resources["AccentButtonStyle"] as Style;
+
+        foreach (int page in GetVisiblePages(CurrentPage, total))
+        {
+            if (page < 0)
+            {
+                // 省略号分隔
+                PageNumbersPanel.Children.Add(new TextBlock
+                {
+                    Text = "…",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = 14,
+                    Foreground = Application.Current.Resources["TextFillColorSecondaryBrush"] as Brush
+                                 ?? new SolidColorBrush(Microsoft.UI.Colors.Gray)
+                });
+                continue;
+            }
+
+            var button = new Button
+            {
+                Content = page.ToString(),
+                Tag = page,
+                Width = 32,
+                Height = 32,
+                Padding = new Thickness(0),
+                FontSize = 13,
+                Style = page == CurrentPage ? accent : subtle
+            };
+            button.Click += PageNumber_Click;
+            PageNumbersPanel.Children.Add(button);
+        }
+    }
+
+    /// <summary>页码窗口：始终含首页/末页，当前页 ±2，中间用负数占位表示省略号</summary>
+    private static IEnumerable<int> GetVisiblePages(int current, int total)
+    {
+        if (total <= 1) return [1];
+
+        var pages = new List<int>();
+        pages.Add(1);
+
+        int start = Math.Max(2, current - 2);
+        int end = Math.Min(total - 1, current + 2);
+
+        if (start > 2) pages.Add(-1);   // 左省略号
+        for (int i = start; i <= end; i++) pages.Add(i);
+        if (end < total - 1) pages.Add(-2);  // 右省略号
+        if (total > 1) pages.Add(total);
+
+        return pages;
+    }
+
+    private void PageNumber_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: int page })
+        {
+            GoToPage(page);
+        }
+    }
     private static readonly Windows.Globalization.Collation.CharacterGroupings _zhGroupings = new Windows.Globalization.Collation.CharacterGroupings("zh-CN");
     private CancellationTokenSource? _filterCts;
     private CancellationTokenSource? _extractCts;
@@ -389,7 +489,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (ViewModel._isBatchUpdating) return;
             _ = ApplyFilters();
         };
-        ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) => _ = ApplyFilters();
+        ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(WallpaperDisplayViewModel.PaginationMode))
+            {
+                // 分页开关/每页数量变化：立即刷新翻页栏状态（ApplyFilters 有延迟，先同步一次）
+                NotifyPagerStateChanged();
+            }
+            _ = ApplyFilters();
+        };
 
         this.Loaded += async (s, e) =>
         {
@@ -565,7 +673,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
     }
 
-    private static bool IsListEqual(ObservableCollection<WallpaperItem> current, List<WallpaperItem> next)
+    private static bool IsListEqual(IReadOnlyList<WallpaperItem> current, IReadOnlyList<WallpaperItem> next)
     {
         if (current.Count != next.Count) return false;
         for (int i = 0; i < current.Count; i++)
@@ -662,6 +770,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             if (_allWallpapers.Count == 0)
             {
+                _filteredWallpapers = filteredResult;
+                NotifyPagerStateChanged();
                 Wallpapers.Clear();
                 DispatcherQueue.TryEnqueue(() =>
                 {
@@ -671,7 +781,19 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 return;
             }
 
-            if (IsListEqual(Wallpapers, filteredResult)) return;
+            // === 分页 ===
+            bool listUnchanged = IsListEqual(_filteredWallpapers, filteredResult);
+            _filteredWallpapers = filteredResult;
+
+            // 筛选/排序变化后回到第一页
+            if (!listUnchanged) CurrentPage = 1;
+            // 每页数量变小等情况下钳制页码
+            int totalPages = ComputeTotalPages(_filteredWallpapers.Count);
+            if (CurrentPage > totalPages) CurrentPage = totalPages;
+            NotifyPagerStateChanged();
+
+            var pageItems = GetCurrentPageItems(_filteredWallpapers);
+            if (listUnchanged && IsListEqual(Wallpapers, pageItems)) return;
 
             if (!token.IsCancellationRequested)
             {
@@ -696,18 +818,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     }
                 });
 
-                DispatcherQueue.TryEnqueue(async () =>
+                DispatcherQueue.TryEnqueue(() =>
                 {
-                    int batchSize = 40;
-                    for (int i = 0; i < filteredResult.Count; i += batchSize)
+                    if (token.IsCancellationRequested) return;
+                    foreach (var item in pageItems)
                     {
-                        if (token.IsCancellationRequested) return;
-                        var batch = filteredResult.Skip(i).Take(batchSize);
-                        foreach (var item in batch)
-                        {
-                            Wallpapers.Add(item);
-                        }
-                        await Task.Delay(1);
+                        Wallpapers.Add(item);
                     }
                 });
             }
@@ -717,6 +833,43 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             Log.Error(ex,"筛选结果时出现异常。");
         }
+    }
+
+    private void PrevPage_Click(object sender, RoutedEventArgs e)
+    {
+        GoToPage(CurrentPage - 1);
+    }
+
+    private void NextPage_Click(object sender, RoutedEventArgs e)
+    {
+        GoToPage(CurrentPage + 1);
+    }
+
+    /// <summary>跳转到指定页并重填列表（分页模式）</summary>
+    private void GoToPage(int page)
+    {
+        int totalPages = ComputeTotalPages(_filteredWallpapers.Count);
+        page = Math.Clamp(page, 1, totalPages);
+        if (page == CurrentPage) return;
+
+        CurrentPage = page;
+        var pageItems = GetCurrentPageItems(_filteredWallpapers);
+        Wallpapers.Clear();
+        foreach (var item in pageItems)
+        {
+            Wallpapers.Add(item);
+        }
+        WallpapersScrollView.ScrollTo(0, 0);
+    }
+
+    /// <summary>取当前页应显示的壁纸；分页关闭时返回完整列表</summary>
+    private List<WallpaperItem> GetCurrentPageItems(List<WallpaperItem> source)
+    {
+        if (!ViewModel.WallpaperDisplayVM.PaginationEnabled) return source;
+        int size = ViewModel.WallpaperDisplayVM.PageSize;
+        if (size <= 0) size = 30;
+        int skip = (CurrentPage - 1) * size;
+        return source.Skip(skip).Take(size).ToList();
     }
 
     private void GoToSettings_Click(object sender, RoutedEventArgs e)
@@ -2405,8 +2558,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             App.GlobalAllWallpapers.Remove(item);
             _allWallpapers.Remove(item);
+            _filteredWallpapers.Remove(item);
             Wallpapers.Remove(item);
             SelectedWallpapers.Remove(item);
+
+            // 当前页被删空且不是第一页时回退一页（分页模式）
+            if (Wallpapers.Count == 0 && CurrentPage > 1)
+            {
+                CurrentPage--;
+                foreach (var it in GetCurrentPageItems(_filteredWallpapers))
+                {
+                    Wallpapers.Add(it);
+                }
+            }
+            NotifyPagerStateChanged();
 
             UpdateMultiSelectCount();
             Log.Information($"壁纸 {item.Title} 已从列表和磁盘中彻底移除。");

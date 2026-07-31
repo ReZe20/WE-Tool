@@ -204,9 +204,26 @@
                                          x:Uid="AppBarButton_None"
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
+                    </MenuFlyoutSubItem>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutSubItem x:Uid="Pagination">
+                        <MenuFlyoutSubItem.Icon>
+                            <FontIcon Glyph="&#xE8A1;" FontSize="16"/>
+                        </MenuFlyoutSubItem.Icon>
+                        <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_None"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
+                        <MenuFlyoutSeparator/>
+                        <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_30"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize30Item, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_50"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize50Item, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_70"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize70Item, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_90"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize90Item, Mode=TwoWay}"/>
+                    </MenuFlyoutSubItem>
                 </MenuFlyoutSubItem>
-            </MenuFlyoutSubItem>
-            <!-- 排序已在查看菜单内置标签，此处仅保留排序 -->
+                <!-- 排序已在查看菜单内置标签，此处仅保留排序 -->
             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_Sort">
                 <MenuFlyoutSubItem.Icon>
                     <FontIcon Glyph="&#xE8CB;"/>
@@ -398,6 +415,19 @@
                                                      x:Uid="AppBarButton_None"
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
+                            </MenuFlyoutSubItem>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem x:Uid="Pagination">
+                                <RadioMenuFlyoutItem GroupName="PageSizeGroup" x:Uid="Pagination_None"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="PageSizeGroup" x:Uid="Pagination_30"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize30Item, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="PageSizeGroup" x:Uid="Pagination_50"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize50Item, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="PageSizeGroup" x:Uid="Pagination_70"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize70Item, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="PageSizeGroup" x:Uid="Pagination_90"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize90Item, Mode=TwoWay}"/>
                             </MenuFlyoutSubItem>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
@@ -735,7 +765,7 @@
                                             Grid.Column="0"
                                             ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                             Tapped="WallpaperList_Tapped">
-                                    <StackPanel Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}">
+                                    <StackPanel x:Name="WallpapersStackPanel" Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}">
                                         <StackPanel x:Name="NoScanResultTip" Visibility="Collapsed" Margin="0,100,0,0" HorizontalAlignment="Center">
                                             <TextBlock Text="程序未扫描到任何壁纸，请前往设置修正扫描路径"
                                                        Style="{StaticResource TitleTextBlockStyle}"
@@ -1030,6 +1060,23 @@
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>
                                         </ItemsRepeater>
+                                        <!-- 分页栏（位于每页列表末尾） -->
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,8,0,0"
+                                                    Visibility="{x:Bind ViewModel.WallpaperDisplayVM.PaginationBarVisibility, Mode=OneWay}">
+                                            <Button x:Uid="Pagination_PrevPage" x:Name="PrevPageButton"
+                                                    Click="PrevPage_Click"
+                                                    IsEnabled="{x:Bind CanGoPrevious, Mode=OneWay}"
+                                                    Style="{StaticResource SubtleButtonStyle}">
+                                                <FontIcon Glyph="&#xE76B;" FontSize="14"/>
+                                            </Button>
+                                            <StackPanel x:Name="PageNumbersPanel" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"/>
+                                            <Button x:Uid="Pagination_NextPage" x:Name="NextPageButton"
+                                                    Click="NextPage_Click"
+                                                    IsEnabled="{x:Bind CanGoNext, Mode=OneWay}"
+                                                    Style="{StaticResource SubtleButtonStyle}">
+                                                <FontIcon Glyph="&#xE76C;" FontSize="14"/>
+                                            </Button>
+                                        </StackPanel>
                                     </StackPanel>
                                 </ScrollView>
                                 <AnnotatedScrollBar x:Name="Papers_AnnotatedScrollBarControl"

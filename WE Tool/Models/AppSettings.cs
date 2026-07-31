@@ -39,6 +39,8 @@ namespace WE_Tool.Models
         public bool IsSortAscending { get; set; } = true;
         public bool DetailSelectionEnabled { get; set; } = true;
         public int FilterResultResponseDelay { get; set; } = 1000;
+        /// <summary>0=不分页, 1=每页30, 2=每页50, 3=每页70, 4=每页90</summary>
+        public int PaginationMode { get; set; } = 0;
         public ExpanderConfig Expander { get; set; } = new ExpanderConfig();
         public class ExpanderConfig
         {
@@ -151,6 +153,8 @@ namespace WE_Tool.Models
         public bool RightSplitViewPaneOpen { get; set; } = true;
         public int SortOrder { get; set; } = 0;
         public bool IsSortAscending { get; set; } = true;
+        /// <summary>0=不分页, 1=每页30, 2=每页50, 3=每页70, 4=每页90</summary>
+        public int PaginationMode { get; set; } = 0;
         public ComponentsExpanderConfig Expander { get; set; } = new();
     }
 

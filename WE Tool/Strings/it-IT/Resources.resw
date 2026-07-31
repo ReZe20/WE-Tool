@@ -898,4 +898,28 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
     <value>Annulla iscrizione</value>
   </data>
+  <data name="Pagination.Text" xml:space="preserve">
+    <value>Paginazione</value>
+  </data>
+  <data name="Pagination_PrevPage.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pagina precedente</value>
+  </data>
+  <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pagina successiva</value>
+  </data>
+  <data name="Pagination_None.Text" xml:space="preserve">
+    <value>Nessuna paginazione</value>
+  </data>
+  <data name="Pagination_30.Text" xml:space="preserve">
+    <value>30 per pagina</value>
+  </data>
+  <data name="Pagination_50.Text" xml:space="preserve">
+    <value>50 per pagina</value>
+  </data>
+  <data name="Pagination_70.Text" xml:space="preserve">
+    <value>70 per pagina</value>
+  </data>
+  <data name="Pagination_90.Text" xml:space="preserve">
+    <value>90 per pagina</value>
+  </data>
 </root>

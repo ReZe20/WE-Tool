@@ -179,6 +179,23 @@
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
                 </MenuFlyoutSubItem>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutSubItem x:Uid="Pagination">
+                    <MenuFlyoutSubItem.Icon>
+                        <FontIcon Glyph="&#xE8A1;" FontSize="16"/>
+                    </MenuFlyoutSubItem.Icon>
+                    <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_None"
+                                         IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
+                    <MenuFlyoutSeparator/>
+                    <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_30"
+                                         IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize30Item, Mode=TwoWay}"/>
+                    <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_50"
+                                         IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize50Item, Mode=TwoWay}"/>
+                    <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_70"
+                                         IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize70Item, Mode=TwoWay}"/>
+                    <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_90"
+                                         IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize90Item, Mode=TwoWay}"/>
+                </MenuFlyoutSubItem>
             </MenuFlyoutSubItem>
             <MenuFlyoutSubItem Text="排序">
                 <MenuFlyoutSubItem.Icon>
@@ -322,6 +339,19 @@
                                 <RadioMenuFlyoutItem Text="（不显示）" GroupName="LabelGroup"
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
+                            </MenuFlyoutSubItem>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem x:Uid="Pagination">
+                                <RadioMenuFlyoutItem GroupName="CompPageSizeGroup" x:Uid="Pagination_None"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="CompPageSizeGroup" x:Uid="Pagination_30"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize30Item, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="CompPageSizeGroup" x:Uid="Pagination_50"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize50Item, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="CompPageSizeGroup" x:Uid="Pagination_70"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize70Item, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="CompPageSizeGroup" x:Uid="Pagination_90"
+                                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize90Item, Mode=TwoWay}"/>
                             </MenuFlyoutSubItem>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
@@ -935,6 +965,24 @@
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>
                                         </ItemsRepeater>
+
+                                        <!-- 分页栏（位于每页列表末尾） -->
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,8,0,0"
+                                                    Visibility="{x:Bind ViewModel.ComponentsDisplayVM.PaginationBarVisibility, Mode=OneWay}">
+                                            <Button x:Uid="Pagination_PrevPage" x:Name="ComponentsPrevPageButton"
+                                                    Click="ComponentsPrevPage_Click"
+                                                    IsEnabled="{x:Bind ComponentsCanGoPrevious, Mode=OneWay}"
+                                                    Style="{StaticResource SubtleButtonStyle}">
+                                                <FontIcon Glyph="&#xE76B;" FontSize="14"/>
+                                            </Button>
+                                            <StackPanel x:Name="ComponentsPageNumbersPanel" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"/>
+                                            <Button x:Uid="Pagination_NextPage" x:Name="ComponentsNextPageButton"
+                                                    Click="ComponentsNextPage_Click"
+                                                    IsEnabled="{x:Bind ComponentsCanGoNext, Mode=OneWay}"
+                                                    Style="{StaticResource SubtleButtonStyle}">
+                                                <FontIcon Glyph="&#xE76C;" FontSize="14"/>
+                                            </Button>
+                                        </StackPanel>
                                     </StackPanel>
                                 </ScrollViewer>
                             </Grid>

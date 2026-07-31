@@ -1006,4 +1006,28 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
     <value>Unsubscribe</value>
   </data>
+  <data name="Pagination.Text" xml:space="preserve">
+    <value>Pagination</value>
+  </data>
+  <data name="Pagination_PrevPage.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Previous Page</value>
+  </data>
+  <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Next Page</value>
+  </data>
+  <data name="Pagination_None.Text" xml:space="preserve">
+    <value>No Pagination</value>
+  </data>
+  <data name="Pagination_30.Text" xml:space="preserve">
+    <value>30 per page</value>
+  </data>
+  <data name="Pagination_50.Text" xml:space="preserve">
+    <value>50 per page</value>
+  </data>
+  <data name="Pagination_70.Text" xml:space="preserve">
+    <value>70 per page</value>
+  </data>
+  <data name="Pagination_90.Text" xml:space="preserve">
+    <value>90 per page</value>
+  </data>
 </root>

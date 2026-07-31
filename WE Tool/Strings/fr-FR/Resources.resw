@@ -898,4 +898,28 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
   <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
     <value>Se désabonner</value>
   </data>
+  <data name="Pagination.Text" xml:space="preserve">
+    <value>Pagination</value>
+  </data>
+  <data name="Pagination_PrevPage.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Page précédente</value>
+  </data>
+  <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Page suivante</value>
+  </data>
+  <data name="Pagination_None.Text" xml:space="preserve">
+    <value>Sans pagination</value>
+  </data>
+  <data name="Pagination_30.Text" xml:space="preserve">
+    <value>30 par page</value>
+  </data>
+  <data name="Pagination_50.Text" xml:space="preserve">
+    <value>50 par page</value>
+  </data>
+  <data name="Pagination_70.Text" xml:space="preserve">
+    <value>70 par page</value>
+  </data>
+  <data name="Pagination_90.Text" xml:space="preserve">
+    <value>90 par page</value>
+  </data>
 </root>

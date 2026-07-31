@@ -64,6 +64,63 @@ namespace WE_Tool.ViewModels
             set => SetProperty(ref field, value);
         }
 
+        // === 分页 ===
+        // PaginationMode: 0=不分页, 1=每页30, 2=每页50, 3=每页70, 4=每页90
+        [ObservableProperty]
+        public partial int PaginationMode { get; set; }
+
+        partial void OnPaginationModeChanged(int value)
+        {
+            OnPropertyChanged(nameof(PaginationEnabled));
+            OnPropertyChanged(nameof(PaginationBarVisibility));
+            OnPropertyChanged(nameof(NoPaginationItem));
+            OnPropertyChanged(nameof(PageSize30Item));
+            OnPropertyChanged(nameof(PageSize50Item));
+            OnPropertyChanged(nameof(PageSize70Item));
+            OnPropertyChanged(nameof(PageSize90Item));
+        }
+
+        public bool PaginationEnabled => PaginationMode != 0;
+
+        public Microsoft.UI.Xaml.Visibility PaginationBarVisibility
+            => PaginationEnabled ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+
+        /// <summary>当前每页数量；不分页模式下返回 0（调用方已有 <=0 兜底）</summary>
+        public int PageSize => PaginationMode switch
+        {
+            1 => 30,
+            2 => 50,
+            3 => 70,
+            4 => 90,
+            _ => 0
+        };
+
+        public bool NoPaginationItem
+        {
+            get => PaginationMode == 0;
+            set { if (value) PaginationMode = 0; }
+        }
+        public bool PageSize30Item
+        {
+            get => PaginationMode == 1;
+            set { if (value) PaginationMode = 1; }
+        }
+        public bool PageSize50Item
+        {
+            get => PaginationMode == 2;
+            set { if (value) PaginationMode = 2; }
+        }
+        public bool PageSize70Item
+        {
+            get => PaginationMode == 3;
+            set { if (value) PaginationMode = 3; }
+        }
+        public bool PageSize90Item
+        {
+            get => PaginationMode == 4;
+            set { if (value) PaginationMode = 4; }
+        }
+
         [ObservableProperty]
         public partial int WallpaperTagDisplayIndex { get; set; }
 
