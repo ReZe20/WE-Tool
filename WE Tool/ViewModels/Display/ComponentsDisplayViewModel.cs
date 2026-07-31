@@ -1,61 +1,190 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Xaml;
 
 namespace WE_Tool.ViewModels;
+
+public enum ComponentsDisplayModes
+{
+    Icon = 0,
+    Content = 1,
+    List = 2
+}
 
 public partial class ComponentsDisplayViewModel : ObservableObject
 {
     // ===================== 视图模式 =====================
+    // ComponentViewIndex: 图标尺寸索引 (0=小, 1=中, 2=大)，仅图标模式有效
     [ObservableProperty]
     public partial int ComponentViewIndex { get; set; }
 
     partial void OnComponentViewIndexChanged(int value)
     {
-        UpdateViewBoolProps();
+        ComponentListMinWidth = value switch
+        {
+            0 => 180,
+            1 => 240,
+            2 => 300,
+            _ => 180
+        };
+        OnPropertyChanged(nameof(SmallIconItem));
+        OnPropertyChanged(nameof(MediumIconItem));
+        OnPropertyChanged(nameof(LargeIconItem));
+
+        if (!_isUpdatingViewMode)
+        {
+            _isUpdatingViewMode = true;
+            ViewModeIndex = ComponentDisplayMode switch
+            {
+                (int)ComponentsDisplayModes.Content => 3,
+                (int)ComponentsDisplayModes.List => 4,
+                _ => value
+            };
+            _isUpdatingViewMode = false;
+        }
     }
 
-    private bool _smallIconViewItem = true;
+    public bool SmallIconItem
+    {
+        get => ComponentViewIndex == 0;
+        set { if (value) ComponentViewIndex = 0; }
+    }
+    public bool MediumIconItem
+    {
+        get => ComponentViewIndex == 1;
+        set { if (value) ComponentViewIndex = 1; }
+    }
+    public bool LargeIconItem
+    {
+        get => ComponentViewIndex == 2;
+        set { if (value) ComponentViewIndex = 2; }
+    }
+
+    private bool _isUpdatingViewMode;
+
+    // ViewModeIndex: 菜单索引 (0=小, 1=中, 2=大, 3=内容, 4=列表)
+    [ObservableProperty]
+    public partial int ViewModeIndex { get; set; }
+
+    partial void OnViewModeIndexChanged(int value)
+    {
+        if (_isUpdatingViewMode)
+        {
+            // 联动赋值路径（OnComponentViewIndexChanged/OnComponentDisplayModeChanged 内部）：
+            // 属性通知同样必须发出，否则菜单选中状态不会刷新
+            OnPropertyChanged(nameof(SmallIconViewItem));
+            OnPropertyChanged(nameof(MediumIconViewItem));
+            OnPropertyChanged(nameof(LargeIconViewItem));
+            OnPropertyChanged(nameof(ContentViewItem));
+            OnPropertyChanged(nameof(ListViewItem));
+            return;
+        }
+        _isUpdatingViewMode = true;
+
+        ComponentDisplayMode = value switch
+        {
+            3 => (int)ComponentsDisplayModes.Content,
+            4 => (int)ComponentsDisplayModes.List,
+            _ => (int)ComponentsDisplayModes.Icon
+        };
+
+        ComponentViewIndex = (value == 3 || value == 4) ? 0 : value;
+
+        _isUpdatingViewMode = false;
+
+        OnPropertyChanged(nameof(SmallIconViewItem));
+        OnPropertyChanged(nameof(MediumIconViewItem));
+        OnPropertyChanged(nameof(LargeIconViewItem));
+        OnPropertyChanged(nameof(ContentViewItem));
+        OnPropertyChanged(nameof(ListViewItem));
+    }
+
     public bool SmallIconViewItem
     {
-        get => _smallIconViewItem;
-        set { if (value && SetProperty(ref _smallIconViewItem, true)) ComponentViewIndex = 0; }
+        get => ViewModeIndex == 0;
+        set { if (value) ViewModeIndex = 0; }
     }
-
-    private bool _mediumIconViewItem;
     public bool MediumIconViewItem
     {
-        get => _mediumIconViewItem;
-        set { if (value && SetProperty(ref _mediumIconViewItem, true)) ComponentViewIndex = 1; }
+        get => ViewModeIndex == 1;
+        set { if (value) ViewModeIndex = 1; }
     }
-
-    private bool _largeIconViewItem;
     public bool LargeIconViewItem
     {
-        get => _largeIconViewItem;
-        set { if (value && SetProperty(ref _largeIconViewItem, true)) ComponentViewIndex = 2; }
+        get => ViewModeIndex == 2;
+        set { if (value) ViewModeIndex = 2; }
     }
-
-    private bool _contentViewItem;
     public bool ContentViewItem
     {
-        get => _contentViewItem;
-        set { if (value && SetProperty(ref _contentViewItem, true)) ComponentViewIndex = 3; }
+        get => ViewModeIndex == 3;
+        set { if (value) ViewModeIndex = 3; }
     }
-
-    private bool _listViewItem;
     public bool ListViewItem
     {
-        get => _listViewItem;
-        set { if (value && SetProperty(ref _listViewItem, true)) ComponentViewIndex = 4; }
+        get => ViewModeIndex == 4;
+        set { if (value) ViewModeIndex = 4; }
     }
 
-    public void UpdateViewBoolProps()
+    // ComponentDisplayMode: 实际显示模式 (0=图标, 1=内容, 2=列表)
+    [ObservableProperty]
+    public partial int ComponentDisplayMode { get; set; }
+
+    partial void OnComponentDisplayModeChanged(int value)
     {
-        SmallIconViewItem = ComponentViewIndex == 0;
-        MediumIconViewItem = ComponentViewIndex == 1;
-        LargeIconViewItem = ComponentViewIndex == 2;
-        ContentViewItem = ComponentViewIndex == 3;
-        ListViewItem = ComponentViewIndex == 4;
+        OnPropertyChanged(nameof(IsIconMode));
+        OnPropertyChanged(nameof(IsContentMode));
+        OnPropertyChanged(nameof(IsListMode));
+        OnPropertyChanged(nameof(IconModeVisibility));
+        OnPropertyChanged(nameof(ContentModeVisibility));
+        OnPropertyChanged(nameof(ListModeVisibility));
+
+        if (!_isUpdatingViewMode)
+        {
+            _isUpdatingViewMode = true;
+            ViewModeIndex = value switch
+            {
+                (int)ComponentsDisplayModes.Content => 3,
+                (int)ComponentsDisplayModes.List => 4,
+                _ => ComponentViewIndex
+            };
+            _isUpdatingViewMode = false;
+        }
     }
+
+    public bool IsIconMode
+    {
+        get => ComponentDisplayMode == (int)ComponentsDisplayModes.Icon;
+        set { if (value) ComponentDisplayMode = (int)ComponentsDisplayModes.Icon; }
+    }
+
+    public bool IsContentMode
+    {
+        get => ComponentDisplayMode == (int)ComponentsDisplayModes.Content;
+        set { if (value) ComponentDisplayMode = (int)ComponentsDisplayModes.Content; }
+    }
+
+    public bool IsListMode
+    {
+        get => ComponentDisplayMode == (int)ComponentsDisplayModes.List;
+        set { if (value) ComponentDisplayMode = (int)ComponentsDisplayModes.List; }
+    }
+
+    public Visibility IconModeVisibility
+        => IsIconMode ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility ContentModeVisibility
+        => IsContentMode ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility ListModeVisibility
+        => IsListMode ? Visibility.Visible : Visibility.Collapsed;
+
+    [ObservableProperty]
+    public partial int ComponentListMinWidth { get; set; }
+
+    [ObservableProperty]
+    public partial bool AutoPlayGif { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool IsComponentEnterAnimationEnabled { get; set; } = true;
 
     // ===================== 标签显示模式 =====================
     [ObservableProperty]
@@ -63,51 +192,42 @@ public partial class ComponentsDisplayViewModel : ObservableObject
 
     partial void OnComponentTagDisplayIndexChanged(int value)
     {
-        UpdateTagBoolProps();
+        OnPropertyChanged(nameof(TypeDisplayInTag));
+        OnPropertyChanged(nameof(RatingDisplayInTag));
+        OnPropertyChanged(nameof(SourceDisplayInTag));
+        OnPropertyChanged(nameof(TagDisplayInTag));
+        OnPropertyChanged(nameof(NoneDisplayInTag));
+        OnPropertyChanged(nameof(TagDisplayVisibility));
     }
 
-    private bool _typeDisplayInTag = true;
+    /// <summary>角标是否显示（0~3 显示，4=无 隐藏）</summary>
+    public Visibility TagDisplayVisibility
+        => ComponentTagDisplayIndex == 4 ? Visibility.Collapsed : Visibility.Visible;
+
     public bool TypeDisplayInTag
     {
-        get => _typeDisplayInTag;
-        set { if (value && SetProperty(ref _typeDisplayInTag, true)) ComponentTagDisplayIndex = 0; }
+        get => ComponentTagDisplayIndex == 0;
+        set { if (value) ComponentTagDisplayIndex = 0; }
     }
-
-    private bool _ratingDisplayInTag;
     public bool RatingDisplayInTag
     {
-        get => _ratingDisplayInTag;
-        set { if (value && SetProperty(ref _ratingDisplayInTag, true)) ComponentTagDisplayIndex = 1; }
+        get => ComponentTagDisplayIndex == 1;
+        set { if (value) ComponentTagDisplayIndex = 1; }
     }
-
-    private bool _sourceDisplayInTag;
     public bool SourceDisplayInTag
     {
-        get => _sourceDisplayInTag;
-        set { if (value && SetProperty(ref _sourceDisplayInTag, true)) ComponentTagDisplayIndex = 2; }
+        get => ComponentTagDisplayIndex == 2;
+        set { if (value) ComponentTagDisplayIndex = 2; }
     }
-
-    private bool _tagDisplayInTag;
     public bool TagDisplayInTag
     {
-        get => _tagDisplayInTag;
-        set { if (value && SetProperty(ref _tagDisplayInTag, true)) ComponentTagDisplayIndex = 3; }
+        get => ComponentTagDisplayIndex == 3;
+        set { if (value) ComponentTagDisplayIndex = 3; }
     }
-
-    private bool _noneDisplayInTag;
     public bool NoneDisplayInTag
     {
-        get => _noneDisplayInTag;
-        set { if (value && SetProperty(ref _noneDisplayInTag, true)) ComponentTagDisplayIndex = 4; }
-    }
-
-    public void UpdateTagBoolProps()
-    {
-        TypeDisplayInTag = ComponentTagDisplayIndex == 0;
-        RatingDisplayInTag = ComponentTagDisplayIndex == 1;
-        SourceDisplayInTag = ComponentTagDisplayIndex == 2;
-        TagDisplayInTag = ComponentTagDisplayIndex == 3;
-        NoneDisplayInTag = ComponentTagDisplayIndex == 4;
+        get => ComponentTagDisplayIndex == 4;
+        set { if (value) ComponentTagDisplayIndex = 4; }
     }
 
     // ===================== 排序 =====================
@@ -116,41 +236,58 @@ public partial class ComponentsDisplayViewModel : ObservableObject
 
     partial void OnSortOrderChanged(int value)
     {
-        UpdateSortBoolProps();
+        OnPropertyChanged(nameof(SortByName));
+        OnPropertyChanged(nameof(SortByUpdateTime));
+        OnPropertyChanged(nameof(SortBySize));
     }
 
-    private bool _sortByName = true;
     public bool SortByName
     {
-        get => _sortByName;
-        set { if (value && SetProperty(ref _sortByName, true)) SortOrder = 0; }
+        get => SortOrder == 0;
+        set { if (value) SortOrder = 0; }
     }
-
-    private bool _sortByUpdateTime;
     public bool SortByUpdateTime
     {
-        get => _sortByUpdateTime;
-        set { if (value && SetProperty(ref _sortByUpdateTime, true)) SortOrder = 1; }
+        get => SortOrder == 1;
+        set { if (value) SortOrder = 1; }
     }
-
-    private bool _sortBySize;
     public bool SortBySize
     {
-        get => _sortBySize;
-        set { if (value && SetProperty(ref _sortBySize, true)) SortOrder = 2; }
-    }
-
-    public void UpdateSortBoolProps()
-    {
-        SortByName = SortOrder == 0;
-        SortByUpdateTime = SortOrder == 1;
-        SortBySize = SortOrder == 2;
+        get => SortOrder == 2;
+        set { if (value) SortOrder = 2; }
     }
 
     [ObservableProperty]
     public partial bool IsSortAscending { get; set; } = true;
 
+    partial void OnIsSortAscendingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(SortDirectionGlyph));
+    }
+
+    public string SortDirectionGlyph => IsSortAscending ? "\uE70D" : "\uE70E";
+
     // ===================== 面板与滚动条 =====================
+    [ObservableProperty]
+    public partial bool IsBottomBarOpen { get; set; } = true;
+
+    partial void OnIsBottomBarOpenChanged(bool value)
+    {
+        BottomBarHeight = value ? new GridLength(50) : new GridLength(0);
+    }
+
+    public GridLength BottomBarHeight
+    {
+        get => IsBottomBarOpen ? new GridLength(50) : new GridLength(0);
+        set => SetProperty(ref field, value);
+    }
+
+    [ObservableProperty]
+    public partial bool DetailSelectionEnabled { get; set; } = true;
+
+    [ObservableProperty]
+    public partial int FilterResultResponseDelay { get; set; } = 1000;
+
     [ObservableProperty]
     public partial bool LeftSplitViewPaneOpen { get; set; } = true;
 

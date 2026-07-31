@@ -188,7 +188,17 @@ namespace WE_Tool.ViewModels
 
         partial void OnViewModeIndexChanged(int value)
         {
-            if (_isUpdatingViewMode) return;
+            if (_isUpdatingViewMode)
+            {
+                // 联动赋值路径（OnWallpaperViewIndexChanged/OnWallpaperDisplayModeChanged 内部）：
+                // 属性通知同样必须发出，否则菜单选中状态不会刷新
+                OnPropertyChanged(nameof(SmallIconViewItem));
+                OnPropertyChanged(nameof(MediumIconViewItem));
+                OnPropertyChanged(nameof(LargeIconViewItem));
+                OnPropertyChanged(nameof(ContentViewItem));
+                OnPropertyChanged(nameof(ListViewItem));
+                return;
+            }
             _isUpdatingViewMode = true;
 
             WallpaperDisplayMode = value switch

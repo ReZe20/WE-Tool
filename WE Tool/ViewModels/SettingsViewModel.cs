@@ -377,8 +377,14 @@ namespace WE_Tool.ViewModels
             ComponentsFilterVM.Technology = compExpander.Technology;
             ComponentsFilterVM.Vehicle = compExpander.Vehicle;
 
-            ComponentsDisplayVM.ComponentViewIndex = _settings.Components.ComponentViewIndex;
+            ComponentsDisplayVM.ViewModeIndex = _settings.Components.ComponentViewIndex;
             ComponentsDisplayVM.ComponentTagDisplayIndex = _settings.Components.ComponentTagDisplayIndex;
+            ComponentsDisplayVM.ComponentListMinWidth = _settings.Components.ComponentListMinWidth;
+            ComponentsDisplayVM.AutoPlayGif = _settings.Components.AutoPlayGif;
+            ComponentsDisplayVM.IsComponentEnterAnimationEnabled = _settings.Components.IsComponentEnterAnimationEnabled;
+            ComponentsDisplayVM.IsBottomBarOpen = _settings.Components.IsBottomBarOpen;
+            ComponentsDisplayVM.DetailSelectionEnabled = _settings.Components.DetailSelectionEnabled;
+            ComponentsDisplayVM.FilterResultResponseDelay = _settings.Components.FilterResultResponseDelay;
             ComponentsDisplayVM.LeftSplitViewPaneOpen = _settings.Components.LeftSplitViewPaneOpen;
             ComponentsDisplayVM.RightSplitViewPaneOpen = _settings.Components.RightSplitViewPaneOpen;
             ComponentsDisplayVM.SortOrder = _settings.Components.SortOrder;
@@ -725,8 +731,14 @@ namespace WE_Tool.ViewModels
                     compExpander.Technology = ComponentsFilterVM.Technology;
                     compExpander.Vehicle = ComponentsFilterVM.Vehicle;
 
-                    _settings.Components.ComponentViewIndex = ComponentsDisplayVM.ComponentViewIndex;
+                    _settings.Components.ComponentViewIndex = ComponentsDisplayVM.ViewModeIndex;
                     _settings.Components.ComponentTagDisplayIndex = ComponentsDisplayVM.ComponentTagDisplayIndex;
+                    _settings.Components.ComponentListMinWidth = ComponentsDisplayVM.ComponentListMinWidth;
+                    _settings.Components.AutoPlayGif = ComponentsDisplayVM.AutoPlayGif;
+                    _settings.Components.IsComponentEnterAnimationEnabled = ComponentsDisplayVM.IsComponentEnterAnimationEnabled;
+                    _settings.Components.IsBottomBarOpen = ComponentsDisplayVM.IsBottomBarOpen;
+                    _settings.Components.DetailSelectionEnabled = ComponentsDisplayVM.DetailSelectionEnabled;
+                    _settings.Components.FilterResultResponseDelay = ComponentsDisplayVM.FilterResultResponseDelay;
                     _settings.Components.LeftSplitViewPaneOpen = ComponentsDisplayVM.LeftSplitViewPaneOpen;
                     _settings.Components.RightSplitViewPaneOpen = ComponentsDisplayVM.RightSplitViewPaneOpen;
                     _settings.Components.SortOrder = ComponentsDisplayVM.SortOrder;

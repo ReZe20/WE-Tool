@@ -534,17 +534,19 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         try
         {
-            if (App.ScanTask != null)
+            // 等待初始扫描链路完成（读配置 → 启动扫描 → 扫描完成），确保 GlobalAllWallpapers 已填充。
+            // 注意：不能只 await App.ScanTask —— 启动时它可能还是 Task.CompletedTask
+            //（ScanWallpaperWhenStart 需先读完配置才赋值），会导致拿到空数据。
+            if (App.InitialScanTask != null)
             {
-                await App.ScanTask;
-                _allWallpapers = [.. App.GlobalAllWallpapers];
+                await App.InitialScanTask;
             }
-            else
+            else if (App.ScanTask.IsCompleted && App.GlobalAllWallpapers.Count == 0)
             {
                 App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath, ViewModel.PathManagementVM.AcfPath, ViewModel.PathManagementVM.VdfPath, ViewModel.AppSettingsVM.ScanCacheEnabled == "1");
-                await App.ScanTask;
-                _allWallpapers = [.. App.GlobalAllWallpapers];
             }
+            await App.ScanTask;
+            _allWallpapers = [.. App.GlobalAllWallpapers];
 
             Wallpapers.Clear();
             DispatcherQueue.TryEnqueue(() =>

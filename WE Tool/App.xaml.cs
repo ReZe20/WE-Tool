@@ -35,6 +35,8 @@ namespace WE_Tool
         private readonly IConfigService _configService = new ConfigService();
         public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = [];
         public static Task ScanTask { get; private set; } = Task.CompletedTask;
+        /// <summary>启动时的完整扫描链路（读配置 → StartBackgroundScan），页面可等待它确保扫描已开始</summary>
+        public static Task? InitialScanTask { get; private set; }
         public static event EventHandler? ScanCompleted;
         // 全局扫描进度事件（0-100）
         public static event EventHandler<int>? ScanProgressChanged;
@@ -73,8 +75,10 @@ namespace WE_Tool
 
             await ViewModel.InitializeAsync();
 
+            // 保存完整扫描链路任务，页面可等待它确保扫描已开始
+            InitialScanTask = ScanWallpaperWhenStart();
+
             _window.Activate();
-            ScanWallpaperWhenStart();
             LoadTheme();
         }
         public static string GetAppDataRoot()
@@ -107,7 +111,7 @@ namespace WE_Tool
                 Log.Error(ex, "应用主题时发生异常。");
             }
         }
-        private async void ScanWallpaperWhenStart()
+        private async Task ScanWallpaperWhenStart()
         {
             try
             {

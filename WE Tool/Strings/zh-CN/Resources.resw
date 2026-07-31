@@ -549,6 +549,114 @@
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>鼠标进入壁纸图标动画</value>
   </data>
+  <data name="ComponentsSetting.Header" xml:space="preserve">
+    <value>已安装组件页面设置</value>
+  </data>
+  <data name="ComponentsSetting.Description" xml:space="preserve">
+    <value>设置已安装组件页面中的具体内容</value>
+  </data>
+  <data name="ComponentsSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>启用底部路径栏</value>
+  </data>
+  <data name="ComponentsSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>为详情面板启用文字选择功能</value>
+  </data>
+  <data name="ComponentsSetting_ComponentAutoPlay.Content" xml:space="preserve">
+    <value>组件列表播放动图</value>
+  </data>
+  <data name="ComponentsSetting_IsComponentEnterAnimationEnabled.Content" xml:space="preserve">
+    <value>鼠标进入组件图标动画</value>
+  </data>
+  <data name="ComponentsSetting_FilterResultResponseDelay.Text" xml:space="preserve">
+    <value>筛选结果响应延迟</value>
+  </data>
+  <data name="CompType_Layers.Content" xml:space="preserve">
+    <value>图层</value>
+  </data>
+  <data name="CompType_Scripts.Content" xml:space="preserve">
+    <value>脚本</value>
+  </data>
+  <data name="CompType_Effects.Content" xml:space="preserve">
+    <value>特效</value>
+  </data>
+  <data name="CompType_Unknown.Content" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="Tag_AudioVisualizer.Content" xml:space="preserve">
+    <value>音频可视化</value>
+  </data>
+  <data name="Tag_Unspecifiedgenre.Content" xml:space="preserve">
+    <value>未指定类型</value>
+  </data>
+  <data name="Tag_Background.Content" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="Tag_Character.Content" xml:space="preserve">
+    <value>角色</value>
+  </data>
+  <data name="Tag_Clock.Content" xml:space="preserve">
+    <value>时钟</value>
+  </data>
+  <data name="Tag_Fire.Content" xml:space="preserve">
+    <value>火焰</value>
+  </data>
+  <data name="Tag_Interactive.Content" xml:space="preserve">
+    <value>交互</value>
+  </data>
+  <data name="Tag_Magic.Content" xml:space="preserve">
+    <value>魔法</value>
+  </data>
+  <data name="Tag_PostProcessing.Content" xml:space="preserve">
+    <value>后期处理</value>
+  </data>
+  <data name="Tag_Smoke.Content" xml:space="preserve">
+    <value>烟雾</value>
+  </data>
+  <data name="Tag_Space.Content" xml:space="preserve">
+    <value>太空</value>
+  </data>
+  <data name="CompTag_UnspecifiedGenre.Content" xml:space="preserve">
+    <value>未指定类型</value>
+  </data>
+  <data name="CompTag_AudioVisualizer.Content" xml:space="preserve">
+    <value>音频可视化</value>
+  </data>
+  <data name="CompTag_Background.Content" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="CompTag_Character.Content" xml:space="preserve">
+    <value>角色</value>
+  </data>
+  <data name="CompTag_Clock.Content" xml:space="preserve">
+    <value>时钟</value>
+  </data>
+  <data name="CompTag_Fire.Content" xml:space="preserve">
+    <value>火焰</value>
+  </data>
+  <data name="CompTag_Interactive.Content" xml:space="preserve">
+    <value>交互</value>
+  </data>
+  <data name="CompTag_Magic.Content" xml:space="preserve">
+    <value>魔法</value>
+  </data>
+  <data name="CompTag_PostProcessing.Content" xml:space="preserve">
+    <value>后期处理</value>
+  </data>
+  <data name="CompTag_Smoke.Content" xml:space="preserve">
+    <value>烟雾</value>
+  </data>
+  <data name="CompTag_Space.Content" xml:space="preserve">
+    <value>太空</value>
+  </data>
+  <data name="DetailPanel.Text" xml:space="preserve">
+    <value>详情面板</value>
+  </data>
+  <data name="InstallDate.Text" xml:space="preserve">
+    <value>安装日期</value>
+  </data>
+  <data name="File.Text" xml:space="preserve">
+    <value>文件</value>
+  </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
     <value>刷新</value>
   </data>

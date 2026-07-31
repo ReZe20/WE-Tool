@@ -136,6 +136,7 @@
                         </controls:SettingsCard.HeaderIcon>
                         <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.StartPageTag, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
                             <ComboBoxItem Tag="Papers" x:Uid="InstalledWallpapers"/>
+                            <ComboBoxItem Tag="InstalledComponents" x:Uid="InstalledComponentsPage"/>
                             <ComboBoxItem Tag="LoadPapers" x:Uid="ImportWallpapers"/>
                         </ComboBox>
                     </controls:SettingsCard>
@@ -175,7 +176,7 @@
                     </controls:SettingsExpander>
 
                     <TextBlock x:Uid="Page" Margin="5,10,0,10"/>
-                    <controls:SettingsExpander x:Uid="PapersSetting">
+                    <controls:SettingsExpander x:Uid="PapersSetting" Margin="0,0,0,10">
                         <controls:SettingsExpander.HeaderIcon>
                             <FontIcon Glyph="&#xE8B9;"/>
                         </controls:SettingsExpander.HeaderIcon>
@@ -217,6 +218,59 @@
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock x:Uid="PapersSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
                                         <NumberBox Value="{x:Bind ViewModel.WallpaperDisplayVM.FilterResultResponseDelay, Mode=TwoWay}"
+                                                   SmallChange="100"
+                                                   LargeChange="1000"
+                                                   SpinButtonPlacementMode="Inline"
+                                                   Minimum="0"/>
+                                    </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+
+                        </controls:SettingsExpander.Items>
+                    </controls:SettingsExpander>
+
+                    <controls:SettingsExpander x:Uid="ComponentsSetting">
+                        <controls:SettingsExpander.HeaderIcon>
+                            <FontIcon Glyph="&#xF4A5;"/>
+                        </controls:SettingsExpander.HeaderIcon>
+                        <controls:SettingsExpander.Items>
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                    <CheckBox x:Uid="ComponentsSetting_BottomBarVisibility"
+                                              IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsBottomBarOpen, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                    <CheckBox x:Uid="ComponentsSetting_DetailTextSelectMode"
+                                              IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.DetailSelectionEnabled, Mode=TwoWay}"/>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox x:Uid="ComponentsSetting_ComponentAutoPlay"
+                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.AutoPlayGif, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox x:Uid="ComponentsSetting_IsComponentEnterAnimationEnabled"
+                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsComponentEnterAnimationEnabled, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                </controls:SettingsCard>
+
+                                <controls:SettingsCard>
+                                    <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Uid="ComponentsSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
+                                        <NumberBox Value="{x:Bind ViewModel.ComponentsDisplayVM.FilterResultResponseDelay, Mode=TwoWay}"
                                                    SmallChange="100"
                                                    LargeChange="1000"
                                                    SpinButtonPlacementMode="Inline"

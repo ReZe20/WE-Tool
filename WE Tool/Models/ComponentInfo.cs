@@ -19,7 +19,37 @@ public class ComponentInfo : INotifyPropertyChanged
     public string? Tags { get; set; }
     public string? Description { get; set; }
 
-    public bool IsSelected { get; set; }
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected != value)
+            {
+                _isSelected = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CheckBoxOpacity));
+            }
+        }
+    }
+
+    private bool _isMultiSelectMode;
+    public bool IsInMultiSelectMode
+    {
+        get => _isMultiSelectMode;
+        set
+        {
+            if (_isMultiSelectMode != value)
+            {
+                _isMultiSelectMode = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CheckBoxOpacity));
+            }
+        }
+    }
+
+    public double CheckBoxOpacity => (IsSelected || IsInMultiSelectMode) ? 1.0 : 0.0;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

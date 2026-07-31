@@ -525,6 +525,114 @@
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>Wallpaper Mouse Enter Animation</value>
   </data>
+  <data name="ComponentsSetting.Header" xml:space="preserve">
+    <value>Installed Components Page Settings</value>
+  </data>
+  <data name="ComponentsSetting.Description" xml:space="preserve">
+    <value>Configure the installed components page</value>
+  </data>
+  <data name="ComponentsSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>Enable bottom path bar</value>
+  </data>
+  <data name="ComponentsSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>Enable text selection in the detail panel</value>
+  </data>
+  <data name="ComponentsSetting_ComponentAutoPlay.Content" xml:space="preserve">
+    <value>Play animated previews in component list</value>
+  </data>
+  <data name="ComponentsSetting_IsComponentEnterAnimationEnabled.Content" xml:space="preserve">
+    <value>Component Mouse Enter Animation</value>
+  </data>
+  <data name="ComponentsSetting_FilterResultResponseDelay.Text" xml:space="preserve">
+    <value>Filter Result Response Delay</value>
+  </data>
+  <data name="CompType_Layers.Content" xml:space="preserve">
+    <value>Layers</value>
+  </data>
+  <data name="CompType_Scripts.Content" xml:space="preserve">
+    <value>Scripts</value>
+  </data>
+  <data name="CompType_Effects.Content" xml:space="preserve">
+    <value>Effects</value>
+  </data>
+  <data name="CompType_Unknown.Content" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Tag_AudioVisualizer.Content" xml:space="preserve">
+    <value>Audio visualizer</value>
+  </data>
+  <data name="Tag_Unspecifiedgenre.Content" xml:space="preserve">
+    <value>Unspecified genre</value>
+  </data>
+  <data name="Tag_Background.Content" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="Tag_Character.Content" xml:space="preserve">
+    <value>Character</value>
+  </data>
+  <data name="Tag_Clock.Content" xml:space="preserve">
+    <value>Clock</value>
+  </data>
+  <data name="Tag_Fire.Content" xml:space="preserve">
+    <value>Fire</value>
+  </data>
+  <data name="Tag_Interactive.Content" xml:space="preserve">
+    <value>Interactive</value>
+  </data>
+  <data name="Tag_Magic.Content" xml:space="preserve">
+    <value>Magic</value>
+  </data>
+  <data name="Tag_PostProcessing.Content" xml:space="preserve">
+    <value>Post-processing</value>
+  </data>
+  <data name="Tag_Smoke.Content" xml:space="preserve">
+    <value>Smoke</value>
+  </data>
+  <data name="Tag_Space.Content" xml:space="preserve">
+    <value>Space</value>
+  </data>
+  <data name="CompTag_UnspecifiedGenre.Content" xml:space="preserve">
+    <value>Unspecified genre</value>
+  </data>
+  <data name="CompTag_AudioVisualizer.Content" xml:space="preserve">
+    <value>Audio visualizer</value>
+  </data>
+  <data name="CompTag_Background.Content" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="CompTag_Character.Content" xml:space="preserve">
+    <value>Character</value>
+  </data>
+  <data name="CompTag_Clock.Content" xml:space="preserve">
+    <value>Clock</value>
+  </data>
+  <data name="CompTag_Fire.Content" xml:space="preserve">
+    <value>Fire</value>
+  </data>
+  <data name="CompTag_Interactive.Content" xml:space="preserve">
+    <value>Interactive</value>
+  </data>
+  <data name="CompTag_Magic.Content" xml:space="preserve">
+    <value>Magic</value>
+  </data>
+  <data name="CompTag_PostProcessing.Content" xml:space="preserve">
+    <value>Post-processing</value>
+  </data>
+  <data name="CompTag_Smoke.Content" xml:space="preserve">
+    <value>Smoke</value>
+  </data>
+  <data name="CompTag_Space.Content" xml:space="preserve">
+    <value>Space</value>
+  </data>
+  <data name="DetailPanel.Text" xml:space="preserve">
+    <value>Detail Panel</value>
+  </data>
+  <data name="InstallDate.Text" xml:space="preserve">
+    <value>Install Date</value>
+  </data>
+  <data name="File.Text" xml:space="preserve">
+    <value>File</value>
+  </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
     <value>Refresh</value>
   </data>
