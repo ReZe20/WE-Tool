@@ -877,6 +877,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         Frame?.Navigate(typeof(Settings));
     }
 
+    private void SortDirectionToggle_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.WallpaperDisplayVM.IsSortAscending = !ViewModel.WallpaperDisplayVM.IsSortAscending;
+    }
+
     private void ShadowRect_Loaded(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement casterElement)

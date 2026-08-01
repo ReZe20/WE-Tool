@@ -468,13 +468,13 @@
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarToggleButton x:Uid="Toolbar_SortDirection"
-                                    IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending, Mode=TwoWay}"
-                                    LabelPosition="Collapsed">
-                    <AppBarToggleButton.Icon>
-                        <FontIcon x:Name="btnSortDirectionIcon" Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
-                    </AppBarToggleButton.Icon>
-                </AppBarToggleButton>
+                <AppBarButton x:Uid="Toolbar_SortDirection"
+                              Click="SortDirectionToggle_Click"
+                              LabelPosition="Collapsed">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
             </CommandBar>
             <!-- 右侧：详情面板切换 -->
             <StackPanel Grid.Column="2" x:Name="RightToolbarPanel" Orientation="Horizontal" VerticalAlignment="Center">

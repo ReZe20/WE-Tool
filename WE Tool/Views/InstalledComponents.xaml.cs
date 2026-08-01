@@ -671,6 +671,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             RightSplitView.IsPaneOpen = toggle.IsChecked == true;
     }
 
+    private void SortDirectionToggle_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.ComponentsDisplayVM.IsSortAscending = !ViewModel.ComponentsDisplayVM.IsSortAscending;
+    }
+
     // ===================== Expander ContextFlyout =====================
     private Expander? _currentFilterExpander;
 
