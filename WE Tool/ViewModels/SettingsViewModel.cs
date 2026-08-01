@@ -221,15 +221,6 @@ namespace WE_Tool.ViewModels
                         break;
                 }
             };
-
-            WallpaperDisplayVM.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(WallpaperDisplayViewModel.AutoPlayGif))
-                {
-                    if (App.MainWindowInstance is MainWindow mainWindow)
-                        mainWindow.RefreshCurrentPage();
-                }
-            };
         }
 
         private void OnSubViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

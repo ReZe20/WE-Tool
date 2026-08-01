@@ -259,6 +259,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         ViewModel.ComponentsDisplayVM.PropertyChanged += (s, e) =>
         {
             if (_isUpdating) return;
+            if (e.PropertyName == nameof(ComponentsDisplayViewModel.AutoPlayGif))
+            {
+                // 仅刷新本页可见动图，不清其它页面缓存（方案 A：页面订阅 VM 变化自刷新）
+                UiHelper.ReloadGifImages(this);
+                return;
+            }
             if (e.PropertyName == nameof(ComponentsDisplayViewModel.SortOrder)
                 || e.PropertyName == nameof(ComponentsDisplayViewModel.IsSortAscending))
             {

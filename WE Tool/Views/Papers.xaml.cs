@@ -491,6 +491,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         };
         ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) =>
         {
+            if (e.PropertyName == nameof(WallpaperDisplayViewModel.AutoPlayGif))
+            {
+                // 仅刷新本页可见动图，不清其它页面缓存（方案 A：页面订阅 VM 变化自刷新）
+                UiHelper.ReloadGifImages(this);
+                return;
+            }
             if (e.PropertyName == nameof(WallpaperDisplayViewModel.PaginationMode))
             {
                 // 分页开关/每页数量变化：立即刷新翻页栏状态（ApplyFilters 有延迟，先同步一次）
