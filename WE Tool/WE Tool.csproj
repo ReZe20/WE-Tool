@@ -174,7 +174,7 @@
   <Target Name="BuildRepkg" BeforeTargets="BeforeBuild">
     <Exec Command="dotnet build &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re.sln&quot; -c $(Configuration)" WorkingDirectory="$(ProjectDir)..\external\repkg_Re" />
     <ItemGroup>
-      <RepkgOutput Include="$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\$(Configuration)\net8.0\*" />
+      <RepkgOutput Include="$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\$(Configuration)\net472\*" />
       <!-- 同时声明为 Content，使 repkg 进入 publish 产物（publish 只发布清单内文件） -->
       <Content Include="@(RepkgOutput)">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
