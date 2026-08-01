@@ -12,8 +12,11 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
-	<LangVersion>preview</LangVersion>
-	<WindowsPackageType>None</WindowsPackageType>
+    <LangVersion>preview</LangVersion>
+    <Version>0.2.0</Version>
+    <Authors>ReZe20</Authors>
+    <Copyright>Copyright © 2026 ReZe20</Copyright>
+    <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\noPreview.png" />
