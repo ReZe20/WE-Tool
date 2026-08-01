@@ -169,6 +169,12 @@
     <None Include="Strings\**\*.resw">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- GPL-3.0 要求分发时附带许可证全文 -->
+    <None Include="$(ProjectDir)..\LICENSE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>LICENSE</Link>
+    </None>
   </ItemGroup>
 
   <!-- Publish repkg-Re（单文件 exe + THIRD-PARTY-NOTICES.txt）并复制到 repkg/ 供 CLI 调用 -->
