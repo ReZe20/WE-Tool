@@ -170,11 +170,11 @@
     </None>
   </ItemGroup>
 
-  <!-- Build repkg-Re and copy to repkg/ subfolder for CLI calls -->
+  <!-- Publish repkg-Re（单文件 exe + THIRD-PARTY-NOTICES.txt）并复制到 repkg/ 供 CLI 调用 -->
   <Target Name="BuildRepkg" BeforeTargets="BeforeBuild">
-    <Exec Command="dotnet build &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re.sln&quot; -c $(Configuration)" WorkingDirectory="$(ProjectDir)..\external\repkg_Re" />
+    <Exec Command="dotnet publish &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj&quot; -c $(Configuration) -p:PublishProfile=FolderProfile" />
     <ItemGroup>
-      <RepkgOutput Include="$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\$(Configuration)\net472\*" />
+      <RepkgOutput Include="$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\publish\*" />
       <!-- 同时声明为 Content，使 repkg 进入 publish 产物（publish 只发布清单内文件） -->
       <Content Include="@(RepkgOutput)">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
