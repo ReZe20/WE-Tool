@@ -51,3 +51,9 @@ WE Tool/
         ├── RePKG.Core/
         └── RePKG.Application/
 ```
+
+## License
+
+[GPL-3.0](LICENSE) © 2026 ReZe20
+
+本工具依赖的第三方组件（如 repkg_Re、CommunityToolkit、Facepunch.Steamworks 等）按各自协议保留版权与许可声明，详见发布产物中的 THIRD-PARTY-NOTICES.txt。

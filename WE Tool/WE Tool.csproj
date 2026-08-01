@@ -16,6 +16,7 @@
     <Version>0.2.0</Version>
     <Authors>ReZe20</Authors>
     <Copyright>Copyright © 2026 ReZe20</Copyright>
+    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
     <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
   <ItemGroup>
