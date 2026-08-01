@@ -175,6 +175,12 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Link>LICENSE</Link>
     </None>
+    <!-- 第三方组件许可声明 -->
+    <None Include="$(ProjectDir)..\THIRD-PARTY-NOTICES.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>THIRD-PARTY-NOTICES.txt</Link>
+    </None>
   </ItemGroup>
 
   <!-- Publish repkg-Re（单文件 exe + THIRD-PARTY-NOTICES.txt）并复制到 repkg/ 供 CLI 调用 -->
