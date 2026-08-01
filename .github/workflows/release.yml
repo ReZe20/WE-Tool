@@ -1,0 +1,51 @@
+name: 发布
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '手动触发的版本号（如 v0.2.0），留空则用 dev'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # RePKG_Re 是独立仓库（被 .gitignore 排除），构建时需要自行拉取
+      - name: 获取 RePKG_Re（构建依赖）
+        run: git clone --depth 1 https://github.com/ReZe20/repkg-Re.git external/repkg_Re
+
+      - name: 发布 SelfContained (x64)
+        run: dotnet publish "WE Tool/WE Tool.csproj" -c Release -p:Platform=x64 -p:PublishProfile=SelfContained_win-amd64
+
+      - name: 发布 ExternalRuntime (x64)
+        run: dotnet publish "WE Tool/WE Tool.csproj" -c Release -p:Platform=x64 -p:PublishProfile=ExternalRuntime_win-amd64
+
+      - name: 打包 zip
+        shell: pwsh
+        run: |
+          $ver = if ("${{ github.ref_name }}" -and "${{ github.ref_name }}" -ne "v*") { "${{ github.ref_name }}" } elseif ("${{ inputs.version }}") { "${{ inputs.version }}" } else { "dev" }
+          Compress-Archive -Path "WE Tool/bin/Package/SelfContained_win-amd64/*" -DestinationPath "WE-Tool-$ver-win-x64-selfcontained.zip"
+          Compress-Archive -Path "WE Tool/bin/Package/ExternalRuntime_win-amd64/*" -DestinationPath "WE-Tool-$ver-win-x64-framework.zip"
+          echo "version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
+            WE-Tool-${{ env.version }}-win-x64-framework.zip
+          generate_release_notes: true
