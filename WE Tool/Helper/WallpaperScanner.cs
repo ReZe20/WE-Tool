@@ -331,7 +331,7 @@ internal class WallpaperScanner
                     if (token.IsCancellationRequested) return;
                     try
                     {
-                        var comp = await ParseComponentAsync(dir, "", token);
+                        var comp = await ParseComponentAsync(dir, "", acfUpdateTimes, token);
                         if (comp != null) componentBag.Add(comp);
                     }
                     catch { }
@@ -625,12 +625,14 @@ internal class WallpaperScanner
     /// </summary>
     public static async Task<List<ComponentInfo>> ScanComponentsAsync(
         string workshopPath,
+        string acfPath = "",
         CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
             return [];
 
         var results = new List<ComponentInfo>();
+        var acfUpdateTimes = GetAcfUpdateTimes(acfPath);
 
         try
         {
@@ -646,7 +648,7 @@ internal class WallpaperScanner
 
                 try
                 {
-                    var component = await ParseComponentAsync(wallpaperDir, "", ct);
+                    var component = await ParseComponentAsync(wallpaperDir, "", acfUpdateTimes, ct);
                     if (component != null)
                         results.Add(component);
                 }
@@ -673,6 +675,7 @@ internal class WallpaperScanner
     private static async Task<ComponentInfo?> ParseComponentAsync(
         string componentDir,
         string parentWallpaperDir,
+        Dictionary<string, DateTime> acfUpdateTimes,
         CancellationToken ct)
     {
         var jsonPath = Path.Combine(componentDir, "project.json");
@@ -730,6 +733,10 @@ internal class WallpaperScanner
             Preview = previewFullPath,
             FileSize = fileSize,
             InstallDate = Directory.GetLastWriteTime(componentDir),
+            CreationTime = Directory.GetCreationTime(componentDir),
+            AcfUpdateTime = acfUpdateTimes.TryGetValue(Path.GetFileName(componentDir), out var acfTime)
+                ? acfTime
+                : null,
             ContentRating = metadata.Contentrating ?? "Everyone",
             Tags = tagsString,
             Description = metadata.Description ?? ""

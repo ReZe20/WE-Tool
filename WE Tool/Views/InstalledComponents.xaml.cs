@@ -42,6 +42,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private DateTime _lastDrillInAnimationTime;
     private CancellationTokenSource? _filterCts;
     private readonly Service.PickerService _pickerService = new();
+    /// <summary>导航离开时属性面板正打开的选中项（返回后恢复，对齐 Papers）</summary>
+    private ComponentInfo? _restorePropertiesComponent;
 
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<ComponentInfo> FilteredComponents { get; } = [];
@@ -324,6 +326,17 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         LoadComponents();
     }
 
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        // 页面缓存模式下返回时 LoadComponents 会清空 SelectedComponent；
+        // 若属性面板正打开，记录选中项以便返回后恢复（对齐 Papers：切页回来面板保持打开且有内容）
+        if (PropertiesOverlay.Visibility == Visibility.Visible && SelectedComponent != null)
+        {
+            _restorePropertiesComponent = SelectedComponent;
+        }
+    }
+
     private async void LoadComponents()
     {
         try
@@ -365,6 +378,27 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
             ApplyPaneState();
             _ = ApplyFilters();
+
+            // 恢复导航前打开的属性面板（对齐 Papers：切页回来面板保持打开且有内容）
+            if (_restorePropertiesComponent != null)
+            {
+                var saved = _restorePropertiesComponent;
+                _restorePropertiesComponent = null;
+
+                var match = _allComponents.FirstOrDefault(c =>
+                    c.FolderPath == saved.FolderPath);
+                if (match != null)
+                {
+                    SelectedComponent = match;
+                    PropertiesOverlay.Visibility = Visibility.Visible;
+                    _ = PopulateFileTreeAsync(match.FolderPath ?? "");
+                }
+                else
+                {
+                    // 组件已不存在（被删除/路径变化），面板随之关闭
+                    PropertiesOverlay.Visibility = Visibility.Collapsed;
+                }
+            }
 
             Log.Information("已加载 {Count} 个组件", _allComponents.Count);
         }
@@ -510,18 +544,24 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                         c.Title?.Contains(searchText, StringComparison.OrdinalIgnoreCase) == true);
                 }
 
-                // 排序
+                // 排序（索引与 Papers 同步：0名称 1订阅时间 2最后使用 3文件大小 4ACF更新时间）
                 filtered = sortOrder switch
                 {
                     0 => isSortAscending
-                        ? filtered.OrderBy(c => c.Title ?? "")
-                        : filtered.OrderByDescending(c => c.Title ?? ""),
+                       ? filtered.OrderBy(c => c.Title ?? "")
+                       : filtered.OrderByDescending(c => c.Title ?? ""),
                     1 => isSortAscending
-                        ? filtered.OrderBy(c => c.InstallDate)
-                        : filtered.OrderByDescending(c => c.InstallDate),
+                       ? filtered.OrderBy(c => c.CreationTime)
+                       : filtered.OrderByDescending(c => c.CreationTime),
                     2 => isSortAscending
-                        ? filtered.OrderBy(c => c.FileSize)
-                        : filtered.OrderByDescending(c => c.FileSize),
+                       ? filtered.OrderBy(c => c.InstallDate)
+                       : filtered.OrderByDescending(c => c.InstallDate),
+                    3 => isSortAscending
+                       ? filtered.OrderBy(c => c.FileSize)
+                       : filtered.OrderByDescending(c => c.FileSize),
+                    4 => isSortAscending
+                       ? filtered.OrderBy(c => c.AcfUpdateTime)
+                       : filtered.OrderByDescending(c => c.AcfUpdateTime),
                     _ => filtered
                 };
 
@@ -925,7 +965,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             // 等一帧让布局完成，然后启动动画
             _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
             {
-                PropertiesPanel.MaxHeight = PropertiesOverlay.ActualHeight * 0.85;
+                // 用页面根 ActualHeight 而非 Overlay 的——overlay 刚从 Collapsed 变 Visible，
+                // 布局可能尚未运行（ActualHeight=0），会把 MaxHeight 永久钉成 0 导致面板第一次打不开
+                PropertiesPanel.MaxHeight = Math.Max(0, ActualHeight * 0.85);
                 PropertiesPanel.UpdateLayout();
                 AnimatePropertiesPanelOpen();
                 _ = PopulateFileTreeAsync(SelectedComponent!.FolderPath ?? "");

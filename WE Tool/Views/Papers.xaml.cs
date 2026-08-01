@@ -2262,7 +2262,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             // 等一帧让布局完成，然后启动动画
             _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
             {
-                PropertiesPanel.MaxHeight = PropertiesOverlay.ActualHeight * 0.85;
+                // 用页面根 ActualHeight 而非 Overlay 的——overlay 刚从 Collapsed 变 Visible，
+                // 布局可能尚未运行（ActualHeight=0），会把 MaxHeight 永久钉成 0 导致面板第一次打不开
+                PropertiesPanel.MaxHeight = Math.Max(0, ActualHeight * 0.85);
                 PropertiesPanel.UpdateLayout();
                 AnimatePropertiesPanelOpen();
                 _ = PopulateFileTreeAsync(ViewModel.SelectedWallpaper!.FolderPath);

@@ -181,12 +181,8 @@
                 </MenuFlyoutSubItem>
                 <MenuFlyoutSeparator/>
                 <MenuFlyoutSubItem x:Uid="Pagination">
-                    <MenuFlyoutSubItem.Icon>
-                        <FontIcon Glyph="&#xE8A1;" FontSize="16"/>
-                    </MenuFlyoutSubItem.Icon>
                     <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_None"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
-                    <MenuFlyoutSeparator/>
                     <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_30"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize30Item, Mode=TwoWay}"/>
                     <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_50"
@@ -201,12 +197,16 @@
                 <MenuFlyoutSubItem.Icon>
                     <FontIcon Glyph="&#xE8CB;"/>
                 </MenuFlyoutSubItem.Icon>
-                <RadioMenuFlyoutItem Text="名称" GroupName="CompSortGroup"
+                <RadioMenuFlyoutItem x:Uid="SortByName" GroupName="CompSortGroup"
                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByName, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem Text="更新时间" GroupName="CompSortGroup"
-                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByUpdateTime, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem Text="大小" GroupName="CompSortGroup"
-                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortBySize, Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem x:Uid="SortBySubTime" GroupName="CompSortGroup"
+                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortBySubTime, Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem x:Uid="SortByLastTime" GroupName="CompSortGroup"
+                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByLastTime, Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem x:Uid="SortByAcfUpdateTime" GroupName="CompSortGroup"
+                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByAcfUpdateTime, Mode=TwoWay}"/>
+                <RadioMenuFlyoutItem x:Uid="SortByFileSize" GroupName="CompSortGroup"
+                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByFileSize, Mode=TwoWay}"/>
             </MenuFlyoutSubItem>
         </MenuFlyout>
 
@@ -362,12 +362,16 @@
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
                         <MenuFlyout Placement="Bottom">
-                            <RadioMenuFlyoutItem Text="名称" GroupName="SortGroup"
+                            <RadioMenuFlyoutItem x:Uid="SortByName" GroupName="SortGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByName, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem Text="更新时间" GroupName="SortGroup"
-                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByUpdateTime, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem Text="大小" GroupName="SortGroup"
-                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortBySize, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem x:Uid="SortBySubTime" GroupName="SortGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortBySubTime, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem x:Uid="SortByLastTime" GroupName="SortGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByLastTime, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem x:Uid="SortByAcfUpdateTime" GroupName="SortGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByAcfUpdateTime, Mode=TwoWay}"/>
+                            <RadioMenuFlyoutItem x:Uid="SortByFileSize" GroupName="SortGroup"
+                                                 IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByFileSize, Mode=TwoWay}"/>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>

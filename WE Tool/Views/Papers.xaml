@@ -207,12 +207,8 @@
                     </MenuFlyoutSubItem>
                     <MenuFlyoutSeparator/>
                     <MenuFlyoutSubItem x:Uid="Pagination">
-                        <MenuFlyoutSubItem.Icon>
-                            <FontIcon Glyph="&#xE8A1;" FontSize="16"/>
-                        </MenuFlyoutSubItem.Icon>
                         <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_None"
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
-                        <MenuFlyoutSeparator/>
                         <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_30"
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize30Item, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_50"
@@ -256,8 +252,16 @@
             </MenuFlyoutSubItem>
         </MenuFlyout>
         <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening">
-            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="FilterExpanderSelectAll_Click"/>
-            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="FilterExpanderInvert_Click"/>
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="FilterExpanderSelectAll_Click">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8B3;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="FilterExpanderInvert_Click">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE8E6;"/>
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
         </MenuFlyout>
     </Page.Resources>
     <Page.KeyboardAccelerators>

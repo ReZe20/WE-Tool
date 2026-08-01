@@ -230,15 +230,17 @@ public partial class ComponentsDisplayViewModel : ObservableObject
         set { if (value) ComponentTagDisplayIndex = 4; }
     }
 
-    // ===================== 排序 =====================
+    // ===================== 排序（与 Papers 索引同步：0名称 1订阅时间 2最后使用 3文件大小 4ACF更新时间） =====================
     [ObservableProperty]
     public partial int SortOrder { get; set; }
 
     partial void OnSortOrderChanged(int value)
     {
         OnPropertyChanged(nameof(SortByName));
-        OnPropertyChanged(nameof(SortByUpdateTime));
-        OnPropertyChanged(nameof(SortBySize));
+        OnPropertyChanged(nameof(SortBySubTime));
+        OnPropertyChanged(nameof(SortByLastTime));
+        OnPropertyChanged(nameof(SortByFileSize));
+        OnPropertyChanged(nameof(SortByAcfUpdateTime));
     }
 
     public bool SortByName
@@ -246,15 +248,25 @@ public partial class ComponentsDisplayViewModel : ObservableObject
         get => SortOrder == 0;
         set { if (value) SortOrder = 0; }
     }
-    public bool SortByUpdateTime
+    public bool SortBySubTime
     {
         get => SortOrder == 1;
         set { if (value) SortOrder = 1; }
     }
-    public bool SortBySize
+    public bool SortByLastTime
     {
         get => SortOrder == 2;
         set { if (value) SortOrder = 2; }
+    }
+    public bool SortByFileSize
+    {
+        get => SortOrder == 3;
+        set { if (value) SortOrder = 3; }
+    }
+    public bool SortByAcfUpdateTime
+    {
+        get => SortOrder == 4;
+        set { if (value) SortOrder = 4; }
     }
 
     [ObservableProperty]

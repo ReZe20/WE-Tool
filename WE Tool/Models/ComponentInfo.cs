@@ -15,6 +15,8 @@ public class ComponentInfo : INotifyPropertyChanged
     public string? Preview { get; set; }
     public long FileSize { get; set; }
     public DateTime InstallDate { get; set; }
+    public DateTime CreationTime { get; set; }
+    public DateTime? AcfUpdateTime { get; set; }
     public string? ContentRating { get; set; }
     public string? Tags { get; set; }
     public string? Description { get; set; }
