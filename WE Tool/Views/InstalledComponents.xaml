@@ -144,38 +144,38 @@
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutSeparator/>
-            <MenuFlyoutSubItem Text="查看">
+            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_View">
                 <MenuFlyoutSubItem.Icon>
                     <FontIcon Glyph="&#xE71D;"/>
                 </MenuFlyoutSubItem.Icon>
-                <RadioMenuFlyoutItem Text="小图标" GroupName="CompViewGroup"
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" GroupName="CompViewGroup"
                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SmallIconViewItem, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem Text="中图标" GroupName="CompViewGroup"
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon" GroupName="CompViewGroup"
                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.MediumIconViewItem, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem Text="大图标" GroupName="CompViewGroup"
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon" GroupName="CompViewGroup"
                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.LargeIconViewItem, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem Text="内容模式" GroupName="CompViewGroup"
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_ContentMode" GroupName="CompViewGroup"
                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ContentViewItem, Mode=TwoWay}"/>
-                <RadioMenuFlyoutItem Text="列表模式" GroupName="CompViewGroup"
+                <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode" GroupName="CompViewGroup"
                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ListViewItem, Mode=TwoWay}"/>
                 <MenuFlyoutSeparator/>
-                <ToggleMenuFlyoutItem Text="注释滚动条"
+                <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
                                       IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsAnnotatedScrollBarEnabled, Mode=TwoWay}"/>
                 <MenuFlyoutSeparator/>
-                <MenuFlyoutSubItem Text="标签">
-                    <RadioMenuFlyoutItem Text="类型" GroupName="CompLabelGroup"
+                <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
+                    <RadioMenuFlyoutItem x:Uid="AppBarButton_Type" GroupName="CompLabelGroup"
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
-                    <RadioMenuFlyoutItem Text="分级" GroupName="CompLabelGroup"
+                    <RadioMenuFlyoutItem x:Uid="AppBarButton_Rating" GroupName="CompLabelGroup"
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
-                    <RadioMenuFlyoutItem Text="来源" GroupName="CompLabelGroup"
+                    <RadioMenuFlyoutItem x:Uid="AppBarButton_Source" GroupName="CompLabelGroup"
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
-                    <RadioMenuFlyoutItem Text="标签" GroupName="CompLabelGroup"
+                    <RadioMenuFlyoutItem x:Uid="AppBarButton_Tag" GroupName="CompLabelGroup"
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
-                    <RadioMenuFlyoutItem Text="（不显示）" GroupName="CompLabelGroup"
+                    <RadioMenuFlyoutItem x:Uid="AppBarButton_None" GroupName="CompLabelGroup"
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
                 </MenuFlyoutSubItem>
@@ -193,7 +193,7 @@
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.PageSize90Item, Mode=TwoWay}"/>
                 </MenuFlyoutSubItem>
             </MenuFlyoutSubItem>
-            <MenuFlyoutSubItem Text="排序">
+            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_Sort">
                 <MenuFlyoutSubItem.Icon>
                     <FontIcon Glyph="&#xE8CB;"/>
                 </MenuFlyoutSubItem.Icon>
@@ -211,12 +211,12 @@
         </MenuFlyout>
 
         <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening">
-            <MenuFlyoutItem Text="全选" Click="FilterExpanderSelectAll_Click">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="FilterExpanderSelectAll_Click">
                 <MenuFlyoutItem.Icon>
                     <FontIcon Glyph="&#xE8B3;"/>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
-            <MenuFlyoutItem Text="反选" Click="FilterExpanderInvert_Click">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="FilterExpanderInvert_Click">
                 <MenuFlyoutItem.Icon>
                     <FontIcon Glyph="&#xE8E6;"/>
                 </MenuFlyoutItem.Icon>
@@ -263,80 +263,80 @@
                         OverflowButtonVisibility="Auto"
                         HorizontalAlignment="Left">
                 <AppBarToggleButton x:Name="LeftToggleFilterButton"
-                                    Label="筛选结果"
+                                    x:Uid="Toolbar_FilterToggle"
                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}">
                     <AppBarToggleButton.Icon>
                         <FontIcon Glyph="&#xE71D;" FontSize="16"/>
                     </AppBarToggleButton.Icon>
                 </AppBarToggleButton>
                 <AppBarSeparator/>
-                <AppBarButton Label="列表视图" LabelPosition="Collapsed"
+                <AppBarButton x:Uid="Toolbar_ListView" LabelPosition="Collapsed"
                               IsEnabled="{x:Bind IsComponentButtonEnabled, Mode=OneWay}"
                               Click="CopyComponent_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8C8;" HorizontalAlignment="Right"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Label="删除" LabelPosition="Collapsed"
+                <AppBarButton x:Uid="Toolbar_Delete" LabelPosition="Collapsed"
                               IsEnabled="{x:Bind IsComponentButtonEnabled, Mode=OneWay}"
                               Click="DeleteComponent_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE74D;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Label="全选" LabelPosition="Collapsed"
+                <AppBarButton x:Uid="Toolbar_SelectAll" LabelPosition="Collapsed"
                               Click="SelectAllComponents_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8B3;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Label="反选" LabelPosition="Collapsed"
+                <AppBarButton x:Uid="Toolbar_InvertSelection" LabelPosition="Collapsed"
                               Click="InvertSelection_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Label="刷新" LabelPosition="Collapsed"
+                <AppBarButton x:Uid="Toolbar_Refresh" LabelPosition="Collapsed"
                               Click="ComponentsRefresh_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE777;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton Label="查看▾">
+                <AppBarButton x:Uid="Toolbar_View">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE71D;" FontSize="16"/>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
                         <MenuFlyout Placement="Bottom">
-                            <RadioMenuFlyoutItem Text="小图标" GroupName="ViewGroup"
+                            <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" GroupName="ViewGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SmallIconViewItem, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem Text="中图标" GroupName="ViewGroup"
+                            <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon" GroupName="ViewGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.MediumIconViewItem, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem Text="大图标" GroupName="ViewGroup"
+                            <RadioMenuFlyoutItem x:Uid="AppBarButton_LargeIcon" GroupName="ViewGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.LargeIconViewItem, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem Text="内容模式" GroupName="ViewGroup"
+                            <RadioMenuFlyoutItem x:Uid="AppBarButton_ContentMode" GroupName="ViewGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ContentViewItem, Mode=TwoWay}"/>
-                            <RadioMenuFlyoutItem Text="列表模式" GroupName="ViewGroup"
+                            <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode" GroupName="ViewGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ListViewItem, Mode=TwoWay}"/>
                             <MenuFlyoutSeparator/>
-                            <ToggleMenuFlyoutItem Text="注释滚动条"
+                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
                                                   IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsAnnotatedScrollBarEnabled, Mode=TwoWay}"/>
                             <MenuFlyoutSeparator/>
-                            <MenuFlyoutSubItem Text="标签">
-                                <RadioMenuFlyoutItem Text="类型" GroupName="LabelGroup"
+                            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
+                                <RadioMenuFlyoutItem x:Uid="AppBarButton_Type" GroupName="LabelGroup"
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.TypeDisplayInTag, Mode=TwoWay}"/>
-                                <RadioMenuFlyoutItem Text="分级" GroupName="LabelGroup"
+                                <RadioMenuFlyoutItem x:Uid="AppBarButton_Rating" GroupName="LabelGroup"
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.RatingDisplayInTag, Mode=TwoWay}"/>
-                                <RadioMenuFlyoutItem Text="来源" GroupName="LabelGroup"
+                                <RadioMenuFlyoutItem x:Uid="AppBarButton_Source" GroupName="LabelGroup"
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SourceDisplayInTag, Mode=TwoWay}"/>
-                                <RadioMenuFlyoutItem Text="标签" GroupName="LabelGroup"
+                                <RadioMenuFlyoutItem x:Uid="AppBarButton_Tag" GroupName="LabelGroup"
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.TagDisplayInTag, Mode=TwoWay}"/>
-                                <RadioMenuFlyoutItem Text="（不显示）" GroupName="LabelGroup"
+                                <RadioMenuFlyoutItem x:Uid="AppBarButton_None" GroupName="LabelGroup"
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
                             </MenuFlyoutSubItem>
@@ -356,7 +356,7 @@
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarButton Label="排序▾">
+                <AppBarButton x:Uid="Toolbar_Sort">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8CB;" FontSize="16"/>
                     </AppBarButton.Icon>
@@ -375,7 +375,7 @@
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarToggleButton Label="排序方向" LabelPosition="Collapsed"
+                <AppBarToggleButton x:Uid="Toolbar_SortDirection" LabelPosition="Collapsed"
                                     IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsSortAscending, Mode=TwoWay}">
                     <AppBarToggleButton.Icon>
                         <FontIcon Glyph="{x:Bind ViewModel.ComponentsDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
@@ -444,9 +444,8 @@
                                 </ItemsControl>
                             </Grid>
 
-                            <!-- 无选中提示 -->
-                            <TextBlock x:Name="NoSelectionHintText"
-                                       Text="选择组件以查看详情"
+                            <!-- 无选中提示 --><TextBlock x:Name="NoSelectionHintText"
+                                       x:Uid="NoSelectionHint_Components"
                                        HorizontalAlignment="Center"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                        FontSize="16" Margin="0,20,0,0"
@@ -464,19 +463,19 @@
                                     <Button Click="ExtractComponent_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE72D;" FontSize="14"/>
-                                            <TextBlock Text="提取" VerticalAlignment="Center" FontSize="12"/>
+                                            <TextBlock x:Uid="Detail_Extract" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                     <Button Click="CopyComponent_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <FontIcon Glyph="&#xE8C8;" FontSize="14"/>
-                                            <TextBlock Text="复制" VerticalAlignment="Center" FontSize="12"/>
+                                            <TextBlock x:Uid="Detail_Copy" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                     <Button Click="UnsubscribeComponent_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <FontIcon Glyph="&#xE711;" FontSize="14"/>
-                                            <TextBlock Text="取消订阅" VerticalAlignment="Center" FontSize="12"/>
+                                            <TextBlock x:Uid="Detail_Unsubscribe" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -485,7 +484,7 @@
                                     <Button Click="DeleteComponent_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <FontIcon Glyph="&#xE74D;" FontSize="14"/>
-                                            <TextBlock Text="删除组件" VerticalAlignment="Center" FontSize="12"/>
+                                            <TextBlock x:Uid="Detail_DeleteComponent" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -498,13 +497,13 @@
                                     <Button Click="OpenComponentFolder_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE838;" FontSize="14"/>
-                                            <TextBlock Text="打开目录" VerticalAlignment="Center" FontSize="12"/>
+                                            <TextBlock x:Uid="Detail_OpenDirectory" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                     <Button Click="ComponentProperties_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <FontIcon Glyph="&#xE90F;" FontSize="14"/>
-                                            <TextBlock Text="属性" VerticalAlignment="Center" FontSize="12"/>
+                                            <TextBlock x:Uid="Detail_Properties" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -554,12 +553,12 @@
                                            Style="{StaticResource TitleTextBlockStyle}"
                                            HorizontalAlignment="Center" Margin="0,0,0,10"/>
                                 <Grid>
-                                    <Button Content="全选" Width="130" Margin="0,0,4,0" HorizontalAlignment="Left"
+                                    <Button x:Uid="MultiSelect_SelectAll" Width="130" Margin="0,0,4,0" HorizontalAlignment="Left"
                                             Click="SelectAllComponents_Click" Style="{StaticResource AccentButtonStyle}"/>
-                                    <Button Content="反选" Width="130" Margin="14,0,0,0" HorizontalAlignment="Right"
+                                    <Button x:Uid="MultiSelect_InvertSelection" Width="130" Margin="14,0,0,0" HorizontalAlignment="Right"
                                             Click="InvertSelection_Click"/>
                                 </Grid>
-                                <Button Content="取消多选" HorizontalAlignment="Stretch"
+                                <Button x:Uid="MultiSelect_Cancel" HorizontalAlignment="Stretch"
                                         Click="CancelMultiSelect_Click"/>
                             </StackPanel>
                         </StackPanel>
@@ -594,7 +593,7 @@
                                                 </StackPanel>
                                             </Button.Content>
                                         </Button>
-                                        <Expander Header="类型" HorizontalAlignment="Stretch" Margin="0,4,0,4"
+                                        <Expander x:Uid="Type" HorizontalAlignment="Stretch" Margin="0,4,0,4"
                                                   IsExpanded="{x:Bind ViewModel.ComponentsFilterVM.TypeExpander, Mode=TwoWay}"
                                                   ContextFlyout="{StaticResource FilterExpanderContextMenu}">
                                             <StackPanel>
@@ -606,7 +605,7 @@
                                                           IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Effects, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
-                                        <Expander Header="年龄" HorizontalAlignment="Stretch" Margin="0,4,0,4"
+                                        <Expander x:Uid="Rating" HorizontalAlignment="Stretch" Margin="0,4,0,4"
                                                   IsExpanded="{x:Bind ViewModel.ComponentsFilterVM.RatingExpander, Mode=TwoWay}"
                                                   ContextFlyout="{StaticResource FilterExpanderContextMenu}">
                                             <StackPanel>
@@ -618,7 +617,7 @@
                                                           IsChecked="{x:Bind ViewModel.ComponentsFilterVM.Mature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                             </StackPanel>
                                         </Expander>
-                                        <Expander Header="标签" HorizontalAlignment="Stretch" Margin="0,4,0,4"
+                                        <Expander x:Uid="Tag" HorizontalAlignment="Stretch" Margin="0,4,0,4"
                                                   IsExpanded="{x:Bind ViewModel.ComponentsFilterVM.TagsExpander, Mode=TwoWay}"
                                                   ContextFlyout="{StaticResource FilterExpanderContextMenu}">
                                             <StackPanel>
@@ -627,9 +626,9 @@
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <Button Content="全选" HorizontalAlignment="Stretch" Grid.Column="0"
+                                                    <Button x:Uid="All" HorizontalAlignment="Stretch" Grid.Column="0"
                                                             Click="SelectAllTags_Click"/>
-                                                    <Button Content="无" HorizontalAlignment="Stretch" Grid.Column="1"
+                                                    <Button x:Uid="None" HorizontalAlignment="Stretch" Grid.Column="1"
                                                             Click="DeselectAllTags_Click"/>
                                                 </Grid>
                                                 <CheckBox x:Uid="CompTag_UnspecifiedGenre" Tag="Unspecified genre"
@@ -686,11 +685,11 @@
                                     <StackPanel>
                                         <!-- 暂无结果提示 -->
                                         <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
-                                            <TextBlock Text="没有匹配的组件"
+                                            <TextBlock x:Uid="NoMatchTip1"
                                                        Style="{StaticResource TitleTextBlockStyle}"
                                                        TextWrapping="Wrap" FontSize="20"
                                                        HorizontalAlignment="Center"/>
-                                            <TextBlock Text="请调整筛选条件"
+                                            <TextBlock x:Uid="NoMatchTip2"
                                                        Style="{StaticResource TitleTextBlockStyle}"
                                                        TextWrapping="Wrap" FontSize="20"
                                                        HorizontalAlignment="Center"/>
@@ -1005,13 +1004,13 @@
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal">
                 <FontIcon Glyph="&#xE74E;" Margin="15,0,0,0"/>
-                <TextBlock Text="组件目录" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                <TextBlock x:Uid="ComponentDirectory" Margin="4,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
             <TextBox Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
             <StackPanel VerticalAlignment="Center" Grid.Column="2" Orientation="Horizontal">
-                <Button Margin="0,0,0,0" Content="选择文件夹"
+                <Button Margin="0,0,0,0" x:Uid="SelectFolder"
                         Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                <Button Margin="4,0,8,0" Content="打开"
+                <Button Margin="4,0,8,0" x:Uid="OpenFolder"
                         Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
@@ -1214,13 +1213,13 @@
                                            Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4"/>
                             </Grid>
 
-                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
-                            <TextBlock Text="文件结构"
+                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
+                                <TextBlock x:Uid="FileStructure"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
                                        FontWeight="SemiBold"
                                        Margin="0,8,0,6"
                                        Foreground="{ThemeResource SystemAccentColor}"/>
-                            <muxc:TreeView x:Name="FileStructureTree"
+                            <TreeView x:Name="FileStructureTree"
                                            MaxHeight="200"
                                            Margin="0,0,0,4"
                                            Expanding="FileStructureTree_Expanding"

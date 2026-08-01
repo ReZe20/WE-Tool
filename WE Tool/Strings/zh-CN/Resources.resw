@@ -1054,4 +1054,100 @@
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>每页 90 项</value>
   </data>
+  <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
+    <value>导入项目</value>
+  </data>
+  <data name="NoSelectionHint.Text" xml:space="preserve">
+    <value>选择一张或多张壁纸</value>
+  </data>
+  <data name="Detail_Extract.Text" xml:space="preserve">
+    <value>提取</value>
+  </data>
+  <data name="Detail_Copy.Text" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="Detail_Unsubscribe.Text" xml:space="preserve">
+    <value>取消订阅</value>
+  </data>
+  <data name="Detail_ImportToEditor.Text" xml:space="preserve">
+    <value>导入壁纸编辑器</value>
+  </data>
+  <data name="Detail_DeleteWallpaper.Text" xml:space="preserve">
+    <value>删除壁纸</value>
+  </data>
+  <data name="Detail_OpenDirectory.Text" xml:space="preserve">
+    <value>打开目录</value>
+  </data>
+  <data name="Detail_Properties.Text" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="MultiSelect_InvertSelection.Content" xml:space="preserve">
+    <value>反选</value>
+  </data>
+  <data name="MultiSelect_Cancel.Content" xml:space="preserve">
+    <value>取消多选</value>
+  </data>
+  <data name="NoScanResultTip.Text" xml:space="preserve">
+    <value>程序未扫描到任何壁纸，请前往设置修正扫描路径</value>
+  </data>
+  <data name="GoToSettings.Content" xml:space="preserve">
+    <value>前往设置</value>
+  </data>
+  <data name="ExtractPause.Text" xml:space="preserve">
+    <value>暂停</value>
+  </data>
+  <data name="ExtractResume.Text" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="ExtractStop.Text" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="FileStructure.Text" xml:space="preserve">
+    <value>文件结构</value>
+  </data>
+  <data name="NoSelectionHint_Components.Text" xml:space="preserve">
+    <value>选择组件以查看详情</value>
+  </data>
+  <data name="Detail_DeleteComponent.Text" xml:space="preserve">
+    <value>删除组件</value>
+  </data>
+  <data name="NoMatchTip1.Text" xml:space="preserve">
+    <value>没有匹配的组件</value>
+  </data>
+  <data name="NoMatchTip2.Text" xml:space="preserve">
+    <value>请调整筛选条件</value>
+  </data>
+  <data name="ComponentDirectory.Text" xml:space="preserve">
+    <value>组件目录</value>
+  </data>
+  <data name="Toolbar_FilterToggle.Label" xml:space="preserve">
+    <value>筛选结果</value>
+  </data>
+  <data name="Toolbar_ListView.Label" xml:space="preserve">
+    <value>列表视图</value>
+  </data>
+  <data name="Toolbar_Delete.Label" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Toolbar_SelectAll.Label" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="Toolbar_InvertSelection.Label" xml:space="preserve">
+    <value>反选</value>
+  </data>
+  <data name="Toolbar_Refresh.Label" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Toolbar_View.Label" xml:space="preserve">
+    <value>查看▾</value>
+  </data>
+  <data name="Toolbar_Sort.Label" xml:space="preserve">
+    <value>排序▾</value>
+  </data>
+  <data name="Toolbar_SortDirection.Label" xml:space="preserve">
+    <value>排序方向</value>
+  </data>
 </root>
