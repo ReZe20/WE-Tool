@@ -206,8 +206,8 @@
     </PropertyGroup>
     <!-- Build launcher -->
     <Exec Command="dotnet build &quot;$(LauncherProj)&quot; -c Release" />
-    <!-- Create app/ and move all files into it in one PowerShell call -->
-    <Exec Command="powershell -NoProfile -Command &quot;$p='$(PublishDir)'; $a=Join-Path $p 'app'; New-Item -ItemType Directory -Force -Path $a | Out-Null; Get-ChildItem $p -Exclude app | Move-Item -Destination $a -Force&quot;" />
+    <!-- Create app/ and move all files into it in one PowerShell call (先删除旧 app/ 保证重复发布幂等) -->
+    <Exec Command="powershell -NoProfile -Command &quot;$p='$(PublishDir)'; $a=Join-Path $p 'app'; if (Test-Path $a) { Remove-Item $a -Recurse -Force }; New-Item -ItemType Directory -Force -Path $a | Out-Null; Get-ChildItem $p -Exclude app | Move-Item -Destination $a -Force&quot;" />
     <!-- Copy launcher EXE to root -->
     <Copy SourceFiles="$(LauncherExe)" DestinationFiles="$(PublishDir)WE_Tool.exe" />
     <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (launcher) + app/" />
