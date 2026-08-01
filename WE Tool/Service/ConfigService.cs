@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using WE_Tool.Models;
 using Windows.ApplicationModel;   // 新增：用于判断是否 Packaged
@@ -18,6 +19,9 @@ namespace WE_Tool.Service
     public class ConfigService : IConfigService
     {
         private const string FileName = "config.json";
+
+        /// <summary>当前配置结构版本号（配置发生破坏性变更时递增，并在 Migrate 中补充对应迁移步骤）</summary>
+        private const int CurrentVersion = 2;
 
         // 静态路径，一次计算，终身使用
         private static readonly string ConfigPath = GetConfigFilePath();
@@ -44,7 +48,17 @@ namespace WE_Tool.Service
                 string text = await File.ReadAllTextAsync(ConfigPath);
                 var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-                return JsonSerializer.Deserialize<AppSettings>(text, opts) ?? new AppSettings();
+                var settings = JsonSerializer.Deserialize<AppSettings>(text, opts) ?? new AppSettings();
+
+                if (settings.Version < CurrentVersion)
+                {
+                    // 旧版本配置：执行迁移并写回，保证升级后设置不丢失
+                    var migrated = Migrate(text, settings);
+                    await SaveAsync(migrated);
+                    return migrated;
+                }
+
+                return settings;
             }
             catch (Exception ex)
             {
@@ -69,6 +83,45 @@ namespace WE_Tool.Service
             {
                 Log.Error(ex, "保存 config.json 失败（路径：{Path}）", ConfigPath);
             }
+        }
+
+        /// <summary>
+        /// 按原始 JSON 执行配置迁移（不经过模型反序列化，避免旧字段被丢弃）。
+        /// 每升一版配置结构，在这里追加一步迁移。
+        /// </summary>
+        private static AppSettings Migrate(string rawJson, AppSettings settings)
+        {
+            var node = JsonNode.Parse(rawJson) as JsonObject;
+            if (node == null) return settings;
+
+            if (settings.Version < 2)
+            {
+                // v1 → v2：Papers 相关字段从顶层移入 Papers 对象（v0.2.0 结构重构）
+                var papers = node["Papers"] as JsonObject ?? new JsonObject();
+                string[] movedFields =
+                [
+                    "Expander", "IsBottomBarOpen", "AutoPlayGif", "IsWallpaperEnterAnimationEnabled",
+                    "IsAnnotatedScrollBarEnabled", "WallpaperTagDisplayIndex", "WallpaperViewIndex",
+                    "WallpaperListMinWidth", "LeftSplitViewPaneOpen", "RightSplitViewPaneOpen",
+                    "SortOrder", "IsSortAscending", "DetailSelectionEnabled", "FilterResultResponseDelay"
+                ];
+                foreach (var field in movedFields)
+                {
+                    if (node[field] != null && papers[field] == null)
+                    {
+                        papers[field] = node[field]!.DeepClone();
+                        node.Remove(field);
+                    }
+                }
+                node["Papers"] = papers;
+                node["Version"] = 2;
+            }
+
+            // 未来的 v2 → v3 迁移在此追加……
+
+            return JsonSerializer.Deserialize<AppSettings>(
+                node.ToJsonString(),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? settings;
         }
     }
 }

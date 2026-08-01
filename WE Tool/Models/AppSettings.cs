@@ -6,7 +6,7 @@ namespace WE_Tool.Models
 {
     public class AppSettings
     {
-        public int Version { get; set; } = 1;
+        public int Version { get; set; } = 2;
         public string AppLanguage { get; set; } = "zh-CN";
         public string StartPageTag { get; set; } = "Papers";
         public string Theme { get; set; } = "Default";
