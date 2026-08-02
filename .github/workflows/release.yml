@@ -37,7 +37,7 @@ jobs:
       - name: 打包 zip
         shell: pwsh
         run: |
-          $ver = if ("${{ github.ref_name }}" -and "${{ github.ref_name }}" -ne "v*") { "${{ github.ref_name }}" } elseif ("${{ inputs.version }}") { "${{ inputs.version }}" } else { "dev" }
+          $ver = if ("${{ inputs.version }}") { "${{ inputs.version }}" } elseif ("${{ github.ref_name }}" -like "v*") { "${{ github.ref_name }}" } else { "dev" }
           Compress-Archive -Path "WE Tool/bin/Package/SelfContained_win-amd64/*" -DestinationPath "WE-Tool-$ver-win-x64-selfcontained.zip"
           Compress-Archive -Path "WE Tool/bin/Package/ExternalRuntime_win-amd64/*" -DestinationPath "WE-Tool-$ver-win-x64-framework.zip"
           echo "version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -45,6 +45,7 @@ jobs:
       - name: 创建 Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.version }}
           files: |
             WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
             WE-Tool-${{ env.version }}-win-x64-framework.zip
