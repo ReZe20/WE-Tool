@@ -576,6 +576,14 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
             if (token.IsCancellationRequested) return;
 
+            // 未扫描到任何组件：显示引导并结束（对齐 Papers 独立分支）
+            if (_allComponents.Count == 0)
+            {
+                NoScanResultTip.Visibility = Visibility.Visible;
+                NoResultTip.Visibility = Visibility.Collapsed;
+                return;
+            }
+
             // === 分页 ===
             bool listUnchanged = IsComponentListEqual(_filteredComponents, filteredResult);
             _filteredComponents = filteredResult;
@@ -592,6 +600,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (listUnchanged && IsComponentListEqual(FilteredComponents, pageItems)) return;
 
             FilteredComponents.Clear();
+
+            // 筛选无结果时显示提示（未扫描到组件的引导已在上方独立分支处理）
             NoResultTip.Visibility = filteredResult.Count == 0
                 ? Visibility.Visible : Visibility.Collapsed;
 
@@ -1216,6 +1226,64 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             repeater.ItemsSource = null;
             repeater.ItemsSource = FilteredComponents;
         }
+    }
+
+    // ===================== 键盘快捷键（对齐 Papers） =====================
+    /// <summary>页面级快捷键统一入口（原 KeyboardAccelerator 在部分焦点/输入法环境下 Ctrl+I 等组合键不触发，改用 KeyDown 路由事件）。
+    /// 焦点在 TextBox 时 Ctrl+A/C、Delete 会被文本框消费并标记 Handled，此处收不到，自动让位。</summary>
+    private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        var ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+        var menu = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+
+        if (ctrl)
+        {
+            switch (e.Key)
+            {
+                case VirtualKey.A:
+                    SelectAllComponents_Accelerator_Invoked(null, null);
+                    e.Handled = true;
+                    return;
+                case VirtualKey.I:
+                    InvertSelection_Accelerator_Invoked(null, null);
+                    e.Handled = true;
+                    return;
+                case VirtualKey.C:
+                    Copy_Accelerator_Invoked(null, null);
+                    e.Handled = true;
+                    return;
+            }
+        }
+        else if (menu && e.Key == VirtualKey.Enter)
+        {
+            Properties_Accelerator_Invoked(null, null);
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.Delete)
+        {
+            Delete_Accelerator_Invoked(null, null);
+            e.Handled = true;
+        }
+    }
+
+    private void SelectAllComponents_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+        => SelectAllComponents_Click(sender, null);
+
+    private void InvertSelection_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+        => InvertSelection_Click(sender, null);
+
+    private void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+        => CopyComponent_Click(sender, null);
+
+    private void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+        => DeleteComponent_Click(sender, null);
+
+    private void Properties_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+        => ComponentProperties_Click(sender, null);
+
+    private void GoToSettings_Click(object sender, RoutedEventArgs e)
+    {
+        Frame?.Navigate(typeof(Settings));
     }
 
     // ===================== 多选面板按钮 =====================

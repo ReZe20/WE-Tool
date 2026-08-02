@@ -1093,6 +1093,9 @@
   <data name="NoScanResultTip.Text" xml:space="preserve">
     <value>程序未扫描到任何壁纸，请前往设置修正扫描路径</value>
   </data>
+  <data name="NoScanResultTip_Components.Text" xml:space="preserve">
+    <value>程序未扫描到任何组件，请前往设置修正扫描路径</value>
+  </data>
   <data name="GoToSettings.Content" xml:space="preserve">
     <value>前往设置</value>
   </data>

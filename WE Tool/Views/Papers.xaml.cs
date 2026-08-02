@@ -2034,6 +2034,42 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void ChangeSort(object sender, RoutedEventArgs e)
     {
     }
+    /// <summary>页面级快捷键统一入口（原 KeyboardAccelerator 在部分焦点/输入法环境下 Ctrl+I 等组合键不触发，改用 KeyDown 路由事件）。
+    /// 焦点在 TextBox 时 Ctrl+A/C、Delete 会被文本框消费并标记 Handled，此处收不到，自动让位。</summary>
+    private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        var ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+        var menu = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+
+        if (ctrl)
+        {
+            switch (e.Key)
+            {
+                case VirtualKey.A:
+                    SelectAllWallpaper_Accelerator_Invoked(null, null);
+                    e.Handled = true;
+                    return;
+                case VirtualKey.I:
+                    InvertSelection_Accelerator_Invoked(null, null);
+                    e.Handled = true;
+                    return;
+                case VirtualKey.C:
+                    Copy_Accelerator_Invoked(null, null);
+                    e.Handled = true;
+                    return;
+            }
+        }
+        else if (menu && e.Key == VirtualKey.Enter)
+        {
+            Property_Accelerator_Invoked(null, null);
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.Delete)
+        {
+            Delete_Accelerator_Invoked(null, null);
+            e.Handled = true;
+        }
+    }
     private void SelectAllWallpaper_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
         if (!IsMultiSelectMode)
