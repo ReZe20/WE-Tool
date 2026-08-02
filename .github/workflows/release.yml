@@ -7,7 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: '手动触发的版本号（如 v0.2.0），留空则用 dev'
+        description: '手动触发的版本号（如 v0.2.0），留空则用分支名'
+        required: false
+        default: ''
+      notes:
+        description: '版本介绍（可选）：填写则作为 Release 说明；留空则从 CHANGELOG.md 提取对应版本段落'
         required: false
         default: ''
 
@@ -34,7 +38,7 @@ jobs:
       - name: 发布 ExternalRuntime (x64)
         run: dotnet publish "WE Tool/WE Tool.csproj" -c Release -p:Platform=x64 -p:PublishProfile=ExternalRuntime_win-amd64
 
-      - name: 打包 zip
+      - name: 打包 zip 并生成版本介绍
         shell: pwsh
         run: |
           $ver = if ("${{ inputs.version }}") { "${{ inputs.version }}" } elseif ("${{ github.ref_name }}" -like "v*") { "${{ github.ref_name }}" } else { "dev" }
@@ -42,7 +46,39 @@ jobs:
           Compress-Archive -Path "WE Tool/bin/Package/ExternalRuntime_win-amd64/*" -DestinationPath "WE-Tool-$ver-win-x64-framework.zip"
           echo "version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: 创建 Release
+          # 版本介绍：手动输入的 notes 优先，其次 CHANGELOG.md 中当前版本的段落
+          $body = ""
+          if ("${{ inputs.notes }}") { $body = "${{ inputs.notes }}" }
+          elseif (Test-Path "CHANGELOG.md") {
+            $lines = Get-Content "CHANGELOG.md"
+            $inSection = $false
+            $section = @()
+            foreach ($line in $lines) {
+              if ($line -match "^## $ver($|\s)") { $inSection = $true; continue }
+              if ($inSection -and $line -match "^## ") { break }
+              if ($inSection) { $section += $line }
+            }
+            if ($section.Count -gt 0) { $body = ($section -join "`n").Trim() }
+          }
+          if ($body) {
+            Set-Content -Path "release-body.md" -Value $body -Encoding UTF8
+            echo "HAS_BODY=true" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            echo "HAS_BODY=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
+      - name: 创建 Release（自定义版本介绍）
+        if: env.HAS_BODY == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.version }}
+          body_path: release-body.md
+          files: |
+            WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
+            WE-Tool-${{ env.version }}-win-x64-framework.zip
+
+      - name: 创建 Release（自动生成介绍）
+        if: env.HAS_BODY != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.version }}
