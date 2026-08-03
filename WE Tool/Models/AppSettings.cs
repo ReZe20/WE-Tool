@@ -7,7 +7,7 @@ namespace WE_Tool.Models
     public class AppSettings
     {
         public int Version { get; set; } = 2;
-        public string AppLanguage { get; set; } = "zh-CN";
+        public string AppLanguage { get; set; } = "default";
         public string StartPageTag { get; set; } = "Papers";
         public string Theme { get; set; } = "Default";
         public int WindowX { get; set; } = -1;
@@ -104,9 +104,9 @@ namespace WE_Tool.Models
     public class ExtractSettings
     {
         // 通用设置
-        public bool UseProjectName { get; set; } = false;
+        public bool UseProjectName { get; set; } = true;
         public int OneFolder { get; set; } = 0;
-        public bool CoverAllFiles { get; set; } = false;
+        public bool CoverAllFiles { get; set; } = true;
         /// <summary>平铺输出时的文件命名模式：0=保持原文件名, 1=按壁纸名命名（重复加序号）</summary>
         public int FlatFileNamingMode { get; set; } = 0;
         /// <summary>子文件夹模式下保持源目录结构：0=保持, 1=打平</summary>
@@ -123,7 +123,7 @@ namespace WE_Tool.Models
         /// <summary>0=导出原始文件(TEX不转换), 1=导出并转换TEX为图片, 2=只导出TEX转换后的图片</summary>
         public int TexExportMode { get; set; } = 1;
         /// <summary>输出类型：0=全量输出, 1=仅输出媒体文件, 2=自定义</summary>
-        public int OutputMode { get; set; } = 0;
+        public int OutputMode { get; set; } = 1;
 
         // 性能参数（阶段1）
         /// <summary>最大并发提取数，默认 CPU 逻辑核心数</summary>
@@ -172,28 +172,28 @@ namespace WE_Tool.Models
 
         // --- 年龄 ---
         public bool Everyone { get; set; } = true;
-        public bool Questionable { get; set; } = true;
-        public bool Mature { get; set; } = true;
+        public bool Questionable { get; set; } = false;
+        public bool Mature { get; set; } = false;
 
         // --- 标签 ---
-        public bool UnspecifiedGenre { get; set; } = false;
-        public bool Abstract { get; set; } = false;
-        public bool Anime { get; set; } = false;
-        public bool AudioVisualizer { get; set; } = false;
-        public bool Background { get; set; } = false;
-        public bool Cgi { get; set; } = false;
-        public bool Character { get; set; } = false;
-        public bool Clock { get; set; } = false;
-        public bool Fire { get; set; } = false;
-        public bool Interactive { get; set; } = false;
-        public bool Magic { get; set; } = false;
-        public bool Memes { get; set; } = false;
-        public bool Nature { get; set; } = false;
-        public bool PostProcessing { get; set; } = false;
-        public bool Smoke { get; set; } = false;
-        public bool Space { get; set; } = false;
-        public bool Sports { get; set; } = false;
-        public bool Technology { get; set; } = false;
-        public bool Vehicle { get; set; } = false;
+        public bool UnspecifiedGenre { get; set; } = true;
+        public bool Abstract { get; set; } = true;
+        public bool Anime { get; set; } = true;
+        public bool AudioVisualizer { get; set; } = true;
+        public bool Background { get; set; } = true;
+        public bool Cgi { get; set; } = true;
+        public bool Character { get; set; } = true;
+        public bool Clock { get; set; } = true;
+        public bool Fire { get; set; } = true;
+        public bool Interactive { get; set; } = true;
+        public bool Magic { get; set; } = true;
+        public bool Memes { get; set; } = true;
+        public bool Nature { get; set; } = true;
+        public bool PostProcessing { get; set; } = true;
+        public bool Smoke { get; set; } = true;
+        public bool Space { get; set; } = true;
+        public bool Sports { get; set; } = true;
+        public bool Technology { get; set; } = true;
+        public bool Vehicle { get; set; } = true;
     }
 }

@@ -675,6 +675,9 @@
                             <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="CachePath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                         </Grid>
                     </controls:SettingsCard>
+
+                    <TextBlock x:Uid="Settings_ResetHeader" Margin="5,10,0,10"/>
+                    <Button x:Uid="Settings_ResetButton" Click="ResetSettingsButton_Click" Margin="5,10,0,110"/>
                 </StackPanel>
             </ScrollViewer>
         </Grid>

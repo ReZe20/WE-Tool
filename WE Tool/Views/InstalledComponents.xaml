@@ -1102,140 +1102,140 @@
                                        Padding="16,20,16,4"
                                        TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True"/>
                             <StackPanel Padding="16,0,16,0" Spacing="0">
-                            <!-- 基本信息 -->
-                            <TextBlock x:Uid="PropertiesPanel_BasicInfo"
+                                <!-- 基本信息 -->
+                                <TextBlock x:Uid="PropertiesPanel_BasicInfo"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
                                        FontWeight="SemiBold"
                                        Margin="0,8,0,8"
                                        Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                            <Grid ColumnSpacing="12">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- Type -->
-                                <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="PropertiesPanel_TypeLabel"
+                                <Grid ColumnSpacing="12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Type -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="PropertiesPanel_TypeLabel"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                    <TextBlock Grid.Row="0" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.ComponentType, Mode=OneWay, Converter={StaticResource ComponentTypeToDisplay}, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- ContentRating -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="PropertiesPanel_RatingLabel"
+                                    <!-- ContentRating -->
+                                    <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="PropertiesPanel_RatingLabel"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                    <TextBlock Grid.Row="1" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- Tags -->
-                                <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="PropertiesPanel_TagLabel"
+                                    <!-- Tags -->
+                                    <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="PropertiesPanel_TagLabel"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                    <TextBlock Grid.Row="2" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.Tags, Mode=OneWay, Converter={StaticResource TagToDisplay}, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}"
                                            TextWrapping="Wrap"
                                            Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- Description -->
-                                <TextBlock Grid.Row="3" Grid.Column="0"
+                                    <!-- Description -->
+                                    <TextBlock Grid.Row="3" Grid.Column="0"
                                            x:Uid="Description"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1"
+                                    <TextBlock Grid.Row="3" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.Description, Mode=OneWay, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}"
                                            TextWrapping="Wrap"
                                            TextTrimming="None"
                                            Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                            </Grid>
+                                </Grid>
 
-                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
+                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
 
-                            <!-- 文件信息 -->
-                            <TextBlock x:Uid="PropertiesPanel_FileInfo"
+                                <!-- 文件信息 -->
+                                <TextBlock x:Uid="PropertiesPanel_FileInfo"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
                                        FontWeight="SemiBold"
                                        Margin="0,8,0,8"
                                        Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                            <Grid ColumnSpacing="12">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- FileSize -->
-                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                <Grid ColumnSpacing="12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- FileSize -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0"
                                            x:Uid="FileSize"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                    <TextBlock Grid.Row="0" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- File (组件文件) -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="File"
+                                    <!-- File (组件文件) -->
+                                    <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="File"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                    <TextBlock Grid.Row="1" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.FilePath, Mode=OneWay, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}"
                                            TextWrapping="Wrap"
                                            Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- FolderPath -->
-                                <TextBlock Grid.Row="2" Grid.Column="0"
+                                    <!-- FolderPath -->
+                                    <TextBlock Grid.Row="2" Grid.Column="0"
                                            x:Uid="FolderPath"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                    <TextBlock Grid.Row="2" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.FolderPath, Mode=OneWay, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}"
                                            TextWrapping="Wrap"
                                            Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- WorkshopID -->
-                                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="WorkshopID"
+                                    <!-- WorkshopID -->
+                                    <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="WorkshopID"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1"
+                                    <TextBlock Grid.Row="3" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.WorkshopID, Mode=OneWay, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}"
                                            IsTextSelectionEnabled="True"
                                            Margin="0,4,0,4"/>
-                            </Grid>
+                                </Grid>
 
-                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
+                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
 
-                            <!-- 时间信息 -->
-                            <TextBlock x:Uid="PropertiesPanel_TimeInfo"
+                                <!-- 时间信息 -->
+                                <TextBlock x:Uid="PropertiesPanel_TimeInfo"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
                                        FontWeight="SemiBold"
                                        Margin="0,8,0,8"
                                        Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                            <Grid ColumnSpacing="12">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- InstallDate -->
-                                <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="InstallDate"
+                                <Grid ColumnSpacing="12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- InstallDate -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="InstallDate"
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                    <TextBlock Grid.Row="0" Grid.Column="1"
                                            Text="{x:Bind SelectedComponent.InstallDate, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}"
                                            Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                            </Grid>
+                                </Grid>
 
                                 <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
                                 <TextBlock x:Uid="FileStructure"
@@ -1243,14 +1243,14 @@
                                        FontWeight="SemiBold"
                                        Margin="0,8,0,6"
                                        Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                            <TreeView x:Name="FileStructureTree"
+                                <TreeView x:Name="FileStructureTree"
                                            MaxHeight="200"
                                            Margin="0,0,0,4"
                                            Expanding="FileStructureTree_Expanding"
                                            DoubleTapped="FileStructureTree_DoubleTapped"
                                            ItemTemplateSelector="{StaticResource FileTreeTemplateSelector}"
                                            CanDragItems="False" CanReorderItems="False" AllowDrop="False"/>
-                        </StackPanel>
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

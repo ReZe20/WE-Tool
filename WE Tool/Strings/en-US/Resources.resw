@@ -1030,4 +1030,28 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 per page</value>
   </data>
+
+  <data name="Settings_ResetHeader.Text" xml:space="preserve">
+    <value>Reset Settings</value>
+  </data>
+
+  <data name="Settings_ResetButton.Content" xml:space="preserve">
+    <value>Reset all settings to defaults</value>
+  </data>
+
+  <data name="Settings_ResetConfirm.Title" xml:space="preserve">
+    <value>Reset Settings</value>
+  </data>
+
+  <data name="Settings_ResetConfirm.Content" xml:space="preserve">
+    <value>Are you sure you want to reset all settings to their default values? This cannot be undone.</value>
+  </data>
+
+  <data name="Settings_ResetConfirm.PrimaryButtonText" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+
+  <data name="Settings_ResetConfirm.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
 </root>

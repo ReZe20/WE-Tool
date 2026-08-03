@@ -922,4 +922,28 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 por página</value>
   </data>
+
+  <data name="Settings_ResetHeader.Text" xml:space="preserve">
+    <value>Restablecer ajustes</value>
+  </data>
+
+  <data name="Settings_ResetButton.Content" xml:space="preserve">
+    <value>Restablecer todos los ajustes a los valores predeterminados</value>
+  </data>
+
+  <data name="Settings_ResetConfirm.Title" xml:space="preserve">
+    <value>Restablecer ajustes</value>
+  </data>
+
+  <data name="Settings_ResetConfirm.Content" xml:space="preserve">
+    <value>¿Seguro que desea restablecer todos los ajustes a sus valores predeterminados? Esta acción no se puede deshacer.</value>
+  </data>
+
+  <data name="Settings_ResetConfirm.PrimaryButtonText" xml:space="preserve">
+    <value>Restablecer</value>
+  </data>
+
+  <data name="Settings_ResetConfirm.CloseButtonText" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
 </root>

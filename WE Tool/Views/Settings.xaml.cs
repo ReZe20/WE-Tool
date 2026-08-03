@@ -13,6 +13,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using WE_Tool.Helper;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using Windows.Foundation;
@@ -97,6 +98,27 @@ public sealed partial class Settings : Page
     private void FolderStructureHelpButton_Click(object sender, RoutedEventArgs e)
     {
         FolderStructureTeachingTip_1.IsOpen = true;
+    }
+
+    /// <summary>
+    /// 重置设置按钮：确认后调用 ViewModel.ResetAllSettingsAsync() 将所有设置恢复默认。
+    /// </summary>
+    private async void ResetSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new ContentDialog
+        {
+            Title = LanguageHelper.GetResource("Settings_ResetConfirm.Title"),
+            Content = LanguageHelper.GetResource("Settings_ResetConfirm.Content"),
+            PrimaryButtonText = LanguageHelper.GetResource("Settings_ResetConfirm.PrimaryButtonText"),
+            CloseButtonText = LanguageHelper.GetResource("Settings_ResetConfirm.CloseButtonText"),
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = XamlRoot
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            await ViewModel.ResetAllSettingsAsync();
+        }
     }
 
     private void SceneWallpaperHelpButton_Click(object sender, RoutedEventArgs e)

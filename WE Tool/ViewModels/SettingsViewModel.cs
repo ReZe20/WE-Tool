@@ -269,6 +269,21 @@ namespace WE_Tool.ViewModels
 
             _settings = await _configService.LoadAsync() ?? new AppSettings();
 
+
+            await ApplySettingsToViewModelsAsync();
+
+
+            _isBatchUpdating = false;
+            await SaveAsync();
+            OnPropertyChanged(string.Empty);
+        }
+
+        /// <summary>
+        /// 将 _settings 的当前值填充到所有子 VM 与页面属性（InitializeAsync 与 ResetAllSettingsAsync 共用）。
+        /// 路径为空时触发自动检测，并将检测结果同步回 _settings。
+        /// </summary>
+        private async Task ApplySettingsToViewModelsAsync()
+        {
             AppSettingsVM.AppLanguage = _settings.AppLanguage ?? "default";
 
             AppSettingsVM.StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
@@ -426,11 +441,25 @@ namespace WE_Tool.ViewModels
                 PathManagementVM.SyncToSettings(_settings);
                 await _configService.SaveAsync(_settings);
             }
+        }
+
+        /// <summary>
+        /// 将所有设置恢复为默认值：新建默认 AppSettings 并重新填充所有 VM（UI 即时刷新），
+        /// 随后保存到配置文件。语言/主题等变化由 AppSettingsVM 的 PropertyChanged 钩子即时应用。
+        /// </summary>
+        public async Task ResetAllSettingsAsync()
+        {
+            _isBatchUpdating = true;
+
+            _settings = new AppSettings();
+
+            await ApplySettingsToViewModelsAsync();
 
             _isBatchUpdating = false;
             await SaveAsync();
             OnPropertyChanged(string.Empty);
         }
+
 
         public async Task ResetFiltersAsync(int mode, bool selectmode)
         {
@@ -514,7 +543,7 @@ namespace WE_Tool.ViewModels
             try
             {
                 var f = ComponentsFilterVM;
-                // 类型全选、年龄全选、标签全否
+                // 类型全选、年龄全选、标签全选
                 f.Layers = true;
                 f.Scripts = true;
                 f.Effects = true;
