@@ -739,7 +739,7 @@
     <value>Salida completa</value>
   </data>
   <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Solo imágenes</value>
+    <value>Solo medios</value>
   </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Personalizado</value>
@@ -814,7 +814,7 @@ Al habilitarlo, se copian también project.json e imágenes de vista previa.</va
     <value>Siguiente</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Solo extrae archivos de imagen (.png/.jpg/.gif etc.). No se copian project.json ni vistas previas. Las texturas TEX en fondos de escena se convierten automáticamente a imágenes.</value>
+    <value>Solo extrae archivos multimedia (.png/.jpg/.mp4 etc., imágenes y videos). No se extraerán project.json ni imágenes de vista previa. Las texturas TEX en fondos de escena se convierten automáticamente: texturas de imagen a imágenes, texturas de video a mp4.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Cerrar</value>

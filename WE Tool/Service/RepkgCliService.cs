@@ -139,7 +139,7 @@ public class RepkgCliService
                     }
 
                     // 统一处理 project.json 和预览图导出（由 WE Tool 负责，不再通过 repkg-Re -c）
-                    // OutputMode==1（仅输出图像）时不复制 project.json/预览图
+                    // OutputMode==1（仅输出媒体文件）时不复制 project.json/预览图
                     if (settings.OutProjectJSON && settings.OutputMode != 1)
                         CopyProjectFiles(dir, wallpaperOutput, settings);
 
@@ -184,20 +184,22 @@ public class RepkgCliService
         sb.Append("extract \""); sb.Append(input); sb.Append("\" ");
         sb.Append("-o \""); sb.Append(output); sb.Append("\" ");
 
-        // 扩展名过滤仅在自定义模式(OutputMode==2)下生效，不影响仅输出图像
+        // 扩展名过滤在自定义模式(OutputMode==2)下使用 RePKG 的输出层参数
+        // (-I / -E)：条目照常解析(TEX 照常转换)，写文件时按"输出文件扩展名"
+        // 判断跳过/保留，转换出的图片按转换后格式(如 .png)参与判断
         if (settings.OutputMode == 2)
         {
             if (settings.IgnoreExtension && !string.IsNullOrEmpty(settings.IgnoreExtensionList))
-                sb.Append("-i ").Append(settings.IgnoreExtensionList).Append(' ');
+                sb.Append("-I ").Append(settings.IgnoreExtensionList).Append(' ');
             if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
-                sb.Append("-e ").Append(settings.OnlyExtensionList).Append(' ');
+                sb.Append("-E ").Append(settings.OnlyExtensionList).Append(' ');
         }
 
         if (settings.KeepSubfolderStructure == 1) sb.Append("-s ");
 
         // Tex 处理：OutputMode==1 独立分支，不受 TexExportMode 影响
         if (settings.OutputMode == 1)
-            sb.Append("--only-tex-images ");
+            sb.Append("-E ").Append(MediaOnlyExtensionsArg).Append(' ');
         else if (settings.TexExportMode == 0)
             sb.Append("--no-tex-convert ");
         else if (settings.TexExportMode == 2)
@@ -375,10 +377,10 @@ public class RepkgCliService
     {
         foreach (var file in sourceDir.EnumerateFiles())
         {
-            // OutputMode==1（仅输出图像）：独立模式，只检查图像扩展名，不受 IgnoreExtension/OnlyExtension 影响
+            // OutputMode==1（仅输出媒体文件）：独立模式，只检查媒体扩展名，不受 IgnoreExtension/OnlyExtension 影响
             if (settings.OutputMode == 1)
             {
-                if (!IsImageExtension(file.Extension)) continue;
+                if (!IsMediaExtension(file.Extension)) continue;
             }
             else
             {
@@ -450,16 +452,31 @@ public class RepkgCliService
         }
     }
 
-    private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    /// <summary>
+    /// 媒体文件扩展名集合（仅输出媒体文件模式使用）：图像 + 视频。
+    /// 与 RePKG 转换输出格式对齐：TEX 纹理→png/gif 等，视频纹理 TEX→mp4。
+    /// </summary>
+    private static readonly HashSet<string> MediaExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".ico"
+        // 图像
+        ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".ico",
+        // 视频（含 RePKG 视频纹理 TEX 转换输出的 .mp4）
+        ".mp4", ".webm", ".mov"
     };
 
-    private static bool IsImageExtension(string extension)
+    /// <summary>
+    /// 仅输出媒体文件模式(OutputMode==1)传给 RePKG 的 -E 白名单（逗号分隔、无前导点）。
+    /// 与 MediaExtensions 保持一致：RePKG 输出层过滤会按转换后扩展名保留 TEX 转换图/视频，
+    /// 并滤除 raw .tex、.tex-json 及 pkg 内非媒体条目。
+    /// </summary>
+    private static readonly string MediaOnlyExtensionsArg =
+        string.Join(',', MediaExtensions.Select(e => e.TrimStart('.')));
+
+    private static bool IsMediaExtension(string extension)
     {
         if (string.IsNullOrEmpty(extension)) return false;
         var ext = extension.StartsWith('.') ? extension : '.' + extension;
-        return ImageExtensions.Contains(ext);
+        return MediaExtensions.Contains(ext);
     }
 
     private static bool ShouldSkipExtension(string extension, ExtractSettings settings)

@@ -739,7 +739,7 @@
     <value>Vollständige Ausgabe</value>
   </data>
   <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Nur Bilder</value>
+    <value>Nur Medien</value>
   </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Benutzerdefiniert</value>
@@ -814,7 +814,7 @@ Wenn aktiviert, werden zusätzlich project.json und Vorschaubilder ausgegeben.</
     <value>Weiter</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Gibt nur Bilddateien (.png/.jpg/.gif usw.) aus. Keine project.json oder Vorschaubilder werden ausgegeben. TEX-Texturen in Szenen-Hintergrundbildern werden automatisch in Bilder konvertiert.</value>
+    <value>Gibt nur Mediendateien (.png/.jpg/.mp4 usw., Bilder und Videos) aus. Keine project.json oder Vorschaubilder werden ausgegeben. TEX-Texturen in Szenen-Hintergrundbildern werden automatisch konvertiert: Bildtexturen zu Bildern, Videotexturen zu mp4.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Schließen</value>

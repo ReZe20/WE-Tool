@@ -847,7 +847,7 @@
     <value>Full Output</value>
   </data>
   <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Images Only</value>
+    <value>Media Only</value>
   </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Custom</value>
@@ -922,7 +922,7 @@ When enabled, additional project.json and preview image files will be output.</v
     <value>Next</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Only output image files (.png/.jpg/.gif etc.). No project.json or preview images will be output. TEX textures in scene wallpapers are automatically converted to images.</value>
+    <value>Only output media files (.png/.jpg/.mp4 etc., images and videos). No project.json or preview images will be output. TEX textures in scene wallpapers are automatically converted: image textures to images, video textures to mp4.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Close</value>

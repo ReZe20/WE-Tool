@@ -739,7 +739,7 @@
     <value>Saída completa</value>
   </data>
   <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Apenas imagens</value>
+    <value>Apenas mídia</value>
   </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Personalizado</value>
@@ -814,7 +814,7 @@ Quando ativado, copia também project.json e imagens de pré-visualização.</va
     <value>Próximo</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Extrai apenas arquivos de imagem (.png/.jpg/.gif etc.). Nenhum project.json ou prévia será copiado. Texturas TEX em papéis de parede de cena são convertidas automaticamente para imagens.</value>
+    <value>Extrai apenas arquivos de mídia (.png/.jpg/.mp4 etc., imagens e vídeos). Nenhum project.json ou imagem de prévia será extraído. Texturas TEX em papéis de parede de cena são convertidas automaticamente: texturas de imagem em imagens, texturas de vídeo em mp4.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Fechar</value>

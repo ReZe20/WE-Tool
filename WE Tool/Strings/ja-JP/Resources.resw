@@ -739,7 +739,7 @@
     <value>フル出力</value>
   </data>
   <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>画像のみ</value>
+    <value>メディアのみ</value>
   </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>カスタム</value>
@@ -814,7 +814,7 @@ project.json とプレビューをコピー
     <value>次へ</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>画像ファイル (.png/.jpg/.gif など) のみ出力します。project.json やプレビュー画像は出力されません。シーン壁紙の TEX テクスチャは自動的に画像に変換されます。</value>
+    <value>メディアファイル（.png/.jpg/.mp4 など、画像と動画）のみ出力します。project.json やプレビュー画像は出力されません。シーン壁紙の TEX テクスチャは自動的に変換されます：画像テクスチャは画像に、動画テクスチャは mp4 に。</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>閉じる</value>

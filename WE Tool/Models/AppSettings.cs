@@ -122,7 +122,7 @@ namespace WE_Tool.Models
         public bool OutProjectJSON { get; set; } = false;
         /// <summary>0=导出原始文件(TEX不转换), 1=导出并转换TEX为图片, 2=只导出TEX转换后的图片</summary>
         public int TexExportMode { get; set; } = 1;
-        /// <summary>输出类型：0=自定义, 1=全量输出, 2=仅输出图像</summary>
+        /// <summary>输出类型：0=全量输出, 1=仅输出媒体文件, 2=自定义</summary>
         public int OutputMode { get; set; } = 0;
 
         // 性能参数（阶段1）

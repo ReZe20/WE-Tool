@@ -133,7 +133,7 @@ namespace WE_Tool.ViewModels
             OnPropertyChanged(nameof(IsOnlyExtensionTextBoxEnabled));
         }
 
-        /// <summary>输出类型：0=自定义, 1=全量输出, 2=仅输出图像</summary>
+        /// <summary>输出类型：0=全量输出, 1=仅输出媒体文件, 2=自定义</summary>
         [ObservableProperty]
         public partial int OutputMode { get; set; }
 

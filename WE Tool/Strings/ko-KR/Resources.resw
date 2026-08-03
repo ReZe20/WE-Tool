@@ -739,7 +739,7 @@
     <value>전체 출력</value>
   </data>
   <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>이미지만 출력</value>
+    <value>미디어만 출력</value>
   </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>사용자 정의</value>
@@ -814,7 +814,7 @@ project.json 및 미리보기 복사
     <value>다음</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>이미지 파일(.png/.jpg/.gif 등)만 출력합니다. project.json이나 미리보기 이미지는 출력되지 않습니다. 씬 배경화면의 TEX 텍스처는 자동으로 이미지로 변환됩니다.</value>
+    <value>미디어 파일(.png/.jpg/.mp4 등, 이미지 및 동영상)만 출력합니다. project.json이나 미리보기 이미지는 출력되지 않습니다. 씬 배경화면의 TEX 텍스처는 자동으로 변환됩니다: 이미지 텍스처는 이미지로, 동영상 텍스처는 mp4로.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>닫기</value>

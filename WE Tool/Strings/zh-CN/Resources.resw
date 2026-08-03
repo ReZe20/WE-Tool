@@ -871,7 +871,7 @@
     <value>全量输出</value>
   </data>
   <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>仅输出图像</value>
+    <value>仅输出媒体文件</value>
   </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>自定义</value>
@@ -949,7 +949,7 @@
     <value>继续</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>仅输出 .png/.jpg/.gif 等图像文件，不输出 project.json 和预览图，场景类壁纸中的 TEX 纹理自动转换为图片输出。</value>
+    <value>仅输出 .png/.jpg/.mp4 等媒体文件（图像与视频），不输出 project.json 和预览图，场景类壁纸中的 TEX 纹理自动转换：图片纹理转图片，视频纹理转 mp4。</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>关闭</value>
