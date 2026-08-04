@@ -922,28 +922,37 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 per pagina</value>
   </data>
-
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>Reimposta impostazioni</value>
   </data>
-
   <data name="Settings_ResetButton.Content" xml:space="preserve">
     <value>Reimposta tutte le impostazioni ai valori predefiniti</value>
   </data>
-
   <data name="Settings_ResetConfirm.Title" xml:space="preserve">
     <value>Reimposta impostazioni</value>
   </data>
-
   <data name="Settings_ResetConfirm.Content" xml:space="preserve">
     <value>Confermi di voler ripristinare tutte le impostazioni ai valori predefiniti? Questa azione non può essere annullata.</value>
   </data>
-
   <data name="Settings_ResetConfirm.PrimaryButtonText" xml:space="preserve">
     <value>Reimposta</value>
   </data>
-
   <data name="Settings_ResetConfirm.CloseButtonText" xml:space="preserve">
     <value>Annulla</value>
+  </data>
+  <data name="Info_About.Header" xml:space="preserve">
+    <value>WE Tool</value>
+  </data>
+  <data name="Info_About.Description" xml:space="preserve">
+    <value>© ReZe20 2026. Licensed under GPL-3.0.</value>
+  </data>
+  <data name="Info_GitHubButton.Content" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="Info_Feedback.Text" xml:space="preserve">
+    <value>Feedback</value>
+  </data>
+  <data name="Info_GitHubIssues.Content" xml:space="preserve">
+    <value>GitHub Issues</value>
   </data>
 </root>

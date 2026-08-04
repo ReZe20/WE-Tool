@@ -922,28 +922,37 @@
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 на страницу</value>
   </data>
-
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>Сбросить настройки</value>
   </data>
-
   <data name="Settings_ResetButton.Content" xml:space="preserve">
     <value>Сбросить все настройки к значениям по умолчанию</value>
   </data>
-
   <data name="Settings_ResetConfirm.Title" xml:space="preserve">
     <value>Сбросить настройки</value>
   </data>
-
   <data name="Settings_ResetConfirm.Content" xml:space="preserve">
     <value>Вы уверены, что хотите сбросить все настройки к значениям по умолчанию? Это действие нельзя отменить.</value>
   </data>
-
   <data name="Settings_ResetConfirm.PrimaryButtonText" xml:space="preserve">
     <value>Сбросить</value>
   </data>
-
   <data name="Settings_ResetConfirm.CloseButtonText" xml:space="preserve">
     <value>Отмена</value>
+  </data>
+  <data name="Info_About.Header" xml:space="preserve">
+    <value>WE Tool</value>
+  </data>
+  <data name="Info_About.Description" xml:space="preserve">
+    <value>© ReZe20 2026. Licensed under GPL-3.0.</value>
+  </data>
+  <data name="Info_GitHubButton.Content" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="Info_Feedback.Text" xml:space="preserve">
+    <value>Обратная связь</value>
+  </data>
+  <data name="Info_GitHubIssues.Content" xml:space="preserve">
+    <value>GitHub Issues</value>
   </data>
 </root>

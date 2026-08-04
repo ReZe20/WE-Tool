@@ -19,12 +19,23 @@ using Windows.Foundation.Collections;
 namespace WE_Tool;
 
 /// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
+/// 关于页:软件信息卡片。
 /// </summary>
 public sealed partial class Info : Page
 {
+    /// <summary>
+    /// 软件版本号(来自程序集版本,csproj &lt;Version&gt; 驱动)
+    /// </summary>
+    public string VersionText { get; } = GetVersionText();
+
     public Info()
     {
         InitializeComponent();
+    }
+
+    private static string GetVersionText()
+    {
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        return version == null ? string.Empty : $"{version.Major}.{version.Minor}.{version.Build}";
     }
 }

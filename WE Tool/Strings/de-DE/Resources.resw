@@ -922,28 +922,37 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 pro Seite</value>
   </data>
-
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>Einstellungen zurücksetzen</value>
   </data>
-
   <data name="Settings_ResetButton.Content" xml:space="preserve">
     <value>Alle Einstellungen auf Standard zurücksetzen</value>
   </data>
-
   <data name="Settings_ResetConfirm.Title" xml:space="preserve">
     <value>Einstellungen zurücksetzen</value>
   </data>
-
   <data name="Settings_ResetConfirm.Content" xml:space="preserve">
     <value>Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen? Dieser Vorgang kann nicht rückgängig gemacht werden.</value>
   </data>
-
   <data name="Settings_ResetConfirm.PrimaryButtonText" xml:space="preserve">
     <value>Zurücksetzen</value>
   </data>
-
   <data name="Settings_ResetConfirm.CloseButtonText" xml:space="preserve">
     <value>Abbrechen</value>
+  </data>
+  <data name="Info_About.Header" xml:space="preserve">
+    <value>WE Tool</value>
+  </data>
+  <data name="Info_About.Description" xml:space="preserve">
+    <value>© ReZe20 2026. Licensed under GPL-3.0.</value>
+  </data>
+  <data name="Info_GitHubButton.Content" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="Info_Feedback.Text" xml:space="preserve">
+    <value>Feedback</value>
+  </data>
+  <data name="Info_GitHubIssues.Content" xml:space="preserve">
+    <value>GitHub Issues</value>
   </data>
 </root>

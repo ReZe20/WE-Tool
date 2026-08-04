@@ -7,12 +7,33 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     NavigationCacheMode="Enabled">
 
     <Grid>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <FontIcon Glyph="&#xE822;" FontSize="48" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
-            <TextBlock Text="正在开发" FontSize="20" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,12,0,0"/>
-        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="25,10,25,0">
+                <controls:SettingsExpander x:Uid="Info_About" Margin="0,0,0,10">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <!-- 软件图标未定,先用透明 FontIcon 占位 20x20;定稿后替换为真实图标 -->
+                        <FontIcon FontSize="20" Width="20" Height="20" Opacity="0"/>
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.Content>
+                        <TextBlock Text="{x:Bind VersionText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    </controls:SettingsExpander.Content>
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel>
+                                    <HyperlinkButton x:Name="GitHubButton" Margin="0,0,0,6" x:Uid="Info_GitHubButton" NavigateUri="https://github.com/ReZe20/WE-Tool"/>
+                                    <TextBlock x:Uid="Info_Feedback" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <HyperlinkButton x:Uid="Info_GitHubIssues" NavigateUri="https://github.com/ReZe20/WE-Tool/issues"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Page>

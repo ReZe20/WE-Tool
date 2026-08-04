@@ -922,28 +922,37 @@ project.json とプレビューをコピー
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>1ページあたり90件</value>
   </data>
-
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>設定をリセット</value>
   </data>
-
   <data name="Settings_ResetButton.Content" xml:space="preserve">
     <value>すべての設定をデフォルトに戻す</value>
   </data>
-
   <data name="Settings_ResetConfirm.Title" xml:space="preserve">
     <value>設定をリセット</value>
   </data>
-
   <data name="Settings_ResetConfirm.Content" xml:space="preserve">
     <value>すべての設定をデフォルト値に戻しますか？この操作は取り消せません。</value>
   </data>
-
   <data name="Settings_ResetConfirm.PrimaryButtonText" xml:space="preserve">
     <value>リセット</value>
   </data>
-
   <data name="Settings_ResetConfirm.CloseButtonText" xml:space="preserve">
     <value>キャンセル</value>
+  </data>
+  <data name="Info_About.Header" xml:space="preserve">
+    <value>WE Tool</value>
+  </data>
+  <data name="Info_About.Description" xml:space="preserve">
+    <value>© ReZe20 2026. Licensed under GPL-3.0.</value>
+  </data>
+  <data name="Info_GitHubButton.Content" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="Info_Feedback.Text" xml:space="preserve">
+    <value>フィードバック</value>
+  </data>
+  <data name="Info_GitHubIssues.Content" xml:space="preserve">
+    <value>GitHub Issues</value>
   </data>
 </root>

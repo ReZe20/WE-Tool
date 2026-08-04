@@ -922,28 +922,37 @@ project.json 및 미리보기 복사
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>페이지당 90개</value>
   </data>
-
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>설정 초기화</value>
   </data>
-
   <data name="Settings_ResetButton.Content" xml:space="preserve">
     <value>모든 설정을 기본값으로 초기화</value>
   </data>
-
   <data name="Settings_ResetConfirm.Title" xml:space="preserve">
     <value>설정 초기화</value>
   </data>
-
   <data name="Settings_ResetConfirm.Content" xml:space="preserve">
     <value>모든 설정을 기본값으로 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.</value>
   </data>
-
   <data name="Settings_ResetConfirm.PrimaryButtonText" xml:space="preserve">
     <value>초기화</value>
   </data>
-
   <data name="Settings_ResetConfirm.CloseButtonText" xml:space="preserve">
     <value>취소</value>
+  </data>
+  <data name="Info_About.Header" xml:space="preserve">
+    <value>WE Tool</value>
+  </data>
+  <data name="Info_About.Description" xml:space="preserve">
+    <value>© ReZe20 2026. Licensed under GPL-3.0.</value>
+  </data>
+  <data name="Info_GitHubButton.Content" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="Info_Feedback.Text" xml:space="preserve">
+    <value>피드백</value>
+  </data>
+  <data name="Info_GitHubIssues.Content" xml:space="preserve">
+    <value>GitHub Issues</value>
   </data>
 </root>

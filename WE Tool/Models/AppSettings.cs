@@ -145,7 +145,7 @@ namespace WE_Tool.Models
         public int ComponentTagDisplayIndex { get; set; } = 0;
         public int ComponentListMinWidth { get; set; } = 180;
         public bool AutoPlayGif { get; set; } = true;
-        public bool IsComponentEnterAnimationEnabled { get; set; } = true;
+        public bool IsComponentEnterAnimationEnabled { get; set; } = false;
         public bool IsBottomBarOpen { get; set; } = true;
         public bool DetailSelectionEnabled { get; set; } = true;
         public int FilterResultResponseDelay { get; set; } = 1000;
