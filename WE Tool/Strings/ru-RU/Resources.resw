@@ -426,6 +426,9 @@
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
     <value>Извлечь</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>Отписаться</value>
+  </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
     <value>Задержка ответа фильтра (мс)</value>
   </data>
@@ -895,9 +898,6 @@
   <data name="AppBarButton_ListMode.Text" xml:space="preserve">
     <value>Список</value>
   </data>
-  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
-    <value>Отписаться</value>
-  </data>
   <data name="Pagination.Text" xml:space="preserve">
     <value>Постраничный вывод</value>
   </data>
@@ -954,5 +954,137 @@
   </data>
   <data name="Info_GitHubIssues.Content" xml:space="preserve">
     <value>GitHub Issues</value>
+  </data>
+  <data name="Info_LicenseButton.Content" xml:space="preserve">
+    <value>Просмотреть лицензию</value>
+  </data>
+  <data name="Info_ThirdPartyButton.Content" xml:space="preserve">
+    <value>Уведомления о сторонних компонентах</value>
+  </data>
+  <data name="Info_LicenseFileMissing.Text" xml:space="preserve">
+    <value>Файл лицензии не найден</value>
+  </data>
+  <data name="Info_DialogClose.Content" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Info_ReleaseNotes.Content" xml:space="preserve">
+    <value>Примечания к выпуску</value>
+  </data>
+  <data name="Info_Diagnostics.Text" xml:space="preserve">
+    <value>Диагностика</value>
+  </data>
+  <data name="Info_ConfigPath.Text" xml:space="preserve">
+    <value>Файл конфигурации</value>
+  </data>
+  <data name="Info_LogPath.Text" xml:space="preserve">
+    <value>Файл журнала</value>
+  </data>
+  <data name="Info_CachePath.Text" xml:space="preserve">
+    <value>Каталог кэша</value>
+  </data>
+  <data name="Info_CopyButton.Content" xml:space="preserve">
+    <value>Копировать</value>
+  </data>
+  <data name="Info_OpenButton.Content" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="Info_Credits.Text" xml:space="preserve">
+    <value>Технологический стек</value>
+  </data>
+  <data name="Info_CreditsLine1.Content" xml:space="preserve">
+    <value>.NET 8</value>
+  </data>
+  <data name="Info_CreditsLine2.Content" xml:space="preserve">
+    <value>WinUI 3 (Windows App SDK 1.8)</value>
+  </data>
+  <data name="Info_CreditsLine3.Content" xml:space="preserve">
+    <value>CommunityToolkit (MVVM 8.4 / WinUI Controls 8.2)</value>
+  </data>
+  <data name="Info_CreditsLine4.Content" xml:space="preserve">
+    <value>Facepunch.Steamworks 2.3</value>
+  </data>
+  <data name="Info_CreditsLine5.Content" xml:space="preserve">
+    <value>Microsoft.Data.Sqlite 10.0</value>
+  </data>
+  <data name="Info_CreditsLine6.Content" xml:space="preserve">
+    <value>Newtonsoft.Json 13.0</value>
+  </data>
+  <data name="Info_CreditsLine7.Content" xml:space="preserve">
+    <value>Serilog 4.3</value>
+  </data>
+  <data name="Info_CreditsLine8.Content" xml:space="preserve">
+    <value>WinUIEx 2.9</value>
+  </data>
+  <data name="Info_CreditsLine9.Content" xml:space="preserve">
+    <value>RePKG_Re (на основе notscuffed/repkg)</value>
+  </data>
+  <data name="Info_License.Header" xml:space="preserve">
+    <value>Лицензия с открытым исходным кодом</value>
+  </data>
+  <data name="Info_ViewInBrowser.Text" xml:space="preserve">
+    <value>Открыть в браузере</value>
+  </data>
+  <data name="Info_CreditsLine10.Content" xml:space="preserve">
+    <value>C# 12</value>
+  </data>
+  <data name="Info_Contributors.Text" xml:space="preserve">
+    <value>Участники</value>
+  </data>
+  <data name="Info_RepkgExpander.Header" xml:space="preserve">
+    <value>RePKG_Re</value>
+  </data>
+  <data name="Info_RepkgExpander.Description" xml:space="preserve">
+    <value>© notscuffed 2019, ReZe20 2026. Licensed under MIT.</value>
+  </data>
+  <data name="Info_RepkgGitHubButton.Content" xml:space="preserve">
+    <value>Репозиторий GitHub</value>
+  </data>
+  <data name="Info_RepkgReleaseNotes.Content" xml:space="preserve">
+    <value>Примечания к выпуску</value>
+  </data>
+  <data name="Info_RepkgIssues.Content" xml:space="preserve">
+    <value>GitHub Issues</value>
+  </data>
+  <data name="Info_RepkgCreditsLine1.Content" xml:space="preserve">
+    <value>.NET Framework 4.7.2</value>
+  </data>
+  <data name="Info_RepkgCreditsLine2.Content" xml:space="preserve">
+    <value>CommandLineParser 2.9</value>
+  </data>
+  <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
+    <value>K4os.Compression.LZ4 1.3</value>
+  </data>
+  <data name="Info_RepkgCreditsLine4.Content" xml:space="preserve">
+    <value>Newtonsoft.Json 13.0</value>
+  </data>
+  <data name="Info_RepkgCreditsLine5.Content" xml:space="preserve">
+    <value>SixLabors.ImageSharp 2.1</value>
+  </data>
+  <data name="Info_RepkgStory.Text" xml:space="preserve">
+    <value>RePKG_Re происходит от проекта RePKG от notscuffed — извлекателя пакетов Wallpaper Engine (лицензия MIT). ReZe20 поддерживает и улучшает его, сохраняя авторские права оригинального автора, и использует как бэкенд извлечения WE Tool.</value>
+  </data>
+  <data name="Info_RepkgLicenseButton.Content" xml:space="preserve">
+    <value>Просмотреть лицензию</value>
+  </data>
+  <data name="Info_RepkgThirdPartyButton.Content" xml:space="preserve">
+    <value>Уведомления о сторонних компонентах</value>
+  </data>
+  <data name="Info_RepkgOriginalRepoLabel.Text" xml:space="preserve">
+    <value>Этот проект — модифицированный форк следующего репозитория</value>
+  </data>
+  <data name="Info_RepkgOriginalRepoLink.Content" xml:space="preserve">
+    <value>notscuffed/repkg</value>
+  </data>
+  <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
+    <value>C# 12</value>
+  </data>
+  <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
+    <value>WE Tool использует repkg_re как бэкенд извлечения пакетов: компилирует external/repkg_Re при сборке, поставляет RePKG_Re.exe с уведомлениями о сторонних компонентах и вызывает его из командной строки при извлечении.&#10;Отказ от ответственности: инструмент предназначен только для личного обучения и резервного копирования. Обои и их ресурсы принадлежат соответствующим авторам. Уважайте права оригинальных авторов и не используйте извлечённое содержимое в коммерческих целях или для несанкционированного распространения.</value>
+  </data>
+  <data name="Info_AboutTitle.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_RepkgTitle.Text" xml:space="preserve">
+    <value></value>
   </data>
 </root>

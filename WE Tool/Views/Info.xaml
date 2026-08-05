@@ -8,11 +8,14 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:uc="using:WE_Tool.Controls"
+    xmlns:models="using:WE_Tool.Models"
     NavigationCacheMode="Enabled">
 
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="25,10,25,0">
+                <TextBlock x:Uid="Info_AboutTitle" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,20,0,10"/>
                 <controls:SettingsExpander x:Uid="Info_About" Margin="0,0,0,10">
                     <controls:SettingsExpander.HeaderIcon>
                         <!-- 软件图标未定,先用透明 FontIcon 占位 20x20;定稿后替换为真实图标 -->
@@ -25,9 +28,127 @@
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
                                 <StackPanel>
-                                    <HyperlinkButton x:Name="GitHubButton" Margin="0,0,0,6" x:Uid="Info_GitHubButton" NavigateUri="https://github.com/ReZe20/WE-Tool"/>
+                                    <controls:WrapPanel HorizontalSpacing="8" VerticalSpacing="4" Margin="0,0,0,6">
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Name="GitHubButton" x:Uid="Info_GitHubButton" NavigateUri="https://github.com/ReZe20/WE-Tool"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_ReleaseNotes" NavigateUri="https://github.com/ReZe20/WE-Tool/releases"/>
+                                        <HyperlinkButton x:Uid="Info_LicenseButton" Click="LicenseButton_Click" Margin="8,0,0,0"/>
+                                        <HyperlinkButton x:Uid="Info_ThirdPartyButton" Click="ThirdPartyButton_Click" Margin="8,0,0,0"/>
+                                    </controls:WrapPanel>
                                     <TextBlock x:Uid="Info_Feedback" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
-                                    <HyperlinkButton x:Uid="Info_GitHubIssues" NavigateUri="https://github.com/ReZe20/WE-Tool/issues"/>
+                                    <controls:WrapPanel HorizontalSpacing="8" VerticalSpacing="4" Margin="0,0,0,6">
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_GitHubIssues" NavigateUri="https://github.com/ReZe20/WE-Tool/issues"/>
+                                    </controls:WrapPanel>
+                                    <TextBlock x:Uid="Info_Credits" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <controls:WrapPanel HorizontalSpacing="8" VerticalSpacing="4">
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine10" NavigateUri="https://github.com/dotnet/csharplang" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine1" NavigateUri="https://dotnet.microsoft.com/" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine2" NavigateUri="https://github.com/microsoft/WindowsAppSDK" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine3" NavigateUri="https://github.com/CommunityToolkit/Windows" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine4" NavigateUri="https://github.com/Facepunch/Facepunch.Steamworks" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine5" NavigateUri="https://github.com/dotnet/efcore" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine6" NavigateUri="https://github.com/JamesNK/Newtonsoft.Json" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine7" NavigateUri="https://github.com/serilog/serilog" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine8" NavigateUri="https://github.com/dotMorten/WinUIEx" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine9" NavigateUri="https://github.com/ReZe20/repkg-Re" FontSize="12"/>
+                                    </controls:WrapPanel>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel>
+                                    <TextBlock x:Uid="Info_Contributors" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <ItemsControl ItemsSource="{x:Bind Contributors}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <controls:WrapPanel HorizontalSpacing="1" VerticalSpacing="1"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Contributor">
+                                                <uc:ContributorCard
+                                                    AvatarSource="{x:Bind AvatarSource}"
+                                                    Badges="{x:Bind Badges}"
+                                                    Description="{x:Bind Description}"
+                                                    Header="{x:Bind Header}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel>
+                                    <TextBlock x:Uid="Info_RepkgReferenceDisclaimer" TextWrapping="Wrap" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+                <TextBlock x:Uid="Info_RepkgTitle" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,20,0,10"/>
+                <controls:SettingsExpander x:Uid="Info_RepkgExpander" Margin="0,0,0,10">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <!-- repkg 图标未定,同 WE Tool 用透明 FontIcon 占位 20x20;定稿后替换为真实图标 -->
+                        <FontIcon FontSize="20" Width="20" Height="20" Opacity="0"/>
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.Content>
+                        <TextBlock Text="{x:Bind RepkgVersionText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    </controls:SettingsExpander.Content>
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgGitHubButton" NavigateUri="https://github.com/ReZe20/repkg-Re"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgReleaseNotes" NavigateUri="https://github.com/ReZe20/repkg-Re/releases"/>
+                                        <HyperlinkButton x:Uid="Info_RepkgLicenseButton" Click="RepkgLicenseButton_Click" Margin="8,0,0,0"/>
+                                        <HyperlinkButton x:Uid="Info_RepkgThirdPartyButton" Click="RepkgThirdPartyButton_Click" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock x:Uid="Info_Feedback" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgIssues" NavigateUri="https://github.com/ReZe20/repkg-Re/issues"/>
+                                    <TextBlock x:Uid="Info_Credits" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <controls:WrapPanel HorizontalSpacing="8" VerticalSpacing="4">
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine6" NavigateUri="https://github.com/dotnet/csharplang" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine1" NavigateUri="https://dotnet.microsoft.com/en-us/download/dotnet-framework" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine2" NavigateUri="https://github.com/commandlineparser/commandline" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine3" NavigateUri="https://github.com/MiloszKrajewski/K4os.Compression.LZ4" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine4" NavigateUri="https://github.com/JamesNK/Newtonsoft.Json" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine5" NavigateUri="https://github.com/SixLabors/ImageSharp" FontSize="12"/>
+                                    </controls:WrapPanel>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel>
+                                    <TextBlock x:Uid="Info_Contributors" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <ItemsControl ItemsSource="{x:Bind RepkgContributors}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <controls:WrapPanel HorizontalSpacing="1" VerticalSpacing="1"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Contributor">
+                                                <uc:ContributorCard
+                                                    AvatarSource="{x:Bind AvatarSource}"
+                                                    Badges="{x:Bind Badges}"
+                                                    Description="{x:Bind Description}"
+                                                    Header="{x:Bind Header}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel>
+                                    <TextBlock x:Uid="Info_RepkgStory" TextWrapping="Wrap" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                                    <TextBlock x:Uid="Info_RepkgOriginalRepoLabel" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,8,0,0"/>
+                                    <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgOriginalRepoLink" NavigateUri="https://github.com/notscuffed/repkg" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </controls:SettingsCard.Header>
                         </controls:SettingsCard>

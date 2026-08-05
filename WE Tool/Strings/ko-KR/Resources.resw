@@ -426,6 +426,9 @@
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
     <value>추출</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>구독 취소</value>
+  </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
     <value>필터 응답 지연(ms)</value>
   </data>
@@ -895,9 +898,6 @@ project.json 및 미리보기 복사
   <data name="AppBarButton_ListMode.Text" xml:space="preserve">
     <value>목록</value>
   </data>
-  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
-    <value>구독 취소</value>
-  </data>
   <data name="Pagination.Text" xml:space="preserve">
     <value>페이지 매김</value>
   </data>
@@ -954,5 +954,137 @@ project.json 및 미리보기 복사
   </data>
   <data name="Info_GitHubIssues.Content" xml:space="preserve">
     <value>GitHub Issues</value>
+  </data>
+  <data name="Info_LicenseButton.Content" xml:space="preserve">
+    <value>라이선스 보기</value>
+  </data>
+  <data name="Info_ThirdPartyButton.Content" xml:space="preserve">
+    <value>타사 구성 요소</value>
+  </data>
+  <data name="Info_LicenseFileMissing.Text" xml:space="preserve">
+    <value>라이선스 파일을 찾을 수 없음</value>
+  </data>
+  <data name="Info_DialogClose.Content" xml:space="preserve">
+    <value>닫기</value>
+  </data>
+  <data name="Info_ReleaseNotes.Content" xml:space="preserve">
+    <value>릴리스 노트</value>
+  </data>
+  <data name="Info_Diagnostics.Text" xml:space="preserve">
+    <value>진단 정보</value>
+  </data>
+  <data name="Info_ConfigPath.Text" xml:space="preserve">
+    <value>구성 파일</value>
+  </data>
+  <data name="Info_LogPath.Text" xml:space="preserve">
+    <value>로그 파일</value>
+  </data>
+  <data name="Info_CachePath.Text" xml:space="preserve">
+    <value>캐시 디렉터리</value>
+  </data>
+  <data name="Info_CopyButton.Content" xml:space="preserve">
+    <value>복사</value>
+  </data>
+  <data name="Info_OpenButton.Content" xml:space="preserve">
+    <value>열기</value>
+  </data>
+  <data name="Info_Credits.Text" xml:space="preserve">
+    <value>기술 스택</value>
+  </data>
+  <data name="Info_CreditsLine1.Content" xml:space="preserve">
+    <value>.NET 8</value>
+  </data>
+  <data name="Info_CreditsLine2.Content" xml:space="preserve">
+    <value>WinUI 3 (Windows App SDK 1.8)</value>
+  </data>
+  <data name="Info_CreditsLine3.Content" xml:space="preserve">
+    <value>CommunityToolkit (MVVM 8.4 / WinUI Controls 8.2)</value>
+  </data>
+  <data name="Info_CreditsLine4.Content" xml:space="preserve">
+    <value>Facepunch.Steamworks 2.3</value>
+  </data>
+  <data name="Info_CreditsLine5.Content" xml:space="preserve">
+    <value>Microsoft.Data.Sqlite 10.0</value>
+  </data>
+  <data name="Info_CreditsLine6.Content" xml:space="preserve">
+    <value>Newtonsoft.Json 13.0</value>
+  </data>
+  <data name="Info_CreditsLine7.Content" xml:space="preserve">
+    <value>Serilog 4.3</value>
+  </data>
+  <data name="Info_CreditsLine8.Content" xml:space="preserve">
+    <value>WinUIEx 2.9</value>
+  </data>
+  <data name="Info_CreditsLine9.Content" xml:space="preserve">
+    <value>RePKG_Re (notscuffed/repkg 기반)</value>
+  </data>
+  <data name="Info_License.Header" xml:space="preserve">
+    <value>오픈소스 라이선스</value>
+  </data>
+  <data name="Info_ViewInBrowser.Text" xml:space="preserve">
+    <value>브라우저에서 보기</value>
+  </data>
+  <data name="Info_CreditsLine10.Content" xml:space="preserve">
+    <value>C# 12</value>
+  </data>
+  <data name="Info_Contributors.Text" xml:space="preserve">
+    <value>기여자</value>
+  </data>
+  <data name="Info_RepkgExpander.Header" xml:space="preserve">
+    <value>RePKG_Re</value>
+  </data>
+  <data name="Info_RepkgExpander.Description" xml:space="preserve">
+    <value>© notscuffed 2019, ReZe20 2026. Licensed under MIT.</value>
+  </data>
+  <data name="Info_RepkgGitHubButton.Content" xml:space="preserve">
+    <value>GitHub 저장소</value>
+  </data>
+  <data name="Info_RepkgReleaseNotes.Content" xml:space="preserve">
+    <value>릴리스 노트</value>
+  </data>
+  <data name="Info_RepkgIssues.Content" xml:space="preserve">
+    <value>GitHub Issues</value>
+  </data>
+  <data name="Info_RepkgCreditsLine1.Content" xml:space="preserve">
+    <value>.NET Framework 4.7.2</value>
+  </data>
+  <data name="Info_RepkgCreditsLine2.Content" xml:space="preserve">
+    <value>CommandLineParser 2.9</value>
+  </data>
+  <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
+    <value>K4os.Compression.LZ4 1.3</value>
+  </data>
+  <data name="Info_RepkgCreditsLine4.Content" xml:space="preserve">
+    <value>Newtonsoft.Json 13.0</value>
+  </data>
+  <data name="Info_RepkgCreditsLine5.Content" xml:space="preserve">
+    <value>SixLabors.ImageSharp 2.1</value>
+  </data>
+  <data name="Info_RepkgStory.Text" xml:space="preserve">
+    <value>RePKG_Re는 notscuffed의 RePKG 프로젝트(배경화면 패키지 추출기, MIT 라이선스)에서 시작되었습니다. ReZe20은 원저작자의 저작권을 유지한 채 지속적으로 유지보수하고 개선하며 WE Tool의 추출 백엔드로 사용하고 있습니다.</value>
+  </data>
+  <data name="Info_RepkgLicenseButton.Content" xml:space="preserve">
+    <value>라이선스 보기</value>
+  </data>
+  <data name="Info_RepkgThirdPartyButton.Content" xml:space="preserve">
+    <value>타사 구성 요소</value>
+  </data>
+  <data name="Info_RepkgOriginalRepoLabel.Text" xml:space="preserve">
+    <value>이 프로젝트는 다음 저장소를 개조한 것입니다</value>
+  </data>
+  <data name="Info_RepkgOriginalRepoLink.Content" xml:space="preserve">
+    <value>notscuffed/repkg</value>
+  </data>
+  <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
+    <value>C# 12</value>
+  </data>
+  <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
+    <value>WE Tool은 repkg_re를 배경화면 패키지 추출 백엔드로 사용합니다. 빌드 시 external/repkg_Re를 컴파일하고 RePKG_Re.exe와 타사 고지를 함께 배포하며, 추출 시 명령줄로 호출합니다.&#10;면책 조항: 이 도구는 개인 학습 및 백업 용도로만 사용됩니다. 배경화면 및 해당 자산의 저작권은 각 저작자에게 있습니다. 원저작자의 권리를 존중하고 추출된 콘텐츠를 상업적 용도나 무단 재배포에 사용하지 마십시오.</value>
+  </data>
+  <data name="Info_AboutTitle.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_RepkgTitle.Text" xml:space="preserve">
+    <value></value>
   </data>
 </root>

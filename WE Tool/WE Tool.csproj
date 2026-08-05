@@ -13,7 +13,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>0.2.2</Version>
+    <Version>0.3.0</Version>
     <Authors>ReZe20</Authors>
     <Copyright>Copyright © 2026 ReZe20</Copyright>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
@@ -69,6 +69,25 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\external\repkg_Re\LICENSE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>repkg\LICENSE</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Contributors.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\ContributorsRepkg.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="Views\Info.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -90,6 +109,11 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\InstalledComponents.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Controls\ContributorCard.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

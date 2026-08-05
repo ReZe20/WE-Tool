@@ -426,6 +426,9 @@
   <data name="AppBarButton_Extract.Label" xml:space="preserve">
     <value>Extrair</value>
   </data>
+  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
+    <value>Cancelar inscrição</value>
+  </data>
   <data name="PapersSetting_FilterResultResponseDelay.Text" xml:space="preserve">
     <value>Atraso de resposta do filtro (ms)</value>
   </data>
@@ -895,9 +898,6 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
   <data name="AppBarButton_ListMode.Text" xml:space="preserve">
     <value>Lista</value>
   </data>
-  <data name="AppBarButton_Unsubscribe.Label" xml:space="preserve">
-    <value>Cancelar inscrição</value>
-  </data>
   <data name="Pagination.Text" xml:space="preserve">
     <value>Paginação</value>
   </data>
@@ -954,5 +954,137 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
   </data>
   <data name="Info_GitHubIssues.Content" xml:space="preserve">
     <value>GitHub Issues</value>
+  </data>
+  <data name="Info_LicenseButton.Content" xml:space="preserve">
+    <value>Ver licença</value>
+  </data>
+  <data name="Info_ThirdPartyButton.Content" xml:space="preserve">
+    <value>Avisos de terceiros</value>
+  </data>
+  <data name="Info_LicenseFileMissing.Text" xml:space="preserve">
+    <value>Arquivo de licença não encontrado</value>
+  </data>
+  <data name="Info_DialogClose.Content" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="Info_ReleaseNotes.Content" xml:space="preserve">
+    <value>Notas de versão</value>
+  </data>
+  <data name="Info_Diagnostics.Text" xml:space="preserve">
+    <value>Diagnóstico</value>
+  </data>
+  <data name="Info_ConfigPath.Text" xml:space="preserve">
+    <value>Arquivo de configuração</value>
+  </data>
+  <data name="Info_LogPath.Text" xml:space="preserve">
+    <value>Arquivo de log</value>
+  </data>
+  <data name="Info_CachePath.Text" xml:space="preserve">
+    <value>Diretório de cache</value>
+  </data>
+  <data name="Info_CopyButton.Content" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="Info_OpenButton.Content" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="Info_Credits.Text" xml:space="preserve">
+    <value>Stack de tecnologia</value>
+  </data>
+  <data name="Info_CreditsLine1.Content" xml:space="preserve">
+    <value>.NET 8</value>
+  </data>
+  <data name="Info_CreditsLine2.Content" xml:space="preserve">
+    <value>WinUI 3 (Windows App SDK 1.8)</value>
+  </data>
+  <data name="Info_CreditsLine3.Content" xml:space="preserve">
+    <value>CommunityToolkit (MVVM 8.4 / WinUI Controls 8.2)</value>
+  </data>
+  <data name="Info_CreditsLine4.Content" xml:space="preserve">
+    <value>Facepunch.Steamworks 2.3</value>
+  </data>
+  <data name="Info_CreditsLine5.Content" xml:space="preserve">
+    <value>Microsoft.Data.Sqlite 10.0</value>
+  </data>
+  <data name="Info_CreditsLine6.Content" xml:space="preserve">
+    <value>Newtonsoft.Json 13.0</value>
+  </data>
+  <data name="Info_CreditsLine7.Content" xml:space="preserve">
+    <value>Serilog 4.3</value>
+  </data>
+  <data name="Info_CreditsLine8.Content" xml:space="preserve">
+    <value>WinUIEx 2.9</value>
+  </data>
+  <data name="Info_CreditsLine9.Content" xml:space="preserve">
+    <value>RePKG_Re (baseado em notscuffed/repkg)</value>
+  </data>
+  <data name="Info_License.Header" xml:space="preserve">
+    <value>Licença de código aberto</value>
+  </data>
+  <data name="Info_ViewInBrowser.Text" xml:space="preserve">
+    <value>Ver no navegador</value>
+  </data>
+  <data name="Info_CreditsLine10.Content" xml:space="preserve">
+    <value>C# 12</value>
+  </data>
+  <data name="Info_Contributors.Text" xml:space="preserve">
+    <value>Colaboradores</value>
+  </data>
+  <data name="Info_RepkgExpander.Header" xml:space="preserve">
+    <value>RePKG_Re</value>
+  </data>
+  <data name="Info_RepkgExpander.Description" xml:space="preserve">
+    <value>© notscuffed 2019, ReZe20 2026. Licensed under MIT.</value>
+  </data>
+  <data name="Info_RepkgGitHubButton.Content" xml:space="preserve">
+    <value>Repositório do GitHub</value>
+  </data>
+  <data name="Info_RepkgReleaseNotes.Content" xml:space="preserve">
+    <value>Notas de versão</value>
+  </data>
+  <data name="Info_RepkgIssues.Content" xml:space="preserve">
+    <value>GitHub Issues</value>
+  </data>
+  <data name="Info_RepkgCreditsLine1.Content" xml:space="preserve">
+    <value>.NET Framework 4.7.2</value>
+  </data>
+  <data name="Info_RepkgCreditsLine2.Content" xml:space="preserve">
+    <value>CommandLineParser 2.9</value>
+  </data>
+  <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
+    <value>K4os.Compression.LZ4 1.3</value>
+  </data>
+  <data name="Info_RepkgCreditsLine4.Content" xml:space="preserve">
+    <value>Newtonsoft.Json 13.0</value>
+  </data>
+  <data name="Info_RepkgCreditsLine5.Content" xml:space="preserve">
+    <value>SixLabors.ImageSharp 2.1</value>
+  </data>
+  <data name="Info_RepkgStory.Text" xml:space="preserve">
+    <value>O RePKG_Re origina-se do projeto RePKG do notscuffed — um extrator de pacotes do Wallpaper Engine com licença MIT. O ReZe20 o mantém e melhora preservando os direitos autorais do autor original, usando-o como backend de extração do WE Tool.</value>
+  </data>
+  <data name="Info_RepkgLicenseButton.Content" xml:space="preserve">
+    <value>Ver licença</value>
+  </data>
+  <data name="Info_RepkgThirdPartyButton.Content" xml:space="preserve">
+    <value>Avisos de terceiros</value>
+  </data>
+  <data name="Info_RepkgOriginalRepoLabel.Text" xml:space="preserve">
+    <value>Este projeto é um fork modificado do seguinte repositório</value>
+  </data>
+  <data name="Info_RepkgOriginalRepoLink.Content" xml:space="preserve">
+    <value>notscuffed/repkg</value>
+  </data>
+  <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
+    <value>C# 12</value>
+  </data>
+  <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
+    <value>O WE Tool usa o repkg_re como backend de extração de pacotes: compila o external/repkg_Re no build, distribui o RePKG_Re.exe com os avisos de terceiros e o invoca pela linha de comando durante a extração.&#10;Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. Os papéis de parede e seus recursos pertencem aos respectivos autores. Respeite os direitos dos autores originais e não use o conteúdo extraído para fins comerciais ou redistribuição não autorizada.</value>
+  </data>
+  <data name="Info_AboutTitle.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_RepkgTitle.Text" xml:space="preserve">
+    <value></value>
   </data>
 </root>

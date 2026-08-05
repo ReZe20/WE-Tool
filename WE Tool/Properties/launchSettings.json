@@ -4,7 +4,8 @@
       "commandName": "MsixPackage"
     },
     "WE Tool(Unpackaged)": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "debugEngines": "managed"
     }
   }
 }
