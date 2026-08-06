@@ -13,9 +13,31 @@
     NavigationCacheMode="Enabled">
 
     <Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="75"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock x:Uid="Info_LogTitle" FontSize="25" VerticalAlignment="Bottom" Margin="30,0,0,6"/>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
             <StackPanel Margin="25,10,25,0">
-                <TextBlock x:Uid="Info_AboutTitle" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,20,0,10"/>
+                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
+                    <ScrollViewer x:Name="LogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="LogScrollViewer_ViewChanged">
+                        <TextBlock x:Name="LogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
+                    </ScrollViewer>
+                </Border>
+                <Grid Margin="0,8,0,0">
+                    <InfoBar x:Name="SteamStatusBar" IsOpen="False" IsClosable="False">
+                        <InfoBar.ActionButton>
+                            <Button x:Name="SteamRetryButton" x:Uid="Info_SteamRetry" Click="SteamRetryButton_Click" Visibility="Collapsed"/>
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                    <!-- 重试期间覆盖在 InfoBar 顶部的加载条 -->
+                    <ProgressBar x:Name="RetryProgressBar" IsIndeterminate="True" Visibility="Collapsed"
+                                 VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="3" Margin="8,0"/>
+                </Grid>
+                <!-- RePKG_Re 后端版本校验 -->
+                <InfoBar x:Name="RepkgStatusBar" IsOpen="False" IsClosable="False" Margin="0,8,0,0"/>
+                <TextBlock x:Uid="Info_AboutTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
                 <controls:SettingsExpander x:Uid="Info_About" Margin="0,0,0,10">
                     <controls:SettingsExpander.HeaderIcon>
                         <!-- 软件图标未定,先用透明 FontIcon 占位 20x20;定稿后替换为真实图标 -->
@@ -80,6 +102,27 @@
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
                                 <StackPanel>
+                                    <TextBlock x:Uid="Info_TranslationTitle" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <ItemsControl ItemsSource="{x:Bind TranslationStatus}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="models:TranslationStatusItem">
+                                                <Grid ColumnSpacing="8" Margin="0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind PercentText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel>
                                     <TextBlock x:Uid="Info_RepkgReferenceDisclaimer" TextWrapping="Wrap" Style="{ThemeResource CaptionTextBlockStyle}"/>
                                 </StackPanel>
                             </controls:SettingsCard.Header>
@@ -87,7 +130,7 @@
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
-                <TextBlock x:Uid="Info_RepkgTitle" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,20,0,10"/>
+                <TextBlock x:Uid="Info_RepkgTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
                 <controls:SettingsExpander x:Uid="Info_RepkgExpander" Margin="0,0,0,10">
                     <controls:SettingsExpander.HeaderIcon>
                         <!-- repkg 图标未定,同 WE Tool 用透明 FontIcon 占位 20x20;定稿后替换为真实图标 -->

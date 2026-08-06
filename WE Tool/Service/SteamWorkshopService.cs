@@ -1,115 +1,303 @@
 using Serilog;
-using Steamworks;
-using Steamworks.Ugc;
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace WE_Tool.Service
+namespace WE_Tool.Service;
+
+/// <summary>Steamworks 状态</summary>
+public enum SteamworksStatus
 {
-    /// <summary>
-    /// Steam 创意工坊服务（全局单例）。
-    /// Init 只调用一次，Shutdown 随 App 退出自动执行。
-    /// 所有 Steam async API 调用使用 ConfigureAwait(false) 避免与 WinUI SynchronizationContext 冲突。
-    /// </summary>
-    public class SteamWorkshopService : IDisposable
+    /// <summary>未启动(尚未拉起桥接进程)</summary>
+    NotStarted,
+    /// <summary>桥接进程存活且上次状态查询正常</summary>
+    Running,
+    /// <summary>启动失败/初始化失败(如 Steam 未运行)</summary>
+    Failed,
+    /// <summary>曾正常运行但桥接进程已退出(如 Steam 客户端关闭时被杀)</summary>
+    Disconnected,
+}
+
+/// <summary>
+/// Steamworks 桥接管理器:Steamworks 注册在独立子进程 SteamworksBridge.exe 中,
+/// 通过 stdin/stdout 行 JSON 协议通信。原因:Steam 客户端退出时会强制关闭以游戏 AppID
+/// 连接的进程(连 Wallpaper Engine 本体都会被关),子进程方案让被杀的是桥接进程,主应用存活。
+/// </summary>
+public class SteamWorkshopService : IDisposable
+{
+    private const string BridgeExeName = "SteamworksBridge.exe";
+
+    private static SteamWorkshopService? _instance;
+    private static readonly object Lock = new();
+
+    private readonly object _ioLock = new(); // 同一时刻只有一个请求在途
+    private Process? _bridge;
+    private TaskCompletionSource<string>? _pendingResponse;
+    private bool _disposed;
+    private bool _hadGoodStatus; // 桥接进程是否曾成功响应过状态查询
+    private bool _startAttempted; // 已尝试过启动(失败后需手动重试,避免每秒自动重启刷屏)
+
+    /// <summary>状态发生切换时触发(桥接启动成功/失败、桥接退出;UI 据此更新导航徽标等)</summary>
+    public static event Action? StatusChanged;
+
+    /// <summary>获取全局单例(首次调用即拉起桥接进程)</summary>
+    public static SteamWorkshopService GetInstance()
     {
-        private static SteamWorkshopService? _instance;
-        private static readonly object _lock = new();
-
-        private bool _initialized;
-        private bool _disposed;
-
-        private SteamWorkshopService() { }
-
-        /// <summary>获取全局单例（同时初始化 Steamworks）</summary>
-        public static SteamWorkshopService GetInstance()
+        if (_instance == null)
         {
-            if (_instance == null)
+            lock (Lock)
             {
-                lock (_lock)
+                _instance ??= new SteamWorkshopService();
+            }
+        }
+        _instance.StartBridgeIfNeeded();
+        return _instance;
+    }
+
+    /// <summary>惰性启动桥接进程(仅首次;退出后需通过重试按钮 Reinitialize 重启)</summary>
+    private void StartBridgeIfNeeded()
+    {
+        if (_startAttempted) return;
+        lock (Lock)
+        {
+            if (_startAttempted) return;
+            _startAttempted = true;
+            StartBridge();
+        }
+    }
+
+    /// <summary>当前状态</summary>
+    public SteamworksStatus Status
+    {
+        get
+        {
+            if (_bridge == null || _bridge.HasExited)
+                return _hadGoodStatus ? SteamworksStatus.Disconnected : SteamworksStatus.Failed;
+            return SteamworksStatus.Running;
+        }
+    }
+
+    /// <summary>是否已成功初始化(兼容旧调用方)</summary>
+    public bool IsAvailable => Status == SteamworksStatus.Running;
+
+    /// <summary>最近一次状态查询返回的 Steam 用户名</summary>
+    public string? UserName { get; private set; }
+
+    /// <summary>在后台线程拉起桥接进程(Info 页加载用;进程启动很快,初始化发生在子进程内)</summary>
+    public static Task InitializeOnBackground()
+        => Task.Run(GetInstance);
+
+    /// <summary>重启桥接进程(Steam 恢复后由 Info 页重试按钮调用)</summary>
+    public bool Reinitialize()
+    {
+        lock (Lock)
+        {
+            StopBridge();
+            _startAttempted = true;
+            return StartBridge();
+        }
+    }
+
+    /// <summary>对指定工坊 ID 执行取消订阅</summary>
+    public async Task<bool> UnsubscribeAsync(ulong workshopId)
+    {
+        try
+        {
+            var response = await RequestAsync(
+                JsonSerializer.Serialize(new { op = "unsubscribe", workshopId = workshopId.ToString() }),
+                TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(response);
+            return doc.RootElement.GetProperty("ok").GetBoolean();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "取消订阅通信异常: WorkshopID={WorkshopId}", workshopId);
+            return false;
+        }
+    }
+
+    /// <summary>刷新状态(Info 页轮询用):ping 桥接进程,更新用户名</summary>
+    public async Task RefreshStatusAsync()
+    {
+        if (_bridge == null || _bridge.HasExited)
+        {
+            UserName = null;
+            return;
+        }
+        try
+        {
+            var response = await RequestAsync(
+                JsonSerializer.Serialize(new { op = "status" }),
+                TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(response);
+            if (doc.RootElement.GetProperty("ok").GetBoolean())
+            {
+                UserName = doc.RootElement.TryGetProperty("user", out var u) ? u.GetString() : null;
+                _hadGoodStatus = true;
+            }
+        }
+        catch
+        {
+            UserName = null;
+        }
+    }
+
+    /// <summary>App 退出时调用,结束桥接进程</summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        lock (Lock)
+        {
+            StopBridge();
+        }
+    }
+
+    private bool StartBridge()
+    {
+        try
+        {
+            var exePath = Path.Combine(AppContext.BaseDirectory, BridgeExeName);
+            if (!File.Exists(exePath))
+            {
+                Log.Error("SteamworksBridge.exe 缺失于 {Path},取消订阅功能不可用。", exePath);
+                _hadGoodStatus = false;
+                StatusChanged?.Invoke();
+                return false;
+            }
+
+            var bridge = new Process
+            {
+                StartInfo = new ProcessStartInfo(exePath)
                 {
-                    if (_instance == null)
-                    {
-                        _instance = new SteamWorkshopService();
-                        if (!_instance.Init())
-                            Log.Warning("SteamWorkshopService 初始化失败，取消订阅功能不可用。");
-                    }
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    StandardInputEncoding = Encoding.UTF8,
+                    StandardOutputEncoding = Encoding.UTF8,
+                },
+                EnableRaisingEvents = true,
+            };
+            // 自包含发布(无 .NET 8 的机器)时,桥接为框架依赖进程,须指向应用自带的运行时;
+            // 框架依赖安装(本机有 .NET 8)则不用设置
+            if (File.Exists(Path.Combine(AppContext.BaseDirectory, "hostfxr.dll")))
+                bridge.StartInfo.Environment["DOTNET_ROOT"] = AppContext.BaseDirectory;
+            bridge.Exited += (_, _) =>
+            {
+                // 桥接进程退出(Steam 关闭时被 Steam 终止,或自身崩溃)
+                Log.Warning("Steamworks 桥接进程已退出 (PID {Pid}, ExitCode {Code})",
+                    bridge.Id, bridge.ExitCode);
+                lock (_ioLock)
+                {
+                    _pendingResponse?.TrySetCanceled();
+                    _pendingResponse = null;
+                }
+                // 仅当退出的还是当前桥接进程时通知(重试中被替换的旧进程不触发)
+                if (ReferenceEquals(bridge, _bridge))
+                    StatusChanged?.Invoke();
+            };
+            bridge.Start();
+            _bridge = bridge;
+            _hadGoodStatus = false;
+            _ = Task.Run(() => ReadBridgeOutput(bridge));
+            Log.Information("Steamworks 桥接进程已启动 (PID {Pid})", bridge.Id);
+            StatusChanged?.Invoke();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Steamworks 桥接进程启动失败");
+            _hadGoodStatus = false;
+            StatusChanged?.Invoke();
+            return false;
+        }
+    }
+
+    private void StopBridge()
+    {
+        var bridge = _bridge;
+        _bridge = null;
+        if (bridge == null) return;
+
+        // 先给优雅退出机会,再强杀
+        try
+        {
+            if (!bridge.HasExited)
+            {
+                bridge.StandardInput.WriteLine(JsonSerializer.Serialize(new { op = "exit" }));
+                bridge.StandardInput.Flush();
+                if (!bridge.WaitForExit(2000))
+                    bridge.Kill();
+            }
+        }
+        catch
+        {
+            try { bridge.Kill(); } catch { }
+        }
+        finally
+        {
+            bridge.Dispose();
+            lock (_ioLock)
+            {
+                _pendingResponse?.TrySetCanceled();
+                _pendingResponse = null;
+            }
+        }
+    }
+
+    private async Task ReadBridgeOutput(Process bridge)
+    {
+        try
+        {
+            while (bridge.StandardOutput.ReadLine() is { } line)
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                lock (_ioLock)
+                {
+                    _pendingResponse?.TrySetResult(line);
+                    _pendingResponse = null;
                 }
             }
-            return _instance;
         }
-
-        /// <summary>是否已成功初始化</summary>
-        public bool IsAvailable => _initialized;
-
-        /// <summary>仅内部调用一次的初始化</summary>
-        private bool Init()
+        catch
         {
-            try
-            {
-                // 注意：asyncCallbacks: true 会设置全局 SynchronizationContext。
-                // WinUI 已有自己的 DispatcherQueueSynchronizationContext，
-                // 因此在调用方使用 ConfigureAwait(false) 让延续在 ThreadPool 上运行。
-                SteamClient.Init(431960, asyncCallbacks: true);
-                _initialized = true;
-                Log.Information($"Steamworks 初始化成功，用户: {SteamClient.Name} (SteamID: {SteamClient.SteamId})");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Steamworks 初始化失败，请确认 Steam 已在运行。");
-                return false;
-            }
+            // 桥接进程退出导致读取中断,属预期
         }
+    }
 
-        /// <summary>对指定工坊 ID 执行取消订阅</summary>
-        public async Task<bool> UnsubscribeAsync(ulong workshopId)
+    /// <summary>发送一行请求并等待一行响应(同一时刻仅一个请求在途)</summary>
+    private async Task<string> RequestAsync(string json, TimeSpan timeout)
+    {
+        Task<string> responseTask;
+        lock (_ioLock)
         {
-            if (!_initialized) return false;
+            if (_bridge == null || _bridge.HasExited)
+                throw new InvalidOperationException("Steamworks 桥接进程未运行");
 
-            try
-            {
-                var item = new Item(workshopId);
-                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(15));
-                // ConfigureAwait(false) 防止延续回到 WinUI UI 线程，避免 SynchronizationContext 冲突
-                bool success = await item.Unsubscribe().WaitAsync(cts.Token).ConfigureAwait(false);
-                Log.Information($"取消订阅 {(success ? "成功" : "失败")}: WorkshopID={workshopId}");
-                return success;
-            }
-            catch (OperationCanceledException)
-            {
-                Log.Warning($"取消订阅超时: WorkshopID={workshopId}");
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"取消订阅异常: WorkshopID={workshopId}");
-                return false;
-            }
+            _pendingResponse = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            responseTask = _pendingResponse.Task;
+            _bridge.StandardInput.WriteLine(json);
+            _bridge.StandardInput.Flush();
         }
 
-        /// <summary>App 退出时调用，释放 Steamworks 原生资源</summary>
-        public void Dispose()
+        using var cts = new CancellationTokenSource(timeout);
+        var completed = await Task.WhenAny(responseTask, Task.Delay(Timeout.Infinite, cts.Token)).ConfigureAwait(false);
+        cts.Cancel();
+        if (completed != responseTask)
         {
-            if (_disposed) return;
-            _disposed = true;
-            _initialized = false;
-
-            try
+            lock (_ioLock)
             {
-                SteamClient.Shutdown();
-                Log.Information("Steamworks 已关闭");
+                if (_pendingResponse?.Task == responseTask)
+                    _pendingResponse = null;
             }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Steamworks 关闭时出现异常");
-            }
-
-            lock (_lock)
-            {
-                _instance = null;
-            }
-            GC.SuppressFinalize(this);
+            throw new TimeoutException("Steamworks 桥接进程响应超时");
         }
+        return await responseTask.ConfigureAwait(false);
     }
 }

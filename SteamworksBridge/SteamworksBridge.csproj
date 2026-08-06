@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SteamworksBridge</AssemblyName>
+    <RootNamespace>SteamworksBridge</RootNamespace>
+    <Version>1.0.0</Version>
+    <!-- 固定输出路径:主项目以 Platform=x64 等全局属性构建时,SDK 默认输出路径会带平台段
+         (bin\x64\Debug),而引用解析按无平台段路径查找,导致 CS0006 元数据文件缺失;
+         显式固定后无论外部 Platform 为何值都输出到同一位置 -->
+    <OutputPath>bin\$(Configuration)\$(TargetFramework)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
+  </ItemGroup>
+
+</Project>

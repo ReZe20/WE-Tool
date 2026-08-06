@@ -54,8 +54,13 @@ namespace WE_Tool
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+                .WriteTo.File(logPath) // 统一写入单个 log.txt,不做按天滚动
                 .CreateLogger();
+
+            // 全局异常日志:任何线程的未处理异常都记录到 log.txt;
+            // Steamworks 回调循环的异常(关闭 Steam 时管道断开)不杀死应用
+            UnhandledException += OnUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
 
             Log.Information($"====应用程序已启动。路径：{appDataRoot}====", appDataRoot);
 
@@ -81,6 +86,23 @@ namespace WE_Tool
             _window.Activate();
             LoadTheme();
         }
+        /// <summary>UI 线程未处理异常:记录日志;Steamworks 相关的标记为已处理,避免关闭 Steam 时应用崩溃</summary>
+        private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            Log.Error(e.Exception, "未处理的 UI 线程异常");
+            if (e.Exception.StackTrace?.Contains("Steamworks", StringComparison.Ordinal) == true)
+                e.Handled = true;
+        }
+
+        /// <summary>非 UI 线程未处理异常:只记录(无法阻止进程终止,但能留下证据)</summary>
+        private void OnAppDomainUnhandledException(object sender, System.UnhandledExceptionEventArgs e)
+        {
+            if (e.ExceptionObject is Exception ex)
+                Log.Error(ex, "未处理的 AppDomain 异常");
+            else
+                Log.Error("未处理的 AppDomain 异常: {ExceptionObject}", e.ExceptionObject);
+        }
+
         public static string GetAppDataRoot()
         {
             string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);

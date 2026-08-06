@@ -1087,4 +1087,34 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
     <value></value>
   </data>
+  <data name="Info_LogTitle.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamRetry.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
+    <value></value>
+  </data>
 </root>

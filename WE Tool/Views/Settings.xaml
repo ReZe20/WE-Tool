@@ -16,670 +16,664 @@
     </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="35"/>
+            <RowDefinition Height="75"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="40"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" x:Uid="Settings" FontSize="25" VerticalAlignment="Center" Margin="30,0,0,0"/>
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <StackPanel  Margin="25,10,25,0">
+        <TextBlock Grid.Row="0" x:Uid="Settings" FontSize="25" VerticalAlignment="Bottom"  Margin="30,0,0,6"/>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel  Margin="25,10,25,0">
 
-                    <TextBlock x:Uid="Program" Margin="5,10,0,10"/>
-                    <controls:SettingsCard x:Uid="Programming_Language" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xF2B7;"/>
-                        </controls:SettingsCard.HeaderIcon>
-                        <ComboBox SelectedValuePath="Tag"
+                <TextBlock x:Uid="Program" Margin="5,10,0,10"/>
+                <controls:SettingsCard x:Uid="Programming_Language" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xF2B7;"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <ComboBox SelectedValuePath="Tag"
                                   MinWidth="150" 
                                   SelectedValue="{x:Bind ViewModel.AppSettingsVM.AppLanguage, Mode=TwoWay}">
-                            <ComboBoxItem Tag="en-US">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="This language is translated by machine"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="English" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="zh-CN" Content="简体中文"/>
-                            <ComboBoxItem Tag="zh-TW">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="此語言由機器翻譯"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="繁體中文" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="ja-JP">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="この言語は機械翻訳によるものです"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="日本語" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="ko-KR">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="이 언어는 기계 번역되었습니다"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="한국어" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="fr-FR">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="Cette langue est traduite automatiquement"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Français" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="de-DE">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="Diese Sprache wurde maschinell übersetzt"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Deutsch" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="es-ES">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="Este idioma se ha traducido automáticamente"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Español" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="it-IT">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="Questa lingua è tradotta automaticamente"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Italiano" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="pt-BR">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="Este idioma foi traduzido por máquina"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Português (Brasil)" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="ru-RU">
-                                <ToolTipService.ToolTip>
-                                    <ToolTip Content="Этот язык переведён машинным переводом"/>
-                                </ToolTipService.ToolTip>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Русский" VerticalAlignment="Center"/>
-                                    <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </ComboBoxItem>
-                            <ComboBoxItem Tag="default" x:Uid="FollowSystem"/>
-                        </ComboBox>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="StartPage" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE8A1;"/>
-                        </controls:SettingsCard.HeaderIcon>
-                        <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.StartPageTag, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
-                            <ComboBoxItem Tag="Papers" x:Uid="InstalledWallpapers"/>
-                            <ComboBoxItem Tag="InstalledComponents" x:Uid="InstalledComponentsPage"/>
-                            <ComboBoxItem Tag="LoadPapers" x:Uid="ImportWallpapers"/>
-                        </ComboBox>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="Theme" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE790;" />
-                        </controls:SettingsCard.HeaderIcon>
-                        <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.Theme, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
-                            <ComboBoxItem Tag="Default" x:Uid="FollowSystem"/>
-                            <ComboBoxItem Tag="Light" x:Uid="Light"/>
-                            <ComboBoxItem Tag="Dark" x:Uid="Dark"/>
-                        </ComboBox>
-                    </controls:SettingsCard>
-                    
-                    <controls:SettingsCard x:Uid="ScanCache" Margin="0,0,0,10" Description="扫描缓存可用于程序加速扫描速度">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xEE94;"/>
-                        </controls:SettingsCard.HeaderIcon>
-                        <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.ScanCacheEnabled, Mode=TwoWay}" SelectedValuePath="Tag" MinWidth="150">
-                            <ComboBoxItem Tag="1" x:Uid="Enabled"/>
-                            <ComboBoxItem Tag="0" x:Uid="Disabled"/>
-                        </ComboBox>
-                    </controls:SettingsCard>
+                        <ComboBoxItem Tag="en-US">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="This language is translated by machine"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="English" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="zh-CN" Content="简体中文"/>
+                        <ComboBoxItem Tag="zh-TW">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="此語言由機器翻譯"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="繁體中文" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="ja-JP">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="この言語は機械翻訳によるものです"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="日本語" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="ko-KR">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="이 언어는 기계 번역되었습니다"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="한국어" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="fr-FR">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="Cette langue est traduite automatiquement"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Français" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="de-DE">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="Diese Sprache wurde maschinell übersetzt"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Deutsch" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="es-ES">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="Este idioma se ha traducido automáticamente"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Español" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="it-IT">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="Questa lingua è tradotta automaticamente"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Italiano" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="pt-BR">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="Este idioma foi traduzido por máquina"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Português (Brasil)" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="ru-RU">
+                            <ToolTipService.ToolTip>
+                                <ToolTip Content="Этот язык переведён машинным переводом"/>
+                            </ToolTipService.ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Русский" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="default" x:Uid="FollowSystem"/>
+                    </ComboBox>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="StartPage" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE8A1;"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.StartPageTag, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
+                        <ComboBoxItem Tag="Papers" x:Uid="InstalledWallpapers"/>
+                        <ComboBoxItem Tag="InstalledComponents" x:Uid="InstalledComponentsPage"/>
+                        <ComboBoxItem Tag="LoadPapers" x:Uid="ImportWallpapers"/>
+                    </ComboBox>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="Theme" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE790;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.Theme, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
+                        <ComboBoxItem Tag="Default" x:Uid="FollowSystem"/>
+                        <ComboBoxItem Tag="Light" x:Uid="Light"/>
+                        <ComboBoxItem Tag="Dark" x:Uid="Dark"/>
+                    </ComboBox>
+                </controls:SettingsCard>
 
-                    <controls:SettingsExpander Header="窗口行为" Description="控制程序启动时是否恢复窗口位置、大小和最大化状态" Margin="0,0,0,10">
+                <controls:SettingsCard x:Uid="ScanCache" Margin="0,0,0,10" Description="扫描缓存可用于程序加速扫描速度">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xEE94;"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.ScanCacheEnabled, Mode=TwoWay}" SelectedValuePath="Tag" MinWidth="150">
+                        <ComboBoxItem Tag="1" x:Uid="Enabled"/>
+                        <ComboBoxItem Tag="0" x:Uid="Disabled"/>
+                    </ComboBox>
+                </controls:SettingsCard>
+
+                <controls:SettingsExpander Header="窗口行为" Description="控制程序启动时是否恢复窗口位置、大小和最大化状态" Margin="0,0,0,10">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE73F;"/>
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <CheckBox Content="恢复上一次的窗口大小和位置"
+                                              IsChecked="{x:Bind ViewModel.AppSettingsVM.RestoreWindowGeometry, Mode=TwoWay}"/>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+                <TextBlock x:Uid="Page" Margin="5,10,0,10"/>
+                <controls:SettingsExpander x:Uid="PapersSetting" Margin="0,0,0,10">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE8B9;"/>
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <CheckBox x:Uid="PapersSetting_BottomBarVisibility" 
+                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsBottomBarOpen, Mode=TwoWay}"/>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <CheckBox x:Uid="PapersSetting_DetailTextSelectMode"
+                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=TwoWay}"/>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox x:Uid="PapersSetting_WallpaperAutoPlay"
+                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.AutoPlayGif, Mode=TwoWay}"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox x:Uid="PapersSetting_IsWallpaperEnterAnimationEnabled"
+                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Uid="PapersSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
+                                    <NumberBox Value="{x:Bind ViewModel.WallpaperDisplayVM.FilterResultResponseDelay, Mode=TwoWay}"
+                                                   SmallChange="100"
+                                                   LargeChange="1000"
+                                                   SpinButtonPlacementMode="Inline"
+                                                   Minimum="0"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+                <controls:SettingsExpander x:Uid="ComponentsSetting" Margin="0,0,0,10">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xF4A5;"/>
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <CheckBox x:Uid="ComponentsSetting_BottomBarVisibility"
+                                              IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsBottomBarOpen, Mode=TwoWay}"/>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <CheckBox x:Uid="ComponentsSetting_DetailTextSelectMode"
+                                              IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.DetailSelectionEnabled, Mode=TwoWay}"/>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox x:Uid="ComponentsSetting_ComponentAutoPlay"
+                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.AutoPlayGif, Mode=TwoWay}"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox x:Uid="ComponentsSetting_IsComponentEnterAnimationEnabled"
+                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsComponentEnterAnimationEnabled, Mode=TwoWay}"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Uid="ComponentsSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
+                                    <NumberBox Value="{x:Bind ViewModel.ComponentsDisplayVM.FilterResultResponseDelay, Mode=TwoWay}"
+                                                   SmallChange="100"
+                                                   LargeChange="1000"
+                                                   SpinButtonPlacementMode="Inline"
+                                                   Minimum="0"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+                <!-- 提取设置 -->
+                <TextBlock x:Uid="Extract" Margin="5,10,0,10"/>
+                <StackPanel>
+                    <controls:SettingsExpander x:Uid="Settings_Output" Header="输出设置" Description="对所有壁纸类型生效" Margin="0,0,0,10">
                         <controls:SettingsExpander.HeaderIcon>
-                            <FontIcon Glyph="&#xE73F;"/>
+                            <FontIcon Glyph="&#xEDE1;"/>
                         </controls:SettingsExpander.HeaderIcon>
                         <controls:SettingsExpander.Items>
                             <controls:SettingsCard>
                                 <controls:SettingsCard.Header>
-                                    <CheckBox Content="恢复上一次的窗口大小和位置"
-                                              IsChecked="{x:Bind ViewModel.AppSettingsVM.RestoreWindowGeometry, Mode=TwoWay}"/>
+                                    <StackPanel>
+                                        <RadioButtons MaxColumns="3" SelectedIndex="{x:Bind ViewModel.OutputMode, Mode=TwoWay}">
+                                            <RadioButtons.Header>
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                        <Button x:Name="OutputTypeHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="OutputTypeHelpButton_Click">
+                                                            <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                                        </Button>
+                                                    </StackPanel>
+                                                    <TeachingTip x:Name="OutputTypeTeachingTip_1" x:Uid="Settings_TeachingTip_Output1" Target="{x:Bind OutputTypeFirstRadio}" Title="{x:Bind OutputTypeFirstRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                    <TeachingTip x:Name="OutputTypeTeachingTip_2" x:Uid="Settings_TeachingTip_Output2" Target="{x:Bind OutputTypeImageOnlyRadio}" Title="{x:Bind OutputTypeImageOnlyRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                    <TeachingTip x:Name="OutputTypeTeachingTip_3" x:Uid="Settings_TeachingTip_Output3" Target="{x:Bind OutputTypeCustomRadio}" Title="{x:Bind OutputTypeCustomRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                </StackPanel>
+                                            </RadioButtons.Header>
+                                            <RadioButton x:Name="OutputTypeFirstRadio">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock x:Name="OutputTypeFirstRadioTitle" x:Uid="Settings_OutputType_Full" VerticalAlignment="Top"/>
+                                                            <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
+                                                                          Visibility="{x:Bind ViewModel.IsConflictMode, Mode=OneWay}"
+                                                                          VerticalAlignment="Center">
+                                                                <ToolTipService.ToolTip>
+                                                                    <ToolTip x:Uid="Settings_ConflictWarning_Output"/>
+                                                                </ToolTipService.ToolTip>
+                                                            </FontIcon>
+                                                        </StackPanel>
+                                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,24,0,0">
+                                                            <RadioButtons.Header>
+                                                                <TextBlock x:Uid="Settings_TexMode" Margin="28,0,12,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                            </RadioButtons.Header>
+                                                            <RadioButton x:Uid="Settings_TexExportRaw"/>
+                                                            <RadioButton x:Uid="Settings_TexExportConvert"/>
+                                                            <RadioButton x:Uid="Settings_TexExportOnlyImage"/>
+                                                        </RadioButtons>
+                                                        <CheckBox x:Uid="Settings_CopyProject" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,12,0,0"/>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                            <RadioButton x:Name="OutputTypeImageOnlyRadio" x:Uid="Settings_OutputType_ImageOnly"/>
+                                            <RadioButton x:Name="OutputTypeCustomRadio">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="OutputTypeCustomRadioTitle" x:Uid="Settings_OutputType_Custom"/>
+                                                        <CheckBox x:Name="IgnoreExtension" Margin="0,24,0,0" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock x:Uid="Settings_Output_IgnoreExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                    <TextBox x:Uid="Settings_IgnoreExtList" HorizontalAlignment="Stretch" Margin="8,0,0,0" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IgnoreExtension, Mode=OneWay}"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock x:Uid="Settings_Output_OnlyExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                    <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OnlyExtension, Mode=OneWay}" Margin="8,0,0,0"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                        </RadioButtons>
+
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                            <Button x:Name="FolderStructureHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="FolderStructureHelpButton_Click">
+                                                <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                            </Button>
+                                        </StackPanel>
+                                        <TeachingTip x:Name="FolderStructureTeachingTip_1" x:Uid="Settings_TeachingTip_Folder1" Target="{x:Bind FolderStructureFirstRadio}" Title="{x:Bind FolderStructureFirstRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                        <TeachingTip x:Name="FolderStructureTeachingTip_2" x:Uid="Settings_TeachingTip_Folder2" Target="{x:Bind FolderStructureFlatRadio}" Title="{x:Bind FolderStructureFlatRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.OneFolder, Mode=TwoWay}" MaxColumns="2">
+                                            <RadioButton x:Name="FolderStructureFirstRadio">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="FolderStructureFirstRadioTitle" x:Uid="Settings_SubfolderOutput_Header"/>
+                                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.OverwriteMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}">
+                                                            <RadioButtons.Header>
+                                                                <TextBlock x:Uid="Settings_FileConflict" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                            </RadioButtons.Header>
+                                                            <RadioButton x:Uid="Settings_OverwriteFiles"/>
+                                                            <RadioButton x:Uid="Settings_SkipExtracted"/>
+                                                        </RadioButtons>
+                                                        <CheckBox x:Uid="Settings_Subfolder_ByName"
+                                                                      IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"
+                                                                      IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}" Margin="0,12,0,0"/>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                            <RadioButton x:Name="FolderStructureFlatRadio">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock x:Name="FolderStructureFlatRadioTitle" x:Uid="Settings_FlatOutput_Header"/>
+                                                            <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
+                                                                          Visibility="{x:Bind ViewModel.IsConflictMode, Mode=OneWay}"
+                                                                          VerticalAlignment="Center">
+                                                                <ToolTipService.ToolTip>
+                                                                    <ToolTip x:Uid="Settings_ConflictWarning_Flat"/>
+                                                                </ToolTipService.ToolTip>
+                                                            </FontIcon>
+                                                        </StackPanel>
+                                                        <RadioButtons IsEnabled="{x:Bind ViewModel.IsFlatModeContentEnabled, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.FlatFileNamingMode, Mode=TwoWay}">
+                                                            <RadioButtons.Header>
+                                                                <TextBlock x:Uid="Settings_FlatFileNaming" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                            </RadioButtons.Header>
+                                                            <RadioButton x:Uid="Settings_FlatOutput_KeepName"/>
+                                                            <RadioButton x:Uid="Settings_FlatOutput_ByName"/>
+                                                        </RadioButtons>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                        </RadioButtons>
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <RadioButtons SelectedIndex="{x:Bind ViewModel.KeepSubfolderStructure, Mode=TwoWay}" MaxColumns="2">
+                                        <RadioButtons.Header>
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock x:Uid="Settings_SceneHeader" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                    <Button x:Name="SceneWallpaperHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="SceneWallpaperHelpButton_Click">
+                                                        <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                                    </Button>
+                                                </StackPanel>
+                                                <TeachingTip x:Name="SceneWallpaperTeachingTip_1" x:Uid="Settings_TeachingTip_Scene1" Target="{x:Bind SceneWallpaperFirstRadio}" Title="{x:Bind SceneWallpaperFirstRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                <TeachingTip x:Name="SceneWallpaperTeachingTip_2" x:Uid="Settings_TeachingTip_Scene2" Target="{x:Bind SceneWallpaperFlattenRadio}" Title="{x:Bind SceneWallpaperFlattenRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                            </StackPanel>
+                                        </RadioButtons.Header>
+                                        <RadioButton x:Name="SceneWallpaperFirstRadio" x:Uid="Settings_KeepStructure"/>
+                                        <RadioButton x:Name="SceneWallpaperFlattenRadio" x:Uid="Settings_FlattenStructure"/>
+                                    </RadioButtons>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
 
-                    <TextBlock x:Uid="Page" Margin="5,10,0,10"/>
-                    <controls:SettingsExpander x:Uid="PapersSetting" Margin="0,0,0,10">
+                    <controls:SettingsExpander x:Uid="Settings_CpuParallel" Header="性能" Description="并发提取数、进程优先级、内存控制" Margin="0,0,0,10">
                         <controls:SettingsExpander.HeaderIcon>
-                            <FontIcon Glyph="&#xE8B9;"/>
+                            <FontIcon Glyph="&#xE950;"/>
                         </controls:SettingsExpander.HeaderIcon>
                         <controls:SettingsExpander.Items>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <CheckBox x:Uid="PapersSetting_BottomBarVisibility" 
-                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsBottomBarOpen, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <CheckBox x:Uid="PapersSetting_DetailTextSelectMode"
-                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <CheckBox x:Uid="PapersSetting_WallpaperAutoPlay"
-                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.AutoPlayGif, Mode=TwoWay}"/>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
+                                        <TextBlock x:Uid="Settings_MaxConcurrent" VerticalAlignment="Center"/>
+                                        <NumberBox Value="{x:Bind ViewModel.MaxConcurrentExtractions, Mode=TwoWay}" Minimum="1" Maximum="{x:Bind ViewModel.MaxConcurrentMax}" SmallChange="1" LargeChange="2" SpinButtonPlacementMode="Inline" MinWidth="80"/>
                                     </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <CheckBox x:Uid="PapersSetting_IsWallpaperEnterAnimationEnabled"
-                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
+                                        <TextBlock x:Uid="Settings_ProcessPriority" VerticalAlignment="Center"/>
+                                        <ComboBox SelectedIndex="{x:Bind ViewModel.ProcessPriority, Mode=TwoWay}" MinWidth="120">
+                                            <ComboBoxItem x:Uid="Settings_PriorityNormal"/>
+                                            <ComboBoxItem x:Uid="Settings_PriorityBelowNormal"/>
+                                            <ComboBoxItem x:Uid="Settings_PriorityIdle"/>
+                                        </ComboBox>
                                     </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock x:Uid="PapersSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
-                                        <NumberBox Value="{x:Bind ViewModel.WallpaperDisplayVM.FilterResultResponseDelay, Mode=TwoWay}"
-                                                   SmallChange="100"
-                                                   LargeChange="1000"
-                                                   SpinButtonPlacementMode="Inline"
-                                                   Minimum="0"/>
-                                    </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <CheckBox x:Uid="Settings_LazyLoad" IsChecked="{x:Bind ViewModel.LazyLoad, Mode=TwoWay}"/>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
+                </StackPanel>
 
-                    <controls:SettingsExpander x:Uid="ComponentsSetting" Margin="0,0,0,10">
-                        <controls:SettingsExpander.HeaderIcon>
-                            <FontIcon Glyph="&#xF4A5;"/>
-                        </controls:SettingsExpander.HeaderIcon>
-                        <controls:SettingsExpander.Items>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <CheckBox x:Uid="ComponentsSetting_BottomBarVisibility"
-                                              IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsBottomBarOpen, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <CheckBox x:Uid="ComponentsSetting_DetailTextSelectMode"
-                                              IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.DetailSelectionEnabled, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <CheckBox x:Uid="ComponentsSetting_ComponentAutoPlay"
-                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.AutoPlayGif, Mode=TwoWay}"/>
-                                    </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <CheckBox x:Uid="ComponentsSetting_IsComponentEnterAnimationEnabled"
-                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsComponentEnterAnimationEnabled, Mode=TwoWay}"/>
-                                    </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock x:Uid="ComponentsSetting_FilterResultResponseDelay" Margin="28,0,12,0" VerticalAlignment="Center"/>
-                                        <NumberBox Value="{x:Bind ViewModel.ComponentsDisplayVM.FilterResultResponseDelay, Mode=TwoWay}"
-                                                   SmallChange="100"
-                                                   LargeChange="1000"
-                                                   SpinButtonPlacementMode="Inline"
-                                                   Minimum="0"/>
-                                    </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                        </controls:SettingsExpander.Items>
-                    </controls:SettingsExpander>
-
-                    <!-- 提取设置 -->
-                    <TextBlock x:Uid="Extract" Margin="5,10,0,10"/>
-                    <StackPanel>
-                        <controls:SettingsExpander x:Uid="Settings_Output" Header="输出设置" Description="对所有壁纸类型生效" Margin="0,0,0,10">
-                            <controls:SettingsExpander.HeaderIcon>
-                                <FontIcon Glyph="&#xEDE1;"/>
-                            </controls:SettingsExpander.HeaderIcon>
-                            <controls:SettingsExpander.Items>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <StackPanel>
-                                            <RadioButtons MaxColumns="3" SelectedIndex="{x:Bind ViewModel.OutputMode, Mode=TwoWay}">
-                                                <RadioButtons.Header>
-                                                    <StackPanel>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
-                                                            <Button x:Name="OutputTypeHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="OutputTypeHelpButton_Click">
-                                                                <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
-                                                            </Button>
-                                                        </StackPanel>
-                                                        <TeachingTip x:Name="OutputTypeTeachingTip_1" x:Uid="Settings_TeachingTip_Output1" Target="{x:Bind OutputTypeFirstRadio}" Title="{x:Bind OutputTypeFirstRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
-                                                        <TeachingTip x:Name="OutputTypeTeachingTip_2" x:Uid="Settings_TeachingTip_Output2" Target="{x:Bind OutputTypeImageOnlyRadio}" Title="{x:Bind OutputTypeImageOnlyRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
-                                                        <TeachingTip x:Name="OutputTypeTeachingTip_3" x:Uid="Settings_TeachingTip_Output3" Target="{x:Bind OutputTypeCustomRadio}" Title="{x:Bind OutputTypeCustomRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
-                                                    </StackPanel>
-                                                </RadioButtons.Header>
-                                                <RadioButton x:Name="OutputTypeFirstRadio">
-                                                    <RadioButton.Content>
-                                                        <StackPanel>
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <TextBlock x:Name="OutputTypeFirstRadioTitle" x:Uid="Settings_OutputType_Full" VerticalAlignment="Top"/>
-                                                                <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
-                                                                          Visibility="{x:Bind ViewModel.IsConflictMode, Mode=OneWay}"
-                                                                          VerticalAlignment="Center">
-                                                                    <ToolTipService.ToolTip>
-                                                                        <ToolTip x:Uid="Settings_ConflictWarning_Output"/>
-                                                                    </ToolTipService.ToolTip>
-                                                                </FontIcon>
-                                                            </StackPanel>
-                                                            <RadioButtons SelectedIndex="{x:Bind ViewModel.TexExportMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,24,0,0">
-                                                                <RadioButtons.Header>
-                                                                    <TextBlock x:Uid="Settings_TexMode" Margin="28,0,12,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-                                                                </RadioButtons.Header>
-                                                                <RadioButton x:Uid="Settings_TexExportRaw"/>
-                                                                <RadioButton x:Uid="Settings_TexExportConvert"/>
-                                                                <RadioButton x:Uid="Settings_TexExportOnlyImage"/>
-                                                            </RadioButtons>
-                                                            <CheckBox x:Uid="Settings_CopyProject" IsChecked="{x:Bind ViewModel.OutProjectJSON, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,12,0,0"/>
-                                                        </StackPanel>
-                                                    </RadioButton.Content>
-                                                </RadioButton>
-                                                <RadioButton x:Name="OutputTypeImageOnlyRadio" x:Uid="Settings_OutputType_ImageOnly"/>
-                                                <RadioButton x:Name="OutputTypeCustomRadio">
-                                                    <RadioButton.Content>
-                                                        <StackPanel>
-                                                            <TextBlock x:Name="OutputTypeCustomRadioTitle" x:Uid="Settings_OutputType_Custom"/>
-                                                            <CheckBox x:Name="IgnoreExtension" Margin="0,24,0,0" IsChecked="{x:Bind ViewModel.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
-                                                                <CheckBox.Content>
-                                                                    <StackPanel Orientation="Horizontal">
-                                                                        <TextBlock x:Uid="Settings_Output_IgnoreExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
-                                                                        <TextBox x:Uid="Settings_IgnoreExtList" HorizontalAlignment="Stretch" Margin="8,0,0,0" Text="{x:Bind ViewModel.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IgnoreExtension, Mode=OneWay}"/>
-                                                                    </StackPanel>
-                                                                </CheckBox.Content>
-                                                            </CheckBox>
-                                                            <CheckBox x:Name="OnlyExtension" IsChecked="{x:Bind ViewModel.OnlyExtension, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
-                                                                <CheckBox.Content>
-                                                                    <StackPanel Orientation="Horizontal">
-                                                                        <TextBlock x:Uid="Settings_Output_OnlyExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
-                                                                        <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OnlyExtension, Mode=OneWay}" Margin="8,0,0,0"/>
-                                                                    </StackPanel>
-                                                                </CheckBox.Content>
-                                                            </CheckBox>
-                                                        </StackPanel>
-                                                    </RadioButton.Content>
-                                                </RadioButton>
-                                            </RadioButtons>
-
-                                        </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
-                                                <Button x:Name="FolderStructureHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="FolderStructureHelpButton_Click">
-                                                    <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
-                                                </Button>
-                                            </StackPanel>
-                                            <TeachingTip x:Name="FolderStructureTeachingTip_1" x:Uid="Settings_TeachingTip_Folder1" Target="{x:Bind FolderStructureFirstRadio}" Title="{x:Bind FolderStructureFirstRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
-                                            <TeachingTip x:Name="FolderStructureTeachingTip_2" x:Uid="Settings_TeachingTip_Folder2" Target="{x:Bind FolderStructureFlatRadio}" Title="{x:Bind FolderStructureFlatRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
-                                            <RadioButtons SelectedIndex="{x:Bind ViewModel.OneFolder, Mode=TwoWay}" MaxColumns="2">
-                                                <RadioButton x:Name="FolderStructureFirstRadio">
-                                                    <RadioButton.Content>
-                                                        <StackPanel>
-                                                            <TextBlock x:Name="FolderStructureFirstRadioTitle" x:Uid="Settings_SubfolderOutput_Header"/>
-                                                            <RadioButtons SelectedIndex="{x:Bind ViewModel.OverwriteMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}">
-                                                                <RadioButtons.Header>
-                                                                    <TextBlock x:Uid="Settings_FileConflict" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-                                                                </RadioButtons.Header>
-                                                                <RadioButton x:Uid="Settings_OverwriteFiles"/>
-                                                                <RadioButton x:Uid="Settings_SkipExtracted"/>
-                                                            </RadioButtons>
-                                                            <CheckBox x:Uid="Settings_Subfolder_ByName"
-                                                                      IsChecked="{x:Bind ViewModel.UseProjectName, Mode=TwoWay}"
-                                                                      IsEnabled="{x:Bind ViewModel.IsSubfolderModeContentEnabled, Mode=OneWay}" Margin="0,12,0,0"/>
-                                                        </StackPanel>
-                                                    </RadioButton.Content>
-                                                </RadioButton>
-                                                <RadioButton x:Name="FolderStructureFlatRadio">
-                                                    <RadioButton.Content>
-                                                        <StackPanel>
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <TextBlock x:Name="FolderStructureFlatRadioTitle" x:Uid="Settings_FlatOutput_Header"/>
-                                                                <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
-                                                                          Visibility="{x:Bind ViewModel.IsConflictMode, Mode=OneWay}"
-                                                                          VerticalAlignment="Center">
-                                                                    <ToolTipService.ToolTip>
-                                                                        <ToolTip x:Uid="Settings_ConflictWarning_Flat"/>
-                                                                    </ToolTipService.ToolTip>
-                                                                </FontIcon>
-                                                            </StackPanel>
-                                                            <RadioButtons IsEnabled="{x:Bind ViewModel.IsFlatModeContentEnabled, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.FlatFileNamingMode, Mode=TwoWay}">
-                                                                <RadioButtons.Header>
-                                                                    <TextBlock x:Uid="Settings_FlatFileNaming" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-                                                                </RadioButtons.Header>
-                                                                <RadioButton x:Uid="Settings_FlatOutput_KeepName"/>
-                                                                <RadioButton x:Uid="Settings_FlatOutput_ByName"/>
-                                                            </RadioButtons>
-                                                        </StackPanel>
-                                                    </RadioButton.Content>
-                                                </RadioButton>
-                                            </RadioButtons>
-                                        </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.KeepSubfolderStructure, Mode=TwoWay}" MaxColumns="2">
-                                            <RadioButtons.Header>
-                                                <StackPanel>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock x:Uid="Settings_SceneHeader" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
-                                                        <Button x:Name="SceneWallpaperHelpButton" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="SceneWallpaperHelpButton_Click">
-                                                            <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
-                                                        </Button>
-                                                    </StackPanel>
-                                                    <TeachingTip x:Name="SceneWallpaperTeachingTip_1" x:Uid="Settings_TeachingTip_Scene1" Target="{x:Bind SceneWallpaperFirstRadio}" Title="{x:Bind SceneWallpaperFirstRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
-                                                    <TeachingTip x:Name="SceneWallpaperTeachingTip_2" x:Uid="Settings_TeachingTip_Scene2" Target="{x:Bind SceneWallpaperFlattenRadio}" Title="{x:Bind SceneWallpaperFlattenRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
-                                                </StackPanel>
-                                            </RadioButtons.Header>
-                                            <RadioButton x:Name="SceneWallpaperFirstRadio" x:Uid="Settings_KeepStructure"/>
-                                            <RadioButton x:Name="SceneWallpaperFlattenRadio" x:Uid="Settings_FlattenStructure"/>
-                                        </RadioButtons>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                            </controls:SettingsExpander.Items>
-                        </controls:SettingsExpander>
-
-                        <controls:SettingsExpander x:Uid="Settings_CpuParallel" Header="性能" Description="并发提取数、进程优先级、内存控制" Margin="0,0,0,10">
-                            <controls:SettingsExpander.HeaderIcon>
-                                <FontIcon Glyph="&#xE950;"/>
-                            </controls:SettingsExpander.HeaderIcon>
-                            <controls:SettingsExpander.Items>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
-                                            <TextBlock x:Uid="Settings_MaxConcurrent" VerticalAlignment="Center"/>
-                                            <NumberBox Value="{x:Bind ViewModel.MaxConcurrentExtractions, Mode=TwoWay}" Minimum="1" Maximum="{x:Bind ViewModel.MaxConcurrentMax}" SmallChange="1" LargeChange="2" SpinButtonPlacementMode="Inline" MinWidth="80"/>
-                                        </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="28,0,0,0">
-                                            <TextBlock x:Uid="Settings_ProcessPriority" VerticalAlignment="Center"/>
-                                            <ComboBox SelectedIndex="{x:Bind ViewModel.ProcessPriority, Mode=TwoWay}" MinWidth="120">
-                                                <ComboBoxItem x:Uid="Settings_PriorityNormal"/>
-                                                <ComboBoxItem x:Uid="Settings_PriorityBelowNormal"/>
-                                                <ComboBoxItem x:Uid="Settings_PriorityIdle"/>
-                                            </ComboBox>
-                                        </StackPanel>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                                <controls:SettingsCard>
-                                    <controls:SettingsCard.Header>
-                                        <CheckBox x:Uid="Settings_LazyLoad" IsChecked="{x:Bind ViewModel.LazyLoad, Mode=TwoWay}"/>
-                                    </controls:SettingsCard.Header>
-                                </controls:SettingsCard>
-                            </controls:SettingsExpander.Items>
-                        </controls:SettingsExpander>
-                    </StackPanel>
-
-                    <TextBlock x:Uid="Path" Margin="5,10,0,10"/>
-                    <controls:SettingsCard x:Uid="ChooseWallpaperExportPath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE74E;"/>
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="ExportDirectory"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" 
+                <TextBlock x:Uid="Path" Margin="5,10,0,10"/>
+                <controls:SettingsCard x:Uid="ChooseWallpaperExportPath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE74E;"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="ExportDirectory"/>
+                            <Button Style="{StaticResource SubtleButtonStyle}" 
                                         Command="{x:Bind ViewModel.PathManagementVM.AutoDetectDownloadPathCommand}"
                                         x:Uid="AutoDetect_DownloadPath">
-                                    <Button.Content>
-                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
-                                    </Button.Content>
-                                </Button>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="ChooseWorkshopPath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE774;"/>
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="WorkShopPath"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="10000"
+                                <Button.Content>
+                                    <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="ChooseWorkshopPath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE774;"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="WorkShopPath"/>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="10000"
                                         x:Uid="AutoDetect_WorkshopPath">
-                                    <Button.Content>
-                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
-                                    </Button.Content>
-                                </Button>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.WorkshopPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="WorkshopPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="ChooseProjectPath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xEBC6;" />
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="ProjectPath"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="01000"
+                                <Button.Content>
+                                    <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.WorkshopPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="WorkshopPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="ChooseProjectPath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xEBC6;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="ProjectPath"/>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="01000"
                                         x:Uid="AutoDetect_ProjectPath">
-                                    <Button.Content>
-                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
-                                    </Button.Content>
-                                </Button>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.ProjectPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="ProjectPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="OfficialWallpaperPath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE9F5;" />
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="OfficialWallpaperPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00010"
+                                <Button.Content>
+                                    <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.ProjectPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="ProjectPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="OfficialWallpaperPath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE9F5;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="OfficialWallpaperPath_TextBlock"/>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00010"
                                         x:Uid="AutoDetect_OfficialPath">
-                                    <Button.Content>
-                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
-                                    </Button.Content>
-                                </Button>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.OfficialPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="OfficialPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="AcfPath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE8A5;" />
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="AcfPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00100"
+                                <Button.Content>
+                                    <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.OfficialPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="OfficialPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="AcfPath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE8A5;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="AcfPath_TextBlock"/>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00100"
                                         x:Uid="AutoDetect_AcfPath">
-                                    <Button.Content>
-                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
-                                    </Button.Content>
-                                </Button>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.AcfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="AcfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="VdfPath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE9F9;" />
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="VdfPath_TextBlock"/>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00001"
+                                <Button.Content>
+                                    <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.AcfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="AcfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="VdfPath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE9F9;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="VdfPath_TextBlock"/>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Command="{x:Bind ViewModel.PathManagementVM.AutoDetectWorkshopPathCommand}" CommandParameter="00001"
                                         x:Uid="AutoDetect_VdfPath">
-                                    <Button.Content>
-                                        <FontIcon Glyph="&#xE72C;" FontSize="12"/>
-                                    </Button.Content>
-                                </Button>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.VdfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="VdfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="SettingPath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xF259;" />
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="SettingPath_TextBlock"/>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.ConfigPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="ConfigPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="LogPath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xF738;" />
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="LogPath_TextBlock"/>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.LogPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="LogPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
-                    <controls:SettingsCard x:Uid="CachePath" Margin="0,0,0,10">
-                        <controls:SettingsCard.HeaderIcon>
-                            <FontIcon Glyph="&#xE8DA;"/>
-                        </controls:SettingsCard.HeaderIcon>
-                        <controls:SettingsCard.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Uid="CachePath_TextBlock"/>
-                            </StackPanel>
-                        </controls:SettingsCard.Header>
-                        <Grid MinWidth="300" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.CachePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="CachePath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </controls:SettingsCard>
+                                <Button.Content>
+                                    <FontIcon Glyph="&#xE72C;" FontSize="12"/>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.VdfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="VdfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="SettingPath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xF259;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="SettingPath_TextBlock"/>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.ConfigPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="ConfigPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="LogPath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xF738;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="LogPath_TextBlock"/>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.LogPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="LogPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="CachePath" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE8DA;"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="CachePath_TextBlock"/>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <Grid MinWidth="300" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Uid="PapersBottomTextBox" IsEnabled="False" Text="{x:Bind ViewModel.AppSettingsVM.CachePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Uid="OpenFolder" Command="{x:Bind ViewModel.PathManagementVM.OpenFolderCommand}" CommandParameter="CachePath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
+                    </Grid>
+                </controls:SettingsCard>
 
-                    <TextBlock x:Uid="Settings_ResetHeader" Margin="5,10,0,10"/>
-                    <Button x:Uid="Settings_ResetButton" Click="ResetSettingsButton_Click" Margin="5,10,0,110"/>
-                </StackPanel>
-            </ScrollViewer>
-        </Grid>
+                <TextBlock x:Uid="Settings_ResetHeader" Margin="5,10,0,10"/>
+                <Button x:Uid="Settings_ResetButton" Click="ResetSettingsButton_Click" Margin="5,10,0,110"/>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Page>

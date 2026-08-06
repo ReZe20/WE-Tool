@@ -2,22 +2,27 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
+using Windows.UI;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -40,6 +45,30 @@ public sealed partial class Info : Page
     public ObservableCollection<Contributor> Contributors { get; } = new();
     public ObservableCollection<Contributor> RepkgContributors { get; } = new();
 
+    private readonly DispatcherTimer _logTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly string? _logPath;
+    private long _logPosition;
+    private bool _logAtBottom = true;
+    private int _lastSteamState = -1; // -1=未检查 0=正常 1=初始化失败 2=中途断开
+    private Task? _steamInitTask;
+
+    // 控制台风格配色(Windows Terminal 色板;日志面板在两种主题下均保持深色)
+    private static readonly SolidColorBrush LogInfoBrush = new(Color.FromArgb(0xFF, 0xCC, 0xCC, 0xCC));
+    private static readonly SolidColorBrush LogWarnBrush = new(Color.FromArgb(0xFF, 0xF9, 0xF1, 0xA5));
+    private static readonly SolidColorBrush LogErrorBrush = new(Color.FromArgb(0xFF, 0xF1, 0x4C, 0x4C));
+    private static readonly SolidColorBrush LogDebugBrush = new(Color.FromArgb(0xFF, 0x76, 0x76, 0x76));
+
+    private static Brush GetLogLevelBrush(string line)
+    {
+        if (line.Contains("[ERR]", StringComparison.Ordinal) || line.Contains("[FTL]", StringComparison.Ordinal))
+            return LogErrorBrush;
+        if (line.Contains("[WRN]", StringComparison.Ordinal))
+            return LogWarnBrush;
+        if (line.Contains("[DBG]", StringComparison.Ordinal) || line.Contains("[VRB]", StringComparison.Ordinal))
+            return LogDebugBrush;
+        return LogInfoBrush;
+    }
+
     /// <summary>RePKG_Re 后端版本:读取随包 exe 的文件版本(0.4.2.0 → 0.4.2),自动跟随后端发布</summary>
     public string RepkgVersionText
     {
@@ -59,6 +88,67 @@ public sealed partial class Info : Page
         }
     }
 
+    /// <summary>随包 RePKG_Re 是否为目标版本(静态信息,运行时不变;Info 页 InfoBar 与导航徽标共用)</summary>
+    public static bool IsRepkgStatusOk()
+    {
+        try
+        {
+            var required = RepkgVersionInfo.Required;
+            if (string.IsNullOrEmpty(required)) return false; // 构建时未注入(external 缺失)
+            var exePath = Path.Combine(AppContext.BaseDirectory, "repkg", "RePKG_Re.exe");
+            if (!File.Exists(exePath)) return false;
+            var version = FileVersionInfo.GetVersionInfo(exePath).FileVersion;
+            var current = string.IsNullOrEmpty(version) ? string.Empty : version.TrimEnd('0', '.');
+            return current == required;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>校验随包 RePKG_Re 是否为目标版本(目标版本构建时从 external/repkg_Re 仓库 csproj 注入)</summary>
+    private void UpdateRepkgStatus()
+    {
+        try
+        {
+            // 目标版本:构建时由 InjectRepkgVersion 目标生成 RepkgVersion.g.cs 常量,
+            // 单源来自 external/repkg_Re/RePKG_Re/RePKG_Re.csproj
+            var required = RepkgVersionInfo.Required;
+            if (string.IsNullOrEmpty(required)) return; // 构建时未注入(如 external 缺失),不做校验
+
+            var exePath = Path.Combine(AppContext.BaseDirectory, "repkg", "RePKG_Re.exe");
+            if (!File.Exists(exePath))
+            {
+                RepkgStatusBar.Severity = InfoBarSeverity.Error;
+                RepkgStatusBar.Title = LanguageHelper.GetResource("Info_RepkgVersionMissing.Title.Text");
+                RepkgStatusBar.Message = LanguageHelper.GetResource("Info_RepkgVersionMissing.Message.Text");
+            }
+            else if (IsRepkgStatusOk())
+            {
+                RepkgStatusBar.Severity = InfoBarSeverity.Success;
+                RepkgStatusBar.Title = LanguageHelper.GetResource("Info_RepkgVersionOk.Title.Text");
+                RepkgStatusBar.Message = string.Format(
+                    LanguageHelper.GetResource("Info_RepkgVersionOk.Message.Text"), RepkgVersionText);
+            }
+            else
+            {
+                RepkgStatusBar.Severity = InfoBarSeverity.Error;
+                RepkgStatusBar.Title = LanguageHelper.GetResource("Info_RepkgVersionMismatch.Title.Text");
+                RepkgStatusBar.Message = string.Format(
+                    LanguageHelper.GetResource("Info_RepkgVersionMismatch.Message.Text"),
+                    string.IsNullOrEmpty(RepkgVersionText) ? "?" : RepkgVersionText, required);
+            }
+            RepkgStatusBar.IsOpen = true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "检查 RePKG_Re 版本失败");
+        }
+    }
+
+    public ObservableCollection<TranslationStatusItem> TranslationStatus { get; } = new();
+
     public Info()
     {
         var app = Application.Current as App;
@@ -66,6 +156,19 @@ public sealed partial class Info : Page
         InitializeComponent();
         _ = LoadContributorsAsync(Contributors, Path.Combine(AppContext.BaseDirectory, "Assets", "Contributors.csv"));
         _ = LoadContributorsAsync(RepkgContributors, Path.Combine(AppContext.BaseDirectory, "Assets", "ContributorsRepkg.csv"));
+
+        // 当前日志文件固定为 logs/log.txt(Serilog 统一单文件,不做按天滚动)
+        _logPath = Path.Combine(ViewModel.AppSettingsVM.LogPath, "log.txt");
+        _logTimer.Tick += OnLogTimerTick;
+        _logTimer.Start();
+        // Steamworks 首次初始化放后台线程,避免页面加载卡顿;完成后立即反映状态
+        _steamInitTask = SteamWorkshopService.InitializeOnBackground();
+        _ = RefreshSteamStatusAsync();
+        UpdateRepkgStatus(); // RePKG_Re 后端版本校验(静态信息,加载时查一次)
+
+        // 翻译完成度(构建时统计,加载时填充一次)
+        foreach (var item in TranslationStatusInfo.Items)
+            TranslationStatus.Add(item);
     }
 
     private static string GetVersionText()
@@ -73,6 +176,143 @@ public sealed partial class Info : Page
         var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         return version == null ? string.Empty : $"{version.Major}.{version.Minor}.{version.Build}";
     }
+
+    /// <summary>重试:重启 Steamworks 桥接子进程(初始化在子进程内完成,主进程不卡);
+    /// 期间显示黄条 + 顶部加载条</summary>
+    private async void SteamRetryButton_Click(object sender, RoutedEventArgs e)
+    {
+        SteamRetryButton.Visibility = Visibility.Collapsed;
+        RetryProgressBar.Visibility = Visibility.Visible;
+        SteamStatusBar.Severity = InfoBarSeverity.Warning;
+        SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamRetrying.Title.Text");
+        SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamRetrying.Message.Text");
+        SteamStatusBar.IsOpen = true;
+
+        await Task.Run(() => SteamWorkshopService.GetInstance().Reinitialize());
+        // 给子进程一点时间完成 Steamworks 初始化(成功则响应状态,失败则退出)
+        await Task.Delay(800);
+
+        RetryProgressBar.Visibility = Visibility.Collapsed;
+        _lastSteamState = -1; // 强制刷新:成功翻绿,失败应用红条 + 恢复重试按钮
+        await SteamWorkshopService.GetInstance().RefreshStatusAsync();
+        UpdateSteamStatus();
+    }
+
+    /// <summary>等待后台初始化完成后刷新状态(初始化期间 UI 不阻塞)</summary>
+    private async Task RefreshSteamStatusAsync()
+    {
+        if (_steamInitTask is { } init)
+        {
+            _steamInitTask = null;
+            await init;
+        }
+        await SteamWorkshopService.GetInstance().RefreshStatusAsync();
+        UpdateSteamStatus();
+    }
+
+    /// <summary>反映 Steamworks 工作状况(经桥接子进程):正常=绿、初始化失败=红、断开(Steam 关闭桥接被杀)=黄;
+    /// 状态变化才更新 UI;随日志轮询每秒复查</summary>
+    private void UpdateSteamStatus()
+    {
+        try
+        {
+            var service = SteamWorkshopService.GetInstance();
+            int state = service.Status switch
+            {
+                SteamworksStatus.Running => 0,
+                SteamworksStatus.Disconnected => 2,
+                _ => 1,
+            };
+            if (state == _lastSteamState) return;
+            _lastSteamState = state;
+
+            SteamRetryButton.Visibility = state == 0 ? Visibility.Collapsed : Visibility.Visible;
+            switch (state)
+            {
+                case 0:
+                    SteamStatusBar.Severity = InfoBarSeverity.Success;
+                    SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusOk.Title.Text");
+                    SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusOk.Message.Text");
+                    break;
+                case 1:
+                    SteamStatusBar.Severity = InfoBarSeverity.Error;
+                    SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusFail.Title.Text");
+                    SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusFail.Message.Text");
+                    break;
+                default:
+                    SteamStatusBar.Severity = InfoBarSeverity.Warning;
+                    SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusLost.Title.Text");
+                    SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusLost.Message.Text");
+                    break;
+            }
+            SteamStatusBar.IsOpen = true;
+        }
+        catch
+        {
+            // Steamworks 未就绪(库缺失等)时保持隐藏
+        }
+    }
+
+    /// <summary>每秒轮询 log.txt 尾部,追加新内容;文件被截断/重建时从头重读</summary>
+    private void OnLogTimerTick(object? sender, object e)
+    {
+        if (_logPath == null || !File.Exists(_logPath)) return;
+        try
+        {
+            _ = RefreshSteamStatusAsync();
+            // 首次加载只读尾部 64KB,避免刷出整屏历史
+            if (_logPosition == 0 && LogTextBlock.Inlines.Count == 0)
+                _logPosition = Math.Max(0, new FileInfo(_logPath).Length - 64 * 1024);
+
+            using var fs = new FileStream(_logPath, FileMode.Open, FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            if (fs.Length < _logPosition)
+            {
+                _logPosition = 0;
+                LogTextBlock.Inlines.Clear();
+            }
+            if (fs.Length == _logPosition) return;
+
+            fs.Seek(_logPosition, SeekOrigin.Begin);
+            using var reader = new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
+            var chunk = reader.ReadToEnd();
+            _logPosition = fs.Position;
+            if (chunk.Length == 0) return;
+
+            AppendLogChunk(chunk);
+            if (_logAtBottom)
+            {
+                // 先强制布局再滚动:直接 ChangeView 时 ScrollableHeight 可能尚未更新,首次加载会停在顶部
+                LogScrollViewer.UpdateLayout();
+                LogScrollViewer.ChangeView(null, double.MaxValue, null, true);
+            }
+        }
+        catch
+        {
+            // 文件暂时被占用,跳过本次轮询
+        }
+    }
+
+    /// <summary>按行追加日志,按级别着色([ERR]/[FTL] 红、[WRN] 黄、[DBG]/[VRB] 灰、其余亮灰);
+    /// 文件尾部的半行(未写完)不加换行,等下一个 tick 续接</summary>
+    private void AppendLogChunk(string chunk)
+    {
+        var lines = chunk.Split('\n');
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            var isLast = i == lines.Length - 1;
+            if (isLast && line.Length == 0) continue; // 末尾换行产生的空元素
+
+            var complete = !isLast || chunk.EndsWith('\n');
+            var text = complete ? line + "\n" : line;
+            if (text.Length > 0)
+                LogTextBlock.Inlines.Add(new Run { Text = text, Foreground = GetLogLevelBrush(line) });
+        }
+    }
+
+    private void LogScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
+        => _logAtBottom = LogScrollViewer.VerticalOffset >= LogScrollViewer.ScrollableHeight - 4;
 
     /// <summary>从 CSV 加载贡献者(照抄 BetterLyrics 的 CSV 解析)</summary>
     private async Task LoadContributorsAsync(ObservableCollection<Contributor> target, string path)

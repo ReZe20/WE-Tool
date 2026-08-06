@@ -1195,4 +1195,55 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
     <value>RePKG_Re</value>
   </data>
+  <data name="Info_LogTitle.Text" xml:space="preserve">
+    <value>Current log</value>
+  </data>
+  <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
+    <value>Steamworks online</value>
+  </data>
+  <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
+    <value>Initialized — workshop-related features are available.</value>
+  </data>
+  <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
+    <value>Steamworks unavailable</value>
+  </data>
+  <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
+    <value>Steam is not running or initialization failed; workshop features are unavailable. Make sure Steam is running, then click Retry.</value>
+  </data>
+  <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
+    <value>Steam connection lost</value>
+  </data>
+  <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
+    <value>Steam has exited; workshop features are temporarily unavailable. Click Retry to reconnect.</value>
+  </data>
+  <data name="Info_SteamRetry.Content" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
+    <value>Reconnecting</value>
+  </data>
+  <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
+    <value>Reinitializing Steamworks, please wait…</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
+    <value>RePKG_Re version OK</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
+    <value>Current version: {0}</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
+    <value>RePKG_Re version mismatch</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
+    <value>Current: {0}, required: {1}. Please update the RePKG_Re backend</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
+    <value>RePKG_Re not found</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
+    <value>repkg\RePKG_Re.exe is missing; extraction is unavailable</value>
+  </data>
+  <data name="Info_TranslationTitle.Text" xml:space="preserve">
+    <value>Translation Progress</value>
+  </data>
 </root>

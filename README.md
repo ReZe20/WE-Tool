@@ -52,6 +52,7 @@ WE Tool/
 │   │   ├── zh-CN/ en-US/ de-DE/ es-ES/ fr-FR/ it-IT/ ja-JP/ ko-KR/ pt-BR/ ru-RU/ zh-TW/
 │   └── Assets/                 # 应用图标 + Contributors.csv / ContributorsRepkg.csv
 ├── WE_Tool.Launcher/           # 启动器(.NET Framework 4.7.2 控制台)
+├── SteamworksBridge/           # Steamworks 桥接子进程(Steam 退出时会关闭游戏 AppID 进程,被杀的是它,主应用存活)
 └── external/
     └── repkg_Re/               # 独立 git 仓库:RePKG_Re(ReZe20 分支)
         ├── RePKG_Re.sln

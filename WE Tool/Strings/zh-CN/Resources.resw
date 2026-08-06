@@ -1310,12 +1310,64 @@
     <value>C# 12</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
-    <value>WE Tool 引用 repkg_re 作为壁纸包提取后端:构建时自动编译 external/repkg_Re,将 RePKG_Re.exe 与第三方组件声明随包分发,提取时以命令行方式调用。&#10;免责声明:本工具仅用于个人学习与备份用途。壁纸及其素材版权归各自作者所有,请尊重原作者权益,勿将提取内容用于商业用途或未经授权的再分发。</value>
+    <value>WE Tool 引用 repkg_re 作为壁纸包提取后端:构建时自动编译 external/repkg_Re,将 RePKG_Re.exe 与第三方组件声明随包分发,提取时以命令行方式调用。
+免责声明:本工具仅用于个人学习与备份用途。壁纸及其素材版权归各自作者所有,请尊重原作者权益,勿将提取内容用于商业用途或未经授权的再分发。</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
     <value>WE Tool</value>
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
     <value>RePKG_Re</value>
+  </data>
+  <data name="Info_LogTitle.Text" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
+    <value>Steamworks 在线</value>
+  </data>
+  <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
+    <value>已初始化,创意工坊相关功能可用。</value>
+  </data>
+  <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
+    <value>Steamworks 不可用</value>
+  </data>
+  <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
+    <value>Steam 未运行或初始化失败,创意工坊相关功能不可用。请确认 Steam 已启动,然后点击重试。</value>
+  </data>
+  <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
+    <value>Steam 连接已断开</value>
+  </data>
+  <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
+    <value>Steam 已退出,创意工坊相关功能暂时不可用。可点击重试重新连接。</value>
+  </data>
+  <data name="Info_SteamRetry.Content" xml:space="preserve">
+    <value>重试</value>
+  </data>
+  <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
+    <value>正在重新连接</value>
+  </data>
+  <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
+    <value>正在重新初始化 Steamworks,请稍候…</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
+    <value>RePKG_Re 版本正常</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
+    <value>当前版本 {0}</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
+    <value>RePKG_Re 版本不匹配</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
+    <value>当前 {0},需要 {1},请更新 RePKG_Re 后端</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
+    <value>未找到 RePKG_Re</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
+    <value>repkg\RePKG_Re.exe 缺失,提取功能不可用</value>
+  </data>
+  <data name="Info_TranslationTitle.Text" xml:space="preserve">
+    <value>翻译进度</value>
   </data>
 </root>
