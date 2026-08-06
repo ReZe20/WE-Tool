@@ -73,7 +73,7 @@
   <Target Name="CopySteamworksBridge" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher"
           Condition="Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj')">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj"
-             Targets="Build" Properties="Configuration=$(Configuration)" />
+             Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
     <ItemGroup>
       <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\net8.0\**\*"
                     Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\net8.0\*.pdb" />
