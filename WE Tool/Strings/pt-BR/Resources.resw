@@ -297,10 +297,19 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>Papéis de parede instalados</value>
   </data>
+  <data name="StartPage_Papers.Text" xml:space="preserve">
+    <value>Papéis de parede instalados</value>
+  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>Importar papéis de parede</value>
   </data>
+  <data name="StartPage_Import.Text" xml:space="preserve">
+    <value>Importar papéis de parede</value>
+  </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>Componentes instalados</value>
+  </data>
+  <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Componentes instalados</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -817,7 +826,9 @@ Quando ativado, copia também project.json e imagens de pré-visualização.</va
     <value>Próximo</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Extrai apenas arquivos de mídia (.png/.jpg/.mp4 etc., imagens e vídeos). Nenhum project.json ou imagem de prévia será extraído. Texturas TEX em papéis de parede de cena são convertidas automaticamente: texturas de imagem em imagens, texturas de vídeo em mp4.</value>
+    <value>Gera apenas arquivos de mídia: imagens, vídeos e áudio, mantendo somente o conteúdo direto das pastas materials/ e sounds/ (subpastas como masks ou effects não são geradas); project.json e imagens de pré-visualização não são gerados.
+
+Texturas TEX de papéis de parede de cena são convertidas automaticamente: texturas de imagem em imagens, texturas de vídeo em vídeos, texturas de áudio em áudio.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Fechar</value>
@@ -826,15 +837,24 @@ Quando ativado, copia também project.json e imagens de pré-visualização.</va
     <value>Próximo</value>
   </data>
   <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
-    <value>Filtrar arquivos de saída por extensão.
+    <value>Combine filtros conforme necessário.
 
-Ignorar extensões
-Pular arquivos com extensões especificadas.
+Excluir extensões
+Pula arquivos com as extensões indicadas.
 
 Manter apenas extensões
-Extrair apenas arquivos com extensões especificadas.
+Gera apenas arquivos com as extensões indicadas.
 
-A filtragem também se aplica à extração de papéis de parede de cena.</value>
+Ignorar diretórios
+Pula todo o conteúdo dos diretórios indicados (incluindo subpastas).
+
+Extrair apenas diretórios
+Gera apenas o conteúdo dos diretórios indicados (incluindo subpastas).
+
+Filtrar imagens de efeito
+Imagens convertidas com proporção de pixels transparentes ou pretos ≥ limite são puladas por completo (0 = desativado).
+
+Filtros de extensão se aplicam tanto à cópia direta quanto à extração de papéis de parede de cena; filtros de diretório e de imagens de efeito se aplicam apenas à extração de papéis de parede de cena.</value>
   </data>
   <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
     <value>Fechar</value>
@@ -1079,42 +1099,58 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
     <value>C# 12</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
-    <value>O WE Tool usa o repkg_re como backend de extração de pacotes: compila o external/repkg_Re no build, distribui o RePKG_Re.exe com os avisos de terceiros e o invoca pela linha de comando durante a extração.&#10;Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. Os papéis de parede e seus recursos pertencem aos respectivos autores. Respeite os direitos dos autores originais e não use o conteúdo extraído para fins comerciais ou redistribuição não autorizada.</value>
+    <value>O WE Tool usa o repkg_re como backend de extração de pacotes: compila o external/repkg_Re no build, distribui o RePKG_Re.exe com os avisos de terceiros e o invoca pela linha de comando durante a extração.
+Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. Os papéis de parede e seus recursos pertencem aos respectivos autores. Respeite os direitos dos autores originais e não use o conteúdo extraído para fins comerciais ou redistribuição não autorizada.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
+  </data>
+  <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
   </data>
 </root>

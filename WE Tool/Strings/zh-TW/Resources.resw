@@ -297,10 +297,19 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>已安裝桌布</value>
   </data>
+  <data name="StartPage_Papers.Text" xml:space="preserve">
+    <value>已安裝桌布</value>
+  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>導入桌布</value>
   </data>
+  <data name="StartPage_Import.Text" xml:space="preserve">
+    <value>導入桌布</value>
+  </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>已安裝組件</value>
+  </data>
+  <data name="StartPage_Components.Text" xml:space="preserve">
     <value>已安裝組件</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -817,7 +826,9 @@
     <value>繼續</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>僅輸出 .png/.jpg/.mp4 等媒體檔案（圖片與影片），不輸出 project.json 和預覽圖。場景類桌布中的 TEX 紋理會自動轉換：圖片紋理轉圖片，影片紋理轉 mp4。</value>
+    <value>僅輸出媒體檔案:圖片、影片與音訊,且只保留 materials/ 與 sounds/ 目錄下的直接內容(子資料夾如 masks、effects 不輸出),不輸出 project.json 與預覽圖。
+
+場景類桌布中的 TEX 紋理自動轉換:圖片紋理轉圖片,影片紋理轉影片,音訊紋理轉音訊。</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>關閉</value>
@@ -826,15 +837,24 @@
     <value>繼續</value>
   </data>
   <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
-    <value>依副檔名篩選輸出檔案。
+    <value>按需組合篩選條件。
 
-忽略副檔名
-可跳過指定類型的檔案。
+排除副檔名
+跳過指定副檔名的檔案。
 
 僅保留副檔名
-只輸出指定類型的檔案。
+只輸出指定副檔名的檔案。
 
-場景類桌布提取時也會套用副檔名過濾。</value>
+忽略解析目錄
+跳過指定目錄及其子資料夾下的全部內容。
+
+僅解析目錄
+只輸出指定目錄及其子資料夾下的內容。
+
+剔除效果圖
+轉換圖中透明或黑色像素占比 ≥ 閾值的將整條目跳過(0 = 關閉)。
+
+副檔名過濾對直接複製與場景桌布提取均生效;目錄過濾與效果圖剔除僅對場景桌布提取生效。</value>
   </data>
   <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
     <value>關閉</value>
@@ -1079,42 +1099,58 @@
     <value>C# 12</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
-    <value>WE Tool 引用 repkg_re 作為桌布套件擷取後端:建置時自動編譯 external/repkg_Re,將 RePKG_Re.exe 與第三方元件聲明隨包散發,擷取時以命令列方式呼叫。&#10;免責聲明:本工具僅供個人學習與備份用途。桌布及其素材版權歸各自作者所有,請尊重原作者權益,請勿將擷取內容用於商業用途或未經授權的再散布。</value>
+    <value>WE Tool 引用 repkg_re 作為桌布套件擷取後端:建置時自動編譯 external/repkg_Re,將 RePKG_Re.exe 與第三方元件聲明隨包散發,擷取時以命令列方式呼叫。
+免責聲明:本工具僅供個人學習與備份用途。桌布及其素材版權歸各自作者所有,請尊重原作者權益,請勿將擷取內容用於商業用途或未經授權的再散布。</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
+  </data>
+  <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
   </data>
 </root>

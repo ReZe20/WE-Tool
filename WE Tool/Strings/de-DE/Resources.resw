@@ -297,10 +297,19 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>Installierte Hintergrundbilder</value>
   </data>
+  <data name="StartPage_Papers.Text" xml:space="preserve">
+    <value>Installierte Hintergrundbilder</value>
+  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>Hintergrundbilder importieren</value>
   </data>
+  <data name="StartPage_Import.Text" xml:space="preserve">
+    <value>Hintergrundbilder importieren</value>
+  </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>Installierte Komponenten</value>
+  </data>
+  <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Installierte Komponenten</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -817,7 +826,9 @@ Wenn aktiviert, werden zusätzlich project.json und Vorschaubilder ausgegeben.</
     <value>Weiter</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Gibt nur Mediendateien (.png/.jpg/.mp4 usw., Bilder und Videos) aus. Keine project.json oder Vorschaubilder werden ausgegeben. TEX-Texturen in Szenen-Hintergrundbildern werden automatisch konvertiert: Bildtexturen zu Bildern, Videotexturen zu mp4.</value>
+    <value>Gibt nur Mediendateien aus: Bilder, Videos und Audio, und behält nur die direkten Inhalte der Ordner materials/ und sounds/ (Unterordner wie masks oder effects werden nicht ausgegeben); project.json und Vorschaubilder werden nicht ausgegeben.
+
+TEX-Texturen in Szenen-Wallpapern werden automatisch konvertiert: Bild-Texturen zu Bildern, Video-Texturen zu Videos, Audio-Texturen zu Audio.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Schließen</value>
@@ -826,15 +837,24 @@ Wenn aktiviert, werden zusätzlich project.json und Vorschaubilder ausgegeben.</
     <value>Weiter</value>
   </data>
   <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
-    <value>Ausgabedateien nach Erweiterung filtern.
+    <value>Filter nach Bedarf kombinieren.
 
-Erweiterungen ignorieren
-Dateien mit angegebenen Erweiterungen überspringen.
+Erweiterungen ausschließen
+Dateien mit den angegebenen Erweiterungen überspringen.
 
 Nur Erweiterungen behalten
-Nur Dateien mit angegebenen Erweiterungen ausgeben.
+Nur Dateien mit den angegebenen Erweiterungen ausgeben.
 
-Erweiterungsfilter wird auch beim Extrahieren von Szenen-Hintergrundbildern angewendet.</value>
+Verzeichnisse ignorieren
+Alles unter den angegebenen Verzeichnissen überspringen (einschließlich Unterordnern).
+
+Nur Verzeichnisse extrahieren
+Nur Inhalte unter den angegebenen Verzeichnissen ausgeben (einschließlich Unterordnern).
+
+Effektbilder filtern
+Konvertierte Bilder, deren Anteil transparenter oder schwarzer Pixel ≥ Schwellwert ist, werden komplett übersprungen (0 = aus).
+
+Erweiterungsfilter gelten für direkte Kopien und Szenen-Extraktion; Verzeichnisfilter und Effektbild-Filter gelten nur für die Szenen-Extraktion.</value>
   </data>
   <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
     <value>Schließen</value>
@@ -1079,42 +1099,58 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
     <value>C# 12</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
-    <value>WE Tool nutzt repkg_re als Backend zur Paket-Extraktion: Es kompiliert external/repkg_Re beim Build, liefert RePKG_Re.exe samt Drittanbieter-Hinweisen aus und ruft es beim Extrahieren per Befehlszeile auf.&#10;Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen und der Sicherung. Die Rechte an Wallpapers und deren Inhalten liegen bei den jeweiligen Autoren. Bitte respektieren Sie die Rechte der Urheber und verwenden Sie extrahierte Inhalte nicht für kommerzielle Zwecke oder unbefugte Weiterverbreitung.</value>
+    <value>WE Tool nutzt repkg_re als Backend zur Paket-Extraktion: Es kompiliert external/repkg_Re beim Build, liefert RePKG_Re.exe samt Drittanbieter-Hinweisen aus und ruft es beim Extrahieren per Befehlszeile auf.
+Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen und der Sicherung. Die Rechte an Wallpapers und deren Inhalten liegen bei den jeweiligen Autoren. Bitte respektieren Sie die Rechte der Urheber und verwenden Sie extrahierte Inhalte nicht für kommerzielle Zwecke oder unbefugte Weiterverbreitung.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
+  </data>
+  <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
   </data>
 </root>

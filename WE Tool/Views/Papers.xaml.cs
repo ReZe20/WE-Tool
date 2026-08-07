@@ -2069,6 +2069,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             Delete_Accelerator_Invoked(null, null);
             e.Handled = true;
         }
+        else if (e.Key == VirtualKey.F5)
+        {
+            // F5 刷新（刷新进行中时由 WallpaperListRefresh_Click_ByCommandBarFlyout 内部防连按兜底）
+            WallpaperListRefresh_Click_ByCommandBarFlyout(null, null);
+            e.Handled = true;
+        }
     }
     private void SelectAllWallpaper_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
@@ -2286,10 +2292,25 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
         InternalInvertSelection();
     }
+    private bool _isRefreshing;
+
     private async void WallpaperListRefresh_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
-        App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath,ViewModel.PathManagementVM.AcfPath, ViewModel.PathManagementVM.VdfPath, ViewModel.AppSettingsVM.ScanCacheEnabled == "1");
-        _ = RefreshWallpaperList();
+        // 防连按：刷新进行中时忽略再次触发（按钮已禁用，F5/菜单入口由此兜底）
+        if (_isRefreshing) return;
+        _isRefreshing = true;
+        RefreshButton.IsEnabled = false;
+
+        try
+        {
+            App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath, ViewModel.PathManagementVM.AcfPath, ViewModel.PathManagementVM.VdfPath, ViewModel.AppSettingsVM.ScanCacheEnabled == "1");
+            await RefreshWallpaperList();
+        }
+        finally
+        {
+            _isRefreshing = false;
+            RefreshButton.IsEnabled = true;
+        }
     }
     private void Property_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
@@ -2431,7 +2452,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 var parts = msg.Split('|');
                 var name = parts[0];
-                var action = parts[1];
+                // 汇总类消息(如"提取完成，共 N 个壁纸")不含 '|',防御性取默认值,避免越界崩溃
+                var action = parts.Length > 1 ? parts[1] : "";
                 double pct = parts.Length > 2 && double.TryParse(parts[2], out var parsed) ? parsed : 0;
 
                 uiQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
@@ -2511,6 +2533,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 OutProjectJSON = ViewModel.OutProjectJSON,
                 TexExportMode = ViewModel.TexExportMode,
                 OutputMode = ViewModel.OutputMode,
+                FilterEffectImagesThreshold = ViewModel.FilterEffectImagesThreshold,
+                FilterEffectImagesEnabled = ViewModel.FilterEffectImagesEnabled,
+                OnlyPaths = ViewModel.OnlyPaths,
+                OnlyPathsList = ViewModel.OnlyPathsList,
+                IgnorePaths = ViewModel.IgnorePaths,
+                IgnorePathsList = ViewModel.IgnorePathsList,
                 MaxConcurrentExtractions = ViewModel.MaxConcurrentExtractions,
                 ProcessPriority = ViewModel.ProcessPriority,
                 SkipExistingOutput = ViewModel.OneFolder == 1 ? ViewModel.SkipExistingOutput : false,

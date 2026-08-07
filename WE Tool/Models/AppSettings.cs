@@ -117,6 +117,11 @@ namespace WE_Tool.Models
         public string IgnoreExtensionList { get; set; } = "";
         public bool OnlyExtension { get; set; } = false;
         public string OnlyExtensionList { get; set; } = "";
+        // 目录过滤（自定义模式，仅对 PKG 解析生效）
+        public bool OnlyPaths { get; set; } = false;
+        public string OnlyPathsList { get; set; } = "";
+        public bool IgnorePaths { get; set; } = false;
+        public string IgnorePathsList { get; set; } = "";
 
         // PKG 专用
         public bool OutProjectJSON { get; set; } = false;
@@ -124,6 +129,10 @@ namespace WE_Tool.Models
         public int TexExportMode { get; set; } = 1;
         /// <summary>输出类型：0=全量输出, 1=仅输出媒体文件, 2=自定义</summary>
         public int OutputMode { get; set; } = 1;
+        /// <summary>效果图剔除阈值(%):转换图透明或黑色占比 ≥ 该值则整条目跳过;0=关闭</summary>
+        public int FilterEffectImagesThreshold { get; set; } = 0;
+        /// <summary>效果图剔除开关(自定义模式):勾选后按阈值剔除效果图</summary>
+        public bool FilterEffectImagesEnabled { get; set; } = false;
 
         // 性能参数（阶段1）
         /// <summary>最大并发提取数，默认 CPU 逻辑核心数</summary>

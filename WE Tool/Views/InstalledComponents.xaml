@@ -128,18 +128,21 @@
         </CommandBarFlyout>
 
         <MenuFlyout x:Name="ScrollViewBackgroundMenu">
-            <MenuFlyoutItem x:Uid="MenuFlyoutItem_Refresh" Click="ComponentsRefresh_Click">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_Refresh" Click="ComponentsRefresh_Click"
+                            KeyboardAcceleratorTextOverride="    F5">
                 <MenuFlyoutItem.Icon>
                     <FontIcon Glyph="&#xE777;"/>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutSeparator/>
-            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="SelectAllComponents_Click">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="SelectAllComponents_Click"
+                            KeyboardAcceleratorTextOverride="    Ctrl+A">
                 <MenuFlyoutItem.Icon>
                     <FontIcon Glyph="&#xE8B3;"/>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
-            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="InvertSelection_Click">
+            <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="InvertSelection_Click"
+                            KeyboardAcceleratorTextOverride="    Ctrl+I">
                 <MenuFlyoutItem.Icon>
                     <FontIcon Glyph="&#xE8E6;"/>
                 </MenuFlyoutItem.Icon>
@@ -301,7 +304,7 @@
                         <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Uid="Toolbar_Refresh" LabelPosition="Collapsed"
+                <AppBarButton x:Name="RefreshButton" x:Uid="Toolbar_Refresh" LabelPosition="Collapsed"
                               Click="ComponentsRefresh_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE777;" FontSize="16"/>

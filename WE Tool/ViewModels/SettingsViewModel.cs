@@ -74,6 +74,36 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial string OnlyExtensionList { get; set; } = null!;
 
+        // === 目录过滤（自定义模式） ===
+
+        [ObservableProperty]
+        public partial bool OnlyPaths { get; set; }
+
+        [ObservableProperty]
+        public partial string OnlyPathsList { get; set; } = null!;
+
+        [ObservableProperty]
+        public partial bool IgnorePaths { get; set; }
+
+        [ObservableProperty]
+        public partial string IgnorePathsList { get; set; } = null!;
+
+        /// <summary>OnlyPaths 勾选时，TextBox 才可编辑（父 CheckBox 禁用时自动级联）</summary>
+        public bool IsOnlyPathsTextBoxEnabled => OnlyPaths;
+
+        /// <summary>IgnorePaths 勾选时，TextBox 才可编辑（父 CheckBox 禁用时自动级联）</summary>
+        public bool IsIgnorePathsTextBoxEnabled => IgnorePaths;
+
+        partial void OnOnlyPathsChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsOnlyPathsTextBoxEnabled));
+        }
+
+        partial void OnIgnorePathsChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsIgnorePathsTextBoxEnabled));
+        }
+
         [ObservableProperty]
         public partial int OneFolder { get; set; }
 
@@ -145,6 +175,14 @@ namespace WE_Tool.ViewModels
         /// <summary>0=导出原始文件, 1=导出并转换TEX, 2=只导出TEX图片</summary>
         [ObservableProperty]
         public partial int TexExportMode { get; set; }
+
+        /// <summary>效果图剔除阈值(%):0=关闭;1-100=透明或黑色占比达到该值的转换图整条目跳过</summary>
+        [ObservableProperty]
+        public partial int FilterEffectImagesThreshold { get; set; }
+
+        /// <summary>效果图剔除开关(自定义模式):NumberBox 的 IsEnabled 单向绑定此值(即父 CheckBox 的 IsChecked)</summary>
+        [ObservableProperty]
+        public partial bool FilterEffectImagesEnabled { get; set; }
 
         // === 性能参数（阶段1） ===
 
@@ -421,6 +459,10 @@ namespace WE_Tool.ViewModels
             IgnoreExtensionList = _settings.Extract.IgnoreExtensionList;
             OnlyExtension = _settings.Extract.OnlyExtension;
             OnlyExtensionList = _settings.Extract.OnlyExtensionList;
+            OnlyPaths = _settings.Extract.OnlyPaths;
+            OnlyPathsList = _settings.Extract.OnlyPathsList;
+            IgnorePaths = _settings.Extract.IgnorePaths;
+            IgnorePathsList = _settings.Extract.IgnorePathsList;
             OneFolder = _settings.Extract.OneFolder;
             OutProjectJSON = _settings.Extract.OutProjectJSON;
             UseProjectName = _settings.Extract.UseProjectName;
@@ -430,6 +472,8 @@ namespace WE_Tool.ViewModels
             CoverAllFiles = _settings.Extract.CoverAllFiles;
             OverwriteMode = _settings.Extract.CoverAllFiles ? 0 : (_settings.Extract.SkipExistingOutput ? 1 : 0);
             TexExportMode = _settings.Extract.TexExportMode;
+            FilterEffectImagesThreshold = _settings.Extract.FilterEffectImagesThreshold;
+            FilterEffectImagesEnabled = _settings.Extract.FilterEffectImagesEnabled;
 
             MaxConcurrentExtractions = _settings.Extract.MaxConcurrentExtractions;
             ProcessPriority = _settings.Extract.ProcessPriority;
@@ -777,6 +821,10 @@ namespace WE_Tool.ViewModels
                     _settings.Extract.IgnoreExtensionList = IgnoreExtensionList;
                     _settings.Extract.OnlyExtension = OnlyExtension;
                     _settings.Extract.OnlyExtensionList = OnlyExtensionList;
+                    _settings.Extract.OnlyPaths = OnlyPaths;
+                    _settings.Extract.OnlyPathsList = OnlyPathsList;
+                    _settings.Extract.IgnorePaths = IgnorePaths;
+                    _settings.Extract.IgnorePathsList = IgnorePathsList;
                     _settings.Extract.OneFolder = OneFolder;
                     _settings.Extract.OutProjectJSON = OutProjectJSON;
                     _settings.Extract.UseProjectName = UseProjectName;
@@ -785,6 +833,8 @@ namespace WE_Tool.ViewModels
                     _settings.Extract.CoverAllFiles = OverwriteMode == 0;
                     _settings.Extract.TexExportMode = TexExportMode;
                     _settings.Extract.OutputMode = OutputMode;
+                    _settings.Extract.FilterEffectImagesThreshold = FilterEffectImagesThreshold;
+                    _settings.Extract.FilterEffectImagesEnabled = FilterEffectImagesEnabled;
 
                     _settings.Extract.MaxConcurrentExtractions = MaxConcurrentExtractions;
                     _settings.Extract.ProcessPriority = ProcessPriority;

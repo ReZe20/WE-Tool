@@ -329,7 +329,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        LoadComponents();
+        _ = LoadComponents();
     }
 
     protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
@@ -343,7 +343,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
     }
 
-    private async void LoadComponents()
+    private async Task LoadComponents()
     {
         try
         {
@@ -382,8 +382,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             IsMultiSelectMode = false;
             SelectedComponent = null;
 
+            // 先清空显示列表再重填（对齐 Papers：刷新时旧内容立即消失，再由 ApplyFilters 重新填充）
+            FilteredComponents.Clear();
+
             ApplyPaneState();
-            _ = ApplyFilters();
+            await ApplyFilters();
 
             // 恢复导航前打开的属性面板（对齐 Papers：切页回来面板保持打开且有内容）
             if (_restorePropertiesComponent != null)
@@ -763,20 +766,34 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             ? SelectedComponents.ToList()
             : SelectedComponent is not null ? [SelectedComponent] : [];
 
+    private bool _isRefreshing;
+
     private async void ComponentsRefresh_Click(object sender, RoutedEventArgs e)
     {
+        // 防连按：刷新进行中时忽略再次触发（按钮已禁用，F5/菜单入口由此兜底）
+        if (_isRefreshing) return;
+        _isRefreshing = true;
+        RefreshButton.IsEnabled = false;
         HideComponentContextMenu();
 
-        // 触发后台扫描（更新 WallpaperScanner.LastComponents），完成后重新加载
-        App.StartBackgroundScan(
-            ViewModel.PathManagementVM.WorkshopPath,
-            ViewModel.PathManagementVM.OfficialPath,
-            ViewModel.PathManagementVM.ProjectPath,
-            ViewModel.PathManagementVM.AcfPath,
-            ViewModel.PathManagementVM.VdfPath,
-            ViewModel.AppSettingsVM.ScanCacheEnabled == "1");
-        await App.ScanTask;
-        LoadComponents();
+        try
+        {
+            // 触发后台扫描（更新 WallpaperScanner.LastComponents），完成后重新加载
+            App.StartBackgroundScan(
+                ViewModel.PathManagementVM.WorkshopPath,
+                ViewModel.PathManagementVM.OfficialPath,
+                ViewModel.PathManagementVM.ProjectPath,
+                ViewModel.PathManagementVM.AcfPath,
+                ViewModel.PathManagementVM.VdfPath,
+                ViewModel.AppSettingsVM.ScanCacheEnabled == "1");
+            await App.ScanTask;
+            await LoadComponents();
+        }
+        finally
+        {
+            _isRefreshing = false;
+            RefreshButton.IsEnabled = true;
+        }
     }
 
     private async void CopyComponent_Click(object sender, RoutedEventArgs e)
@@ -1262,6 +1279,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         else if (e.Key == VirtualKey.Delete)
         {
             Delete_Accelerator_Invoked(null, null);
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.F5)
+        {
+            // F5 刷新（刷新进行中时由 ComponentsRefresh_Click 内部防连按兜底）
+            ComponentsRefresh_Click(null, null);
             e.Handled = true;
         }
     }

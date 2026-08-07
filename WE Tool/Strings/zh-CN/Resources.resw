@@ -297,10 +297,19 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>已安装壁纸</value>
   </data>
+  <data name="StartPage_Papers.Text" xml:space="preserve">
+    <value>已安装壁纸</value>
+  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>导入壁纸</value>
   </data>
+  <data name="StartPage_Import.Text" xml:space="preserve">
+    <value>导入壁纸</value>
+  </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>已安装组件</value>
+  </data>
+  <data name="StartPage_Components.Text" xml:space="preserve">
     <value>已安装组件</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -949,7 +958,9 @@
     <value>继续</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>仅输出 .png/.jpg/.mp4 等媒体文件（图像与视频），不输出 project.json 和预览图，场景类壁纸中的 TEX 纹理自动转换：图片纹理转图片，视频纹理转 mp4。</value>
+    <value>仅输出媒体文件:图像、视频与音频,且只保留 materials/ 与 sounds/ 目录下的直接内容(子文件夹如 masks、effects 不输出),不输出 project.json 和预览图。
+
+场景类壁纸中的 TEX 纹理自动转换:图片纹理转图片,视频纹理转视频,音频纹理转音频。</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>关闭</value>
@@ -958,15 +969,24 @@
     <value>继续</value>
   </data>
   <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
-    <value>按扩展名筛选输出文件。
+    <value>按需组合过滤条件。
 
 排除扩展名
-可跳过指定类型文件。
+跳过指定扩展名的文件。
 
 仅保留扩展名
-则只输出指定类型文件。
+只输出指定扩展名的文件。
 
-场景类壁纸提取时也会应用扩展名过滤。</value>
+忽略解析目录
+跳过指定目录及其子文件夹下的全部内容。
+
+仅解析目录
+只输出指定目录及其子文件夹下的内容。
+
+剔除效果图
+转换图中透明或黑色像素占比 ≥ 阈值的将整条目跳过(0 = 关闭)。
+
+扩展名过滤对直接拷贝与场景壁纸提取均生效;目录过滤与效果图剔除仅对场景壁纸提取生效。</value>
   </data>
   <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
     <value>关闭</value>
@@ -1320,7 +1340,7 @@
     <value>RePKG_Re</value>
   </data>
   <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value>关于</value>
+    <value>日志</value>
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
     <value>Steamworks 在线</value>
@@ -1369,5 +1389,23 @@
   </data>
   <data name="Info_TranslationTitle.Text" xml:space="preserve">
     <value>翻译进度</value>
+  </data>
+  <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
+    <value>透明与黑色像素过滤阈值</value>
+  </data>
+  <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
+    <value>仅解析目录</value>
+  </data>
+  <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value>英文逗号分隔,如 materials,models(含子文件夹)</value>
+  </data>
+  <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
+    <value>忽略解析目录</value>
+  </data>
+  <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value>英文逗号分隔,如 effects,sounds(含子文件夹)</value>
+  </data>
+  <data name="Info_AboutHeader.Text" xml:space="preserve">
+    <value>关于</value>
   </data>
 </root>

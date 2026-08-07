@@ -17,9 +17,10 @@
             <RowDefinition Height="75"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock x:Uid="Info_LogTitle" FontSize="25" VerticalAlignment="Bottom" Margin="30,0,0,6"/>
+        <TextBlock x:Uid="Info_AboutHeader" FontSize="25" VerticalAlignment="Bottom" Margin="30,0,0,6"/>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
             <StackPanel Margin="25,10,25,0">
+                <TextBlock x:Uid="Info_LogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
                 <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
                     <ScrollViewer x:Name="LogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="LogScrollViewer_ViewChanged">
                         <TextBlock x:Name="LogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
@@ -36,7 +37,7 @@
                                  VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="3" Margin="8,0"/>
                 </Grid>
                 <!-- RePKG_Re 后端版本校验 -->
-                <InfoBar x:Name="RepkgStatusBar" IsOpen="False" IsClosable="False" Margin="0,8,0,0"/>
+                <InfoBar x:Name="RepkgStatusBar" IsOpen="False" IsClosable="False" Margin="0,8,0,10"/>
                 <TextBlock x:Uid="Info_AboutTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
                 <controls:SettingsExpander x:Uid="Info_About" Margin="0,0,0,10">
                     <controls:SettingsExpander.HeaderIcon>

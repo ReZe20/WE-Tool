@@ -297,10 +297,19 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>Fonds d'écran installés</value>
   </data>
+  <data name="StartPage_Papers.Text" xml:space="preserve">
+    <value>Fonds d'écran installés</value>
+  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>Importer des fonds d'écran</value>
   </data>
+  <data name="StartPage_Import.Text" xml:space="preserve">
+    <value>Importer des fonds d'écran</value>
+  </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>Composants installés</value>
+  </data>
+  <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Composants installés</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -817,7 +826,9 @@ Si activé, copie également project.json et les images d'aperçu.</value>
     <value>Suivant</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Extrait uniquement les fichiers médias (.png/.jpg/.mp4 etc., images et vidéos). Aucun project.json ni image d'aperçu ne sera extrait. Les textures TEX des fonds d'écran de scène sont automatiquement converties : textures d'image en images, textures vidéo en mp4.</value>
+    <value>Ne génère que des fichiers multimédia : images, vidéos et audio, en ne conservant que le contenu direct des dossiers materials/ et sounds/ (les sous-dossiers comme masks ou effects ne sont pas générés) ; project.json et les aperçus ne sont pas générés.
+
+Les textures TEX des fonds d'écran de scène sont converties automatiquement : textures d'image en images, textures vidéo en vidéos, textures audio en audio.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Fermer</value>
@@ -826,15 +837,24 @@ Si activé, copie également project.json et les images d'aperçu.</value>
     <value>Suivant</value>
   </data>
   <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
-    <value>Filtrer les fichiers par extension.
+    <value>Combinez les filtres selon vos besoins.
 
-Ignorer les extensions
-Sauter les fichiers avec les extensions spécifiées.
+Exclure des extensions
+Ignore les fichiers avec les extensions indiquées.
 
-Conserver uniquement
-Extraire seulement les fichiers avec les extensions spécifiées.
+Ne conserver que des extensions
+Ne génère que les fichiers avec les extensions indiquées.
 
-Le filtrage s'applique aussi à l'extraction des fonds d'écran de scène.</value>
+Ignorer des dossiers
+Ignore tout le contenu des dossiers indiqués (sous-dossiers inclus).
+
+N'extraire que des dossiers
+Ne génère que le contenu des dossiers indiqués (sous-dossiers inclus).
+
+Filtrer les images d'effet
+Les images converties dont le ratio de pixels transparents ou noirs ≥ seuil sont entièrement ignorées (0 = désactivé).
+
+Les filtres d'extension s'appliquent à la copie directe et à l'extraction des fonds de scène ; les filtres de dossiers et d'images d'effet ne s'appliquent qu'à l'extraction des fonds de scène.</value>
   </data>
   <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
     <value>Fermer</value>
@@ -1079,42 +1099,58 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
     <value>C# 12</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
-    <value>WE Tool utilise repkg_re comme backend d'extraction de paquets : il compile external/repkg_Re à la compilation, distribue RePKG_Re.exe avec les mentions tierces et l'invoque en ligne de commande lors de l'extraction.&#10;Avertissement : cet outil est réservé à un usage personnel d'apprentissage et de sauvegarde. Les fonds d'écran et leurs ressources appartiennent à leurs auteurs respectifs. Veuillez respecter les droits des auteurs originaux et ne pas utiliser le contenu extrait à des fins commerciales ni le redistribuer sans autorisation.</value>
+    <value>WE Tool utilise repkg_re comme backend d'extraction de paquets : il compile external/repkg_Re à la compilation, distribue RePKG_Re.exe avec les mentions tierces et l'invoque en ligne de commande lors de l'extraction.
+Avertissement : cet outil est réservé à un usage personnel d'apprentissage et de sauvegarde. Les fonds d'écran et leurs ressources appartiennent à leurs auteurs respectifs. Veuillez respecter les droits des auteurs originaux et ne pas utiliser le contenu extrait à des fins commerciales ni le redistribuer sans autorisation.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
+  </data>
+  <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
   </data>
 </root>

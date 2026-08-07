@@ -297,10 +297,19 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>설치된 배경화면</value>
   </data>
+  <data name="StartPage_Papers.Text" xml:space="preserve">
+    <value>설치된 배경화면</value>
+  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>배경화면 가져오기</value>
   </data>
+  <data name="StartPage_Import.Text" xml:space="preserve">
+    <value>배경화면 가져오기</value>
+  </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>설치된 구성 요소</value>
+  </data>
+  <data name="StartPage_Components.Text" xml:space="preserve">
     <value>설치된 구성 요소</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -817,7 +826,9 @@ project.json 및 미리보기 복사
     <value>다음</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>미디어 파일(.png/.jpg/.mp4 등, 이미지 및 동영상)만 출력합니다. project.json이나 미리보기 이미지는 출력되지 않습니다. 씬 배경화면의 TEX 텍스처는 자동으로 변환됩니다: 이미지 텍스처는 이미지로, 동영상 텍스처는 mp4로.</value>
+    <value>이미지, 동영상, 오디오 등 미디어 파일만 출력하며, materials/ 및 sounds/ 폴더의 직접 콘텐츠만 유지합니다(masks, effects 등 하위 폴더는 출력하지 않음). project.json과 미리보기 이미지는 출력하지 않습니다.
+
+장면 배경화면의 TEX 텍스처는 자동 변환됩니다:이미지 텍스처→이미지, 동영상 텍스처→동영상, 오디오 텍스처→오디오.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>닫기</value>
@@ -826,15 +837,24 @@ project.json 및 미리보기 복사
     <value>다음</value>
   </data>
   <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
-    <value>확장자로 출력 파일을 필터링합니다.
+    <value>필터를 필요에 따라 조합합니다.
 
-확장자 무시
+확장자 제외
 지정한 확장자의 파일을 건너뜁니다.
 
 확장자만 유지
 지정한 확장자의 파일만 출력합니다.
 
-씬 배경화면 추출 시에도 확장자 필터가 적용됩니다.</value>
+디렉터리 무시
+지정한 디렉터리 아래(하위 폴더 포함)의 모든 내용을 건너뜁니다.
+
+디렉터리만 추출
+지정한 디렉터리 아래(하위 폴더 포함)의 내용만 출력합니다.
+
+효과 이미지 필터링
+투명 또는 검은 픽셀 비율이 임계값 이상인 변환 이미지는 항목 전체가 건너뛰어집니다(0 = 꺼짐).
+
+확장자 필터는 직접 복사와 장면 배경화면 추출 모두에 적용되며, 디렉터리 필터와 효과 이미지 필터링은 장면 배경화면 추출에만 적용됩니다.</value>
   </data>
   <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
     <value>닫기</value>
@@ -1079,42 +1099,58 @@ project.json 및 미리보기 복사
     <value>C# 12</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
-    <value>WE Tool은 repkg_re를 배경화면 패키지 추출 백엔드로 사용합니다. 빌드 시 external/repkg_Re를 컴파일하고 RePKG_Re.exe와 타사 고지를 함께 배포하며, 추출 시 명령줄로 호출합니다.&#10;면책 조항: 이 도구는 개인 학습 및 백업 용도로만 사용됩니다. 배경화면 및 해당 자산의 저작권은 각 저작자에게 있습니다. 원저작자의 권리를 존중하고 추출된 콘텐츠를 상업적 용도나 무단 재배포에 사용하지 마십시오.</value>
+    <value>WE Tool은 repkg_re를 배경화면 패키지 추출 백엔드로 사용합니다. 빌드 시 external/repkg_Re를 컴파일하고 RePKG_Re.exe와 타사 고지를 함께 배포하며, 추출 시 명령줄로 호출합니다.
+면책 조항: 이 도구는 개인 학습 및 백업 용도로만 사용됩니다. 배경화면 및 해당 자산의 저작권은 각 저작자에게 있습니다. 원저작자의 권리를 존중하고 추출된 콘텐츠를 상업적 용도나 무단 재배포에 사용하지 마십시오.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
+  </data>
+  <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
   </data>
 </root>

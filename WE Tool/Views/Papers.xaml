@@ -343,7 +343,7 @@
                         <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Uid="Toolbar_Refresh"
+                <AppBarButton x:Name="RefreshButton" x:Uid="Toolbar_Refresh"
                               Click="WallpaperListRefresh_Click_ByCommandBarFlyout"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>

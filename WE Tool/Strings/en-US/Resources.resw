@@ -297,10 +297,19 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>Installed Wallpapers</value>
   </data>
+  <data name="StartPage_Papers.Text" xml:space="preserve">
+    <value>Installed Wallpapers</value>
+  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>Import Wallpapers</value>
   </data>
+  <data name="StartPage_Import.Text" xml:space="preserve">
+    <value>Import Wallpapers</value>
+  </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>Installed Components</value>
+  </data>
+  <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Installed Components</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -925,7 +934,9 @@ When enabled, additional project.json and preview image files will be output.</v
     <value>Next</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Only output media files (.png/.jpg/.mp4 etc., images and videos). No project.json or preview images will be output. TEX textures in scene wallpapers are automatically converted: image textures to images, video textures to mp4.</value>
+    <value>Outputs only media files: images, videos and audio, keeping only the direct contents of the materials/ and sounds/ folders (subfolders such as masks and effects are excluded); project.json and preview images are not output.
+
+TEX textures in scene wallpapers are converted automatically: image textures to images, video textures to videos, audio textures to audio.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Close</value>
@@ -934,15 +945,24 @@ When enabled, additional project.json and preview image files will be output.</v
     <value>Next</value>
   </data>
   <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
-    <value>Filter output files by extension.
+    <value>Combine filters as needed.
 
-Ignore Extensions
-Skip files with specified extensions.
+Exclude extensions
+Skip files with the given extensions.
 
-Keep Only Extensions
-Only output files with specified extensions.
+Only keep extensions
+Output only files with the given extensions.
 
-Extension filtering also applies when extracting scene wallpapers.</value>
+Ignore directories
+Skip everything under the given directories (including subfolders).
+
+Only extract directories
+Output only content under the given directories (including subfolders).
+
+Filter effect images
+Converted images whose transparent or black pixel ratio ≥ threshold are skipped entirely (0 = off).
+
+Extension filters apply to both direct copies and scene-wallpaper extraction; directory filters and effect-image filtering apply to scene-wallpaper extraction only.</value>
   </data>
   <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
     <value>Close</value>
@@ -1187,7 +1207,8 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
     <value>C# 12</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
-    <value>WE Tool references repkg_re as its wallpaper package extraction backend: it compiles external/repkg_Re at build time, ships RePKG_Re.exe with third-party notices, and invokes it via command line during extraction.&#10;Disclaimer: This tool is for personal learning and backup purposes only. Wallpapers and their assets remain the property of their respective authors. Please respect the original authors' rights and do not use extracted content for commercial purposes or unauthorized redistribution.</value>
+    <value>WE Tool references repkg_re as its wallpaper package extraction backend: it compiles external/repkg_Re at build time, ships RePKG_Re.exe with third-party notices, and invokes it via command line during extraction.
+Disclaimer: This tool is for personal learning and backup purposes only. Wallpapers and their assets remain the property of their respective authors. Please respect the original authors' rights and do not use extracted content for commercial purposes or unauthorized redistribution.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
     <value>WE Tool</value>
@@ -1245,5 +1266,20 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   </data>
   <data name="Info_TranslationTitle.Text" xml:space="preserve">
     <value>Translation Progress</value>
+  </data>
+  <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
+    <value>Transparent &amp; black pixel filter threshold (%)</value>
+  </data>
+  <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
+    <value>Only extract directories</value>
+  </data>
+  <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Comma-separated, e.g. materials,models (includes subfolders)</value>
+  </data>
+  <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
+    <value>Ignore directories</value>
+  </data>
+  <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Comma-separated, e.g. effects,sounds (includes subfolders)</value>
   </data>
 </root>

@@ -297,10 +297,19 @@
   <data name="InstalledWallpapers.Content" xml:space="preserve">
     <value>Установленные обои</value>
   </data>
+  <data name="StartPage_Papers.Text" xml:space="preserve">
+    <value>Установленные обои</value>
+  </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
     <value>Импортировать обои</value>
   </data>
+  <data name="StartPage_Import.Text" xml:space="preserve">
+    <value>Импортировать обои</value>
+  </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
+    <value>Установленные компоненты</value>
+  </data>
+  <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Установленные компоненты</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
@@ -817,7 +826,9 @@
     <value>Далее</value>
   </data>
   <data name="Settings_TeachingTip_Output2.Subtitle" xml:space="preserve">
-    <value>Выводит только медиафайлы (.png/.jpg/.mp4 и т.д., изображения и видео). project.json и изображения предпросмотра не выводятся. Текстуры TEX в сценарных обоях автоматически конвертируются: текстуры изображений в изображения, видеотекстуры в mp4.</value>
+    <value>Выводит только медиафайлы: изображения, видео и аудио, сохраняя лишь содержимое напрямую в папках materials/ и sounds/ (вложенные папки, такие как masks или effects, не выводятся); project.json и превью не выводятся.
+
+Текстуры TEX в сценических обоях конвертируются автоматически: текстуры-изображения — в изображения, видео-текстуры — в видео, аудио-текстуры — в аудио.</value>
   </data>
   <data name="Settings_TeachingTip_Output2.CloseButtonContent" xml:space="preserve">
     <value>Закрыть</value>
@@ -826,15 +837,24 @@
     <value>Далее</value>
   </data>
   <data name="Settings_TeachingTip_Output3.Subtitle" xml:space="preserve">
-    <value>Фильтрация вывода по расширению.
+    <value>Комбинируйте фильтры по необходимости.
 
-Игнорировать расширения
-Пропускать файлы с указанными расширениями.
+Исключить расширения
+Пропускает файлы с указанными расширениями.
 
 Только указанные расширения
-Выводить только файлы с указанными расширениями.
+Выводит только файлы с указанными расширениями.
 
-Фильтрация также применяется при извлечении обоев сцены.</value>
+Игнорировать папки
+Пропускает всё содержимое указанных папок (включая вложенные).
+
+Извлекать только папки
+Выводит только содержимое указанных папок (включая вложенные).
+
+Фильтр эффектных изображений
+Преобразованные изображения с долей прозрачных или чёрных пикселей ≥ порога пропускаются целиком (0 = выкл).
+
+Фильтры расширений применяются и к прямому копированию, и к извлечению сценических обоев; фильтры папок и эффектных изображений — только к извлечению сценических обоев.</value>
   </data>
   <data name="Settings_TeachingTip_Output3.CloseButtonContent" xml:space="preserve">
     <value>Закрыть</value>
@@ -1079,42 +1099,58 @@
     <value>C# 12</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
-    <value>WE Tool использует repkg_re как бэкенд извлечения пакетов: компилирует external/repkg_Re при сборке, поставляет RePKG_Re.exe с уведомлениями о сторонних компонентах и вызывает его из командной строки при извлечении.&#10;Отказ от ответственности: инструмент предназначен только для личного обучения и резервного копирования. Обои и их ресурсы принадлежат соответствующим авторам. Уважайте права оригинальных авторов и не используйте извлечённое содержимое в коммерческих целях или для несанкционированного распространения.</value>
+    <value>WE Tool использует repkg_re как бэкенд извлечения пакетов: компилирует external/repkg_Re при сборке, поставляет RePKG_Re.exe с уведомлениями о сторонних компонентах и вызывает его из командной строки при извлечении.
+Отказ от ответственности: инструмент предназначен только для личного обучения и резервного копирования. Обои и их ресурсы принадлежат соответствующим авторам. Уважайте права оригинальных авторов и не используйте извлечённое содержимое в коммерческих целях или для несанкционированного распространения.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value></value>
+    <value />
+  </data>
+  <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
+    <value />
   </data>
 </root>

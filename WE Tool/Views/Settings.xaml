@@ -130,9 +130,24 @@
                         <FontIcon Glyph="&#xE8A1;"/>
                     </controls:SettingsCard.HeaderIcon>
                     <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.StartPageTag, Mode=TwoWay}" SelectedValuePath="Tag" SelectedIndex="0" MinWidth="150">
-                        <ComboBoxItem Tag="Papers" x:Uid="InstalledWallpapers"/>
-                        <ComboBoxItem Tag="InstalledComponents" x:Uid="InstalledComponentsPage"/>
-                        <ComboBoxItem Tag="LoadPapers" x:Uid="ImportWallpapers"/>
+                        <ComboBoxItem Tag="Papers">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8B9;" FontSize="14"/>
+                                <TextBlock x:Uid="StartPage_Papers" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="InstalledComponents">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xF4A5;" FontSize="14"/>
+                                <TextBlock x:Uid="StartPage_Components" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="LoadPapers">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8B5;" FontSize="14"/>
+                                <TextBlock x:Uid="StartPage_Import" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
                     </ComboBox>
                 </controls:SettingsCard>
                 <controls:SettingsCard x:Uid="Theme" Margin="0,0,0,10">
@@ -345,6 +360,32 @@
                                                                 <StackPanel Orientation="Horizontal">
                                                                     <TextBlock x:Uid="Settings_Output_OnlyExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
                                                                     <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OnlyExtension, Mode=OneWay}" Margin="8,0,0,0"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="OnlyPaths" IsChecked="{x:Bind ViewModel.OnlyPaths, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}" Margin="0,12,0,0">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock x:Uid="Settings_Output_OnlyPathsText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                    <TextBox x:Uid="Settings_OnlyPathsList" HorizontalAlignment="Stretch" Margin="8,0,0,0" Text="{x:Bind ViewModel.OnlyPathsList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IsOnlyPathsTextBoxEnabled, Mode=OneWay}"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="IgnorePaths" IsChecked="{x:Bind ViewModel.IgnorePaths, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock x:Uid="Settings_Output_IgnorePathsText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                    <TextBox x:Uid="Settings_IgnorePathsList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.IgnorePathsList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IsIgnorePathsTextBoxEnabled, Mode=OneWay}" Margin="8,0,0,0"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="EffectImagesCheckBox" IsChecked="{x:Bind ViewModel.FilterEffectImagesEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel>
+                                                                    <TextBlock x:Uid="Settings_Output_EffectImagesText" Margin="0,12,0,8" VerticalAlignment="Bottom" IsHitTestVisible="False" TextWrapping="Wrap"/>
+                                                                    <NumberBox Minimum="0" Maximum="100" SmallChange="5" SpinButtonPlacementMode="Compact"
+                                                                               Value="{x:Bind ViewModel.FilterEffectImagesThreshold, Mode=TwoWay}" Margin="8,0,0,0"
+                                                                               IsEnabled="{x:Bind ViewModel.FilterEffectImagesEnabled, Mode=OneWay}"/>
                                                                 </StackPanel>
                                                             </CheckBox.Content>
                                                         </CheckBox>

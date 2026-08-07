@@ -125,7 +125,9 @@ public class RepkgCliService
 
                 try
                 {
-                    var pkgFiles = dir.EnumerateFiles("*.pkg", SearchOption.AllDirectories).ToArray();
+                    var pkgFiles = dir.EnumerateFiles("*.pkg", SearchOption.AllDirectories)
+                        .Concat(dir.EnumerateFiles("*.mpkg", SearchOption.AllDirectories))
+                        .ToArray();
 
                     if (pkgFiles.Length > 0)
                     {
@@ -184,27 +186,40 @@ public class RepkgCliService
         sb.Append("extract \""); sb.Append(input); sb.Append("\" ");
         sb.Append("-o \""); sb.Append(output); sb.Append("\" ");
 
-        // 扩展名过滤在自定义模式(OutputMode==2)下使用 RePKG 的输出层参数
-        // (-I / -E)：条目照常解析(TEX 照常转换)，写文件时按"输出文件扩展名"
-        // 判断跳过/保留，转换出的图片按转换后格式(如 .png)参与判断
+        // 扩展名/目录过滤在自定义模式(OutputMode==2)下使用 RePKG 的输出层参数
+        // (-I / -E)与解析前目录过滤(--onlypaths / --ignorepaths)：条目照常解析(TEX 照常转换)，
+        // 写文件时按"输出文件扩展名"判断跳过/保留，转换出的图片按转换后格式(如 .png)参与判断
         if (settings.OutputMode == 2)
         {
             if (settings.IgnoreExtension && !string.IsNullOrEmpty(settings.IgnoreExtensionList))
                 sb.Append("-I ").Append(settings.IgnoreExtensionList).Append(' ');
             if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
                 sb.Append("-E ").Append(settings.OnlyExtensionList).Append(' ');
+            if (settings.IgnorePaths && !string.IsNullOrEmpty(settings.IgnorePathsList))
+                sb.Append("--ignorepaths ").Append(settings.IgnorePathsList).Append(' ');
+            if (settings.OnlyPaths && !string.IsNullOrEmpty(settings.OnlyPathsList))
+                sb.Append("--onlypaths ").Append(settings.OnlyPathsList).Append(' ');
         }
 
         if (settings.KeepSubfolderStructure == 1) sb.Append("-s ");
 
         // Tex 处理：OutputMode==1 独立分支，不受 TexExportMode 影响
         if (settings.OutputMode == 1)
+        {
             sb.Append("-E ").Append(MediaOnlyExtensionsArg).Append(' ');
+            // 媒体模式只输出 materials/sounds 的直接子文件（--paths-depth 1 排除子文件夹：
+            // masks/effects/workshop 等整体不输出）
+            sb.Append("--onlypaths materials,sounds --paths-depth 1 ");
+        }
         else if (settings.TexExportMode == 0)
             sb.Append("--no-tex-convert ");
         else if (settings.TexExportMode == 2)
             sb.Append("--only-tex-images ");
         // TexExportMode==1（导出并转换）：无额外参数，默认行为 = 提取全部 + TEX 转图片 + 保留 TEX
+
+        // 效果图剔除（仅自定义模式）：开关勾选且阈值 > 0 时透传给 RePKG_Re（透明或黑色占比 ≥ 阈值的整条目跳过）
+        if (settings.OutputMode == 2 && settings.FilterEffectImagesEnabled && settings.FilterEffectImagesThreshold > 0)
+            sb.Append("--filter-effect-images ").Append(settings.FilterEffectImagesThreshold).Append(' ');
 
         if (settings.CoverAllFiles) sb.Append("--overwrite ");
         if (settings.LazyLoad) sb.Append("--lazy ");
@@ -453,7 +468,7 @@ public class RepkgCliService
     }
 
     /// <summary>
-    /// 媒体文件扩展名集合（仅输出媒体文件模式使用）：图像 + 视频。
+    /// 媒体文件扩展名集合（仅输出媒体文件模式使用）：图像 + 视频 + 音频。
     /// 与 RePKG 转换输出格式对齐：TEX 纹理→png/gif 等，视频纹理 TEX→mp4。
     /// </summary>
     private static readonly HashSet<string> MediaExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -461,7 +476,9 @@ public class RepkgCliService
         // 图像
         ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".ico",
         // 视频（含 RePKG 视频纹理 TEX 转换输出的 .mp4）
-        ".mp4", ".webm", ".mov"
+        ".mp4", ".webm", ".mov",
+        // 音频（场景壁纸 sounds/ 目录下的 mp3/ogg/wav 等）
+        ".mp3", ".ogg", ".wav", ".flac", ".m4a", ".aac"
     };
 
     /// <summary>

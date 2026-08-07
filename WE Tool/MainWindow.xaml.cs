@@ -1,27 +1,15 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.UI.Windowing;
+﻿using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using Serilog;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
-using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Graphics;
 using Windows.UI;
 using WinUIEx;
@@ -209,7 +197,7 @@ namespace WE_Tool
             contentFrame.CacheSize = 0;
             contentFrame.Navigate(pageType, null);
             contentFrame.CacheSize = originalCacheSize;
-            
+
         }
 
         private async void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
@@ -256,4 +244,3 @@ namespace WE_Tool
         }
     }
 }
- 
