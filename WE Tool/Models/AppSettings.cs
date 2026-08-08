@@ -134,8 +134,8 @@ namespace WE_Tool.Models
         /// <summary>效果图剔除开关(自定义模式):勾选后按阈值剔除效果图</summary>
         public bool FilterEffectImagesEnabled { get; set; } = false;
 
-        // 性能参数（阶段1）
-        /// <summary>最大并发提取数，默认 CPU 逻辑核心数</summary>
+        // 性能参数(阶段1)
+        /// <summary>batch 最大线程数(单进程 batch 模式,v0.5.0 起语义从"进程数"变为"线程数"),默认 CPU 逻辑核心数</summary>
         public int MaxConcurrentExtractions { get; set; } = Environment.ProcessorCount;
         /// <summary>0=Normal, 1=BelowNormal, 2=Idle</summary>
         public int ProcessPriority { get; set; } = 0;

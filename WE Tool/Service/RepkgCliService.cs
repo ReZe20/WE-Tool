@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
@@ -19,9 +20,9 @@ public class RepkgCliService
     private readonly string _repkgDir;
     private readonly ConcurrentDictionary<int, Process> _runningProcesses = new();
 
-    public RepkgCliService()
+    public RepkgCliService(string? repkgDir = null)
     {
-        _repkgDir = Path.Combine(AppContext.BaseDirectory, "repkg");
+        _repkgDir = repkgDir ?? Path.Combine(AppContext.BaseDirectory, "repkg");
     }
 
     public void Pause()
@@ -65,6 +66,11 @@ public class RepkgCliService
         _runningProcesses.Clear();
     }
 
+    /// <summary>
+    /// 单进程 batch 提取:所有 pkg 壁纸交给一个 RePKG_Re.exe batch 进程(内部多线程),
+    /// 非 pkg 壁纸(HTML 等)由本服务直接复制;进程崩溃自动重启(第二击跳壁纸,最多 3 次)。
+    /// onProgress 消息格式保持 name|action|pct|entry 不变(UI 无感知)。
+    /// </summary>
     public async Task ExtractWallpapersAsync(
         IReadOnlyList<WallpaperItem> wallpapers,
         string outputRoot,
@@ -75,166 +81,179 @@ public class RepkgCliService
         int total = wallpapers.Count;
         if (total == 0) return;
 
-        int done = 0;
-
         void ReportProgress(string msg) => onProgress?.Invoke(msg);
 
-        int maxDop = settings.MaxConcurrentExtractions > 0
+        // 跳过已提取 — 仅子文件夹模式下检查(平铺模式共用输出目录,无法按壁纸判断)
+        var pending = new List<WallpaperItem>();
+        foreach (var wallpaper in wallpapers)
+        {
+            if (string.IsNullOrEmpty(wallpaper.FolderPath)) continue;
+            var dir = new DirectoryInfo(wallpaper.FolderPath);
+            if (!dir.Exists) continue;
+
+            var wallpaperOutput = GetOutputPath(outputRoot, wallpaper, settings);
+            var name = NameOf(wallpaper);
+
+            if (settings.OneFolder == 0 && settings.SkipExistingOutput &&
+                Directory.Exists(wallpaperOutput) &&
+                Directory.EnumerateFileSystemEntries(wallpaperOutput).Any())
+            {
+                ReportProgress($"{name}|跳过(已提取)|100");
+                continue;
+            }
+
+            pending.Add(wallpaper);
+        }
+
+        if (pending.Count == 0)
+        {
+            if (!ct.IsCancellationRequested)
+                ReportProgress($"提取完成，共 {total} 个壁纸");
+            return;
+        }
+
+        // pkg 壁纸 → batch;非 pkg(HTML 等)→ CopyAllFiles 直接复制
+        var pkgWallpapers = pending.Where(w => HasPkgFiles(w.FolderPath!)).ToList();
+        var copyWallpapers = pending.Where(w => !HasPkgFiles(w.FolderPath!)).ToList();
+
+        int maxThreads = settings.MaxConcurrentExtractions > 0
             ? settings.MaxConcurrentExtractions
             : Environment.ProcessorCount;
 
-        var po = new ParallelOptions
-        {
-            CancellationToken = ct,
-            MaxDegreeOfParallelism = maxDop
-        };
+        var batchTask = pkgWallpapers.Count > 0
+            ? RunBatchWithRestartAsync(pkgWallpapers, outputRoot, settings, maxThreads, ReportProgress, ct)
+            : Task.FromResult((Crashed: 0, GaveUpRemaining: 0));
+        var copyTask = copyWallpapers.Count > 0
+            ? CopyAllWallpapersAsync(copyWallpapers, outputRoot, settings, maxThreads, ReportProgress, ct)
+            : Task.CompletedTask;
 
-        Log.Information("[repkg] 开始提取: {Count} 个壁纸, 并发数={Dop}", total, maxDop);
-
-        try
-        {
-            await Parallel.ForEachAsync(wallpapers, po, async (wallpaper, token) =>
-            {
-                token.ThrowIfCancellationRequested();
-                if (string.IsNullOrEmpty(wallpaper.FolderPath)) { Interlocked.Increment(ref done); return; }
-
-                var dir = new DirectoryInfo(wallpaper.FolderPath);
-                if (!dir.Exists) { Interlocked.Increment(ref done); return; }
-
-                var wallpaperOutput = GetOutputPath(outputRoot, wallpaper, settings);
-                var name = wallpaper.Title ?? wallpaper.WorkshopID ?? dir.Name;
-                var n = Interlocked.Increment(ref done);
-
-                void ItemProgress(string action, double pct)
-                    => ReportProgress($"{name}|{action}|{pct}");
-
-                void ItemProgressWithEntry(string action, double pct, string? entry)
-                    => ReportProgress($"{name}|{action}|{pct}|{entry}");
-
-                // 跳过已提取 — 仅子文件夹模式下检查（平铺模式共用输出目录，无法按壁纸判断）
-                if (settings.OneFolder == 0 && settings.SkipExistingOutput && Directory.Exists(wallpaperOutput))
-                {
-                    if (Directory.EnumerateFileSystemEntries(wallpaperOutput).Any())
-                    {
-                        ItemProgress("跳过(已提取)", 100);
-                        return;
-                    }
-                }
-
-                ItemProgress("开始", 0);
-
-                try
-                {
-                    var pkgFiles = dir.EnumerateFiles("*.pkg", SearchOption.AllDirectories)
-                        .Concat(dir.EnumerateFiles("*.mpkg", SearchOption.AllDirectories))
-                        .ToArray();
-
-                    if (pkgFiles.Length > 0)
-                    {
-                        var args = BuildArgs(wallpaper.FolderPath, wallpaperOutput, settings);
-                        await RunRepkgAsync(name, args, (pct, entry) => ItemProgressWithEntry("解析PKG", pct, entry), token);
-                    }
-                    else
-                    {
-                        Directory.CreateDirectory(wallpaperOutput);
-                        CopyAllFiles(dir, wallpaperOutput, settings, wallpaper.Type == "scene");
-                    }
-
-                    // 统一处理 project.json 和预览图导出（由 WE Tool 负责，不再通过 repkg-Re -c）
-                    // OutputMode==1（仅输出媒体文件）时不复制 project.json/预览图
-                    if (settings.OutProjectJSON && settings.OutputMode != 1)
-                        CopyProjectFiles(dir, wallpaperOutput, settings);
-
-                    // 平铺模式
-                    if (settings.OneFolder == 1 && settings.FlatFileNamingMode == 1 && !string.IsNullOrEmpty(wallpaper.Title))
-                    {
-                        var safeTitle = GetSafeName(wallpaper.Title);
-                        foreach (var f in Directory.EnumerateFiles(wallpaperOutput))
-                        {
-                            var fi = new FileInfo(f);
-                            var newName = $"{safeTitle}_{fi.Name}";
-                            var dest = Path.Combine(wallpaperOutput, newName);
-                            int seq = 2;
-                            while (File.Exists(dest))
-                                dest = Path.Combine(wallpaperOutput, $"{safeTitle}_{seq++}_{fi.Name}");
-                            File.Move(f, dest);
-                        }
-                    }
-
-                    ItemProgress("完成", 100);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "[repkg] 提取失败: {Name}", name);
-                    ItemProgress("失败", 100);
-                }
-            });
-        }
-        catch (OperationCanceledException) { }
+        await Task.WhenAll(batchTask, copyTask);
 
         if (!ct.IsCancellationRequested)
-            onProgress?.Invoke($"提取完成，共 {total} 个壁纸");
+        {
+            var (crashed, gaveUpRemaining) = await batchTask;
+            if (gaveUpRemaining > 0)
+                ReportProgress($"提取失败:批处理连续崩溃,剩余 {gaveUpRemaining} 个壁纸未提取");
+            else if (crashed > 0)
+                ReportProgress($"提取完成，共 {total} 个壁纸(因崩溃跳过 {crashed} 个)");
+            else
+                ReportProgress($"提取完成，共 {total} 个壁纸");
+        }
     }
 
-    private static string BuildArgs(string input, string output, ExtractSettings settings)
+    /// <summary>
+    /// batch 提取 + 崩溃重启循环:id 稳定(数组下标);收到 wallpaper done 的壁纸移出 pending;
+    /// 进程退出未见 batch done = 崩溃:第一次重启全部 pending,第二次崩在同一壁纸 → 跳过该壁纸,
+    /// 连续 3 次崩溃整体放弃。用户取消(ct)不触发重启。
+    /// 返回:(Crashed = 因第二击跳过的壁纸数, GaveUpRemaining = 整体放弃时剩余壁纸数,0 = 未放弃)。
+    /// </summary>
+    private async Task<(int Crashed, int GaveUpRemaining)> RunBatchWithRestartAsync(
+        List<WallpaperItem> wallpapers,
+        string outputRoot,
+        ExtractSettings settings,
+        int maxThreads,
+        Action<string> reportProgress,
+        CancellationToken ct)
     {
-        var sb = new StringBuilder();
-        sb.Append("extract \""); sb.Append(input); sb.Append("\" ");
-        sb.Append("-o \""); sb.Append(output); sb.Append("\" ");
+        var items = wallpapers.Select((w, i) => new BatchItem { Id = i.ToString(), Wallpaper = w }).ToList();
+        var idToItem = items.ToDictionary(x => x.Id, StringComparer.Ordinal);
+        var pending = new HashSet<string>(items.Select(x => x.Id), StringComparer.Ordinal);
 
-        // 扩展名/目录过滤在自定义模式(OutputMode==2)下使用 RePKG 的输出层参数
-        // (-I / -E)与解析前目录过滤(--onlypaths / --ignorepaths)：条目照常解析(TEX 照常转换)，
-        // 写文件时按"输出文件扩展名"判断跳过/保留，转换出的图片按转换后格式(如 .png)参与判断
-        if (settings.OutputMode == 2)
+        int restartCount = 0;
+        const int maxRestarts = 3;
+        string? lastCrashId = null;
+        var crashedIds = new List<string>();
+
+        while (pending.Count > 0)
         {
-            if (settings.IgnoreExtension && !string.IsNullOrEmpty(settings.IgnoreExtensionList))
-                sb.Append("-I ").Append(settings.IgnoreExtensionList).Append(' ');
-            if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
-                sb.Append("-E ").Append(settings.OnlyExtensionList).Append(' ');
-            if (settings.IgnorePaths && !string.IsNullOrEmpty(settings.IgnorePathsList))
-                sb.Append("--ignorepaths ").Append(settings.IgnorePathsList).Append(' ');
-            if (settings.OnlyPaths && !string.IsNullOrEmpty(settings.OnlyPathsList))
-                sb.Append("--onlypaths ").Append(settings.OnlyPathsList).Append(' ');
+            if (ct.IsCancellationRequested) break;
+
+            var manifestPath = WriteManifest(
+                items.Where(x => pending.Contains(x.Id)).ToList(), outputRoot, settings, maxThreads);
+
+            BatchRunResult result;
+            try
+            {
+                result = await RunBatchAsync(manifestPath, idToItem, reportProgress, ct);
+            }
+            finally
+            {
+                try { File.Delete(manifestPath); } catch { }
+            }
+
+            if (ct.IsCancellationRequested) break;
+
+            // 已完成的壁纸:移出 pending + 后处理(project.json/预览图/平铺重命名)
+            foreach (var id in result.DoneIds)
+            {
+                if (pending.Remove(id) && idToItem.TryGetValue(id, out var doneItem))
+                    PostProcessWallpaper(doneItem.Wallpaper, GetOutputPath(outputRoot, doneItem.Wallpaper, settings), settings);
+            }
+
+            if (result.CleanDone) break;
+
+            // ---- 崩溃恢复 ----
+            restartCount++;
+            if (restartCount > maxRestarts)
+            {
+                int remaining = pending.Count;
+                Log.Error("[repkg] 批处理连续崩溃超过 {Max} 次,放弃剩余 {Count} 个壁纸", maxRestarts, remaining);
+                foreach (var id in pending)
+                {
+                    if (idToItem.TryGetValue(id, out var it))
+                        reportProgress($"{NameOf(it.Wallpaper)}|失败|100");
+                }
+                pending.Clear();
+                return (crashedIds.Count, remaining);
+            }
+
+            var suspect = result.LastActiveId;
+            if (suspect != null && suspect == lastCrashId && pending.Contains(suspect) &&
+                idToItem.TryGetValue(suspect, out var suspectItem))
+            {
+                // 第二击:同一壁纸连续两次触发崩溃,确认元凶,跳过并记录
+                crashedIds.Add(suspect);
+                Log.Warning("[repkg] 壁纸 {Name} 连续两次触发崩溃,已跳过", NameOf(suspectItem.Wallpaper));
+                reportProgress($"{NameOf(suspectItem.Wallpaper)}|失败|100");
+                pending.Remove(suspect);
+                lastCrashId = null;
+            }
+            else
+            {
+                lastCrashId = suspect;
+            }
+
+            Log.Warning("[repkg] 批处理进程崩溃,重启剩余 {Count} 个壁纸(第 {N} 次),manifest: {Path}",
+                pending.Count, restartCount, manifestPath);
         }
 
-        if (settings.KeepSubfolderStructure == 1) sb.Append("-s ");
-
-        // Tex 处理：OutputMode==1 独立分支，不受 TexExportMode 影响
-        if (settings.OutputMode == 1)
+        if (crashedIds.Count > 0)
         {
-            sb.Append("-E ").Append(MediaOnlyExtensionsArg).Append(' ');
-            // 媒体模式只输出 materials/sounds 的直接子文件（--paths-depth 1 排除子文件夹：
-            // masks/effects/workshop 等整体不输出）
-            sb.Append("--onlypaths materials,sounds --paths-depth 1 ");
+            var names = crashedIds
+                .Where(id => idToItem.TryGetValue(id, out _))
+                .Select(id => NameOf(idToItem[id].Wallpaper));
+            Log.Warning("[repkg] 因崩溃跳过的壁纸: {Names}", string.Join(", ", names));
         }
-        else if (settings.TexExportMode == 0)
-            sb.Append("--no-tex-convert ");
-        else if (settings.TexExportMode == 2)
-            sb.Append("--only-tex-images ");
-        // TexExportMode==1（导出并转换）：无额外参数，默认行为 = 提取全部 + TEX 转图片 + 保留 TEX
 
-        // 效果图剔除（仅自定义模式）：开关勾选且阈值 > 0 时透传给 RePKG_Re（透明或黑色占比 ≥ 阈值的整条目跳过）
-        if (settings.OutputMode == 2 && settings.FilterEffectImagesEnabled && settings.FilterEffectImagesThreshold > 0)
-            sb.Append("--filter-effect-images ").Append(settings.FilterEffectImagesThreshold).Append(' ');
-
-        if (settings.CoverAllFiles) sb.Append("--overwrite ");
-        if (settings.LazyLoad) sb.Append("--lazy ");
-        sb.Append("-r"); // recursive
-        return sb.ToString();
+        return (crashedIds.Count, 0);
     }
 
-    private async Task RunRepkgAsync(string wallpaperName, string args, Action<double, string?> progressCb, CancellationToken ct)
+    /// <summary>单次 batch 进程调用:解析 JSON 事件,按 id 路由到壁纸,跟踪完成/崩溃信息。</summary>
+    private async Task<BatchRunResult> RunBatchAsync(
+        string manifestPath,
+        Dictionary<string, BatchItem> idToItem,
+        Action<string> reportProgress,
+        CancellationToken ct)
     {
+        var result = new BatchRunResult();
+        var lastTickById = new Dictionary<string, long>(StringComparer.Ordinal);
+
         var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
                 FileName = Path.Combine(_repkgDir, "RePKG_Re.exe"),
-                Arguments = args,
+                Arguments = $"batch --manifest \"{manifestPath}\"",
                 WorkingDirectory = _repkgDir,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -244,53 +263,73 @@ public class RepkgCliService
             EnableRaisingEvents = true
         };
 
-        long _lastProgressTick = 0;
         process.OutputDataReceived += (_, e) =>
         {
-            if (!string.IsNullOrEmpty(e.Data) && e.Data.StartsWith("{"))
+            if (string.IsNullOrEmpty(e.Data) || !e.Data.StartsWith("{")) return;
+            try
             {
-                try
+                using var doc = JsonDocument.Parse(e.Data);
+                var root = doc.RootElement;
+
+                // 批次完成:整批正常结束的唯一判据
+                if (root.TryGetProperty("type", out var typeProp))
                 {
-                    using var doc = System.Text.Json.JsonDocument.Parse(e.Data);
-                    var root = doc.RootElement;
-
-                    // Enhanced progress (Phase 5): wallpaper-level start
-                    if (root.TryGetProperty("type", out var typeProp))
+                    var type = typeProp.GetString();
+                    if (type == "batch" && root.TryGetProperty("action", out var ba) &&
+                        ba.GetString() == "done")
                     {
-                        var type = typeProp.GetString();
-                        if (type == "wallpaper" && root.TryGetProperty("total_entries", out var totalEnt))
-                        {
-                            Log.Information("[repkg] 开始解析壁纸: {Name}, 共 {Total} 个条目",
-                                wallpaperName, totalEnt.GetInt32());
-                        }
-                        else if (type == "entry" && root.TryGetProperty("entry", out var entryProp))
-                        {
-                            Log.Information("[repkg] 正在转换: {Entry} ({Pos}/{Total})",
-                                entryProp.GetString(),
-                                root.TryGetProperty("pos", out var p) ? p.GetInt32() : 0,
-                                root.TryGetProperty("total", out var t) ? t.GetInt32() : 0);
-
-                            // 将条目名传给 UI（同时携带当前进度）
-                            if (root.TryGetProperty("pos", out var pos) && root.TryGetProperty("total", out var total))
-                            {
-                                progressCb(Math.Round((double)pos.GetInt32() / total.GetInt32() * 100, 1),
-                                    entryProp.GetString());
-                            }
-                        }
+                        result.CleanDone = true;
+                        return;
                     }
-                    else if (root.TryGetProperty("pos", out var pos) && root.TryGetProperty("total", out var total))
-                    {
-                        // 节流：最多每 30ms 触发一次 progress 回调
-                        var now = Environment.TickCount64;
-                        if (now - _lastProgressTick < 30) return;
-                        _lastProgressTick = now;
 
-                        var entryName = root.TryGetProperty("entry", out var entryProp) ? entryProp.GetString() : null;
-                        progressCb(Math.Round((double)pos.GetInt32() / total.GetInt32() * 100, 1), entryName);
+                    if (type == "wallpaper" && root.TryGetProperty("id", out var widProp))
+                    {
+                        var id = widProp.GetString();
+                        if (id == null || !idToItem.TryGetValue(id, out var item)) return;
+                        var action = root.TryGetProperty("action", out var wa) ? wa.GetString() : null;
+                        if (action == "start")
+                            reportProgress($"{NameOf(item.Wallpaper)}|开始|0");
+                        else if (action == "done")
+                        {
+                            result.DoneIds.Add(id);
+                            reportProgress($"{NameOf(item.Wallpaper)}|完成|100");
+                        }
+                        return;
                     }
                 }
-                catch { }
+
+                if (!root.TryGetProperty("id", out var idProp)) return;
+                var entryId = idProp.GetString();
+                if (entryId == null || !idToItem.TryGetValue(entryId, out var entryItem)) return;
+                var entryType = root.TryGetProperty("type", out var et) ? et.GetString() : null;
+                var name = NameOf(entryItem.Wallpaper);
+
+                if (entryType == "entry")
+                {
+                    // 崩溃定位:转换前发出的事件,最后一条 = 崩溃前正在处理的条目
+                    result.LastActiveId = entryId;
+
+                    // 节流:每个壁纸最多每 30ms 触发一次进度回调
+                    var now = Environment.TickCount64;
+                    if (lastTickById.TryGetValue(entryId, out var last) && now - last < 30) return;
+                    lastTickById[entryId] = now;
+
+                    double pct = 0;
+                    if (root.TryGetProperty("pos", out var posP) && root.TryGetProperty("total", out var totalP) &&
+                        totalP.GetInt32() > 0)
+                        pct = Math.Round(posP.GetInt32() * 100.0 / totalP.GetInt32(), 1);
+                    var entry = root.TryGetProperty("entry", out var ep) ? ep.GetString() : null;
+                    reportProgress($"{name}|解析PKG|{pct}|{entry}");
+                }
+                else if (entryType == "error")
+                {
+                    result.ErrorCount++;
+                    var entry = root.TryGetProperty("entry", out var ep2) ? ep2.GetString() : null;
+                    var msg = root.TryGetProperty("msg", out var mp) ? mp.GetString() : null;
+                    Log.Warning("[repkg] 条目错误 {Entry}: {Msg}", entry, msg);
+                }
             }
+            catch { }
         };
 
         process.ErrorDataReceived += (_, e) =>
@@ -301,7 +340,7 @@ public class RepkgCliService
 
         process.Start();
 
-        // 设置子进程优先级（阶段1）
+        // 设置子进程优先级
         try
         {
             if (_processPriorityLevel >= 0)
@@ -332,37 +371,157 @@ public class RepkgCliService
             throw;
         }
 
-        // Read exit code before any potential dispose
-        int exitCode = process.ExitCode;
-
-        // Cleanup: dispose once, only if Exited event didn't already do it
         _runningProcesses.TryRemove(pid, out _);
         process.Dispose();
-
-        if (exitCode != 0)
-        {
-            Log.Warning("[repkg] 进程退出码非0: {Code}, Name={Name}", exitCode, wallpaperName);
-        }
+        return result;
     }
 
-    private static ProcessPriorityClass _processPriorityLevel = ProcessPriorityClass.Normal;
-
-    /// <summary>
-    /// 设置后续子进程的优先级。0=Normal, 1=BelowNormal, 2=Idle
-    /// </summary>
-    public static void SetProcessPriorityLevel(int priority)
+    /// <summary>ExtractSettings → batch manifest 文件(临时目录,用完即删)。</summary>
+    private static string WriteManifest(
+        List<BatchItem> items, string outputRoot, ExtractSettings settings, int threads)
     {
-        _processPriorityLevel = priority switch
+        var manifest = new
         {
-            1 => ProcessPriorityClass.BelowNormal,
-            2 => ProcessPriorityClass.Idle,
-            _ => ProcessPriorityClass.Normal
+            threads,
+            wallpapers = items.Select(x => new
+            {
+                id = x.Id,
+                input = x.Wallpaper.FolderPath,
+                output = GetOutputPath(outputRoot, x.Wallpaper, settings)
+            }).ToList(),
+            options = BuildManifestOptions(settings)
         };
+
+        var path = Path.Combine(Path.GetTempPath(),
+            $"repkg_batch_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, JsonSerializer.Serialize(manifest));
+        return path;
+    }
+
+    /// <summary>manifest options:与旧 BuildArgs 的分支逻辑 1:1 对应。</summary>
+    private static object BuildManifestOptions(ExtractSettings settings)
+    {
+        var o = new Dictionary<string, object?>
+        {
+            ["overwrite"] = settings.CoverAllFiles,
+            ["keepSubfolderStructure"] = settings.KeepSubfolderStructure == 1,
+            ["pathsDepth"] = 0,
+            ["filterEffectImages"] = 0,
+            ["noTexConvert"] = false,
+            ["onlyTexImages"] = false
+        };
+
+        // 自定义模式(OutputMode==2):输出层过滤 + 目录过滤
+        if (settings.OutputMode == 2)
+        {
+            if (settings.IgnoreExtension && !string.IsNullOrEmpty(settings.IgnoreExtensionList))
+                o["outputIgnoreExts"] = SplitCsv(settings.IgnoreExtensionList);
+            if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
+                o["outputOnlyExts"] = SplitCsv(settings.OnlyExtensionList);
+            if (settings.IgnorePaths && !string.IsNullOrEmpty(settings.IgnorePathsList))
+                o["ignorepaths"] = SplitCsv(settings.IgnorePathsList);
+            if (settings.OnlyPaths && !string.IsNullOrEmpty(settings.OnlyPathsList))
+                o["onlypaths"] = SplitCsv(settings.OnlyPathsList);
+            if (settings.FilterEffectImagesEnabled && settings.FilterEffectImagesThreshold > 0)
+                o["filterEffectImages"] = settings.FilterEffectImagesThreshold;
+        }
+
+        // 媒体模式(OutputMode==1):媒体白名单 + materials/sounds 直接子文件
+        if (settings.OutputMode == 1)
+        {
+            o["outputOnlyExts"] = MediaOnlyExtensionsArg.Split(',');
+            o["onlypaths"] = new[] { "materials", "sounds" };
+            o["pathsDepth"] = 1;
+        }
+        else if (settings.TexExportMode == 0)
+            o["noTexConvert"] = true;
+        else if (settings.TexExportMode == 2)
+            o["onlyTexImages"] = true;
+
+        return o;
+    }
+
+    /// <summary>非 pkg 壁纸(HTML 等):直接复制(与旧流程 CopyAllFiles 分支等价)。</summary>
+    private async Task CopyAllWallpapersAsync(
+        List<WallpaperItem> wallpapers,
+        string outputRoot,
+        ExtractSettings settings,
+        int maxThreads,
+        Action<string> reportProgress,
+        CancellationToken ct)
+    {
+        var po = new ParallelOptions
+        {
+            CancellationToken = ct,
+            MaxDegreeOfParallelism = Math.Max(1, maxThreads)
+        };
+
+        try
+        {
+            await Parallel.ForEachAsync(wallpapers, po, (wallpaper, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                var dir = new DirectoryInfo(wallpaper.FolderPath!);
+                var wallpaperOutput = GetOutputPath(outputRoot, wallpaper, settings);
+                var name = NameOf(wallpaper);
+
+                reportProgress($"{name}|开始|0");
+                try
+                {
+                    Directory.CreateDirectory(wallpaperOutput);
+                    CopyAllFiles(dir, wallpaperOutput, settings, wallpaper.Type == "scene");
+                    PostProcessWallpaper(wallpaper, wallpaperOutput, settings);
+                    reportProgress($"{name}|完成|100");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "[repkg] 拷贝壁纸失败: {Name}", name);
+                    reportProgress($"{name}|失败|100");
+                }
+                return ValueTask.CompletedTask;
+            });
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private static bool HasPkgFiles(string folderPath)
+    {
+        try
+        {
+            var dir = new DirectoryInfo(folderPath);
+            return dir.EnumerateFiles("*.pkg", SearchOption.AllDirectories).Any()
+                || dir.EnumerateFiles("*.mpkg", SearchOption.AllDirectories).Any();
+        }
+        catch { return false; }
+    }
+
+    /// <summary>壁纸提取完成后的统一后处理:project.json/预览图导出 + 平铺模式重命名。</summary>
+    private static void PostProcessWallpaper(WallpaperItem wallpaper, string outputDir, ExtractSettings settings)
+    {
+        // OutputMode==1(仅输出媒体文件)时不复制 project.json/预览图
+        if (settings.OutProjectJSON && settings.OutputMode != 1)
+            CopyProjectFiles(new DirectoryInfo(wallpaper.FolderPath!), outputDir, settings);
+
+        // 平铺模式
+        if (settings.OneFolder == 1 && settings.FlatFileNamingMode == 1 && !string.IsNullOrEmpty(wallpaper.Title))
+        {
+            var safeTitle = GetSafeName(wallpaper.Title);
+            foreach (var f in Directory.EnumerateFiles(outputDir))
+            {
+                var fi = new FileInfo(f);
+                var newName = $"{safeTitle}_{fi.Name}";
+                var dest = Path.Combine(outputDir, newName);
+                int seq = 2;
+                while (File.Exists(dest))
+                    dest = Path.Combine(outputDir, $"{safeTitle}_{seq++}_{fi.Name}");
+                File.Move(f, dest);
+            }
+        }
     }
 
     private static string GetOutputPath(string outputRoot, WallpaperItem wallpaper, ExtractSettings settings)
     {
-        // 平铺模式：所有文件直接放到输出根目录，不建子文件夹
+        // 平铺模式:所有文件直接放到输出根目录,不建子文件夹
         if (settings.OneFolder == 1)
             return outputRoot;
 
@@ -370,7 +529,7 @@ public class RepkgCliService
         // 按壁纸标题命名子文件夹
         if (settings.UseProjectName && !string.IsNullOrEmpty(wallpaper.Title))
             return Path.Combine(outputRoot, GetSafeName(wallpaper.Title));
-        // 降级：使用 WorkshopID 或文件夹名
+        // 降级:使用 WorkshopID 或文件夹名
         var sub = !string.IsNullOrEmpty(wallpaper.WorkshopID)
             ? wallpaper.WorkshopID
             : new DirectoryInfo(wallpaper.FolderPath!).Name;
@@ -392,7 +551,7 @@ public class RepkgCliService
     {
         foreach (var file in sourceDir.EnumerateFiles())
         {
-            // OutputMode==1（仅输出媒体文件）：独立模式，只检查媒体扩展名，不受 IgnoreExtension/OnlyExtension 影响
+            // OutputMode==1(仅输出媒体文件):独立模式,只检查媒体扩展名,不受 IgnoreExtension/OnlyExtension 影响
             if (settings.OutputMode == 1)
             {
                 if (!IsMediaExtension(file.Extension)) continue;
@@ -408,7 +567,7 @@ public class RepkgCliService
             try { File.Copy(file.FullName, destPath, true); }
             catch (Exception ex) { Log.Error(ex, "拷贝文件失败: {File}", file.FullName); }
         }
-        // 子目录处理：非场景壁纸始终保持目录结构，场景壁纸由 KeepSubfolderStructure 控制
+        // 子目录处理:非场景壁纸始终保持目录结构,场景壁纸由 KeepSubfolderStructure 控制
         bool flatten = isScene && settings.KeepSubfolderStructure == 1;
         if (flatten)
         {
@@ -468,22 +627,22 @@ public class RepkgCliService
     }
 
     /// <summary>
-    /// 媒体文件扩展名集合（仅输出媒体文件模式使用）：图像 + 视频 + 音频。
-    /// 与 RePKG 转换输出格式对齐：TEX 纹理→png/gif 等，视频纹理 TEX→mp4。
+    /// 媒体文件扩展名集合(仅输出媒体文件模式使用):图像 + 视频 + 音频。
+    /// 与 RePKG 转换输出格式对齐:TEX 纹理→png/gif 等,视频纹理 TEX→mp4。
     /// </summary>
     private static readonly HashSet<string> MediaExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         // 图像
         ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".ico",
-        // 视频（含 RePKG 视频纹理 TEX 转换输出的 .mp4）
+        // 视频(含 RePKG 视频纹理 TEX 转换输出的 .mp4)
         ".mp4", ".webm", ".mov",
-        // 音频（场景壁纸 sounds/ 目录下的 mp3/ogg/wav 等）
+        // 音频(场景壁纸 sounds/ 目录下的 mp3/ogg/wav 等)
         ".mp3", ".ogg", ".wav", ".flac", ".m4a", ".aac"
     };
 
     /// <summary>
-    /// 仅输出媒体文件模式(OutputMode==1)传给 RePKG 的 -E 白名单（逗号分隔、无前导点）。
-    /// 与 MediaExtensions 保持一致：RePKG 输出层过滤会按转换后扩展名保留 TEX 转换图/视频，
+    /// 仅输出媒体文件模式(OutputMode==1)传给 RePKG 的 -E 白名单(逗号分隔、无前导点)。
+    /// 与 MediaExtensions 保持一致:RePKG 输出层过滤会按转换后扩展名保留 TEX 转换图/视频,
     /// 并滤除 raw .tex、.tex-json 及 pkg 内非媒体条目。
     /// </summary>
     private static readonly string MediaOnlyExtensionsArg =
@@ -526,6 +685,50 @@ public class RepkgCliService
         }
 
         return false;
+    }
+
+    private static string[] SplitCsv(string csv)
+        => csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(s => s.Length > 0)
+            .ToArray();
+
+    private static string NameOf(WallpaperItem w)
+        => w.Title ?? w.WorkshopID ?? (w.FolderPath != null ? new DirectoryInfo(w.FolderPath).Name : "?");
+
+    private static ProcessPriorityClass _processPriorityLevel = ProcessPriorityClass.Normal;
+
+    /// <summary>
+    /// 设置后续子进程的优先级。0=Normal, 1=BelowNormal, 2=Idle
+    /// </summary>
+    public static void SetProcessPriorityLevel(int priority)
+    {
+        _processPriorityLevel = priority switch
+        {
+            1 => ProcessPriorityClass.BelowNormal,
+            2 => ProcessPriorityClass.Idle,
+            _ => ProcessPriorityClass.Normal
+        };
+    }
+
+    private sealed class BatchItem
+    {
+        public string Id { get; init; } = "";
+        public WallpaperItem Wallpaper { get; init; } = null!;
+    }
+
+    /// <summary>单次 batch 进程的运行结果(崩溃检测与恢复依据)。</summary>
+    private sealed class BatchRunResult
+    {
+        /// <summary>收到 batch done = 整批正常结束</summary>
+        public bool CleanDone;
+
+        /// <summary>崩溃前最后活跃的条目所属壁纸 id(崩溃点定位)</summary>
+        public string? LastActiveId;
+
+        /// <summary>收到 wallpaper done 的壁纸 id 集合</summary>
+        public HashSet<string> DoneIds { get; } = new(StringComparer.Ordinal);
+
+        public int ErrorCount;
     }
 
     #region Win32 Process Suspend/Resume

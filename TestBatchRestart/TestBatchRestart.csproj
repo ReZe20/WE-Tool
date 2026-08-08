@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 真实服务代码(WE Tool 是 MSIX 打包应用,拒绝 AnyCPU,必须注入 Platform/RID) -->
+    <ProjectReference Include="..\WE Tool\WE Tool.csproj">
+      <AdditionalProperties>Platform=x64;RuntimeIdentifier=win-x64</AdditionalProperties>
+    </ProjectReference>
+    <!-- 假 repkg(输出 RePKG_Re.exe,随本项目的输出目录复制) -->
+    <ProjectReference Include="..\FakeRePkg\FakeRePkg.csproj" />
+  </ItemGroup>
+
+</Project>
