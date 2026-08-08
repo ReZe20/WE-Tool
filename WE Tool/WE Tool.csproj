@@ -13,7 +13,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>0.4.1</Version>
+    <Version>0.4.2</Version>
     <Authors>ReZe20</Authors>
     <Copyright>Copyright © 2026 ReZe20</Copyright>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
