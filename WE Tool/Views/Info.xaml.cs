@@ -69,7 +69,7 @@ public sealed partial class Info : Page
         return LogInfoBrush;
     }
 
-    /// <summary>RePKG_Re 后端版本:读取随包 exe 的文件版本(0.4.2.0 → 0.4.2),自动跟随后端发布</summary>
+    /// <summary>RePKG_Re 后端版本:读取随包 exe 的文件版本(0.5.0.0 → 0.5.0),自动跟随后端发布</summary>
     public string RepkgVersionText
     {
         get
@@ -79,7 +79,7 @@ public sealed partial class Info : Page
                 var exePath = Path.Combine(AppContext.BaseDirectory, "repkg", "RePKG_Re.exe");
                 if (!File.Exists(exePath)) return string.Empty;
                 var version = FileVersionInfo.GetVersionInfo(exePath).FileVersion;
-                return string.IsNullOrEmpty(version) ? string.Empty : version.TrimEnd('0', '.');
+                return string.IsNullOrEmpty(version) ? string.Empty : TrimFileVersion(version);
             }
             catch
             {
@@ -98,13 +98,25 @@ public sealed partial class Info : Page
             var exePath = Path.Combine(AppContext.BaseDirectory, "repkg", "RePKG_Re.exe");
             if (!File.Exists(exePath)) return false;
             var version = FileVersionInfo.GetVersionInfo(exePath).FileVersion;
-            var current = string.IsNullOrEmpty(version) ? string.Empty : version.TrimEnd('0', '.');
+            var current = string.IsNullOrEmpty(version) ? string.Empty : TrimFileVersion(version);
             return current == required;
         }
         catch
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// 文件版本 "0.5.0.0" → "0.5.0":只裁掉 FileVersion 自动补的第四段(.0),保留 Major.Minor.Build。
+    /// 不能用 TrimEnd('0', '.')——它会把 0.5.0.0 误剪成 0.5(第三段为 0 时),与注入的 Required("0.5.0")比对失败。
+    /// </summary>
+    private static string TrimFileVersion(string fileVersion)
+    {
+        var parts = fileVersion.Split('.');
+        if (parts.Length == 4 && parts[3] == "0")
+            return $"{parts[0]}.{parts[1]}.{parts[2]}";
+        return fileVersion;
     }
 
     /// <summary>校验随包 RePKG_Re 是否为目标版本(目标版本构建时从 external/repkg_Re 仓库 csproj 注入)</summary>
