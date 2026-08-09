@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Models;
+using WE_Tool.ViewModels;
 
 namespace WE_Tool.Service;
 
@@ -23,6 +24,36 @@ public class RepkgCliService
     public RepkgCliService(string? repkgDir = null)
     {
         _repkgDir = repkgDir ?? Path.Combine(AppContext.BaseDirectory, "repkg");
+    }
+
+    // ---------- repkg 输出日志(Info 页 RePKG_Re 日志面板轮询 repkg.log) ----------
+    private static readonly object RepkgLogLock = new();
+
+    private static string RepkgLogPath => Path.Combine(AppSettingsHelper.LogPath, "repkg.log");
+
+    /// <summary>批处理开始前清空 repkg 日志(面板只显示最近一次提取的记录)</summary>
+    private static void ResetRepkgLog()
+    {
+        try
+        {
+            lock (RepkgLogLock)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(RepkgLogPath)!);
+                File.WriteAllText(RepkgLogPath, string.Empty);
+            }
+        }
+        catch { /* 写入失败只影响日志面板,不影响提取 */ }
+    }
+
+    /// <summary>追加一行 repkg 进程输出(常规行/错误行)到独立日志</summary>
+    private static void AppendRepkgLog(string line)
+    {
+        if (string.IsNullOrEmpty(line)) return;
+        try
+        {
+            lock (RepkgLogLock) File.AppendAllText(RepkgLogPath, line + Environment.NewLine);
+        }
+        catch { }
     }
 
     public void Pause()
@@ -53,6 +84,11 @@ public class RepkgCliService
 
     public void Stop()
     {
+        // 只杀进程,不 Dispose:Process 对象的所有权在 RunBatchAsync(创建→等待→释放)。
+        // 停止路径与取消路径并发访问同一对象,若在这里提前 Dispose,
+        // RunBatchAsync 取消 catch 里的 HasExited 会抛 InvalidOperationException
+        // ("No process is associated with this object",2026-08 实测)。
+        // 杀掉后 WaitForExitAsync 自然结束(或走取消路径),统一在那里释放。
         foreach (var kvp in _runningProcesses)
         {
             var process = kvp.Value;
@@ -61,7 +97,6 @@ public class RepkgCliService
                 try { process.Kill(); }
                 catch (Exception ex) { Log.Warning(ex, "[repkg] 终止进程失败: {Pid}", kvp.Key); }
             }
-            process?.Dispose();
         }
         _runningProcesses.Clear();
     }
@@ -158,6 +193,9 @@ public class RepkgCliService
         var items = wallpapers.Select((w, i) => new BatchItem { Id = i.ToString(), Wallpaper = w }).ToList();
         var idToItem = items.ToDictionary(x => x.Id, StringComparer.Ordinal);
         var pending = new HashSet<string>(items.Select(x => x.Id), StringComparer.Ordinal);
+
+        // 每次提取开始清空 repkg 日志(Info 页 RePKG_Re 日志面板只显示最近一次提取的记录)
+        ResetRepkgLog();
 
         int restartCount = 0;
         const int maxRestarts = 3;
@@ -258,14 +296,27 @@ public class RepkgCliService
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                // repkg 输出 UTF-8(Console.OutputEncoding=UTF-8);不显式指定时 .NET 按系统
+                // ANSI 代码页(GBK)解码,中文文件名会乱码(恶魔→榄旂帇,2026-08 实测)
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
             },
             EnableRaisingEvents = true
         };
 
         process.OutputDataReceived += (_, e) =>
         {
-            if (string.IsNullOrEmpty(e.Data) || !e.Data.StartsWith("{")) return;
+            if (string.IsNullOrEmpty(e.Data)) return;
+
+            // repkg 常规输出行(非 JSON 事件,如启动信息/警告摘要)记录到独立日志,
+            // 不再丢弃——Info 页 RePKG_Re 日志面板可见
+            if (!e.Data.StartsWith("{"))
+            {
+                AppendRepkgLog(e.Data);
+                return;
+            }
+
             try
             {
                 using var doc = JsonDocument.Parse(e.Data);
@@ -327,6 +378,7 @@ public class RepkgCliService
                     var entry = root.TryGetProperty("entry", out var ep2) ? ep2.GetString() : null;
                     var msg = root.TryGetProperty("msg", out var mp) ? mp.GetString() : null;
                     Log.Warning("[repkg] 条目错误 {Entry}: {Msg}", entry, msg);
+                    AppendRepkgLog($"[ERR] {entry}: {msg}");
                 }
             }
             catch { }
@@ -335,7 +387,10 @@ public class RepkgCliService
         process.ErrorDataReceived += (_, e) =>
         {
             if (!string.IsNullOrEmpty(e.Data))
+            {
                 Log.Warning("[repkg] {Msg}", e.Data);
+                AppendRepkgLog(e.Data);
+            }
         };
 
         process.Start();

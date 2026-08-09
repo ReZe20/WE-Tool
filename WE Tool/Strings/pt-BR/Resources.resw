@@ -1108,7 +1108,7 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
     <value />
   </data>
-  <data name="Info_LogTitle.Text" xml:space="preserve">
+  <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
     <value />
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">

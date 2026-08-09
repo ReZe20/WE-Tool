@@ -91,6 +91,14 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     private void NotifyPagerStateChanged()
     {
+        // 可能被后台线程的 VM PropertyChanged 直接调用(WallpaperDisplayVM.PaginationMode 等),
+        // x:Bind 推送必须在 UI 线程,非 UI 线程时重排到 UI 线程执行
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            _ = DispatcherQueue.EnqueueAsync(NotifyPagerStateChanged);
+            return;
+        }
+
         OnPropertyChanged(nameof(CanGoPrevious));
         OnPropertyChanged(nameof(CanGoNext));
         RebuildPageNumberButtons();
@@ -325,7 +333,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     public Visibility ExtractEntryVisibility => _isSingleExtract ? Visibility.Visible : Visibility.Collapsed;
 
-    public Visibility ExtractPreviewVisibility => IsExtracting ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ExtractPreviewVisibility => IsExtracting && _isSingleExtract ? Visibility.Visible : Visibility.Collapsed;
 
     /// <summary>导入壁纸编辑器按钮可用性（仅场景类且非项目的壁纸）</summary>
     public bool IsImportToEditorEnabled
@@ -338,6 +346,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
     }
     public ObservableCollection<ExtractProgressItem> ExtractItems { get; } = [];
+
+    /// <summary>多壁纸提取进行中列表数据源:每项 = 一个正在提取的壁纸(名称/预览图/实时进度)</summary>
+    public ObservableCollection<ExtractProgressItem> ExtractProgressItems { get; } = [];
+
+    /// <summary>壁纸名 → 进度项索引(事件按名路由,避免集合线性查找)</summary>
+    private Dictionary<string, ExtractProgressItem> _extractProgressByName = [];
 
     private bool _isMultiSelectMode = false;
     private bool _isScanning = false;
@@ -628,6 +642,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             Canvas.SetZIndex(container, i);
         }
     }
+
     private void StopAllStackAnimations()
     {
         for (int i = 0; i < DisplayedSelectedWallpapers.Count; i++)
@@ -708,6 +723,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     private async Task ApplyFilters()
     {
+        // ApplyFilters 可能被后台线程触发(VM PropertyChanged 事件),但分页状态通知、
+        // x:Bind 推送(IsEnabled 等)和列表重建都要求 UI 线程——非 UI 线程会抛
+        // COMException 0x8000FFFF(实测:筛选结果时 CanGoPrevious 绑定更新崩溃)。
+        // await 后续代码会回到捕获的 SynchronizationContext,这里统一切回 UI 线程。
+        if (!DispatcherQueue.HasThreadAccess)
+            await DispatcherQueue.EnqueueAsync(() => { });
+
         if (_filterCts != null)
         {
             _filterCts.Cancel();
@@ -1922,6 +1944,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         // 查找对应的文件夹路径
         if (node.Content is FileItem fileItem && fileItem.ItemType == FileItemType.Folder && node.Parent != null)
         {
+            // 仅首次展开时加载:创建时 HasUnrealizedChildren=true,填充后 PopulateTreeNodeChildrenAsync
+            // 置 false——折叠再展开直接跳过,否则子项会重复添加(3→6,每次翻倍)
+            if (!node.HasUnrealizedChildren) return;
+
             var path = GetNodePath(node);
             if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
             {
@@ -2418,12 +2444,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _extractTotalCount = itemsToExtract.Count;
             _extractCompletedCount = 0;
             _extractCompletedNames = [];
+            _extractProgressByName = [];
+            ExtractProgressItems.Clear();
             ExtractProgress = 0;
             ExtractStatus = "正在提取...";
 
             // 判断单/多模式
             _isSingleExtract = itemsToExtract.Count == 1;
-            ExtractTitleText = $"正在提取壁纸{(itemsToExtract.Count > 1 ? $" (共 {itemsToExtract.Count} 个)" : "")}";
+            ExtractWallpaperList.Visibility = _isSingleExtract ? Visibility.Collapsed : Visibility.Visible;
+            OnPropertyChanged(nameof(ExtractPreviewVisibility));
+            ExtractTitleText = "正在提取";
             ExtractSubText = _isSingleExtract ? "准备中..." : $"已完成 0/{itemsToExtract.Count} 个壁纸";
             ExtractEntryText = "";
             OnPropertyChanged(nameof(ExtractEntryVisibility));
@@ -2491,16 +2521,33 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                         // 多壁纸模式：进度条反映已完成壁纸数 / 总壁纸数
                         if ((action == "开始" || action == "解析PKG") && !_extractCompletedNames.Contains(name))
                         {
-                            // 切换到当前壁纸的预览图 + 标题
-                            if (extractNameToItem.TryGetValue(name, out var currentItem))
-                                SetExtractPreviewImage(currentItem.Preview, currentItem.Title ?? name);
+                            // 首次进入:创建进度项加入列表;后续 entry 事件持续刷新该壁纸进度
+                            if (!_extractProgressByName.TryGetValue(name, out var progressItem))
+                            {
+                                progressItem = new ExtractProgressItem
+                                {
+                                    Name = name,
+                                    Preview = extractNameToItem.TryGetValue(name, out var w) ? w.Preview : null
+                                };
+                                _extractProgressByName[name] = progressItem;
+                                ExtractProgressItems.Add(progressItem);
+                            }
+                            progressItem.Progress = pct; // 0.5% 阈值防抖在 setter 内
                         }
                         else if (action == "完成" && _extractCompletedNames.Add(name))
                         {
+                            // 已完成壁纸移出列表(剩余项自动上移)
+                            if (_extractProgressByName.Remove(name, out var doneItem))
+                                ExtractProgressItems.Remove(doneItem);
                             _extractCompletedCount++;
                             ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
                             ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
                             OnPropertyChanged(nameof(ExtractProgressText));
+                        }
+                        else if (action == "失败" && _extractProgressByName.Remove(name, out var failedItem))
+                        {
+                            // 崩溃跳过/失败的壁纸同样移出列表
+                            ExtractProgressItems.Remove(failedItem);
                         }
                     }
 
@@ -2584,6 +2631,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             ExtractStatus = "提取失败，请查看日志";
             ExtractProgress = 0;
         }
+
+        // 收尾:清空进度列表(完成/取消/异常三路都经过这里)
+        _extractProgressByName = [];
+        ExtractProgressItems.Clear();
     }
 
     private void PauseExtractButton_Click(object sender, RoutedEventArgs e)

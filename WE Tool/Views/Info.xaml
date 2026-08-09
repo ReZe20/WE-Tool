@@ -20,12 +20,34 @@
         <TextBlock x:Uid="Info_AboutHeader" FontSize="25" VerticalAlignment="Bottom" Margin="30,0,0,6"/>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
             <StackPanel Margin="25,10,25,0">
-                <TextBlock x:Uid="Info_LogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
+                <TextBlock x:Uid="Info_WEToolLogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
                 <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
                     <ScrollViewer x:Name="LogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="LogScrollViewer_ViewChanged">
                         <TextBlock x:Name="LogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
                     </ScrollViewer>
                 </Border>
+                <!-- 拖拽手柄:按住上下拖动调整日志面板高度(默认 220,60~800) -->
+                <uc:LogResizeHandle x:Name="LogResizeHandle" Height="12" Margin="0,4,0,0" Background="Transparent"
+                        AutomationProperties.AccessibilityView="Raw"
+                        PointerPressed="LogResizeHandle_PointerPressed" PointerMoved="LogResizeHandle_PointerMoved"
+                        PointerReleased="LogResizeHandle_PointerReleased" PointerCaptureLost="LogResizeHandle_PointerCaptureLost">
+                    <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+                </uc:LogResizeHandle>
+                <TextBlock x:Uid="Info_repkgLogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
+                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
+                    <ScrollViewer x:Name="RepkgLogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="RepkgLogScrollViewer_ViewChanged">
+                        <TextBlock x:Name="RepkgLogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
+                    </ScrollViewer>
+                </Border>
+                <!-- 拖拽手柄:按住上下拖动调整日志面板高度(默认 220,60~800) -->
+                <uc:LogResizeHandle x:Name="RepkgLogResizeHandle" Height="12" Margin="0,4,0,0" Background="Transparent"
+                        AutomationProperties.AccessibilityView="Raw"
+                        PointerPressed="RepkgLogResizeHandle_PointerPressed" PointerMoved="RepkgLogResizeHandle_PointerMoved"
+                        PointerReleased="RepkgLogResizeHandle_PointerReleased" PointerCaptureLost="RepkgLogResizeHandle_PointerCaptureLost">
+                    <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+                </uc:LogResizeHandle>
                 <Grid Margin="0,8,0,0">
                     <InfoBar x:Name="SteamStatusBar" IsOpen="False" IsClosable="False">
                         <InfoBar.ActionButton>

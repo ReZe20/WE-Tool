@@ -1339,8 +1339,8 @@
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
     <value>RePKG_Re</value>
   </data>
-  <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value>日志</value>
+  <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
+    <value>WE Tool 日志</value>
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
     <value>Steamworks 在线</value>
@@ -1407,5 +1407,8 @@
   </data>
   <data name="Info_AboutHeader.Text" xml:space="preserve">
     <value>关于</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>RePKG_Re 日志</value>
   </data>
 </root>

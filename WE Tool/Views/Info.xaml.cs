@@ -49,6 +49,19 @@ public sealed partial class Info : Page
     private readonly string? _logPath;
     private long _logPosition;
     private bool _logAtBottom = true;
+    // 日志面板拖拽调高:手柄拖动改 LogScrollViewer.Height(不持久化,重启回默认 220)
+    private bool _logResizing;
+    private double _logResizeStartY;
+    private double _logResizeStartHeight;
+    private const double MinLogHeight = 60;
+    private const double MaxLogHeight = 800;
+    // RePKG_Re 日志面板(独立文件 repkg.log,RepkgCliService 写入,每次提取开始清空)
+    private readonly string? _repkgLogPath;
+    private long _repkgLogPosition;
+    private bool _repkgLogAtBottom = true;
+    private bool _repkgLogResizing;
+    private double _repkgLogResizeStartY;
+    private double _repkgLogResizeStartHeight;
     private int _lastSteamState = -1; // -1=未检查 0=正常 1=初始化失败 2=中途断开
     private Task? _steamInitTask;
 
@@ -171,6 +184,8 @@ public sealed partial class Info : Page
 
         // 当前日志文件固定为 logs/log.txt(Serilog 统一单文件,不做按天滚动)
         _logPath = Path.Combine(ViewModel.AppSettingsVM.LogPath, "log.txt");
+        // RePKG_Re 日志:RepkgCliService 写入 logs/repkg.log(每次提取开始清空)
+        _repkgLogPath = Path.Combine(ViewModel.AppSettingsVM.LogPath, "repkg.log");
         _logTimer.Tick += OnLogTimerTick;
         _logTimer.Start();
         // Steamworks 首次初始化放后台线程,避免页面加载卡顿;完成后立即反映状态
@@ -272,6 +287,7 @@ public sealed partial class Info : Page
         try
         {
             _ = RefreshSteamStatusAsync();
+            PollRepkgLog();
             // 首次加载只读尾部 64KB,避免刷出整屏历史
             if (_logPosition == 0 && LogTextBlock.Inlines.Count == 0)
                 _logPosition = Math.Max(0, new FileInfo(_logPath).Length - 64 * 1024);
@@ -291,7 +307,7 @@ public sealed partial class Info : Page
             _logPosition = fs.Position;
             if (chunk.Length == 0) return;
 
-            AppendLogChunk(chunk);
+            AppendLogChunk(chunk, LogTextBlock);
             if (_logAtBottom)
             {
                 // 先强制布局再滚动:直接 ChangeView 时 ScrollableHeight 可能尚未更新,首次加载会停在顶部
@@ -305,9 +321,73 @@ public sealed partial class Info : Page
         }
     }
 
+    /// <summary>RePKG_Re 日志面板:同一 tick 轮询 repkg.log(RepkgCliService 写入,每次提取开始清空——截断检测自动清面板)</summary>
+    private void PollRepkgLog()
+    {
+        if (_repkgLogPath == null || !File.Exists(_repkgLogPath)) return;
+        try
+        {
+            if (_repkgLogPosition == 0 && RepkgLogTextBlock.Inlines.Count == 0)
+                _repkgLogPosition = Math.Max(0, new FileInfo(_repkgLogPath).Length - 64 * 1024);
+
+            using var fs = new FileStream(_repkgLogPath, FileMode.Open, FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            if (fs.Length < _repkgLogPosition)
+            {
+                _repkgLogPosition = 0;
+                RepkgLogTextBlock.Inlines.Clear();
+            }
+            if (fs.Length == _repkgLogPosition) return;
+
+            fs.Seek(_repkgLogPosition, SeekOrigin.Begin);
+            using var reader = new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
+            var chunk = reader.ReadToEnd();
+            _repkgLogPosition = fs.Position;
+            if (chunk.Length == 0) return;
+
+            AppendLogChunk(chunk, RepkgLogTextBlock);
+            if (_repkgLogAtBottom)
+            {
+                RepkgLogScrollViewer.UpdateLayout();
+                RepkgLogScrollViewer.ChangeView(null, double.MaxValue, null, true);
+            }
+        }
+        catch
+        {
+            // 文件暂时被占用,跳过本次轮询
+        }
+    }
+
+    private void RepkgLogScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
+        => _repkgLogAtBottom = RepkgLogScrollViewer.VerticalOffset >= RepkgLogScrollViewer.ScrollableHeight - 4;
+
+    private void RepkgLogResizeHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _repkgLogResizing = true;
+        _repkgLogResizeStartY = e.GetCurrentPoint(null).Position.Y;
+        _repkgLogResizeStartHeight = RepkgLogScrollViewer.Height;
+        RepkgLogResizeHandle.CapturePointer(e.Pointer);
+    }
+
+    private void RepkgLogResizeHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_repkgLogResizing) return;
+        var delta = e.GetCurrentPoint(null).Position.Y - _repkgLogResizeStartY;
+        RepkgLogScrollViewer.Height = Math.Clamp(_repkgLogResizeStartHeight + delta, MinLogHeight, MaxLogHeight);
+    }
+
+    private void RepkgLogResizeHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _repkgLogResizing = false;
+        RepkgLogResizeHandle.ReleasePointerCapture(e.Pointer);
+    }
+
+    private void RepkgLogResizeHandle_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        => _repkgLogResizing = false; // 捕获意外丢失(系统中断等)时兜底,避免卡在拖拽态
+
     /// <summary>按行追加日志,按级别着色([ERR]/[FTL] 红、[WRN] 黄、[DBG]/[VRB] 灰、其余亮灰);
     /// 文件尾部的半行(未写完)不加换行,等下一个 tick 续接</summary>
-    private void AppendLogChunk(string chunk)
+    private void AppendLogChunk(string chunk, TextBlock target)
     {
         var lines = chunk.Split('\n');
         for (var i = 0; i < lines.Length; i++)
@@ -319,12 +399,37 @@ public sealed partial class Info : Page
             var complete = !isLast || chunk.EndsWith('\n');
             var text = complete ? line + "\n" : line;
             if (text.Length > 0)
-                LogTextBlock.Inlines.Add(new Run { Text = text, Foreground = GetLogLevelBrush(line) });
+                target.Inlines.Add(new Run { Text = text, Foreground = GetLogLevelBrush(line) });
         }
     }
 
     private void LogScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
         => _logAtBottom = LogScrollViewer.VerticalOffset >= LogScrollViewer.ScrollableHeight - 4;
+
+    /// <summary>日志面板拖拽调高:按下时记录起点,捕获指针后按窗口坐标算增量(指针离开手柄也能继续拖)</summary>
+    private void LogResizeHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _logResizing = true;
+        _logResizeStartY = e.GetCurrentPoint(null).Position.Y;
+        _logResizeStartHeight = LogScrollViewer.Height;
+        LogResizeHandle.CapturePointer(e.Pointer);
+    }
+
+    private void LogResizeHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_logResizing) return;
+        var delta = e.GetCurrentPoint(null).Position.Y - _logResizeStartY;
+        LogScrollViewer.Height = Math.Clamp(_logResizeStartHeight + delta, MinLogHeight, MaxLogHeight);
+    }
+
+    private void LogResizeHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _logResizing = false;
+        LogResizeHandle.ReleasePointerCapture(e.Pointer);
+    }
+
+    private void LogResizeHandle_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        => _logResizing = false; // 捕获意外丢失(系统中断等)时兜底,避免卡在拖拽态
 
     /// <summary>从 CSV 加载贡献者(照抄 BetterLyrics 的 CSV 解析)</summary>
     private async Task LoadContributorsAsync(ObservableCollection<Contributor> target, string path)

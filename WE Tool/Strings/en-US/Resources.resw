@@ -1216,8 +1216,11 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
     <value>RePKG_Re</value>
   </data>
-  <data name="Info_LogTitle.Text" xml:space="preserve">
-    <value>Current log</value>
+  <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
+    <value>WE Tool log</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>RePKG_Re log</value>
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
     <value>Steamworks online</value>
