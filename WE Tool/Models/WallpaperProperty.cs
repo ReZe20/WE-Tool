@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
@@ -24,30 +24,30 @@ namespace WE_Tool.Models
     public class WallpaperProperty : INotifyPropertyChanged
     {
         // === 元数据（解析时固定） ===
-        public string Key { get; init; } = "";
+        public string Key { get; set; } = "";
 
         /// <summary>控件类型：bool/slider/combo/color/textinput/scenetexture/text/group（未知类型原样保留）</summary>
-        public string Type { get; init; } = "";
+        public string Type { get; set; } = "";
 
-        public string Text { get; init; } = "";
+        public string Text { get; set; } = "";
 
         /// <summary>剥除 HTML 后的显示标签；分组标题的 text 以 &lt;hr&gt; 开头</summary>
-        public string DisplayText { get; init; } = "";
+        public string DisplayText { get; set; } = "";
 
         /// <summary>只读类型的显示值（scenetexture 文件名/未知类型原文）</summary>
-        public string DisplayValue { get; init; } = "";
+        public string DisplayValue { get; set; } = "";
 
         /// <summary>是否为分组标题（分隔线 + 粗体，无编辑控件；仅纯文本组件判定）</summary>
-        public bool IsGroupHeader { get; init; }
+        public bool IsGroupHeader { get; set; }
 
         /// <summary>纯文本组件的标题样式（text 含 &lt;h1&gt;~&lt;h6&gt; 或 &lt;big&gt;）</summary>
-        public bool IsTitle { get; init; }
+        public bool IsTitle { get; set; }
 
         /// <summary>纯文本组件粗体（text 含 &lt;b&gt;/&lt;strong&gt;）</summary>
-        public bool IsBold { get; init; }
+        public bool IsBold { get; set; }
 
         /// <summary>纯文本组件居中（text 含 &lt;center&gt;）</summary>
-        public bool IsCentered { get; init; }
+        public bool IsCentered { get; set; }
 
         /// <summary>纯文本组件字号：标题 16，普通 13</summary>
         public double TextFontSize => IsTitle ? 16 : 13;

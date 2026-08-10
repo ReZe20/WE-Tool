@@ -623,6 +623,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         // 加载期间列表也保持可见:增量填充的每批会立即布局渲染,把"显示瞬间的全量布局"分摊到填充过程,切换大壁纸不冻结
         PropertyItemsControl.Visibility = (hasSelection && hasProps) ? Visibility.Visible : Visibility.Collapsed;
         PropertySaveButton.IsEnabled = hasSelection && !loading && hasProps;
+        PropertySaveButton.Visibility = hasSelection ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void PropertySaveButton_Click(object sender, RoutedEventArgs e)
@@ -1791,19 +1792,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         imageVisual.StartAnimation("Scale.Y", scaleAnim);
         imageVisual.StartAnimation("Opacity", opacityAnim);
     }
-    private void AnimatePropertiesPanelOpen()
-    {
-        AnimatePanelOpen(PropertiesPanel, PropertiesOverlayBackground);
-    }
-    private void AnimatePropertiesPanelClose(Action onCompleted)
-    {
-        AnimatePanelClose(PropertiesPanel, PropertiesOverlayBackground, () =>
-        {
-            PropertiesOverlay.Visibility = Visibility.Collapsed;
-            onCompleted?.Invoke();
-        });
-    }
-
     private void AnimateExtractPanelOpen()
     {
         AnimatePanelOpen(ExtractPanel, ExtractOverlayBackground);
@@ -1882,161 +1870,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         batch.End();
     }
 
-    // ========== File structure TreeView model & template selector ==========
-
-    private async Task PopulateFileTreeAsync(string folderPath)
-    {
-        FileStructureTree.RootNodes.Clear();
-
-        if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
-            return;
-
-        var rootName = Path.GetFileName(folderPath);
-        var rootNode = new TreeViewNode
-        {
-            Content = new FileItem { Name = rootName, ItemType = FileItemType.Folder },
-            IsExpanded = true
-        };
-
-        await PopulateTreeNodeChildrenAsync(rootNode, folderPath);
-        FileStructureTree.RootNodes.Add(rootNode);
-    }
-
-    private async Task PopulateTreeNodeChildrenAsync(TreeViewNode node, string directoryPath)
-    {
-        node.HasUnrealizedChildren = false;
-
-        try
-        {
-            // 添加子目录（延迟加载）
-            foreach (var subDir in Directory.EnumerateDirectories(directoryPath))
-            {
-                var dirName = Path.GetFileName(subDir);
-                var dirNode = new TreeViewNode
-                {
-                    Content = new FileItem { Name = dirName, ItemType = FileItemType.Folder },
-                    HasUnrealizedChildren = true
-                };
-                node.Children.Add(dirNode);
-            }
-
-            // 添加文件（含大小）
-            foreach (var file in Directory.EnumerateFiles(directoryPath))
-            {
-                var fileInfo = new FileInfo(file);
-                var ext = Path.GetExtension(file).ToLowerInvariant();
-                var type = ext switch
-                {
-                    ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp" => FileItemType.Image,
-                    ".mp4" or ".webm" or ".avi" or ".mov" or ".mkv" => FileItemType.Video,
-                    ".json" or ".txt" or ".xml" or ".html" or ".htm" or ".css" or ".js" or ".md" => FileItemType.Document,
-                    _ => FileItemType.Other
-                };
-                var fileNode = new TreeViewNode
-                {
-                    Content = new FileItem { Name = fileInfo.Name, ItemType = type, Size = fileInfo.Length }
-                };
-                node.Children.Add(fileNode);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, $"填充 TreeView 节点时异常: {directoryPath}");
-            node.Children.Add(new TreeViewNode
-            {
-                Content = new FileItem { Name = "(访问被拒绝)", ItemType = FileItemType.Other }
-            });
-        }
-
-        await Task.CompletedTask;
-    }
-
-    private static string FormatFileSize(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB", "TB"];
-        double size = Math.Abs((double)bytes);
-        int unitIndex = 0;
-        while (size >= 1024 && unitIndex < units.Length - 1)
-        {
-            size /= 1024;
-            unitIndex++;
-        }
-        return $"{size:F2} {units[unitIndex]}";
-    }
-
-    private async void FileStructureTree_Expanding(TreeView sender, TreeViewExpandingEventArgs args)
-    {
-        var node = args.Node;
-
-        // 查找对应的文件夹路径
-        if (node.Content is FileItem fileItem && fileItem.ItemType == FileItemType.Folder && node.Parent != null)
-        {
-            // 仅首次展开时加载:创建时 HasUnrealizedChildren=true,填充后 PopulateTreeNodeChildrenAsync
-            // 置 false——折叠再展开直接跳过,否则子项会重复添加(3→6,每次翻倍)
-            if (!node.HasUnrealizedChildren) return;
-
-            var path = GetNodePath(node);
-            if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
-            {
-                await PopulateTreeNodeChildrenAsync(node, path);
-            }
-        }
-    }
-
-    private string? GetNodePath(TreeViewNode node)
-    {
-        var segments = new List<string>();
-        var current = node;
-
-        // 从叶子节点向上收集路径段
-        while (current != null)
-        {
-            if (current.Content is FileItem fi && !string.IsNullOrEmpty(fi.Name))
-            {
-                segments.Insert(0, fi.Name);
-            }
-            current = current.Parent;
-        }
-
-        if (segments.Count == 0) return null;
-
-        // 根节点 = 壁纸文件夹名，需要找到对应的完整路径
-        var root = segments[0];
-        var basePath = ViewModel.SelectedWallpaper?.FolderPath;
-        if (string.IsNullOrEmpty(basePath) || Path.GetFileName(basePath) != root)
-            return null;
-
-        var relative = segments.Count > 1
-            ? string.Join(Path.DirectorySeparatorChar.ToString(), segments.Skip(1))
-            : "";
-        return Path.Combine(basePath, relative);
-    }
-    private void FileStructureTree_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-    {
-        // 找到双击的 TreeViewItem
-        var source = e.OriginalSource as DependencyObject;
-        while (source != null && source is not TreeViewItem)
-            source = VisualTreeHelper.GetParent(source);
-        if (source is not TreeViewItem treeViewItem) return;
-
-        var node = FileStructureTree.NodeFromContainer(treeViewItem);
-        if (node?.Content is not FileItem fileItem || fileItem.ItemType == FileItemType.Folder)
-            return;
-
-        // 构造完整文件路径并打开
-        var fullPath = GetNodePath(node);
-        if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, $"打开文件失败: {fullPath}");
-            }
-        }
-    }
     private void SelectAllWallpapers_Click(object sender, RoutedEventArgs e)
     {
         if (!IsMultiSelectMode)
@@ -2330,27 +2163,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         HideWallpaperContextMenu();
         if (ViewModel.SelectedWallpaper != null)
-        {
-            PropertiesOverlay.Visibility = Visibility.Visible;
-            // 等一帧让布局完成，然后启动动画
-            _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
-            {
-                // 用页面根 ActualHeight 而非 Overlay 的——overlay 刚从 Collapsed 变 Visible，
-                // 布局可能尚未运行（ActualHeight=0），会把 MaxHeight 永久钉成 0 导致面板第一次打不开
-                PropertiesPanel.MaxHeight = Math.Max(0, ActualHeight * 0.85);
-                PropertiesPanel.UpdateLayout();
-                AnimatePropertiesPanelOpen();
-                _ = PopulateFileTreeAsync(ViewModel.SelectedWallpaper!.FolderPath);
-            });
-        }
-    }
-    private void PropertiesOverlayBackground_Tapped(object sender, TappedRoutedEventArgs e)
-    {
-        AnimatePropertiesPanelClose(() => { });
-    }
-    private void PropertiesCloseButton_Click(object sender, RoutedEventArgs e)
-    {
-        AnimatePropertiesPanelClose(() => { });
+            PropertiesWindow.Open(ViewModel.SelectedWallpaper);
     }
     private async void OnIconSizeChanged(object sender, RoutedEventArgs e)
     {

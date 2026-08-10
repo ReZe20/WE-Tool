@@ -120,6 +120,12 @@
   <data name="MenuFlyoutSubItem_RightPanel.Text" xml:space="preserve">
     <value>Right Panel</value>
   </data>
+  <data name="PropertiesWindow_FileInfo.Content" xml:space="preserve">
+    <value>File Info</value>
+  </data>
+  <data name="PropertiesWindow_WallpaperProps.Content" xml:space="preserve">
+    <value>Wallpaper Properties</value>
+  </data>
   <data name="PropertyPanel_NoProperties.Text" xml:space="preserve">
     <value>This wallpaper has no configurable properties</value>
   </data>

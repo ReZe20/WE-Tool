@@ -120,6 +120,12 @@
   <data name="MenuFlyoutSubItem_RightPanel.Text" xml:space="preserve">
     <value>右侧面板</value>
   </data>
+  <data name="PropertiesWindow_FileInfo.Content" xml:space="preserve">
+    <value>文件属性</value>
+  </data>
+  <data name="PropertiesWindow_WallpaperProps.Content" xml:space="preserve">
+    <value>壁纸属性</value>
+  </data>
   <data name="PropertyPanel_NoProperties.Text" xml:space="preserve">
     <value>该壁纸没有可配置属性</value>
   </data>
