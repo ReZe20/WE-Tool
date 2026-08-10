@@ -63,6 +63,97 @@
                                          VideoTemplate="{StaticResource FileTreeVideoTemplate}"
                                          DocumentTemplate="{StaticResource FileTreeDocumentTemplate}"
                                          OtherTemplate="{StaticResource FileTreeOtherTemplate}"/>
+
+        <!-- 属性面板行模板：分组标题(<hr> 纯文本) / group 类型 Expander(递归渲染子属性) / 属性行(标签+控件) 按标志切换 -->
+        <DataTemplate x:Key="PropertyRowTemplate" x:DataType="models:WallpaperProperty">
+            <Grid>
+                <StackPanel Visibility="{x:Bind GroupHeaderVisibility, Mode=OneWay}">
+                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6,0,10"/>
+                    <TextBlock Text="{x:Bind DisplayText}" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="14"
+                               TextAlignment="{x:Bind TextAlignmentValue, Mode=OneWay}"/>
+                </StackPanel>
+                <!-- group 类型 → Expander 折叠组（默认折叠：组内子属性不展开渲染，大量分组壁纸切换不卡；点击组标题展开） -->
+                <Expander Visibility="{x:Bind GroupBorderVisibility, Mode=OneWay}"
+                          IsExpanded="False"
+                          HorizontalAlignment="Stretch"
+                          Margin="0,4">
+                    <Expander.Header>
+                        <TextBlock Text="{x:Bind DisplayText}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"
+                                   TextAlignment="{x:Bind TextAlignmentValue, Mode=OneWay}"/>
+                    </Expander.Header>
+                    <ItemsControl ItemsSource="{x:Bind Children, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <StaticResource ResourceKey="PropertyRowTemplate"/>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander>
+                <!-- 属性行：左标签 + 右控件两列布局（RowVisibility 含 condition 条件） -->
+                <Grid Visibility="{x:Bind RowVisibility, Mode=OneWay}" Margin="0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- 标签：纯文本（含 HTML 样式：字号/粗体/居中/文字色） -->
+                    <TextBlock Text="{x:Bind DisplayText}" TextWrapping="Wrap" VerticalAlignment="Center"
+                               FontSize="{x:Bind TextFontSize, Mode=OneWay}"
+                               FontWeight="{x:Bind TextFontWeight, Mode=OneWay}"
+                               TextAlignment="{x:Bind TextAlignmentValue, Mode=OneWay}"/>
+                    <Grid Grid.Column="1" Margin="12,0,0,0">
+                        <CheckBox Visibility="{x:Bind BoolVisibility, Mode=OneWay}"
+                                  IsChecked="{x:Bind BoolValue, Mode=TwoWay}"
+                                  MinWidth="0"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Center"/>
+                        <Slider Visibility="{x:Bind SliderVisibility, Mode=OneWay}"
+                                Value="{x:Bind SliderValue, Mode=TwoWay}"
+                                Minimum="{x:Bind SliderMin, Mode=OneWay}"
+                                Maximum="{x:Bind SliderMax, Mode=OneWay}"
+                                StepFrequency="{x:Bind SliderStep, Mode=OneWay}"
+                                Width="140"
+                                VerticalAlignment="Center"/>
+                        <ComboBox Visibility="{x:Bind ComboVisibility, Mode=OneWay}"
+                                  ItemsSource="{x:Bind Options, Mode=OneWay}"
+                                  SelectedIndex="{x:Bind ComboIndex, Mode=TwoWay}"
+                                  MinWidth="140"
+                                  VerticalAlignment="Center"/>
+                        <Button Visibility="{x:Bind ColorVisibility, Mode=OneWay}" Padding="8,4" VerticalAlignment="Center">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Rectangle Width="14" Height="14" Fill="{x:Bind ColorBrush, Mode=OneWay}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{x:Bind ColorHexText, Mode=OneWay}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button.Content>
+                            <Button.Flyout>
+                                <Flyout>
+                                    <ColorPicker Color="{x:Bind ColorValue, Mode=TwoWay}"
+                                                 IsAlphaEnabled="False"
+                                                 IsColorPreviewVisible="False"
+                                                 IsColorSpectrumVisible="True"
+                                                 IsColorSliderVisible="True"
+                                                 IsHexInputVisible="True"/>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        <TextBox Visibility="{x:Bind TextInputVisibility, Mode=OneWay}"
+                                 Text="{x:Bind TextValue, Mode=TwoWay}"
+                                 TextWrapping="Wrap"
+                                 Width="180"
+                                 VerticalAlignment="Center"/>
+                        <Button Visibility="{x:Bind FilePathVisibility, Mode=OneWay}"
+                                Command="{x:Bind PickFileCommand}"
+                                Content="{x:Bind FilePathDisplay, Mode=OneWay}"
+                                MaxWidth="180"
+                                Padding="10,4"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Visibility="{x:Bind ReadOnlyVisibility, Mode=OneWay}"
+                                   Text="{x:Bind DisplayValue}"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </DataTemplate>
         <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
             <CommandBarFlyout.PrimaryCommands>
                 <AppBarButton x:Uid="AppBarButton_Extract"
@@ -218,6 +309,13 @@
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize70Item, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_90"
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize90Item, Mode=TwoWay}"/>
+                    </MenuFlyoutSubItem>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_RightPanel">
+                        <RadioMenuFlyoutItem GroupName="MenuRightPanelGroup" x:Uid="RightPanel_Detail"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelViewItem, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="MenuRightPanelGroup" x:Uid="RightPanel_Property"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PropertyPanelViewItem, Mode=TwoWay}"/>
                     </MenuFlyoutSubItem>
                 </MenuFlyoutSubItem>
                 <!-- 排序已在查看菜单内置标签，此处仅保留排序 -->
@@ -412,6 +510,13 @@
                                 <RadioMenuFlyoutItem GroupName="PageSizeGroup" x:Uid="Pagination_90"
                                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize90Item, Mode=TwoWay}"/>
                             </MenuFlyoutSubItem>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_RightPanel">
+                                <RadioMenuFlyoutItem GroupName="RightPanelGroup" x:Uid="RightPanel_Detail"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelViewItem, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="RightPanelGroup" x:Uid="RightPanel_Property"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PropertyPanelViewItem, Mode=TwoWay}"/>
+                            </MenuFlyoutSubItem>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
@@ -481,7 +586,7 @@
         <SplitView 
                 x:Name="RightSplitView" 
                 PanePlacement="Right" 
-                OpenPaneLength="305" 
+                OpenPaneLength="340" 
                 DisplayMode="Inline"
                 Grid.Row="1"
                 IsPaneOpen="{x:Bind ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}">
@@ -489,9 +594,8 @@
                 <ScrollViewer>
                     <Grid Padding="15,15,15,15" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
                         <StackPanel Spacing="15">
-
-                            <Grid x:Name="PreviewImageContainer" Height="250" Width="250" HorizontalAlignment="Center">
-                                <Border x:Name="SinglePreviewBorder" Margin="0,10,0,0" Width="250" Height="250" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                            <Grid x:Name="PreviewImageContainer" Height="280" Width="280" HorizontalAlignment="Center">
+                                <Border x:Name="SinglePreviewBorder" Margin="0,10,0,0" Width="280" Height="280" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                                     <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue=null}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
                                         <Image.RenderTransform>
                                             <ScaleTransform x:Name="ImageScale" />
@@ -523,8 +627,7 @@
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                        FontSize="16"
                                        Margin="0,20,0,0"
-                                       TextWrapping="Wrap"
-                                       Visibility="Visible"/>
+                                       TextWrapping="Wrap"/>
 
                             <StackPanel x:Name="SingleSelectionInfoPanel" Spacing="15">
                                 <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.Title, Mode=OneWay, FallbackValue=''}" 
@@ -555,8 +658,7 @@
                                     </Button>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
-                                    <Button Click="ImportToEditor_Click"
-                                            IsEnabled="{x:Bind IsImportToEditorEnabled, Mode=OneWay}">
+                                    <Button Click="ImportToEditor_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <FontIcon Glyph="&#xE70F;" FontSize="14"/>
                                             <TextBlock x:Uid="Detail_ImportToEditor" VerticalAlignment="Center" FontSize="12"/>
@@ -574,6 +676,7 @@
                                            Foreground="Gray" 
                                            TextWrapping="Wrap"
                                            IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"
+                                           Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}"
                                            Margin="10,0,0,0"/>
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
                                     <Button Command="{x:Bind OpenSelectedFoldersCommand}">
@@ -627,6 +730,7 @@
                                            TextWrapping="Wrap"
                                            TextTrimming="None"
                                            IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"
+                                           Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}"
                                            Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
                                            Margin="10,0,0,0"/>
                             </StackPanel>
@@ -639,6 +743,35 @@
                                 <Button x:Uid="MultiSelect_Cancel" Click="CancelMultiSelect_Click" HorizontalAlignment="Stretch" Style="{StaticResource DefaultButtonStyle}"/>
                             </StackPanel>
 
+                            <!-- 属性面板底部区：保存/加载指示 + 属性列表（仅属性模式显示；随整个面板一起滚动） -->
+                            <StackPanel Spacing="15" Visibility="{x:Bind ViewModel.WallpaperDisplayVM.PropertyPanelVisibility, Mode=OneWay}">
+                                <Button x:Name="PropertySaveButton"
+                                        x:Uid="PropertyPanel_Save"
+                                        Click="PropertySaveButton_Click"
+                                        HorizontalAlignment="Left"/>
+                                <ProgressRing x:Name="PropertyPanelLoadingRing"
+                                              IsActive="{x:Bind ViewModel.IsPropertyPanelLoading, Mode=OneWay}"
+                                              Visibility="{x:Bind ViewModel.PropertyPanelLoadingVisibility, Mode=OneWay}"
+                                              Width="36"
+                                              Height="36"
+                                              HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="PropertyPanelEmptyHint"
+                                           x:Uid="PropertyPanel_NoProperties"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           FontSize="16"
+                                           Margin="0,10,0,0"
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed"/>
+                                <ItemsControl x:Name="PropertyItemsControl"
+                                              ItemsSource="{x:Bind ViewModel.SelectedWallpaperProperties, Mode=OneWay}"
+                                              Visibility="Collapsed">
+                                    <ItemsControl.ItemTemplate>
+                                        <StaticResource ResourceKey="PropertyRowTemplate"/>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>

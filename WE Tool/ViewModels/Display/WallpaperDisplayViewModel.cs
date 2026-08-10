@@ -378,6 +378,42 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial bool RightSplitViewPaneOpen { get; set; }
 
+        // === 右侧面板模式 ===
+        // RightPanelIndex: 0=详情面板, 1=属性面板（查看菜单二选一，持久化进 Papers 配置段）
+        [ObservableProperty]
+        public partial int RightPanelIndex { get; set; }
+
+        partial void OnRightPanelIndexChanged(int value)
+        {
+            OnPropertyChanged(nameof(DetailPanelViewItem));
+            OnPropertyChanged(nameof(PropertyPanelViewItem));
+            OnPropertyChanged(nameof(DetailPanelVisibility));
+            OnPropertyChanged(nameof(PropertyPanelVisibility));
+        }
+
+        public bool DetailPanelViewItem
+        {
+            get => RightPanelIndex == 0;
+            set
+            {
+                if (value) RightPanelIndex = 0;
+            }
+        }
+        public bool PropertyPanelViewItem
+        {
+            get => RightPanelIndex == 1;
+            set
+            {
+                if (value) RightPanelIndex = 1;
+            }
+        }
+
+        public Microsoft.UI.Xaml.Visibility DetailPanelVisibility
+            => RightPanelIndex == 0 ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+
+        public Microsoft.UI.Xaml.Visibility PropertyPanelVisibility
+            => RightPanelIndex == 1 ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+
         [ObservableProperty]
         public partial bool DetailSelectionEnabled { get; set; }
 

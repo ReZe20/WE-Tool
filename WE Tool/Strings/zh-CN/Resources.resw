@@ -117,6 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="MenuFlyoutSubItem_RightPanel.Text" xml:space="preserve">
+    <value>右侧面板</value>
+  </data>
+  <data name="PropertyPanel_NoProperties.Text" xml:space="preserve">
+    <value>该壁纸没有可配置属性</value>
+  </data>
+  <data name="PropertyPanel_Save.Content" xml:space="preserve">
+    <value>保存属性</value>
+  </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>大众级(G)</value>
   </data>
@@ -125,6 +134,12 @@
   </data>
   <data name="Rating_Mature.Content" xml:space="preserve">
     <value>限制级/成人级    (R-18)</value>
+  </data>
+  <data name="RightPanel_Detail.Text" xml:space="preserve">
+    <value>详情面板</value>
+  </data>
+  <data name="RightPanel_Property.Text" xml:space="preserve">
+    <value>属性面板</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
     <value>来源</value>

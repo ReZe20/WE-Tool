@@ -15,6 +15,7 @@ namespace WE_Tool.Service
     {
         Task<string?> PickFolderAsync();
         Task<string?> PickFileAsync();
+        Task<string?> PickImageAsync();
         Task OpenFolderAsync(string folderPath);
         Task<bool> DeleteFolderAsync(string folderPath);               
     }
@@ -43,6 +44,22 @@ namespace WE_Tool.Service
             filePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder;
 
             filePicker.FileTypeFilter.Add(".acf");
+
+            var file = await filePicker.PickSingleFileAsync();
+            return file?.Path;
+        }
+        public async Task<string?> PickImageAsync()
+        {
+            var filePicker = new Windows.Storage.Pickers.FileOpenPicker();
+
+            IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindowInstance);
+            WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
+
+            filePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+            filePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+
+            foreach (string ext in new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp" })
+                filePicker.FileTypeFilter.Add(ext);
 
             var file = await filePicker.PickSingleFileAsync();
             return file?.Path;

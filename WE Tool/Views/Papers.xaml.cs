@@ -62,7 +62,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<WallpaperItem> Wallpapers { get; set; } = [];
     public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
-    public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
     private List<WallpaperItem> _filteredWallpapers = [];
     private int _currentPage = 1;
 
@@ -345,6 +344,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return false;
         }
     }
+    public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
     public ObservableCollection<ExtractProgressItem> ExtractItems { get; } = [];
 
     /// <summary>多壁纸提取进行中列表数据源:每项 = 一个正在提取的壁纸(名称/预览图/实时进度)</summary>
@@ -430,6 +430,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
     }
 
+
     public Papers()
     {
         var app = Application.Current as App;
@@ -477,6 +478,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             if (ViewModel._isBatchUpdating) return;
 
+            if (e.PropertyName == nameof(SettingsViewModel.IsPropertyPanelLoading))
+            {
+                UpdatePropertyPanelState();
+                return;
+            }
+
             if (e.PropertyName == "SteamWorkshopPath"
                 || e.PropertyName?.EndsWith("Expander") == true
                 || e.PropertyName?.Contains("Pane") == true
@@ -491,12 +498,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                         ? Visibility.Visible : Visibility.Collapsed;
                     NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
                         ? Visibility.Collapsed : Visibility.Visible;
+                    UpdatePropertyPanelState();
                 }
                 return;
             }
 
             _ = ApplyFilters();
         };
+
+        ViewModel.SelectedWallpaperProperties.CollectionChanged += (s, e) => UpdatePropertyPanelState();
+        SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
 
         ViewModel.FilterExpanderVM.PropertyChanged += (s, e) =>
         {
@@ -528,11 +539,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 _isFirstLoad = false;
                 await ViewModel.InitializeAsync();
                 await RefreshWallpaperList();
-                // 初始状态：无选中壁纸时隐藏详情面板并显示提示
-                SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
-                    ? Visibility.Visible : Visibility.Collapsed;
-                NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
-                    ? Visibility.Collapsed : Visibility.Visible;
             }
 
             var presenter = WallpapersScrollView.ScrollPresenter;
@@ -600,34 +606,39 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         });
 
         _pickerService = new PickerService();
-        SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
 
         Log.Information("正在检查变量: ", nameof(WallpapersScrollView.ScrollPresenter.VerticalScrollController));
     }
-    private async void App_ScanCompleted(object? sender, EventArgs e)
+    /// <summary>
+    /// 属性面板底部区状态切换（公共区/详情区由模式绑定与选中切换负责）：
+    /// 加载中→空白；加载完→属性列表或"没有可配置属性"占位。
+    /// </summary>
+    private void UpdatePropertyPanelState()
     {
-        await DispatcherQueue.EnqueueAsync(async () =>
-        {
-            await RefreshWallpaperList();
-        });
+        bool hasSelection = ViewModel.SelectedWallpaper != null;
+        bool hasProps = ViewModel.SelectedWallpaperProperties.Count > 0;
+        bool loading = ViewModel.IsPropertyPanelLoading;
+
+        PropertyPanelEmptyHint.Visibility = (hasSelection && !loading && !hasProps) ? Visibility.Visible : Visibility.Collapsed;
+        // 加载期间列表也保持可见:增量填充的每批会立即布局渲染,把"显示瞬间的全量布局"分摊到填充过程,切换大壁纸不冻结
+        PropertyItemsControl.Visibility = (hasSelection && hasProps) ? Visibility.Visible : Visibility.Collapsed;
+        PropertySaveButton.IsEnabled = hasSelection && !loading && hasProps;
     }
+
+    private async void PropertySaveButton_Click(object sender, RoutedEventArgs e)
+    {
+        var (ok, error) = await ViewModel.SaveSelectedWallpaperPropertiesAsync();
+        if (ok)
+            await DialogHelper.ShowMessageAsync("保存属性", "属性已保存到 project.json。");
+        else
+            await DialogHelper.ShowMessageAsync("保存失败", error ?? "未知错误");
+    }
+
     private void SelectedWallpapers_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         RefreshDisplayedSelectedWallpapers();
         UpdateStackVisuals();
         OnPropertyChanged(nameof(IsUnsubscribeEnabled));
-    }
-    private void Global_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        var props = e.GetCurrentPoint(null).Properties;
-        if (props.IsLeftButtonPressed)
-        {
-            _isLeftMouseButtonPressed = true;
-        }
-    }
-    private void Global_PointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        _isLeftMouseButtonPressed = false;
     }
     private void UpdateStackVisuals()
     {
@@ -640,6 +651,19 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             container.Visibility = Visibility.Visible;
             ApplyStackAnimation(container, i);
             Canvas.SetZIndex(container, i);
+        }
+    }
+    private void StackedImage_Loaded(object sender, RoutedEventArgs e)
+    {
+        // 从 SelectedWallpapers 集合计算相对位置
+        if (sender is FrameworkElement fe && fe.DataContext is WallpaperItem item)
+        {
+            int idx = SelectedWallpapers.IndexOf(item);
+            if (idx < 0) return;
+            int relative = Math.Max(0, idx - Math.Max(0, SelectedWallpapers.Count - 5));
+            fe.Visibility = Visibility.Visible;
+            ApplyStackAnimation(fe, relative);
+            Canvas.SetZIndex(fe, relative);
         }
     }
 
@@ -659,6 +683,235 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
         }
     }
+    private async void App_ScanCompleted(object? sender, EventArgs e)
+    {
+        await DispatcherQueue.EnqueueAsync(async () =>
+        {
+            await RefreshWallpaperList();
+        });
+    }
+    private void Global_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        var props = e.GetCurrentPoint(null).Properties;
+        if (props.IsLeftButtonPressed)
+        {
+            _isLeftMouseButtonPressed = true;
+        }
+    }
+    private void Global_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _isLeftMouseButtonPressed = false;
+    }
+
+    private void RefreshDisplayedSelectedWallpapers(bool forceRebuild = false)
+    {
+        // 全选/反选/退出多选 等批量操作时强制重建
+        if (forceRebuild)
+        {
+            StopAllStackAnimations();
+            RebuildDisplayedFromLast5();
+            return;
+        }
+
+        // 单张选择/取消 时走增量更新（最自然）
+        // 这里我们不传 EventArgs，所以用简单判断：如果当前显示的最后一张不是 Selected 的最后一张 → 说明新增了
+        if (DisplayedSelectedWallpapers.Count == 0 ||
+            !DisplayedSelectedWallpapers.Last().Equals(SelectedWallpapers.LastOrDefault()))
+        {
+            if (SelectedWallpapers.Count <= 5)
+            {
+                StopAllStackAnimations();
+                RebuildDisplayedFromLast5();
+            }
+            else
+            {
+                // 增量：挤掉最旧的一张，加入最新的一张（前4张容器保持不变！）
+                if (DisplayedSelectedWallpapers.Count >= 5)
+                {
+                    DisplayedSelectedWallpapers.RemoveAt(0);   // 移除最底层（最早的）
+                }
+                DisplayedSelectedWallpapers.Add(SelectedWallpapers.Last()); // 加入最新（最顶层）
+            }
+        }
+    }
+
+    private void RebuildDisplayedFromLast5()
+    {
+        DisplayedSelectedWallpapers.Clear();
+        int total = SelectedWallpapers.Count;
+        int start = Math.Max(0, total - 5);
+        for (int i = start; i < total; i++)
+        {
+            DisplayedSelectedWallpapers.Add(SelectedWallpapers[i]);
+        }
+    }
+
+    private static void ApplyStackAnimation(FrameworkElement element, int relativeIndex)
+    {
+        Visual visual = ElementCompositionPreview.GetElementVisual(element);
+        Compositor compositor = visual.Compositor;
+
+        // 1:1 正方形中心点
+        float size = 200f;
+        visual.CenterPoint = new Vector3(size / 2, size / 2, 0f);
+
+        // 基于相对位置计算位移和旋转
+        // relativeIndex 越大（越新），偏移越多
+        float offsetY = relativeIndex * -12f;
+        float offsetX = relativeIndex * 8f;
+        float rotation = (relativeIndex % 2 == 0) ? relativeIndex * 2.5f : relativeIndex * -2.5f;
+
+        // 使用动画平滑移动到新位置（防止新增图片时旧图片位置突跳）
+        var offsetAnim = compositor.CreateSpringVector3Animation();
+        offsetAnim.Target = "Offset";
+        offsetAnim.FinalValue = new Vector3(offsetX, offsetY, 0f);
+        offsetAnim.DampingRatio = 0.7f;
+
+        var rotationAnim = compositor.CreateSpringScalarAnimation();
+        rotationAnim.Target = "RotationAngleInDegrees";
+        rotationAnim.FinalValue = rotation;
+        rotationAnim.DampingRatio = 0.7f;
+
+        visual.StartAnimation("Offset", offsetAnim);
+        visual.StartAnimation("RotationAngleInDegrees", rotationAnim);
+    }
+
+    private async void ToggleMultiSelectVisuals(bool isMulti)
+    {
+        CancelAllAnimations();
+
+        if (isMulti)
+        {
+            // 如果单选有焦点，顺便加入多选
+            if (ViewModel.SelectedWallpaper != null && !SelectedWallpapers.Contains(ViewModel.SelectedWallpaper))
+            {
+                SelectedWallpapers.Add(ViewModel.SelectedWallpaper);
+                RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+            }
+            else if (SelectedWallpapers.Count > 0)
+            {
+                RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+            }
+
+            // 1. 核心视觉：缩小 + 圆角
+            SinglePreviewBorder.CornerRadius = new CornerRadius(8);
+            var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
+            visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
+
+            var scaleAnimation = visual.Compositor.CreateSpringVector3Animation();
+            scaleAnimation.Target = "Scale";
+            scaleAnimation.FinalValue = new Vector3(0.6f, 0.6f, 1.0f);
+            scaleAnimation.DampingRatio = 0.6f;
+            visual.StartAnimation("Scale", scaleAnimation);
+
+            await Task.Delay(150);
+            StackedImagesControl.Visibility = Visibility.Visible;
+            SinglePreviewBorder.Visibility = Visibility.Collapsed;
+            SingleSelectionInfoPanel.Visibility = Visibility.Collapsed;
+            MultiSelectionInfoPanel.Visibility = Visibility.Visible;
+            NoSelectionHintText.Visibility = Visibility.Collapsed;
+
+            UpdateMultiSelectCount();
+        }
+        else
+        {
+            StopAllStackAnimations();
+            SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
+            ViewModel.SuspendSelectedWallpapersCollectionChanged();
+
+            SinglePreviewBorder.Visibility = Visibility.Visible;
+            SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
+                ? Visibility.Visible : Visibility.Collapsed;
+            NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
+                ? Visibility.Collapsed : Visibility.Visible;
+
+            StackedImagesControl.Visibility = Visibility.Collapsed;
+            MultiSelectionInfoPanel.Visibility = Visibility.Collapsed;
+
+            var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
+            visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
+
+            // 缩放回 1.0 (250px)
+            var scaleReturnAnim = visual.Compositor.CreateSpringVector3Animation();
+            scaleReturnAnim.Target = "Scale";
+            scaleReturnAnim.FinalValue = new Vector3(1.0f, 1.0f, 1.0f);
+            scaleReturnAnim.DampingRatio = 0.7f; // 略微有弹性的恢复
+            scaleReturnAnim.Period = TimeSpan.FromMilliseconds(50);
+
+            // 位置归零 (防止在堆叠时有微小的 Offset)
+            var offsetReturnAnim = visual.Compositor.CreateSpringVector3Animation();
+            offsetReturnAnim.Target = "Offset";
+            offsetReturnAnim.FinalValue = new Vector3(0f, 0f, 0f);
+            offsetReturnAnim.DampingRatio = 1.0f; // 平滑归位
+
+            SinglePreviewBorder.CornerRadius = new CornerRadius(0);
+
+            // 启动动画
+            visual.StartAnimation("Scale", scaleReturnAnim);
+            visual.StartAnimation("Offset", offsetReturnAnim);
+
+
+            foreach (var wp in SelectedWallpapers)
+            {
+                wp.IsSelected = false;
+            }
+            SelectedWallpapers.Clear();
+
+            SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
+            ViewModel.ResumeSelectedWallpapersCollectionChanged();
+
+            RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+            UpdateMultiSelectCount();
+
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+        }
+    }
+    private void CancelAllAnimations()
+    {
+        // 打断单选主面板（SinglePreviewBorder）
+        var singleVisual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
+        if (singleVisual != null)
+        {
+            singleVisual.StopAnimation("Scale");
+            singleVisual.StopAnimation("Offset");
+        }
+
+        // 打断单图钻入动画（PlayDrillInAnimation 用的）
+        var imageVisual = ElementCompositionPreview.GetElementVisual(SinglePreviewImage);
+        if (imageVisual != null)
+        {
+            imageVisual.StopAnimation("Scale.X");
+            imageVisual.StopAnimation("Scale.Y");
+            imageVisual.StopAnimation("Opacity");
+        }
+
+        // 打断堆叠图片的所有动画（复用你已有的方法）
+        StopAllStackAnimations();
+
+        // 额外保险：把所有堆叠容器动画也停掉（防止残留）
+        for (int i = 0; i < DisplayedSelectedWallpapers.Count; i++)
+        {
+            var container = StackedImagesControl.ContainerFromIndex(i) as FrameworkElement;
+            if (container == null) continue;
+            var visual = ElementCompositionPreview.GetElementVisual(container);
+            if (visual != null)
+            {
+                visual.StopAnimation("Scale");
+                visual.StopAnimation("Offset");
+                visual.StopAnimation("RotationAngleInDegrees");
+            }
+        }
+    }
+    private void UpdateMultiSelectCount()
+    {
+        MultiSelectCountText?.Text = $"已选择 {SelectedWallpapers.Count} 项";
+        if (SelectedWallpapers.Count == 0)
+        {
+            IsMultiSelectMode = false;
+        }
+    }
+
     public async Task RefreshWallpaperList()
     {
         try
@@ -1071,232 +1324,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
         }
         return null;
-    }
-    private void RefreshDisplayedSelectedWallpapers(bool forceRebuild = false)
-    {
-        // 全选/反选/退出多选 等批量操作时强制重建
-        if (forceRebuild)
-        {
-            StopAllStackAnimations();
-            RebuildDisplayedFromLast5();
-            return;
-        }
-
-        // 单张选择/取消 时走增量更新（最自然）
-        // 这里我们不传 EventArgs，所以用简单判断：如果当前显示的最后一张不是 Selected 的最后一张 → 说明新增了
-        if (DisplayedSelectedWallpapers.Count == 0 ||
-            !DisplayedSelectedWallpapers.Last().Equals(SelectedWallpapers.LastOrDefault()))
-        {
-            if (SelectedWallpapers.Count <= 5)
-            {
-                StopAllStackAnimations();
-                RebuildDisplayedFromLast5();
-            }
-            else
-            {
-                // 增量：挤掉最旧的一张，加入最新的一张（前4张容器保持不变！）
-                if (DisplayedSelectedWallpapers.Count >= 5)
-                {
-                    DisplayedSelectedWallpapers.RemoveAt(0);   // 移除最底层（最早的）
-                }
-                DisplayedSelectedWallpapers.Add(SelectedWallpapers.Last()); // 加入最新（最顶层）
-            }
-        }
-    }
-
-    private void RebuildDisplayedFromLast5()
-    {
-        DisplayedSelectedWallpapers.Clear();
-        int total = SelectedWallpapers.Count;
-        int start = Math.Max(0, total - 5);
-        for (int i = start; i < total; i++)
-        {
-            DisplayedSelectedWallpapers.Add(SelectedWallpapers[i]);
-        }
-    }
-    private static void ApplyStackAnimation(FrameworkElement element, int relativeIndex)
-    {
-        Visual visual = ElementCompositionPreview.GetElementVisual(element);
-        Compositor compositor = visual.Compositor;
-
-        // 1:1 正方形中心点
-        float size = 200f;
-        visual.CenterPoint = new Vector3(size / 2, size / 2, 0f);
-
-        // 基于相对位置计算位移和旋转
-        // relativeIndex 越大（越新），偏移越多
-        float offsetY = relativeIndex * -12f;
-        float offsetX = relativeIndex * 8f;
-        float rotation = (relativeIndex % 2 == 0) ? relativeIndex * 2.5f : relativeIndex * -2.5f;
-
-        // 使用动画平滑移动到新位置（防止新增图片时旧图片位置突跳）
-        var offsetAnim = compositor.CreateSpringVector3Animation();
-        offsetAnim.Target = "Offset";
-        offsetAnim.FinalValue = new Vector3(offsetX, offsetY, 0f);
-        offsetAnim.DampingRatio = 0.7f;
-
-        var rotationAnim = compositor.CreateSpringScalarAnimation();
-        rotationAnim.Target = "RotationAngleInDegrees";
-        rotationAnim.FinalValue = rotation;
-        rotationAnim.DampingRatio = 0.7f;
-
-        visual.StartAnimation("Offset", offsetAnim);
-        visual.StartAnimation("RotationAngleInDegrees", rotationAnim);
-    }
-    private async void ToggleMultiSelectVisuals(bool isMulti)
-    {
-        CancelAllAnimations();
-
-        if (isMulti)
-        {
-            // 如果单选有焦点，顺便加入多选
-            if (ViewModel.SelectedWallpaper != null && !SelectedWallpapers.Contains(ViewModel.SelectedWallpaper))
-            {
-                ViewModel.SelectedWallpaper.IsSelected = true;
-                SelectedWallpapers.Add(ViewModel.SelectedWallpaper);
-                RefreshDisplayedSelectedWallpapers(forceRebuild: true);
-            }
-            else if (SelectedWallpapers.Count > 0)
-            {
-                RefreshDisplayedSelectedWallpapers(forceRebuild: true);
-            }
-
-            // 1. 核心视觉：缩小 + 圆角
-            SinglePreviewBorder.CornerRadius = new CornerRadius(8);
-            var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
-            visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
-
-            var scaleAnimation = visual.Compositor.CreateSpringVector3Animation();
-            scaleAnimation.Target = "Scale";
-            scaleAnimation.FinalValue = new Vector3(0.6f, 0.6f, 1.0f);
-            scaleAnimation.DampingRatio = 0.6f;
-            visual.StartAnimation("Scale", scaleAnimation);
-
-            await Task.Delay(150);
-            StackedImagesControl.Visibility = Visibility.Visible;
-            SinglePreviewBorder.Visibility = Visibility.Collapsed;
-            SingleSelectionInfoPanel.Visibility = Visibility.Collapsed;
-            MultiSelectionInfoPanel.Visibility = Visibility.Visible;
-            NoSelectionHintText.Visibility = Visibility.Collapsed;
-
-            UpdateMultiSelectCount();
-        }
-        else
-        {
-            StopAllStackAnimations();
-            SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
-            ViewModel.SuspendSelectedWallpapersCollectionChanged();
-
-            SinglePreviewBorder.Visibility = Visibility.Visible;
-            SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
-                ? Visibility.Visible : Visibility.Collapsed;
-            NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
-                ? Visibility.Collapsed : Visibility.Visible;
-
-            StackedImagesControl.Visibility = Visibility.Collapsed;
-            MultiSelectionInfoPanel.Visibility = Visibility.Collapsed;
-
-            var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
-            visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
-
-            // 缩放回 1.0 (250px)
-            var scaleReturnAnim = visual.Compositor.CreateSpringVector3Animation();
-            scaleReturnAnim.Target = "Scale";
-            scaleReturnAnim.FinalValue = new Vector3(1.0f, 1.0f, 1.0f);
-            scaleReturnAnim.DampingRatio = 0.7f; // 略微有弹性的恢复
-            scaleReturnAnim.Period = TimeSpan.FromMilliseconds(50);
-
-            // 位置归零 (防止在堆叠时有微小的 Offset)
-            var offsetReturnAnim = visual.Compositor.CreateSpringVector3Animation();
-            offsetReturnAnim.Target = "Offset";
-            offsetReturnAnim.FinalValue = new Vector3(0f, 0f, 0f);
-            offsetReturnAnim.DampingRatio = 1.0f; // 平滑归位
-
-            SinglePreviewBorder.CornerRadius = new CornerRadius(0);
-
-            // 启动动画
-            visual.StartAnimation("Scale", scaleReturnAnim);
-            visual.StartAnimation("Offset", offsetReturnAnim);
-
-
-            foreach (var wp in SelectedWallpapers)
-            {
-                wp.IsSelected = false;
-            }
-            SelectedWallpapers.Clear();
-
-            SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
-            ViewModel.ResumeSelectedWallpapersCollectionChanged();
-
-            RefreshDisplayedSelectedWallpapers(forceRebuild: true);
-            UpdateMultiSelectCount();
-
-            GC.Collect(2, GCCollectionMode.Forced, true);
-            GC.WaitForPendingFinalizers();
-        }
-    }
-    private void CancelAllAnimations()
-    {
-        // 打断单选主面板（SinglePreviewBorder）
-        var singleVisual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
-        if (singleVisual != null)
-        {
-            singleVisual.StopAnimation("Scale");
-            singleVisual.StopAnimation("Offset");
-        }
-
-        // 打断单图钻入动画（PlayDrillInAnimation 用的）
-        var imageVisual = ElementCompositionPreview.GetElementVisual(SinglePreviewImage);
-        if (imageVisual != null)
-        {
-            imageVisual.StopAnimation("Scale.X");
-            imageVisual.StopAnimation("Scale.Y");
-            imageVisual.StopAnimation("Opacity");
-        }
-
-        // 打断堆叠图片的所有动画（复用你已有的方法）
-        StopAllStackAnimations();
-
-        // 额外保险：把所有堆叠容器动画也停掉（防止残留）
-        for (int i = 0; i < DisplayedSelectedWallpapers.Count; i++)
-        {
-            var container = StackedImagesControl.ContainerFromIndex(i) as FrameworkElement;
-            if (container == null) continue;
-            var visual = ElementCompositionPreview.GetElementVisual(container);
-            if (visual != null)
-            {
-                visual.StopAnimation("Offset");
-                visual.StopAnimation("RotationAngleInDegrees");
-                visual.StopAnimation("Scale");
-            }
-        }
-    }
-    private void StackedImage_Loaded(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement element)
-        {
-            Visual visual = ElementCompositionPreview.GetElementVisual(element);
-            var compositor = visual.Compositor;
-
-            visual.Scale = new Vector3(1.0f, 1.0f, 1.0f);
-
-            // 触发位置计算
-            UpdateStackVisuals();
-
-            // 渐现动画
-            var opacityAnim = compositor.CreateScalarKeyFrameAnimation();
-            opacityAnim.InsertKeyFrame(1.0f, 1.0f);
-            opacityAnim.Duration = TimeSpan.FromMilliseconds(200);
-            visual.StartAnimation("Opacity", opacityAnim);
-        }
-    }
-    private void UpdateMultiSelectCount()
-    {
-        MultiSelectCountText?.Text = $"已选择 {SelectedWallpapers.Count} 项";
-        if (SelectedWallpapers.Count == 0)
-        {
-            IsMultiSelectMode = false;
-        }
     }
     private void WallpaperList_Tapped(object sender, TappedRoutedEventArgs e)
     {
@@ -1743,8 +1770,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         Visual imageVisual = ElementCompositionPreview.GetElementVisual(SinglePreviewImage);
         Compositor compositor = imageVisual.Compositor;
 
-        // 设置中心点 (250 / 2 = 125)
-        imageVisual.CenterPoint = new Vector3(125f, 125f, 0f);
+        // 设置中心点 (280 / 2 = 140)
+        imageVisual.CenterPoint = new Vector3(140f, 140f, 0f);
 
         // 创建缩放动画 (从 0.8 放大到 1.0)
         var scaleAnim = compositor.CreateScalarKeyFrameAnimation();
@@ -2010,52 +2037,21 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
         }
     }
-    private void InternalSelectAllWallpapers()
+    private void SelectAllWallpapers_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel.SuspendSelectedWallpapersCollectionChanged();
-        SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
-
-        var itemsToAdd = Wallpapers.Where(w => !w.IsSelected).ToList();
-        foreach (var item in Wallpapers.Where(w => !w.IsSelected))
+        if (!IsMultiSelectMode)
         {
-            item.IsSelected = true;
-            SelectedWallpapers.Add(item);
+            IsMultiSelectMode = true;
         }
-
-        ViewModel.ResumeSelectedWallpapersCollectionChanged();
-        SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
-        RefreshDisplayedSelectedWallpapers(forceRebuild: true);
-
-        DispatcherQueue.TryEnqueue(() => {
-            UpdateStackVisuals();
-            UpdateMultiSelectCount();
-        });
-
+        InternalSelectAllWallpapers();
     }
-    private void InternalInvertSelection()
+    private void InvertSelection_CLick(object sender, RoutedEventArgs e)
     {
-        ViewModel.SuspendSelectedWallpapersCollectionChanged();
-        SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
-        var currentlySelected = SelectedWallpapers.ToList();
-        foreach (var item in Wallpapers)
+        if (!IsMultiSelectMode)
         {
-            item.IsSelected = !item.IsSelected;
+            IsMultiSelectMode = true;
         }
-        SelectedWallpapers.Clear();
-        foreach (var item in Wallpapers)
-        {
-            if (item.IsSelected)
-                SelectedWallpapers.Add(item);
-        }
-        ViewModel.ResumeSelectedWallpapersCollectionChanged();
-        SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
-        RefreshDisplayedSelectedWallpapers(forceRebuild: true);
-
-        UpdateMultiSelectCount();
-        UpdateStackVisuals();
-
-        GC.Collect(2, GCCollectionMode.Forced, true);
-        GC.WaitForPendingFinalizers();
+        InternalInvertSelection();
     }
     private void ChangeSort(object sender, RoutedEventArgs e)
     {
@@ -2118,34 +2114,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
         InternalInvertSelection();
     }
-    private void SelectAllWallpapers_Click(object sender, RoutedEventArgs e)
-    {
-        InternalSelectAllWallpapers();
-    }
-    private void InvertSelection_CLick(object sender, RoutedEventArgs e)
-    {
-        InternalInvertSelection();
-    }
-    private void MultiSelect_CLick(object sender, RoutedEventArgs e)
-    {
-        
-    }
-
     private async void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
         await CopyWallpapersAsync();
     }
     private async void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
+        HideWallpaperContextMenu();
         await CopyWallpapersAsync();
     }
     private async Task CopyWallpapersAsync()
     {
-        HideWallpaperContextMenu();
-
-        var items = ViewModel.SelectedWallpapers.Count > 0
-            ? ViewModel.SelectedWallpapers.ToList()
-            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
+        var items = SelectedWallpapers.Count > 0
+            ? SelectedWallpapers.ToList()
+            : ViewModel?.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
 
         if (items.Count == 0) return;
 
@@ -2163,15 +2145,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 Log.Warning(ex, "获取文件夹失败: {Path}", item.FolderPath);
             }
         }
-
         if (folders.Count == 0) return;
 
-        var dataPackage = new DataPackage();
-        dataPackage.RequestedOperation = DataPackageOperation.Copy;
+        var dataPackage = new Windows.ApplicationModel.DataTransfer.DataPackage();
         dataPackage.SetStorageItems(folders);
         Clipboard.SetContent(dataPackage);
     }
-
     private async void ImportToEditor_Click(object sender, RoutedEventArgs e)
     {
         var item = ViewModel.SelectedWallpaper;
@@ -2401,6 +2380,53 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         WallpaperContextMenu?.Hide();
     }
 
+    private void InternalSelectAllWallpapers()
+    {
+        ViewModel.SuspendSelectedWallpapersCollectionChanged();
+        SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
+
+        var itemsToAdd = Wallpapers.Where(w => !w.IsSelected).ToList();
+        foreach (var item in Wallpapers.Where(w => !w.IsSelected))
+        {
+            item.IsSelected = true;
+            SelectedWallpapers.Add(item);
+        }
+
+        ViewModel.ResumeSelectedWallpapersCollectionChanged();
+        SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
+        RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+
+        DispatcherQueue.TryEnqueue(() => {
+            UpdateStackVisuals();
+            UpdateMultiSelectCount();
+        });
+
+    }
+    private void InternalInvertSelection()
+    {
+        ViewModel.SuspendSelectedWallpapersCollectionChanged();
+        SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
+        var currentlySelected = SelectedWallpapers.ToList();
+        foreach (var item in Wallpapers)
+        {
+            item.IsSelected = !item.IsSelected;
+        }
+        SelectedWallpapers.Clear();
+        foreach (var item in Wallpapers)
+        {
+            if (item.IsSelected)
+                SelectedWallpapers.Add(item);
+        }
+        ViewModel.ResumeSelectedWallpapersCollectionChanged();
+        SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
+        RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+
+        UpdateMultiSelectCount();
+        UpdateStackVisuals();
+
+        GC.Collect(2, GCCollectionMode.Forced, true);
+        GC.WaitForPendingFinalizers();
+    }
     private void SetExtractPreviewImage(string? previewPath, string title)
     {
         ExtractPreviewTitle.Text = title;
@@ -2700,7 +2726,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 }
             }
             NotifyPagerStateChanged();
-
             UpdateMultiSelectCount();
             Log.Information($"壁纸 {item.Title} 已从列表和磁盘中彻底移除。");
         }

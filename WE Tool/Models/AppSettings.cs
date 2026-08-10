@@ -35,6 +35,8 @@ namespace WE_Tool.Models
         public int WallpaperListMinWidth { get; set; } = 180;
         public bool LeftSplitViewPaneOpen { get; set; } = true;
         public bool RightSplitViewPaneOpen { get; set; } = true;
+        /// <summary>右侧面板模式：0=详情面板, 1=属性面板</summary>
+        public int RightPanelIndex { get; set; } = 0;
         public int SortOrder { get; set; } = 0;
         public bool IsSortAscending { get; set; } = true;
         public bool DetailSelectionEnabled { get; set; } = true;
