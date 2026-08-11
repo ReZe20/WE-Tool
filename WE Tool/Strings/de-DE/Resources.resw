@@ -322,10 +322,10 @@
     <value>Installierte Hintergrundbilder</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Hintergrundbilder importieren</value>
+    <value>Importieren &amp; Entpacken</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>Hintergrundbilder importieren</value>
+    <value>Importieren &amp; Entpacken</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
     <value>Installierte Komponenten</value>

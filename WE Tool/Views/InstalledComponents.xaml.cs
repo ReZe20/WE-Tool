@@ -382,9 +382,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             IsMultiSelectMode = false;
             SelectedComponent = null;
 
-            // 先清空显示列表再重填（对齐 Papers：刷新时旧内容立即消失，再由 ApplyFilters 重新填充）
-            FilteredComponents.Clear();
-
+            // 不再先清空显示列表:ApplyFilters 内部有"结果未变化则跳过"的优化(IsComponentListEqual),
+            // 先 Clear 会把比较对象清空,导致切页回来(内容没变)也全量重建,观感像"没有缓存"。
+            // 内容真变化时 ApplyFilters 内部照常 Clear + 重填。
             ApplyPaneState();
             await ApplyFilters();
 

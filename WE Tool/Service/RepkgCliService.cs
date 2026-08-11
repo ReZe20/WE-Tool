@@ -123,8 +123,8 @@ public class RepkgCliService
         foreach (var wallpaper in wallpapers)
         {
             if (string.IsNullOrEmpty(wallpaper.FolderPath)) continue;
-            var dir = new DirectoryInfo(wallpaper.FolderPath);
-            if (!dir.Exists) continue;
+            // input 兼容文件与目录:单个 pkg 文件或目录均可作为提取输入
+            if (!File.Exists(wallpaper.FolderPath) && !Directory.Exists(wallpaper.FolderPath)) continue;
 
             var wallpaperOutput = GetOutputPath(outputRoot, wallpaper, settings);
             var name = NameOf(wallpaper);
@@ -543,6 +543,10 @@ public class RepkgCliService
     {
         try
         {
+            // input 兼容文件与目录:单个 pkg/mpkg 文件直接命中;目录 → 递归枚举
+            if (File.Exists(folderPath))
+                return folderPath.EndsWith(".pkg", StringComparison.OrdinalIgnoreCase)
+                    || folderPath.EndsWith(".mpkg", StringComparison.OrdinalIgnoreCase);
             var dir = new DirectoryInfo(folderPath);
             return dir.EnumerateFiles("*.pkg", SearchOption.AllDirectories).Any()
                 || dir.EnumerateFiles("*.mpkg", SearchOption.AllDirectories).Any();
@@ -584,10 +588,12 @@ public class RepkgCliService
         // 按壁纸标题命名子文件夹
         if (settings.UseProjectName && !string.IsNullOrEmpty(wallpaper.Title))
             return Path.Combine(outputRoot, GetSafeName(wallpaper.Title));
-        // 降级:使用 WorkshopID 或文件夹名
+        // 降级:使用 WorkshopID 或输入名(文件输入取去扩展名文件名)
         var sub = !string.IsNullOrEmpty(wallpaper.WorkshopID)
             ? wallpaper.WorkshopID
-            : new DirectoryInfo(wallpaper.FolderPath!).Name;
+            : File.Exists(wallpaper.FolderPath ?? "")
+                ? Path.GetFileNameWithoutExtension(wallpaper.FolderPath)
+                : new DirectoryInfo(wallpaper.FolderPath!).Name;
         return Path.Combine(outputRoot, sub);
     }
 

@@ -322,10 +322,10 @@
     <value>Установленные обои</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Импортировать обои</value>
+    <value>Импорт и распаковка</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>Импортировать обои</value>
+    <value>Импорт и распаковка</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
     <value>Установленные компоненты</value>

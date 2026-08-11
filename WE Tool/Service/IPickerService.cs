@@ -16,6 +16,7 @@ namespace WE_Tool.Service
         Task<string?> PickFolderAsync();
         Task<string?> PickFileAsync();
         Task<string?> PickImageAsync();
+        Task<IReadOnlyList<string>?> PickPkgFilesAsync();
         Task OpenFolderAsync(string folderPath);
         Task<bool> DeleteFolderAsync(string folderPath);               
     }
@@ -63,6 +64,22 @@ namespace WE_Tool.Service
 
             var file = await filePicker.PickSingleFileAsync();
             return file?.Path;
+        }
+        public async Task<IReadOnlyList<string>?> PickPkgFilesAsync()
+        {
+            var filePicker = new Windows.Storage.Pickers.FileOpenPicker();
+
+            IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindowInstance);
+            WinRT.Interop.InitializeWithWindow.Initialize(filePicker, hwnd);
+
+            filePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+            filePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Downloads;
+
+            filePicker.FileTypeFilter.Add(".pkg");
+            filePicker.FileTypeFilter.Add(".mpkg");
+
+            var files = await filePicker.PickMultipleFilesAsync();
+            return files?.Select(f => f.Path).ToList();
         }
         public async Task OpenFolderAsync(string folderPath)
         {

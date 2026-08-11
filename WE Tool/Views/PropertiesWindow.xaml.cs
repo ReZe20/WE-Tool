@@ -1,7 +1,9 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Windowing;
 using Microsoft.Windows.ApplicationModel.Resources;
 using Serilog;
@@ -41,6 +43,14 @@ namespace WE_Tool
             InitializeComponent();
             // 壁纸属性页的 DataContext = 窗口自身(绑定 Properties/IsPropertyLoading 等)
             WallpaperPropsRoot.DataContext = this;
+            // 虚拟化属性列表:XamlCompiler 对窗口内 ItemsRepeater 标签稳定崩溃(Pass1 MSB3073),
+            // 改为 code-behind 实例化——运行时创建,虚拟化行为不变(StackLayout + 外层 ScrollViewer)
+            PropertyItemsHost.Children.Add(new ItemsRepeater
+            {
+                ItemsSource = Properties,
+                Layout = new StackLayout { Spacing = 4 },
+                ItemTemplate = RootGrid.Resources["PropertyRowTemplate"] as DataTemplate
+            });
             Properties.CollectionChanged += (s, e) =>
             {
                 OnPropertyChanged(nameof(PropertyEmptyHintVisibility));
@@ -202,6 +212,126 @@ namespace WE_Tool
             bool isProps = (args.SelectedItem as NavigationViewItem)?.Tag as string == "props";
             WallpaperPropsRoot.Visibility = isProps ? Visibility.Visible : Visibility.Collapsed;
             ContentRoot.Visibility = isProps ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        /// <summary>
+        /// 纯文本组件链接/图片渲染:含 <a href>/裸 URL 时用 InlineUIContainer + HyperlinkButton 接管显示,
+        /// 含 <img> 时渲染 HTTP 图片;约定:外部链接统一 HyperlinkButton + App.xaml 的 ExternalLinkButtonStyle
+        /// (无阴影无背景),样式必须从 Application.Current.Resources 取(页面/窗口 Resources 索引器抛
+        /// COMException 0x80004005);载体必须用 RichTextBlock——InlineUIContainer 不能进 TextBlock.Inlines
+        /// (运行时会抛 System.ArgumentException),Paragraph 才支持;内联按钮不继承字体,内容 TextBlock 显式拷贝。
+        /// 图片段不显示其文本(剥标签残留的换行/占位空白段跳过)。
+        /// </summary>
+        private void TextBlock_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
+        {
+            if (sender is not RichTextBlock rtb || rtb.DataContext is not WallpaperProperty prop)
+                return;
+
+            rtb.Blocks.Clear();
+            var paragraph = new Paragraph();
+
+            var segments = prop.LinkSegments;
+            bool hasLink = segments.Any(s => s.Url != null);
+            bool hasImage = prop.ImageSegments.Count > 0;
+
+            // 无链接无图片:纯文本,直接 Run
+            if (!hasLink && !hasImage)
+            {
+                paragraph.Inlines.Add(new Run { Text = prop.DisplayText });
+                rtb.Blocks.Add(paragraph);
+                return;
+            }
+
+            // 有链接/图片:分段渲染;空白文本段跳过(img 剥标签残留的换行/占位不显示)
+            foreach (var (text, url) in segments)
+            {
+                if (string.IsNullOrWhiteSpace(text)) continue;
+                if (url == null)
+                {
+                    paragraph.Inlines.Add(new Run { Text = text });
+                }
+                else
+                {
+                    var container = new InlineUIContainer();
+                    container.Child = new HyperlinkButton
+                    {
+                        NavigateUri = new Uri(url),
+                        Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"],
+                        Padding = new Thickness(0), // 内联:去掉 ButtonPadding,避免文字偏移
+                        Content = new TextBlock
+                        {
+                            Text = text,
+                            TextWrapping = TextWrapping.Wrap,
+                            FontSize = rtb.FontSize,
+                            FontWeight = rtb.FontWeight
+                        }
+                    };
+                    paragraph.Inlines.Add(container);
+                }
+            }
+
+            // 图片段(<img src>,HTTP 加载;外层 <a href> 时整图可点击)
+            foreach (var (src, link, width, height) in prop.ImageSegments)
+            {
+                var image = new Image
+                {
+                    Source = new BitmapImage(new Uri(src)),
+                    Stretch = Stretch.Uniform,
+                    MaxWidth = 200,
+                    MaxHeight = 200,
+                    Margin = new Thickness(0, 4, 0, 4)
+                };
+                if (width.HasValue) image.Width = Math.Min(width.Value, 200);
+                if (height.HasValue) image.Height = Math.Min(height.Value, 200);
+                // 加载失败(网络/URL 失效)隐藏,不占位
+                image.ImageFailed += (s, e) => image.Visibility = Visibility.Collapsed;
+
+                var container = new InlineUIContainer();
+                if (link != null)
+                {
+                    container.Child = new HyperlinkButton
+                    {
+                        NavigateUri = new Uri(link),
+                        Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"],
+                        Padding = new Thickness(0),
+                        Content = image
+                    };
+                }
+                else
+                {
+                    container.Child = image;
+                }
+                paragraph.Inlines.Add(container);
+            }
+            rtb.Blocks.Add(paragraph);
+        }
+
+        /// <summary>
+        /// combo 类型下拉:DropDownButton + 动态菜单——显示区是普通 TextBlock(绑定 ComboDisplayText),
+        /// 没有 ComboBox SelectionBoxItem 的滚动显示空白 bug(实测 SelectedIndex/SelectedItem 状态正确
+        /// 仅显示区不刷新的 WinUI 缺陷,滚动/虚拟化重用均触发,各种 workaround 无效,故换控件根治)。
+        /// </summary>
+        private void ComboButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not DropDownButton button || button.DataContext is not WallpaperProperty prop)
+                return;
+
+            var flyout = new MenuFlyout();
+            string group = $"Combo_{prop.Key}";
+            for (int i = 0; i < prop.Options.Count; i++)
+            {
+                int index = i; // 闭包捕获
+                var item = new RadioMenuFlyoutItem
+                {
+                    Text = prop.Options[i].Label,
+                    IsChecked = i == prop.ComboIndex,
+                    GroupName = group
+                };
+                item.Click += (s, e2) => prop.ComboIndex = index;
+                flyout.Items.Add(item);
+            }
+            button.Flyout = flyout;
+            flyout.ShowAt(button);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

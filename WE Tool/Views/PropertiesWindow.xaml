@@ -18,7 +18,7 @@
     <!-- 注意:Window 不是 FrameworkElement。本文件全部用普通 Binding(DataContext 在 code-behind 设置),
         不能用 x:Bind——x:Bind + StaticResource 转换器会让 XamlCompiler 生成 SetConverterLookupRoot(Window),
         CS1503 编译失败 -->
-    <Grid Background="Transparent">
+    <Grid x:Name="RootGrid" Background="Transparent">
         <Grid.Resources>
         <!-- 属性行模板：分组标题(<hr> 纯文本) / group 类型 Expander(递归渲染子属性) / 属性行(标签+控件) 按标志切换。
              从 Papers.xaml 搬入,x:Bind 改普通 Binding(窗口内禁用 x:Bind+StaticResource) -->
@@ -26,8 +26,9 @@
             <Grid>
                 <StackPanel Visibility="{Binding GroupHeaderVisibility, Mode=OneWay}">
                     <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6,0,10"/>
-                    <TextBlock Text="{Binding DisplayText}" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="14"
-                               TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"/>
+                    <RichTextBlock TextWrapping="Wrap" FontWeight="SemiBold" FontSize="14"
+                                   TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"
+                                   DataContextChanged="TextBlock_DataContextChanged"/>
                 </StackPanel>
                 <!-- group 类型 → Expander 折叠组（默认折叠：组内子属性不展开渲染，大量分组壁纸切换不卡；点击组标题展开） -->
                 <Expander Visibility="{Binding GroupBorderVisibility, Mode=OneWay}"
@@ -35,8 +36,9 @@
                           HorizontalAlignment="Stretch"
                           Margin="0,4">
                     <Expander.Header>
-                        <TextBlock Text="{Binding DisplayText}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"
-                                   TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"/>
+                        <RichTextBlock TextWrapping="Wrap" FontSize="13" FontWeight="SemiBold"
+                                       TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"
+                                       DataContextChanged="TextBlock_DataContextChanged"/>
                     </Expander.Header>
                     <ItemsControl ItemsSource="{Binding Children, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>
@@ -51,28 +53,39 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <!-- 标签：纯文本（含 HTML 样式：字号/粗体/居中/文字色） -->
-                    <TextBlock Text="{Binding DisplayText}" TextWrapping="Wrap" VerticalAlignment="Center"
-                               FontSize="{Binding TextFontSize, Mode=OneWay}"
-                               FontWeight="{Binding TextFontWeight, Mode=OneWay}"
-                               TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"/>
+                    <RichTextBlock TextWrapping="Wrap" VerticalAlignment="Center"
+                                   FontSize="{Binding TextFontSize, Mode=OneWay}"
+                                   FontWeight="{Binding TextFontWeight, Mode=OneWay}"
+                                   TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"
+                                   DataContextChanged="TextBlock_DataContextChanged"/>
                     <Grid Grid.Column="1" Margin="12,0,0,0">
                         <CheckBox Visibility="{Binding BoolVisibility, Mode=OneWay}"
                                   IsChecked="{Binding BoolValue, Mode=TwoWay}"
                                   MinWidth="0"
                                   HorizontalAlignment="Right"
                                   VerticalAlignment="Center"/>
-                        <Slider Visibility="{Binding SliderVisibility, Mode=OneWay}"
-                                Value="{Binding SliderValue, Mode=TwoWay}"
-                                Minimum="{Binding SliderMin, Mode=OneWay}"
-                                Maximum="{Binding SliderMax, Mode=OneWay}"
-                                StepFrequency="{Binding SliderStep, Mode=OneWay}"
-                                Width="140"
-                                VerticalAlignment="Center"/>
-                        <ComboBox Visibility="{Binding ComboVisibility, Mode=OneWay}"
-                                  ItemsSource="{Binding Options, Mode=OneWay}"
-                                  SelectedIndex="{Binding ComboIndex, Mode=TwoWay}"
-                                  MinWidth="140"
-                                  VerticalAlignment="Center"/>
+                        <!-- slider:滑杆 + 右侧当前值文字(Width 100 为文字腾空间) -->
+                        <StackPanel Orientation="Horizontal" Spacing="6"
+                                    Visibility="{Binding SliderVisibility, Mode=OneWay}"
+                                    VerticalAlignment="Center">
+                            <Slider Value="{Binding SliderValue, Mode=TwoWay}"
+                                    Minimum="{Binding SliderMin, Mode=OneWay}"
+                                    Maximum="{Binding SliderMax, Mode=OneWay}"
+                                    StepFrequency="{Binding SliderStep, Mode=OneWay}"
+                                    Width="100"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding SliderValueText, Mode=OneWay}"
+                                       MinWidth="40"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <!-- combo:DropDownButton + 动态菜单(显示区为普通 TextBlock,根治 WinUI
+                             ComboBox 滚动后 SelectionBoxItem 不刷新的显示空白 bug) -->
+                        <DropDownButton Visibility="{Binding ComboVisibility, Mode=OneWay}"
+                                        MinWidth="140"
+                                        VerticalAlignment="Center"
+                                        Click="ComboButton_Click">
+                            <TextBlock Text="{Binding ComboDisplayText, Mode=OneWay}"/>
+                        </DropDownButton>
                         <Button Visibility="{Binding ColorVisibility, Mode=OneWay}" Padding="8,4" VerticalAlignment="Center">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -415,13 +428,11 @@
                                            Margin="0,10,0,0"
                                            TextWrapping="Wrap"
                                            Visibility="{Binding PropertyEmptyHintVisibility, Mode=OneWay}"/>
-                                <ItemsControl x:Name="PropertyItemsControl"
-                                              ItemsSource="{Binding Properties, Mode=OneWay}"
-                                              Visibility="{Binding PropertyListVisibility, Mode=OneWay}">
-                                    <ItemsControl.ItemTemplate>
-                                        <StaticResource ResourceKey="PropertyRowTemplate"/>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <!-- 虚拟化属性列表:ItemsRepeater 由 code-behind 创建(XamlCompiler 对窗口内
+                                     ItemsRepeater 标签稳定 Pass1 崩溃,2026-08-10 实测 3 连崩);
+                                     combo 已换 DropDownButton(显示区自控),虚拟化重用不再有显示 bug -->
+                                <StackPanel x:Name="PropertyItemsHost"
+                                            Visibility="{Binding PropertyListVisibility, Mode=OneWay}"/>
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>

@@ -322,10 +322,10 @@
     <value>已安装壁纸</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>导入壁纸</value>
+    <value>导入解包</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>导入壁纸</value>
+    <value>导入解包</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
     <value>已安装组件</value>

@@ -101,6 +101,8 @@ namespace WE_Tool.Models
         public string OfficialPath { get; set; } = "";
         public string AcfPath { get; set; } = "";
         public string VdfPath { get; set; } = "";
+        /// <summary>导入解包页的导出目录(留空则回退 ProjectPath)。</summary>
+        public string ImportExportPath { get; set; } = "";
     }
 
     public class ExtractSettings

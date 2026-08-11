@@ -322,10 +322,10 @@
     <value>설치된 배경화면</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>배경화면 가져오기</value>
+    <value>가져오기 및 압축 풀기</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>배경화면 가져오기</value>
+    <value>가져오기 및 압축 풀기</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
     <value>설치된 구성 요소</value>

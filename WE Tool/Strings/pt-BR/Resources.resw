@@ -322,10 +322,10 @@
     <value>Papéis de parede instalados</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Importar papéis de parede</value>
+    <value>Importar e extrair</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>Importar papéis de parede</value>
+    <value>Importar e extrair</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
     <value>Componentes instalados</value>

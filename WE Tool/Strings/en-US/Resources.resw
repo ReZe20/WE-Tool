@@ -322,10 +322,10 @@
     <value>Installed Wallpapers</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Import Wallpapers</value>
+    <value>Import &amp; Unpack</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>Import Wallpapers</value>
+    <value>Import &amp; Unpack</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
     <value>Installed Components</value>

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using WE_Tool.Service;
@@ -102,9 +103,14 @@ namespace WE_Tool.Models
                 {
                     _sliderValue = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(SliderValueText));
                 }
             }
         }
+
+        /// <summary>slider 当前值显示文本：有精度定义按精度保留小数，否则最多 3 位（去尾零）</summary>
+        public string SliderValueText
+            => Precision >= 0 ? SliderValue.ToString($"F{Precision}") : SliderValue.ToString("0.###");
 
         private int _comboIndex = -1;
         public int ComboIndex
@@ -117,6 +123,7 @@ namespace WE_Tool.Models
                     _comboIndex = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(ComboValue));
+                    OnPropertyChanged(nameof(ComboDisplayText));
                 }
             }
         }
@@ -124,6 +131,17 @@ namespace WE_Tool.Models
         /// <summary>当前下拉选项的 value（写回用）；未匹配到选项时为空</summary>
         public string ComboValue
             => ComboIndex >= 0 && ComboIndex < Options.Count ? Options[ComboIndex].Value : "";
+
+        /// <summary>下拉按钮显示文本：选中项 label；匹配失败显示原值（解析器已格式化到 DisplayValue）</summary>
+        public string ComboDisplayText
+        {
+            get
+            {
+                if (ComboIndex >= 0 && ComboIndex < Options.Count)
+                    return Options[ComboIndex].Label;
+                return string.IsNullOrEmpty(DisplayValue) ? ComboValue : DisplayValue;
+            }
+        }
 
         private Color _colorValue = Color.FromArgb(255, 255, 255, 255);
         public Color ColorValue
@@ -203,6 +221,115 @@ namespace WE_Tool.Models
 
         public SolidColorBrush ColorBrush => new(ColorValue);
         public string ColorHexText => $"#{ColorValue.R:X2}{ColorValue.G:X2}{ColorValue.B:X2}";
+
+        // === 链接感知分段(纯文本组件:<a href> 与裸 URL 拆成可点击段,懒构建) ===
+        private static readonly Regex LinkAnchorRegex = new(
+            @"<a\s+[^>]*href\s*=\s*[""']([^""']+)[""'][^>]*>(.*?)</a>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        private static readonly Regex LinkUrlRegex = new(@"https?://[^\s<>""']+", RegexOptions.IgnoreCase);
+        private static readonly Regex LinkTagRegex = new(@"<[^>]+>");
+        private static readonly Regex LinkBrRegex = new(@"<br\s*/?>", RegexOptions.IgnoreCase);
+
+        private IReadOnlyList<(string Text, string? Url)>? _linkSegments;
+
+        /// <summary>链接感知分段:Text=显示文本,Url=null 为普通文本(有链接才需要接管 Inlines 渲染)</summary>
+        public IReadOnlyList<(string Text, string? Url)> LinkSegments
+            => _linkSegments ??= BuildLinkSegments();
+
+        private IReadOnlyList<(string Text, string? Url)> BuildLinkSegments()
+        {
+            var result = new List<(string, string?)>();
+            int pos = 0;
+            foreach (Match m in LinkAnchorRegex.Matches(Text))
+            {
+                AddPlainSegments(result, Text.Substring(pos, m.Index - pos));
+                string inner = StripLinkHtml(m.Groups[2].Value);
+                string url = m.Groups[1].Value;
+                if (inner.Length > 0)
+                    result.Add((inner, url));
+                pos = m.Index + m.Length;
+            }
+            AddPlainSegments(result, Text.Substring(pos));
+            return result;
+        }
+
+        private void AddPlainSegments(List<(string, string?)> result, string text)
+        {
+            // 先剥掉 img 标签:其 src URL 是图片地址,不作为链接文本显示(图片由 ImageSegments 单独渲染)
+            text = ImageTagRegex.Replace(text, "");
+            int pos = 0;
+            foreach (Match m in LinkUrlRegex.Matches(text))
+            {
+                if (m.Index > pos)
+                {
+                    string plain = StripLinkHtml(text.Substring(pos, m.Index - pos));
+                    if (plain.Length > 0) result.Add((plain, null));
+                }
+                result.Add((m.Value, m.Value));
+                pos = m.Index + m.Length;
+            }
+            string rest = StripLinkHtml(text.Substring(pos));
+            if (rest.Length > 0) result.Add((rest, null));
+        }
+
+        private static string StripLinkHtml(string text)
+        {
+            string t = LinkBrRegex.Replace(text, "\n");
+            t = LinkTagRegex.Replace(t, "");
+            t = t.Replace("&amp;", "&")
+                 .Replace("&lt;", "<")
+                 .Replace("&gt;", ">")
+                 .Replace("&quot;", "\"")
+                 .Replace("&#39;", "'")
+                 .Replace("&nbsp;", " ");
+            return t.Trim();
+        }
+
+        // === 图片段(纯文本组件中的 <img src>,HTTP 加载显示) ===
+        private static readonly Regex ImageTagRegex = new(
+            @"<img\s+[^>]*src\s*=\s*(?:[""']([^""']+)[""']|([^\s>""']+))[^>]*>",
+            RegexOptions.IgnoreCase);
+        private static readonly Regex ImageSizeRegex = new(
+            @"\b(width|height)\s*=\s*[""']?(\d+)", RegexOptions.IgnoreCase);
+
+        private IReadOnlyList<(string Src, string? Link, int? Width, int? Height)>? _imageSegments;
+
+        /// <summary>图片段:Src=HTTP 图片地址,Link=外层 &lt;a href&gt;(整图可点击),Width/Height=标签尺寸</summary>
+        public IReadOnlyList<(string Src, string? Link, int? Width, int? Height)> ImageSegments
+            => _imageSegments ??= BuildImageSegments();
+
+        private IReadOnlyList<(string Src, string? Link, int? Width, int? Height)> BuildImageSegments()
+        {
+            var result = new List<(string, string?, int?, int?)>();
+            var anchors = LinkAnchorRegex.Matches(Text);
+            foreach (Match im in ImageTagRegex.Matches(Text))
+            {
+                string src = im.Groups[1].Value.Length > 0 ? im.Groups[1].Value : im.Groups[2].Value;
+                if (src.Length == 0) continue;
+
+                // img 是否被 <a href> 包裹 → 整图可点击跳转
+                string? link = null;
+                foreach (Match am in anchors)
+                {
+                    if (im.Index > am.Index && im.Index < am.Index + am.Length)
+                    {
+                        link = am.Groups[1].Value;
+                        break;
+                    }
+                }
+
+                int? width = null, height = null;
+                foreach (Match sm in ImageSizeRegex.Matches(im.Value))
+                {
+                    int val = int.Parse(sm.Groups[2].Value);
+                    if (sm.Groups[1].Value == "width") width = val;
+                    else height = val;
+                }
+
+                result.Add((src, link, width, height));
+            }
+            return result;
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

@@ -322,10 +322,10 @@
     <value>Fondos instalados</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>Importar fondos</value>
+    <value>Importar y descomprimir</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>Importar fondos</value>
+    <value>Importar y descomprimir</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
     <value>Componentes instalados</value>

@@ -61,12 +61,14 @@ namespace WE_Tool.Helper
                 string type = GetString(obj, "type") ?? "";
                 string text = GetString(obj, "text") ?? kv.Name;
 
-                // text/group = 纯文本组件：剥标签后无文字（如纯 <img> 行）直接跳过，不占面板空间
+                // text/group = 纯文本组件:剥标签后无文字(如纯 <img> 行)直接跳过,不占面板空间;
+                // 例外:含 <img> 的保留(标签区渲染 HTTP 图片)
                 bool isTextLike = type == "text" || type == "group";
+                bool hasImage = text.Contains("<img", StringComparison.OrdinalIgnoreCase);
                 // 分组标题仅对纯文本组件判定；可编辑类型（如 bool）text 里的 <hr> 只是装饰
                 bool isGroupHeader = isTextLike && text.StartsWith("<hr", StringComparison.OrdinalIgnoreCase);
                 string displayText = ResolveLabel(text);
-                if (isTextLike && !isGroupHeader && string.IsNullOrWhiteSpace(displayText))
+                if (isTextLike && !isGroupHeader && string.IsNullOrWhiteSpace(displayText) && !hasImage)
                     continue;
 
                 var prop = new WallpaperProperty

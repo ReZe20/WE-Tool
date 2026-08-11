@@ -58,18 +58,6 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial WallpaperItem? SelectedWallpaper { get; set; }
 
-        /// <summary>当前选中壁纸的属性面板数据（懒解析，选中变化时异步加载，按 FolderPath 缓存）</summary>
-        [ObservableProperty]
-        public partial ObservableCollection<WallpaperProperty> SelectedWallpaperProperties { get; set; } = [];
-
-        /// <summary>属性异步加载中（面板据此隐藏"没有可配置属性"占位，避免切换选中时的闪烁）</summary>
-        [ObservableProperty]
-        public partial bool IsPropertyPanelLoading { get; set; }
-
-        /// <summary>属性加载指示环可见性（切换壁纸解析/填充期间显示）</summary>
-        public Visibility PropertyPanelLoadingVisibility
-            => IsPropertyPanelLoading ? Visibility.Visible : Visibility.Collapsed;
-
 
         public bool IsButtonInGridColumnEnabled
         {
@@ -293,67 +281,8 @@ namespace WE_Tool.ViewModels
         partial void OnSelectedWallpaperChanged(WallpaperItem value)
         {
             OnPropertyChanged(nameof(IsButtonInGridColumnEnabled));
-            _ = LoadSelectedWallpaperPropertiesAsync(value);
         }
 
-        /// <summary>属性加载代次号：选中快速切换时丢弃过期加载结果</summary>
-        private int _propertyLoadVersion;
-
-        private async Task LoadSelectedWallpaperPropertiesAsync(WallpaperItem? item)
-        {
-            int version = ++_propertyLoadVersion;
-            string? folder = item?.FolderPath;
-
-            IsPropertyPanelLoading = !string.IsNullOrEmpty(folder);
-            SelectedWallpaperProperties.Clear();
-
-            if (string.IsNullOrEmpty(folder))
-                return;
-
-            try
-            {
-                var props = await Task.Run(() => WallpaperPropertyParser.Parse(folder));
-                if (version != _propertyLoadVersion) return;
-
-                // 增量填充防卡顿:大壁纸(200+ 属性)每批添加后等一帧渲染,创建+布局渐进分摊,UI 不冻结。
-                // 注意:必须 Task.Delay(16) 而非 Task.Yield——Yield 的续延会连续抢占消息队列,渲染帧被饿死,列表仍会一次性布局
-                SelectedWallpaperProperties.Clear();
-                foreach (var chunk in props.Chunk(10))
-                {
-                    if (version != _propertyLoadVersion) return;
-                    foreach (var p in chunk)
-                        SelectedWallpaperProperties.Add(p);
-                    await Task.Delay(16);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "加载壁纸属性失败: {Folder}", folder);
-            }
-            finally
-            {
-                if (version == _propertyLoadVersion)
-                    IsPropertyPanelLoading = false;
-            }
-        }
-
-        /// <summary>把当前选中壁纸的属性编辑值写回 project.json（UI 线程收集、后台线程写盘）</summary>
-        public async Task<(bool Ok, string? Error)> SaveSelectedWallpaperPropertiesAsync()
-        {
-            var item = SelectedWallpaper;
-            if (item?.FolderPath is not { Length: > 0 } folder)
-                return (false, "未选中壁纸");
-
-            // 扁平化收集：group(Expander) 内的可编辑属性也要写回
-            var props = SelectedWallpaperProperties
-                .SelectMany(p => p.Children.Prepend(p))
-                .Where(p => p.IsEditable)
-                .ToList();
-            if (props.Count == 0)
-                return (false, "没有可编辑属性");
-
-            return await Task.Run(() => WallpaperPropertyWriter.Save(folder, props));
-        }
         public void OnSelectedWallpapersCollectionChanged(object? sender,System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(IsButtonInGridColumnEnabled));

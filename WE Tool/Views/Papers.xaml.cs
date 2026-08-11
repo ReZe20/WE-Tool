@@ -51,6 +51,17 @@ public enum ExtractState
     Completed
 }
 
+/// <summary>搜索建议项:Display = 建议列表显示文本(标题 + ID);Text = 选中后回填值(完整标题,保证可被筛选匹配)。</summary>
+public sealed class SearchSuggestion
+{
+    public string Display { get; init; } = "";
+    public string Text { get; init; } = "";
+    public WallpaperItem Item { get; init; } = null!;
+
+    // 保底显示(AutoSuggestBox 建议列表无 DisplayMemberPath 时走 ToString)
+    public override string ToString() => Display;
+}
+
 /// <summary>
 /// An empty page that can be used on its own or navigated to within a Frame.
 /// </summary>
@@ -478,11 +489,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             if (ViewModel._isBatchUpdating) return;
 
-            if (e.PropertyName == nameof(SettingsViewModel.IsPropertyPanelLoading))
-            {
-                UpdatePropertyPanelState();
-                return;
-            }
 
             if (e.PropertyName == "SteamWorkshopPath"
                 || e.PropertyName?.EndsWith("Expander") == true
@@ -498,7 +504,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                         ? Visibility.Visible : Visibility.Collapsed;
                     NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
                         ? Visibility.Collapsed : Visibility.Visible;
-                    UpdatePropertyPanelState();
                 }
                 return;
             }
@@ -506,7 +511,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _ = ApplyFilters();
         };
 
-        ViewModel.SelectedWallpaperProperties.CollectionChanged += (s, e) => UpdatePropertyPanelState();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
 
         ViewModel.FilterExpanderVM.PropertyChanged += (s, e) =>
@@ -609,32 +613,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         Log.Information("正在检查变量: ", nameof(WallpapersScrollView.ScrollPresenter.VerticalScrollController));
     }
-    /// <summary>
-    /// 属性面板底部区状态切换（公共区/详情区由模式绑定与选中切换负责）：
-    /// 加载中→空白；加载完→属性列表或"没有可配置属性"占位。
-    /// </summary>
-    private void UpdatePropertyPanelState()
-    {
-        bool hasSelection = ViewModel.SelectedWallpaper != null;
-        bool hasProps = ViewModel.SelectedWallpaperProperties.Count > 0;
-        bool loading = ViewModel.IsPropertyPanelLoading;
-
-        PropertyPanelEmptyHint.Visibility = (hasSelection && !loading && !hasProps) ? Visibility.Visible : Visibility.Collapsed;
-        // 加载期间列表也保持可见:增量填充的每批会立即布局渲染,把"显示瞬间的全量布局"分摊到填充过程,切换大壁纸不冻结
-        PropertyItemsControl.Visibility = (hasSelection && hasProps) ? Visibility.Visible : Visibility.Collapsed;
-        PropertySaveButton.IsEnabled = hasSelection && !loading && hasProps;
-        PropertySaveButton.Visibility = hasSelection ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private async void PropertySaveButton_Click(object sender, RoutedEventArgs e)
-    {
-        var (ok, error) = await ViewModel.SaveSelectedWallpaperPropertiesAsync();
-        if (ok)
-            await DialogHelper.ShowMessageAsync("保存属性", "属性已保存到 project.json。");
-        else
-            await DialogHelper.ShowMessageAsync("保存失败", error ?? "未知错误");
-    }
-
     private void SelectedWallpapers_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         RefreshDisplayedSelectedWallpapers();
@@ -968,11 +946,42 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void WallpaperSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
-        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+        // UserInput:用户输入 → 实时筛选 + 更新建议;
+        // SuggestionChosen:从建议列表选中 → 输入框文本被替换,同样要重新筛选
+        if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput &&
+            args.Reason != AutoSuggestionBoxTextChangeReason.SuggestionChosen)
         {
-            _searchText = sender.Text;
-            _ = ApplyFilters();
+            return;
         }
+
+        _searchText = sender.Text;
+        _ = ApplyFilters();
+
+        // 建议:标题/ID 匹配的壁纸,最多 8 条(仅用户输入时刷新建议,选中时保持)
+        var query = sender.Text.Trim();
+        if (string.IsNullOrWhiteSpace(query) || args.Reason == AutoSuggestionBoxTextChangeReason.SuggestionChosen)
+        {
+            if (string.IsNullOrWhiteSpace(query)) sender.ItemsSource = null;
+            return;
+        }
+        // 建议:在当前筛选结果(类型/分级/来源/标签限定)内匹配标题/ID,最多 8 条
+        // (基于 _filteredWallpapers 而非全量,保证建议不超出用户设定的筛选边界)
+        var suggestions = _filteredWallpapers
+            .Where(w => (w.Title?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (w.WorkshopID?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Take(8)
+            .Select(w => new SearchSuggestion
+            {
+                // 显示:标题 (ID) 便于区分;回填:完整标题,保证筛选 Contains 能命中
+                Display = string.IsNullOrEmpty(w.WorkshopID)
+                    ? w.Title ?? ""
+                    : $"{w.Title}  ({w.WorkshopID})",
+                Text = w.Title ?? "",
+                Item = w
+            })
+            .ToList();
+
+        sender.ItemsSource = suggestions;
     }
 
     private async Task ApplyFilters()
@@ -1032,7 +1041,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     bool tagsMatch = selectedTags.Count > 0 && selectedTags.Contains(normalizedTag);
 
                     bool searchMatch = string.IsNullOrWhiteSpace(_searchText) ||
-                                        (w.Title?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false);
+                                        (w.Title?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                                        (w.WorkshopID?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false);
 
                     return typeMatch && ratingMatch && tagsMatch && source && searchMatch;
                 });

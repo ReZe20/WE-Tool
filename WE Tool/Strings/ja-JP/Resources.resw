@@ -322,10 +322,10 @@
     <value>インストール済み壁紙</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>壁紙をインポート</value>
+    <value>インポートと解凍</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>壁紙をインポート</value>
+    <value>インポートと解凍</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
     <value>インストール済みコンポーネント</value>
