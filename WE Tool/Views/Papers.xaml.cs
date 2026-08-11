@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Composition;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -531,6 +532,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 // 分页开关/每页数量变化：立即刷新翻页栏状态（ApplyFilters 有延迟，先同步一次）
                 NotifyPagerStateChanged();
             }
+            if (e.PropertyName == nameof(WallpaperDisplayViewModel.IsAnnotatedScrollBarEnabled))
+            {
+                // 详情滚动条开关:同步 GridView 内部滚动条可见性
+                SyncGridViewScrollBarVisibility();
+                return;
+            }
             _ = ApplyFilters();
         };
 
@@ -545,7 +552,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 await RefreshWallpaperList();
             }
 
-            var presenter = WallpapersScrollView.ScrollPresenter;
+            // GridView 首次布局后同步内部滚动条可见性 + 自适应列宽
+            SyncGridViewScrollBarVisibility();
+            UpdateAllGridItemWidths();
         };
 
         OpenSelectedFoldersCommand = new AsyncRelayCommand(async () =>
@@ -610,8 +619,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         });
 
         _pickerService = new PickerService();
-
-        Log.Information("正在检查变量: ", nameof(WallpapersScrollView.ScrollPresenter.VerticalScrollController));
     }
     private void SelectedWallpapers_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
@@ -1151,7 +1158,78 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             Wallpapers.Add(item);
         }
-        WallpapersScrollView.ScrollTo(0, 0);
+        ScrollVisibleGridToTop();
+    }
+
+    // ============= GridView 列表辅助(自适应列宽/滚动条/回顶) =============
+
+    /// <summary>三个壁纸 GridView(图标/内容/列表模式)</summary>
+    private GridView[] AllWallpaperGridViews => new[] { WallpapersGridView, WallpapersContentGridView, WallpapersListGridView };
+
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _gridItemWidthTimer;
+
+    /// <summary>窗口尺寸变化:防抖 100ms 后重算 ItemWidth(拖动中零计算,列数由 ItemsWrapGrid 原生自适应换行)</summary>
+    private void WallpaperGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        _gridItemWidthTimer ??= DispatcherQueue.CreateTimer();
+        _gridItemWidthTimer.Interval = TimeSpan.FromMilliseconds(100);
+        _gridItemWidthTimer.IsRepeating = false;
+        _gridItemWidthTimer.Tick += (s, _) => UpdateAllGridItemWidths();
+        _gridItemWidthTimer.Start();
+    }
+
+    /// <summary>按各模式档位重算 ItemWidth,复刻 UniformGridLayout 的"拉伸填满行尾"</summary>
+    private void UpdateAllGridItemWidths()
+    {
+        UpdateGridItemWidth(WallpapersGridView, ViewModel.WallpaperDisplayVM.WallpaperListMinWidth, 10);
+        UpdateGridItemWidth(WallpapersListGridView, 400, 6);
+        UpdateGridItemWidth(WallpapersContentGridView, 1, 0); // 内容模式单列
+    }
+
+    private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, double spacing)
+    {
+        if (gridView == null || gridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
+        double available = gridView.ActualWidth;
+        if (available <= 0) return;
+        int cols = Math.Max(1, (int)((available + spacing) / (minItemWidth + spacing)));
+        wrap.ItemWidth = (available - spacing * (cols - 1)) / cols;
+    }
+
+    /// <summary>AnnotatedScrollBar 开启时隐藏系统滚动条(对齐原 ScrollView 行为),关闭时恢复 Auto</summary>
+    private void SyncGridViewScrollBarVisibility()
+    {
+        var bar = ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled
+            ? ScrollBarVisibility.Hidden : ScrollBarVisibility.Auto;
+        foreach (var gv in AllWallpaperGridViews)
+            if (FindScrollViewer(gv) is ScrollViewer sv)
+                sv.VerticalScrollBarVisibility = bar;
+    }
+
+    /// <summary>当前可见的 GridView(AnnotatedScrollBar 详情标签用)</summary>
+    private GridView? GetVisibleGridView()
+    {
+        foreach (var gv in AllWallpaperGridViews)
+            if (gv.Visibility == Visibility.Visible)
+                return gv;
+        return null;
+    }
+
+    /// <summary>可见 GridView 滚动回顶(分页/刷新后)</summary>
+    private void ScrollVisibleGridToTop()
+    {
+        if (GetVisibleGridView() is GridView gv && FindScrollViewer(gv) is ScrollViewer sv)
+            sv.ChangeView(0, 0, null);
+    }
+
+    private static ScrollViewer? FindScrollViewer(DependencyObject root)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is ScrollViewer sv) return sv;
+            if (FindScrollViewer(child) is ScrollViewer found) return found;
+        }
+        return null;
     }
 
     /// <summary>取当前页应显示的壁纸；分页关闭时返回完整列表</summary>
@@ -1353,33 +1431,17 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     private void UpdateAllVisibleCheckBoxes()
     {
-        foreach (var repeater in new ItemsRepeater[] { WallpapersRepeater, WallpapersContentRepeater, WallpapersListRepeater })
+        foreach (var gv in AllWallpaperGridViews)
         {
-            if (repeater == null || repeater.ItemsSourceView == null) continue;
-            for (int i = 0; i < repeater.ItemsSourceView.Count; i++)
+            if (gv == null) continue;
+            for (int i = 0; i < gv.Items.Count; i++)
             {
-                var element = repeater.TryGetElement(i) as FrameworkElement;
-                if (element == null) continue;
-                var grid = element as Grid ?? FindChildGrid(element);
-                if (grid?.DataContext is WallpaperItem item)
+                if (gv.ContainerFromIndex(i) is not GridViewItem container) continue;
+                // 容器 Content = DataTemplate 根(Grid,DataContext = WallpaperItem)
+                if (container.Content is Grid grid && grid.DataContext is WallpaperItem item)
                     UpdateItemCheckBoxOpacity(grid, item);
             }
         }
-    }
-
-    private static Grid? FindChildGrid(FrameworkElement element)
-    {
-        if (element is Grid g) return g;
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++)
-        {
-            var child = VisualTreeHelper.GetChild(element, i) as FrameworkElement;
-            if (child != null)
-            {
-                var result = FindChildGrid(child);
-                if (result != null) return result;
-            }
-        }
-        return null;
     }
     private void WallpaperList_Tapped(object sender, TappedRoutedEventArgs e)
     {
@@ -2235,8 +2297,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private async void OnTagDisplayChanged(object sender, RoutedEventArgs e)
     {
         HideWallpaperContextMenu();
-        WallpapersRepeater.ItemsSource = null;
-        WallpapersRepeater.ItemsSource = Wallpapers;
+        // 角标只在图标模式模板;重置 ItemsSource 强制重建容器刷新角标(观察:若触发全列表动画再改手动刷新)
+        WallpapersGridView.ItemsSource = null;
+        WallpapersGridView.ItemsSource = Wallpapers;
     }
     private async void ChangeAnnotatedScrollBarEnabled(object sender, RoutedEventArgs e)
     {
@@ -2664,11 +2727,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         // 如果列表为空，直接返回
         if (Wallpapers == null || Wallpapers.Count == 0) return;
 
-        var presenter = WallpapersScrollView.ScrollPresenter;
-        if (presenter == null) return;
+        // GridView 内部 ScrollViewer(替代原 ScrollView.ScrollPresenter)
+        if (GetVisibleGridView() is not GridView gv || FindScrollViewer(gv) is not ScrollViewer sv) return;
 
         // 计算总可滚动高度 (总内容高度 - 视口可见高度)
-        double maxOffset = presenter.ExtentHeight - presenter.ViewportHeight;
+        double maxOffset = sv.ExtentHeight - sv.ViewportHeight;
         if (maxOffset <= 0) return;
 
         // 计算当前滚动的百分比进度

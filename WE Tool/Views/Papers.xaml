@@ -25,6 +25,22 @@
         <converters:DateTimeToString x:Key="DateTimeToString"/>
         <converters:PapersTagContentChoose x:Key="PapersTagContentChoose"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <Style x:Key="TransparentGridViewItemStyle" TargetType="GridViewItem">
+            <Setter Property="Margin" Value="5,5,5,5"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <!-- 去掉 GridViewItem 默认悬停/选中/焦点视觉(卡片自带悬停阴影,与 ItemsRepeater 观感一致) -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GridViewItem">
+                        <ContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <CommandBarFlyout x:Name="WallpaperContextMenu" AlwaysExpanded="True">
             <CommandBarFlyout.PrimaryCommands>
@@ -711,57 +727,28 @@
 
                         <SplitView.Content>
                             <Grid>
-                                <ScrollView HorizontalAnchorRatio="0.5" 
-                                            VerticalAnchorRatio="0.5"
-                                            x:Name="WallpapersScrollView"
-                                            VerticalScrollBarVisibility="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewBarVisibility,Mode=OneWay}"
-                                            Grid.Column="0"
-                                            ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
-                                            Tapped="WallpaperList_Tapped">
-                                    <StackPanel x:Name="WallpapersStackPanel" Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}">
-                                        <StackPanel x:Name="NoScanResultTip" Visibility="Collapsed" Margin="0,100,0,0" HorizontalAlignment="Center">
-                                            <TextBlock x:Uid="NoScanResultTip"
-                                                       Style="{StaticResource TitleTextBlockStyle}"
-                                                       FontSize="20"
-                                                       TextWrapping="Wrap"
-                                                       Margin="0,0,0,20"/>
-                                            <Button x:Uid="GoToSettings"
-                                                    Click="GoToSettings_Click"
-                                                    Style="{StaticResource AccentButtonStyle}"
-                                                    HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                        <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
-                                            <TextBlock x:Uid="NoResultTip1"
-                                                   Style="{StaticResource TitleTextBlockStyle}" 
-                                                   TextWrapping="Wrap"
-                                                   FontSize="20"
-                                                   HorizontalAlignment="Center"/>
-                                            <TextBlock x:Uid="NoResultTip2"
-                                                   Style="{StaticResource TitleTextBlockStyle}" 
-                                                   TextWrapping="Wrap"
-                                                   FontSize="20"
-                                                   HorizontalAlignment="Center"/>
-                                            <TextBlock x:Uid="NoResultTip3"
-                                                   Style="{StaticResource TitleTextBlockStyle}" 
-                                                   TextWrapping="Wrap"
-                                                   FontSize="20"
-                                                   HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                        <ItemsRepeater ItemsSource="{x:Bind Wallpapers}" 
-                                               Margin="8,0,8,0"
-                                               x:Name="WallpapersRepeater"
-                                               Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IconModeVisibility, Mode=OneWay}"
-                                               ContextFlyout="{StaticResource WallpaperContextMenu}">
-                                            <ItemsRepeater.Layout>
-                                                <UniformGridLayout
-                                                    MinItemWidth="{x:Bind ViewModel.WallpaperDisplayVM.WallpaperListMinWidth, Mode=OneWay}"
-                                                    MinColumnSpacing="10" 
-                                                    MinRowSpacing="10" 
-                                                    ItemsStretch="Fill" 
-                                                    Orientation="Horizontal"/>
-                                            </ItemsRepeater.Layout>
+                                <Grid Grid.Column="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                                            <ItemsRepeater.ItemTemplate>
+                                    <GridView x:Name="WallpapersGridView"
+                                              ItemsSource="{x:Bind Wallpapers}"
+                                              Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}"
+                                              Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IconModeVisibility, Mode=OneWay}"
+                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
+                                              Tapped="WallpaperList_Tapped"
+                                              SelectionMode="None"
+                                              SizeChanged="WallpaperGrid_SizeChanged"
+                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
+                                        <GridView.ItemContainerTransitions>
+                                            <TransitionCollection>
+                                                <AddDeleteThemeTransition/>
+                                                <RepositionThemeTransition/>
+                                            </TransitionCollection>
+                                        </GridView.ItemContainerTransitions>
+                                        <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ItemContainer">
                                                         <ProgressRing IsActive="True" Background="Transparent"/>
@@ -844,18 +831,25 @@
                                                         </Grid>
                                                     </Grid>
                                                 </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                        </ItemsRepeater>
-                                        <ItemsRepeater ItemsSource="{x:Bind Wallpapers}" 
-                                               Margin="8,0,8,0"
-                                               x:Name="WallpapersContentRepeater"
-                                               Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ContentModeVisibility, Mode=OneWay}"
-                                               ContextFlyout="{StaticResource WallpaperContextMenu}">
-                                            <ItemsRepeater.Layout>
-                                                <StackLayout Orientation="Vertical" Spacing="2"/>
-                                            </ItemsRepeater.Layout>
+                                        </GridView.ItemTemplate>
+                                    </GridView>
 
-                                            <ItemsRepeater.ItemTemplate>
+                                    <GridView x:Name="WallpapersContentGridView"
+                                              ItemsSource="{x:Bind Wallpapers}"
+                                              Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}"
+                                              Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ContentModeVisibility, Mode=OneWay}"
+                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
+                                              Tapped="WallpaperList_Tapped"
+                                              SelectionMode="None"
+                                              SizeChanged="WallpaperGrid_SizeChanged"
+                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
+                                        <GridView.ItemContainerTransitions>
+                                            <TransitionCollection>
+                                                <AddDeleteThemeTransition/>
+                                                <RepositionThemeTransition/>
+                                            </TransitionCollection>
+                                        </GridView.ItemContainerTransitions>
+                                        <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ContentItemContainer"
                                                           Height="86"
@@ -959,22 +953,25 @@
                                                                    TextAlignment="Right"/>
                                                     </Grid>
                                                 </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                        </ItemsRepeater>
-                                        <ItemsRepeater ItemsSource="{x:Bind Wallpapers}"
-                                               Margin="8,0,8,0"
-                                               x:Name="WallpapersListRepeater"
-                                               Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ListModeVisibility, Mode=OneWay}"
-                                               ContextFlyout="{StaticResource WallpaperContextMenu}">
-                                            <ItemsRepeater.Layout>
-                                                <UniformGridLayout
-                                                    MinItemWidth="400"
-                                                    MinColumnSpacing="6"
-                                                    MinRowSpacing="6"
-                                                    ItemsStretch="Fill"
-                                                    Orientation="Horizontal"/>
-                                            </ItemsRepeater.Layout>
-                                            <ItemsRepeater.ItemTemplate>
+                                        </GridView.ItemTemplate>
+                                    </GridView>
+
+                                    <GridView x:Name="WallpapersListGridView"
+                                              ItemsSource="{x:Bind Wallpapers}"
+                                              Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}"
+                                              Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ListModeVisibility, Mode=OneWay}"
+                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
+                                              Tapped="WallpaperList_Tapped"
+                                              SelectionMode="None"
+                                              SizeChanged="WallpaperGrid_SizeChanged"
+                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
+                                        <GridView.ItemContainerTransitions>
+                                            <TransitionCollection>
+                                                <AddDeleteThemeTransition/>
+                                                <RepositionThemeTransition/>
+                                            </TransitionCollection>
+                                        </GridView.ItemContainerTransitions>
+                                        <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ListItemContainer"
                                                           Height="36"
@@ -1011,11 +1008,41 @@
                                                         </StackPanel>
                                                     </Grid>
                                                 </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                        </ItemsRepeater>
-                                        <!-- 分页栏（位于每页列表末尾） -->
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,8,0,0"
-                                                    Visibility="{x:Bind ViewModel.WallpaperDisplayVM.PaginationBarVisibility, Mode=OneWay}">
+                                        </GridView.ItemTemplate>
+                                    </GridView>
+
+                                        <StackPanel x:Name="NoScanResultTip" Visibility="Collapsed" Margin="0,100,0,0" HorizontalAlignment="Center">
+                                            <TextBlock x:Uid="NoScanResultTip"
+                                                       Style="{StaticResource TitleTextBlockStyle}"
+                                                       FontSize="20"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,0,0,20"/>
+                                            <Button x:Uid="GoToSettings"
+                                                    Click="GoToSettings_Click"
+                                                    Style="{StaticResource AccentButtonStyle}"
+                                                    HorizontalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
+                                            <TextBlock x:Uid="NoResultTip1"
+                                                   Style="{StaticResource TitleTextBlockStyle}" 
+                                                   TextWrapping="Wrap"
+                                                   FontSize="20"
+                                                   HorizontalAlignment="Center"/>
+                                            <TextBlock x:Uid="NoResultTip2"
+                                                   Style="{StaticResource TitleTextBlockStyle}" 
+                                                   TextWrapping="Wrap"
+                                                   FontSize="20"
+                                                   HorizontalAlignment="Center"/>
+                                            <TextBlock x:Uid="NoResultTip3"
+                                                   Style="{StaticResource TitleTextBlockStyle}" 
+                                                   TextWrapping="Wrap"
+                                                   FontSize="20"
+                                                   HorizontalAlignment="Center"/>
+                                        </StackPanel>
+
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,8,0,0"
+                                            Visibility="{x:Bind ViewModel.WallpaperDisplayVM.PaginationBarVisibility, Mode=OneWay}">
                                             <Button x:Uid="Pagination_PrevPage" x:Name="PrevPageButton"
                                                     Click="PrevPage_Click"
                                                     IsEnabled="{x:Bind CanGoPrevious, Mode=OneWay}"
@@ -1030,8 +1057,7 @@
                                                 <FontIcon Glyph="&#xE76C;" FontSize="14"/>
                                             </Button>
                                         </StackPanel>
-                                    </StackPanel>
-                                </ScrollView>
+                                </Grid>
                                 <AnnotatedScrollBar x:Name="Papers_AnnotatedScrollBarControl"
                                                     HorizontalAlignment="Right"
                                                     VerticalAlignment="Stretch"
