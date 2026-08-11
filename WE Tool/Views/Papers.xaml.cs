@@ -1169,6 +1169,51 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         Frame?.Navigate(typeof(Settings));
     }
 
+    /// <summary>长 description 折叠行数(超出显示"展开全文"按钮)</summary>
+    private const int DescriptionCollapsedLines = 5;
+
+    /// <summary>上次处理的 description 文本(用于区分"内容切换"与"仅尺寸变化")</summary>
+    private string? _lastDescriptionText;
+
+    /// <summary>
+    /// 长 description 折叠:文本变化时复位为折叠态(切换壁纸后新描述从收起开始);
+    /// 折叠态下实际高度达到 5 行高即视为超长,显示"展开全文"按钮;展开态(不限行)不判断。
+    /// </summary>
+    private void DescriptionText_SizeChanged(object sender, SizeChangedEventArgs args)
+    {
+        if (sender is not TextBlock tb) return;
+
+        // 内容换了 → 复位折叠(窗口宽度变化等场景 Text 不变,保持当前展开/收起状态)
+        if (tb.Text != _lastDescriptionText)
+        {
+            _lastDescriptionText = tb.Text;
+            tb.MaxLines = DescriptionCollapsedLines;
+        }
+
+        if (tb.MaxLines <= 0) return; // 展开态:按钮保持"收起"
+
+        double lineHeight = tb.LineHeight > 0 ? tb.LineHeight : tb.FontSize * 1.333;
+        bool overflow = tb.ActualHeight >= lineHeight * DescriptionCollapsedLines - 0.5;
+        if (overflow)
+        {
+            ExpandDescriptionButton.Visibility = Visibility.Visible;
+            ExpandDescriptionButton.Content = LanguageHelper.GetResource("RightPanel_ExpandDescription.Text");
+        }
+        else
+        {
+            ExpandDescriptionButton.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>展开/收起长 description(MaxLines 5 ↔ 不限)</summary>
+    private void ExpandDescriptionButton_Click(object sender, RoutedEventArgs e)
+    {
+        bool expand = DescriptionText.MaxLines > 0; // 当前折叠 → 展开
+        DescriptionText.MaxLines = expand ? 0 : DescriptionCollapsedLines;
+        ExpandDescriptionButton.Content = LanguageHelper.GetResource(
+            expand ? "RightPanel_CollapseDescription.Text" : "RightPanel_ExpandDescription.Text");
+    }
+
     private void SortDirectionToggle_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.WallpaperDisplayVM.IsSortAscending = !ViewModel.WallpaperDisplayVM.IsSortAscending;
@@ -2074,6 +2119,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             var safeName = GetSafeWallpaperName(item.Title ?? item.WorkshopID ?? "untitled");
             Log.Information("[导入编辑器] 壁纸已导入到: {Path}", Path.Combine(projectPath, safeName));
+            // 主窗口不在焦点时弹系统通知
+            NotificationService.NotifyIfUnfocused("导入到编辑器完成", $"已导入: {safeName}");
         }
         catch (OperationCanceledException)
         {
@@ -2082,6 +2129,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         catch (Exception ex)
         {
             Log.Error(ex, "[导入编辑器] 导入失败: {Name}", item.Title);
+            NotificationService.NotifyIfUnfocused("导入到编辑器失败", $"导入失败:{item.Title}");
         }
         finally
         {
@@ -2456,6 +2504,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 if (!_isSingleExtract)
                     ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
                 Log.Information("提取完成: {Count} 个壁纸 → {Output}", itemsToExtract.Count, outputPath);
+                // 主窗口不在焦点时弹系统通知
+                NotificationService.NotifyIfUnfocused(
+                    "提取完成",
+                    _isSingleExtract ? "壁纸已提取完成" : $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸");
             }
             else
             {
@@ -2463,6 +2515,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 IsExtracting = false;
                 ExtractStatus = "提取已停止";
                 Log.Information("提取被用户停止");
+                NotificationService.NotifyIfUnfocused("提取已停止", "提取已停止");
             }
         }
         catch (OperationCanceledException)
@@ -2471,6 +2524,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             ExtractState = ExtractState.Completed;
             IsExtracting = false;
             Log.Information("提取被用户停止");
+            NotificationService.NotifyIfUnfocused("提取已停止", "提取已停止");
         }
         catch (Exception ex)
         {
@@ -2479,6 +2533,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             IsExtracting = false;
             ExtractStatus = "提取失败，请查看日志";
             ExtractProgress = 0;
+            NotificationService.NotifyIfUnfocused("提取失败", "提取失败，请查看日志");
         }
 
         // 收尾:清空进度列表(完成/取消/异常三路都经过这里)

@@ -410,20 +410,21 @@
 
         <!-- Row 1: 主体 -->
         <SplitView x:Name="RightSplitView"
-                   PanePlacement="Right" OpenPaneLength="304"
+                   PanePlacement="Right" OpenPaneLength="340"
                    DisplayMode="Inline" Grid.Row="1"
+                   PaneBackground="Transparent"
                    IsPaneOpen="{x:Bind ViewModel.ComponentsDisplayVM.RightSplitViewPaneOpen, Mode=TwoWay}">
             <SplitView.Pane>
-                <ScrollViewer>
+                <ScrollView>
                     <Grid Padding="15,15,15,15"
-                          Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+                          Background="Transparent"
                           BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                           BorderThickness="1,0,0,0">
                         <StackPanel Spacing="15">
                             <!-- 预览图 -->
-                            <Grid x:Name="PreviewImageContainer" Height="250" Width="250" HorizontalAlignment="Center">
+                            <Grid x:Name="PreviewImageContainer" Height="280" Width="280" HorizontalAlignment="Center">
                                 <Border x:Name="SinglePreviewBorder"
-                                        Width="250" Height="250"
+                                        Width="280" Height="280"
                                         HorizontalAlignment="Center" VerticalAlignment="Center"
                                         CornerRadius="0"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -572,7 +573,7 @@
                             </StackPanel>
                         </StackPanel>
                     </Grid>
-                </ScrollViewer>
+                </ScrollView>
             </SplitView.Pane>
 
             <!-- 内容区 -->
@@ -582,14 +583,15 @@
                     <SplitView x:Name="LeftSplitView"
                                PanePlacement="Left" OpenPaneLength="210"
                                DisplayMode="Inline"
-                               IsPaneOpen="{x:Bind ViewModel.ComponentsDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}">
+                               IsPaneOpen="{x:Bind ViewModel.ComponentsDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}"
+                               PaneBackground="Transparent">
                         <SplitView.Pane>
-                            <Grid>
+                            <Grid >
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                     <StackPanel x:Name="FilterStackPanel" Padding="15,0,15,10">
                                         <Button Margin="0,10,0,5"
                                                 HorizontalAlignment="Stretch"
@@ -681,14 +683,14 @@
                                             </StackPanel>
                                         </Expander>
                                     </StackPanel>
-                                </ScrollViewer>
+                                </ScrollView>
                             </Grid>
                         </SplitView.Pane>
 
                         <!-- 内容 -->
                         <SplitView.Content>
                             <Grid>
-                                <ScrollViewer x:Name="ComponentsScrollView"
+                                <ScrollView x:Name="ComponentsScrollView"
                                               Tapped="ComponentsList_Tapped"
                                               ContextFlyout="{StaticResource ScrollViewBackgroundMenu}">
                                     <StackPanel>
@@ -1008,7 +1010,7 @@
                                             </Button>
                                         </StackPanel>
                                     </StackPanel>
-                                </ScrollViewer>
+                                </ScrollView>
                             </Grid>
                         </SplitView.Content>
                     </SplitView>
@@ -1043,221 +1045,5 @@
         </Grid>
 
         <!-- 属性面板（照抄 Papers） -->
-        <Grid x:Name="PropertiesOverlay"
-              Visibility="Collapsed"
-              Grid.RowSpan="3"
-              HorizontalAlignment="Stretch"
-              VerticalAlignment="Stretch">
-            <Rectangle x:Name="PropertiesOverlayBackground" Fill="#80000000"
-                       Tapped="PropertiesOverlayBackground_Tapped"/>
-            <Border x:Name="PropertiesPanel"
-                    Width="480"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
-                    CornerRadius="12"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    Margin="0,100,0,100">
-                <Border.Shadow>
-                    <ThemeShadow />
-                </Border.Shadow>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <!-- 标题栏 -->
-                    <Grid Padding="16,12,12,12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE90F;" FontSize="16"/>
-                            <TextBlock x:Uid="PropertiesPanel_Header"
-                                       Style="{StaticResource TitleTextBlockStyle}"
-                                       FontSize="18"
-                                       VerticalAlignment="Center" IsTextSelectionEnabled="True"/>
-                        </StackPanel>
-                        <Button Grid.Column="1"
-                                x:Name="PropertiesCloseButton"
-                                Click="PropertiesCloseButton_Click"
-                                Style="{StaticResource SubtleButtonStyle}"
-                                Width="32"
-                                Height="32">
-                            <FontIcon Glyph="&#xE711;" FontSize="9"/>
-                        </Button>
-                    </Grid>
-                    <!-- 内容 -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Padding="0,32,0,16" Spacing="0">
-                            <!-- 组件预览图 -->
-                            <Border Width="200" Height="200" HorizontalAlignment="Center"
-                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4">
-                                <Image Source="{x:Bind SelectedComponent.Preview, Mode=OneWay, FallbackValue=null}" Stretch="Uniform"/>
-                            </Border>
-                            <!-- 组件标题 -->
-                            <TextBlock Text="{x:Bind SelectedComponent.Title, Mode=OneWay, FallbackValue=''}"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontSize="28"
-                                       FontWeight="SemiBold"
-                                       Padding="16,20,16,4"
-                                       TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True"/>
-                            <StackPanel Padding="16,0,16,0" Spacing="0">
-                                <!-- 基本信息 -->
-                                <TextBlock x:Uid="PropertiesPanel_BasicInfo"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,8,0,8"
-                                       Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                                <Grid ColumnSpacing="12">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <!-- Type -->
-                                    <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="PropertiesPanel_TypeLabel"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.ComponentType, Mode=OneWay, Converter={StaticResource ComponentTypeToDisplay}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <!-- ContentRating -->
-                                    <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="PropertiesPanel_RatingLabel"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <!-- Tags -->
-                                    <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="PropertiesPanel_TagLabel"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.Tags, Mode=OneWay, Converter={StaticResource TagToDisplay}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <!-- Description -->
-                                    <TextBlock Grid.Row="3" Grid.Column="0"
-                                           x:Uid="Description"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.Description, Mode=OneWay, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           TextWrapping="Wrap"
-                                           TextTrimming="None"
-                                           Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                </Grid>
-
-                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
-
-                                <!-- 文件信息 -->
-                                <TextBlock x:Uid="PropertiesPanel_FileInfo"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,8,0,8"
-                                       Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                                <Grid ColumnSpacing="12">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <!-- FileSize -->
-                                    <TextBlock Grid.Row="0" Grid.Column="0"
-                                           x:Uid="FileSize"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <!-- File (组件文件) -->
-                                    <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="File"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.FilePath, Mode=OneWay, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <!-- FolderPath -->
-                                    <TextBlock Grid.Row="2" Grid.Column="0"
-                                           x:Uid="FolderPath"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.FolderPath, Mode=OneWay, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <!-- WorkshopID -->
-                                    <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="WorkshopID"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.WorkshopID, Mode=OneWay, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           IsTextSelectionEnabled="True"
-                                           Margin="0,4,0,4"/>
-                                </Grid>
-
-                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
-
-                                <!-- 时间信息 -->
-                                <TextBlock x:Uid="PropertiesPanel_TimeInfo"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,8,0,8"
-                                       Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                                <Grid ColumnSpacing="12">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <!-- InstallDate -->
-                                    <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="InstallDate"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1"
-                                           Text="{x:Bind SelectedComponent.InstallDate, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                </Grid>
-
-                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
-                                <TextBlock x:Uid="FileStructure"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,8,0,6"
-                                       Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                                <TreeView x:Name="FileStructureTree"
-                                           MaxHeight="200"
-                                           Margin="0,0,0,4"
-                                           Expanding="FileStructureTree_Expanding"
-                                           DoubleTapped="FileStructureTree_DoubleTapped"
-                                           ItemTemplateSelector="{StaticResource FileTreeTemplateSelector}"
-                                           CanDragItems="False" CanReorderItems="False" AllowDrop="False"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
-        </Grid>
     </Grid>
 </Page>

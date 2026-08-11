@@ -328,11 +328,13 @@ namespace WE_Tool
                         item.Status = "已停止";
                 }
                 ShowInfoBar("已停止提取", InfoBarSeverity.Warning);
+                NotificationService.NotifyIfUnfocused("导入解包已停止", "提取已停止");
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "[导入解包] 提取失败");
                 ShowInfoBar($"提取失败:{ex.Message}", InfoBarSeverity.Error);
+                NotificationService.NotifyIfUnfocused("导入解包失败", $"提取失败:{ex.Message}");
             }
             finally
             {
@@ -568,6 +570,9 @@ namespace WE_Tool
                 ? $"提取完成:{ok} 个成功,{fail} 个失败"
                 : $"提取完成,共 {ok} 个壁纸";
             ShowInfoBar(msg, fail > 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
+
+            // 主窗口不在焦点时弹系统通知
+            NotificationService.NotifyIfUnfocused("导入解包完成", msg);
         }
 
         /// <summary>桌面 .pkg 包内没有 project.json(batch 也不复制包旁文件),缺则补写最小文件;mpkg 自带则跳过。</summary>

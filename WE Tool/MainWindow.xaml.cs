@@ -32,7 +32,10 @@ namespace WE_Tool
             ViewModel = app?.ViewModel ?? new SettingsViewModel(new ConfigService(), new PickerService());
             InitializeComponent();
             this.ExtendsContentIntoTitleBar = true;
+            AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
             this.Activated += MainWindow_Activated;
+            // 焦点跟踪:提取等后台事件仅在主窗口无焦点时弹系统通知(常驻,区别于一次性启动导航的 MainWindow_Activated)
+            this.Activated += MainWindow_FocusChanged;
             this.AppWindow.Changed += OnAppWindowChanged;
             // 导航栏 Info 项徽标实时反映 Steamworks 状态(桥接进程事件驱动,不依赖 Info 页轮询)
             SteamWorkshopService.StatusChanged += OnSteamworksStatusChanged;
@@ -43,6 +46,12 @@ namespace WE_Tool
         private void OnSteamworksStatusChanged()
         {
             DispatcherQueue.TryEnqueue(UpdateSteamStatusBadge);
+        }
+
+        /// <summary>焦点跟踪:提取等后台事件仅在主窗口无焦点时弹系统通知(Deactivated = 失去焦点)</summary>
+        private void MainWindow_FocusChanged(object? sender, WindowActivatedEventArgs e)
+        {
+            NotificationService.IsWindowFocused = e.WindowActivationState != WindowActivationState.Deactivated;
         }
 
         /// <summary>导航栏 Info 项徽标:全绿才绿(Steamworks 在线 且 RePKG_Re 版本匹配),其余一律红</summary>

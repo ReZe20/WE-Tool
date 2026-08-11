@@ -1,11 +1,11 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Windowing;
-using Microsoft.Windows.ApplicationModel.Resources;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -17,6 +17,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
+using WE_Tool.Converters;
 using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
@@ -51,6 +52,14 @@ namespace WE_Tool
                 Layout = new StackLayout { Spacing = 4 },
                 ItemTemplate = RootGrid.Resources["PropertyRowTemplate"] as DataTemplate
             });
+            // 文件属性页虚拟化列表:ItemsRepeater 由 code-behind 创建(同 PropertyItemsHost 模式,
+            // XamlCompiler 对窗口内 ItemsRepeater 标签稳定 Pass1 崩溃);直接挂 ScrollViewer.Content,
+            // 获得有界视口,StackLayout 才真正虚拟化(行模板 FileInfoRowTemplate 在 RootGrid.Resources)
+            ContentRoot.Content = new ItemsRepeater
+            {
+                Layout = new StackLayout(),
+                ItemTemplate = RootGrid.Resources["FileInfoRowTemplate"] as DataTemplate
+            };
             Properties.CollectionChanged += (s, e) =>
             {
                 OnPropertyChanged(nameof(PropertyEmptyHintVisibility));
@@ -62,11 +71,12 @@ namespace WE_Tool
             AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
             // 标题:MRT Core 默认构造不依赖视图上下文(LanguageHelper 同款);
             // 旧 API GetForCurrentView 在窗口激活前(构造函数里)会挂起等待视图上下文 → 卡死崩溃;
-            // GetString 找不到键时返回空字符串(不抛异常),空值兜底,保证任务栏/Alt+Tab 显示"属性"而非组件名
+            // GetResource 内部 '.'→'/' 转层级键(直接 GetString('X.Y.Text') 抛 0x80073B17),找不到返回键名,空值兜底,
+            // 保证任务栏/Alt+Tab 显示"属性"而非组件名
             string title = "属性";
             try
             {
-                var t = new ResourceLoader().GetString("PropertiesPanel_Header.Text");
+                var t = LanguageHelper.GetResource("PropertiesPanel_Header.Text");
                 if (!string.IsNullOrEmpty(t)) title = t;
             }
             catch (Exception ex)
@@ -90,7 +100,10 @@ namespace WE_Tool
         /// <summary>打开时快照的壁纸(与主窗口选中分离,不跟随主窗口切换)</summary>
         public WallpaperItem? Selected { get; private set; }
 
-        public static void Open(WallpaperItem wallpaper)
+        /// <summary>是否显示"壁纸属性"页(组件等无 project.json 可配置属性的条目传 false,只显示文件属性页)</summary>
+        public bool ShowPropsPage { get; set; } = true;
+
+        public static void Open(WallpaperItem wallpaper, bool showPropsPage = true)
         {
             // 推迟一帧创建窗口:窗口构造(XAML 解析/可视树构建/绑定首次求值)是同步重活,
             // 直接执行会短暂卡住主窗口;Low 优先级让本次点击先完成、UI 空闲后再建窗口。
@@ -100,6 +113,7 @@ namespace WE_Tool
             {
                 var window = new PropertiesWindow();
                 _openWindows.Add(window);
+                window.ShowPropsPage = showPropsPage;
                 window.SetWallpaper(wallpaper);
                 window.Activate();
             });
@@ -108,9 +122,67 @@ namespace WE_Tool
         private void SetWallpaper(WallpaperItem wallpaper)
         {
             Selected = wallpaper;
-            ContentRoot.DataContext = wallpaper;
+            if (!ShowPropsPage)
+                WallpaperPropsNavItem.Visibility = Visibility.Collapsed;
+            BuildFileInfoRows(wallpaper);
             _ = RefreshFileTreeAsync();
-            _ = LoadPropertiesAsync(wallpaper);
+            if (ShowPropsPage)
+                _ = LoadPropertiesAsync(wallpaper);
+        }
+
+        // ========== 文件属性页:虚拟化行构建(快照语义,窗口打开时一次性取值) ==========
+
+        private static readonly FileSizeToString FileSizeConv = new();
+        private static readonly TypeToDisplay TypeConv = new();
+        private static readonly SourceToDisplay SourceConv = new();
+        private static readonly RatingToDisplay RatingConv = new();
+        private static readonly TagToDisplay TagConv = new();
+        private static readonly DescriptionToDisplay DescriptionConv = new();
+        private static readonly DateTimeToString DateTimeConv = new();
+
+        /// <summary>与旧 XAML 绑定语义一致:null 走 FallbackValue '-'、非 null 走转换器原样输出</summary>
+        private static string Format(IValueConverter converter, object? value)
+            => value == null ? "-" : (converter.Convert(value, typeof(string), null, null) as string) ?? "-";
+
+        /// <summary>构建文件属性页虚拟化行(标签用 LanguageHelper 取:MRT Core 键是 '/' 层级形式,
+        /// ResourceLoader.GetString 直接传 'X.Y.Text' 会抛 0x80073B17;LanguageHelper 内部 '.'→'/' + 缓存)</summary>
+        private void BuildFileInfoRows(WallpaperItem? wallpaper)
+        {
+            var rows = new List<FileInfoRow>();
+
+            if (wallpaper != null)
+            {
+                rows.Add(FileInfoRow.Preview(wallpaper.Preview));
+                rows.Add(FileInfoRow.Title(wallpaper.Title));
+
+                rows.Add(FileInfoRow.Section(LanguageHelper.GetResource("PropertiesPanel_BasicInfo.Text")));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_TypeLabel.Text"), Format(TypeConv, wallpaper.Type)));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_SourceLabel.Text"), Format(SourceConv, wallpaper.Source)));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_RatingLabel.Text"), Format(RatingConv, wallpaper.ContentRating)));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_TagLabel.Text"), Format(TagConv, wallpaper.Tags), wrap: true));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("Description.Text"), Format(DescriptionConv, wallpaper.Description), wrap: true));
+                rows.Add(FileInfoRow.Divider());
+
+                rows.Add(FileInfoRow.Section(LanguageHelper.GetResource("PropertiesPanel_FileInfo.Text")));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("FileSize.Text"), Format(FileSizeConv, wallpaper.FileSize)));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("AcfSize.Text"), Format(FileSizeConv, wallpaper.AcfSize)));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("FolderPath.Text"), wallpaper.FolderPath ?? "-", wrap: true));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("WorkshopID.Text"), wallpaper.WorkshopID ?? "-"));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("Dependency.Text"), wallpaper.Dependency ?? "-", wrap: true));
+                rows.Add(FileInfoRow.Divider());
+
+                rows.Add(FileInfoRow.Section(LanguageHelper.GetResource("PropertiesPanel_TimeInfo.Text")));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("CreationTime.Text"), Format(DateTimeConv, wallpaper.CreationTime)));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("UpdateTime.Text"), Format(DateTimeConv, wallpaper.UpdateTime)));
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("AcfUpdateTime.Text"), Format(DateTimeConv, wallpaper.AcfUpdateTime)));
+                rows.Add(FileInfoRow.Divider());
+
+                rows.Add(FileInfoRow.Section(LanguageHelper.GetResource("FileStructure.Text")));
+                rows.Add(FileInfoRow.Tree());
+            }
+
+            if (ContentRoot.Content is ItemsRepeater repeater)
+                repeater.ItemsSource = rows;
         }
 
         // ========== 壁纸属性页:快照壁纸的 project.json 属性(懒加载/增量填充/代次号,模式同 SettingsViewModel) ==========
@@ -356,17 +428,24 @@ namespace WE_Tool
         /// <summary>刷新代次号:防止快速切换壁纸时异步枚举乱序完成导致文件树串台</summary>
         private int _treeLoadVersion;
 
+        /// <summary>当前实化的文件树(模板内实例:虚拟化回收后重新实化时由 Loaded 更新)</summary>
+        private TreeView? _treeView;
+
+        /// <summary>根目录扫描结果缓存:树行重实化时同步重建,不重复扫磁盘</summary>
+        private List<string>? _cachedDirs;
+        private List<(string Name, FileItemType Type, long Size)>? _cachedFiles;
+        private bool _cachedDenied;
+        private string? _cachedRootName;
+
         private async Task RefreshFileTreeAsync()
         {
             int version = ++_treeLoadVersion;
-            FileStructureTree.RootNodes.Clear();
 
             var wallpaper = Selected;
             if (wallpaper == null || string.IsNullOrEmpty(wallpaper.FolderPath) || !Directory.Exists(wallpaper.FolderPath))
                 return;
 
             var folderPath = wallpaper.FolderPath;
-            var rootName = Path.GetFileName(folderPath);
 
             // 目录枚举是磁盘 IO,放后台线程,避免打开窗口时卡住主窗口
             List<string> dirs;
@@ -387,29 +466,53 @@ namespace WE_Tool
             // 期间已有更新的刷新请求,丢弃本次结果,避免串台
             if (version != _treeLoadVersion) return;
 
-            // TreeViewNode 是 DependencyObject,必须在 UI 线程创建
+            // 缓存扫描结果,再填充当前实化的树(可能尚未实化,Loaded 时会用缓存补)
+            _cachedDirs = dirs;
+            _cachedFiles = files;
+            _cachedDenied = denied;
+            _cachedRootName = Path.GetFileName(folderPath);
+            PopulateTree();
+        }
+
+        /// <summary>文件树行被虚拟化回收后重新实化(滚回视野)时:同步用缓存重建根节点</summary>
+        private void FileStructureTree_Loaded(object sender, RoutedEventArgs e)
+        {
+            var tree = (TreeView)sender;
+            _treeView = tree;
+            if (tree.RootNodes.Count == 0 && _cachedDirs != null)
+                PopulateTree();
+        }
+
+        /// <summary>用缓存数据填充当前实化的树(TreeViewNode 是 DependencyObject,须在 UI 线程创建)</summary>
+        private void PopulateTree()
+        {
+            var tree = _treeView;
+            if (tree == null || _cachedDirs == null) return;
+
+            tree.RootNodes.Clear();
+
             var rootNode = new TreeViewNode
             {
-                Content = new FileItem { Name = rootName, ItemType = FileItemType.Folder },
+                Content = new FileItem { Name = _cachedRootName ?? "", ItemType = FileItemType.Folder },
                 IsExpanded = true
             };
-            foreach (var dir in dirs)
+            foreach (var dir in _cachedDirs)
                 rootNode.Children.Add(new TreeViewNode
                 {
                     Content = new FileItem { Name = dir, ItemType = FileItemType.Folder },
                     HasUnrealizedChildren = true
                 });
-            foreach (var f in files)
+            foreach (var f in _cachedFiles!)
                 rootNode.Children.Add(new TreeViewNode
                 {
                     Content = new FileItem { Name = f.Name, ItemType = f.Type, Size = f.Size }
                 });
-            if (denied)
+            if (_cachedDenied)
                 rootNode.Children.Add(new TreeViewNode
                 {
                     Content = new FileItem { Name = "(访问被拒绝)", ItemType = FileItemType.Other }
                 });
-            FileStructureTree.RootNodes.Add(rootNode);
+            tree.RootNodes.Add(rootNode);
         }
 
         /// <summary>后台线程执行:纯磁盘扫描,不创建任何 UI 对象</summary>
@@ -529,7 +632,7 @@ namespace WE_Tool
                 source = VisualTreeHelper.GetParent(source);
             if (source is not TreeViewItem treeViewItem) return;
 
-            var node = FileStructureTree.NodeFromContainer(treeViewItem);
+            var node = ((TreeView)sender).NodeFromContainer(treeViewItem);
             if (node?.Content is not FileItem fileItem || fileItem.ItemType == FileItemType.Folder)
                 return;
 
@@ -547,5 +650,45 @@ namespace WE_Tool
                 }
             }
         }
+    }
+
+    /// <summary>文件属性页虚拟化行类型</summary>
+    public enum FileInfoRowKind { Preview, Title, Section, Info, Divider, Tree }
+
+    /// <summary>
+    /// 文件属性页虚拟化行:单模板 + Kind 可见性切换(同 PropertyRowTemplate 模式);
+    /// 标签/值在 BuildFileInfoRows 时预计算(窗口快照语义)。
+    /// </summary>
+    public sealed class FileInfoRow
+    {
+        public FileInfoRowKind Kind { get; }
+        public string? Label { get; }
+        public string? SectionTitle { get; }
+        public object? Value { get; }
+        public TextWrapping ValueWrap { get; }
+
+        private FileInfoRow(FileInfoRowKind kind, string? label = null, string? sectionTitle = null, object? value = null, TextWrapping wrap = TextWrapping.NoWrap)
+        {
+            Kind = kind;
+            Label = label;
+            SectionTitle = sectionTitle;
+            Value = value;
+            ValueWrap = wrap;
+        }
+
+        public static FileInfoRow Preview(object? imageSource) => new(FileInfoRowKind.Preview, value: imageSource);
+        public static FileInfoRow Title(string? text) => new(FileInfoRowKind.Title, value: text);
+        public static FileInfoRow Section(string title) => new(FileInfoRowKind.Section, sectionTitle: title);
+        public static FileInfoRow Info(string label, string? value, bool wrap = false)
+            => new(FileInfoRowKind.Info, label: label, value: value, wrap: wrap ? TextWrapping.Wrap : TextWrapping.NoWrap);
+        public static FileInfoRow Divider() => new(FileInfoRowKind.Divider);
+        public static FileInfoRow Tree() => new(FileInfoRowKind.Tree);
+
+        public Visibility PreviewVisibility => Kind == FileInfoRowKind.Preview ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility TitleVisibility => Kind == FileInfoRowKind.Title ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility SectionVisibility => Kind == FileInfoRowKind.Section ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility InfoVisibility => Kind == FileInfoRowKind.Info ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility DividerVisibility => Kind == FileInfoRowKind.Divider ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility TreeVisibility => Kind == FileInfoRowKind.Tree ? Visibility.Visible : Visibility.Collapsed;
     }
 }

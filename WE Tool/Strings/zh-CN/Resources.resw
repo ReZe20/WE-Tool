@@ -147,6 +147,12 @@
   <data name="RightPanel_Property.Text" xml:space="preserve">
     <value>属性面板</value>
   </data>
+  <data name="RightPanel_ExpandDescription.Text" xml:space="preserve">
+    <value>展开全文</value>
+  </data>
+  <data name="RightPanel_CollapseDescription.Text" xml:space="preserve">
+    <value>收起</value>
+  </data>
   <data name="Source.Header" xml:space="preserve">
     <value>来源</value>
   </data>

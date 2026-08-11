@@ -42,8 +42,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private DateTime _lastDrillInAnimationTime;
     private CancellationTokenSource? _filterCts;
     private readonly Service.PickerService _pickerService = new();
-    /// <summary>导航离开时属性面板正打开的选中项（返回后恢复，对齐 Papers）</summary>
-    private ComponentInfo? _restorePropertiesComponent;
 
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<ComponentInfo> FilteredComponents { get; } = [];
@@ -174,7 +172,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             FilteredComponents.Add(item);
         }
-        ComponentsScrollView.ChangeView(0, 0, null);
+        ComponentsScrollView.ScrollTo(0, 0);
     }
 
     /// <summary>取当前页应显示的组件；分页关闭时返回完整列表（照抄 Papers）</summary>
@@ -335,12 +333,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        // 页面缓存模式下返回时 LoadComponents 会清空 SelectedComponent；
-        // 若属性面板正打开，记录选中项以便返回后恢复（对齐 Papers：切页回来面板保持打开且有内容）
-        if (PropertiesOverlay.Visibility == Visibility.Visible && SelectedComponent != null)
-        {
-            _restorePropertiesComponent = SelectedComponent;
-        }
     }
 
     private async Task LoadComponents()
@@ -387,27 +379,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             // 内容真变化时 ApplyFilters 内部照常 Clear + 重填。
             ApplyPaneState();
             await ApplyFilters();
-
-            // 恢复导航前打开的属性面板（对齐 Papers：切页回来面板保持打开且有内容）
-            if (_restorePropertiesComponent != null)
-            {
-                var saved = _restorePropertiesComponent;
-                _restorePropertiesComponent = null;
-
-                var match = _allComponents.FirstOrDefault(c =>
-                    c.FolderPath == saved.FolderPath);
-                if (match != null)
-                {
-                    SelectedComponent = match;
-                    PropertiesOverlay.Visibility = Visibility.Visible;
-                    _ = PopulateFileTreeAsync(match.FolderPath ?? "");
-                }
-                else
-                {
-                    // 组件已不存在（被删除/路径变化），面板随之关闭
-                    PropertiesOverlay.Visibility = Visibility.Collapsed;
-                }
-            }
 
             Log.Information("已加载 {Count} 个组件", _allComponents.Count);
         }
@@ -990,249 +961,34 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private void ComponentProperties_Click(object sender, RoutedEventArgs e)
     {
-        ShowProperties();
-    }
-
-    // ===================== 属性面板（照抄 Papers） =====================
-    private void ShowProperties()
-    {
         HideComponentContextMenu();
         if (SelectedComponent != null)
-        {
-            PropertiesOverlay.Visibility = Visibility.Visible;
-            // 等一帧让布局完成，然后启动动画
-            _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
-            {
-                // 用页面根 ActualHeight 而非 Overlay 的——overlay 刚从 Collapsed 变 Visible，
-                // 布局可能尚未运行（ActualHeight=0），会把 MaxHeight 永久钉成 0 导致面板第一次打不开
-                PropertiesPanel.MaxHeight = Math.Max(0, ActualHeight * 0.85);
-                PropertiesPanel.UpdateLayout();
-                AnimatePropertiesPanelOpen();
-                _ = PopulateFileTreeAsync(SelectedComponent!.FolderPath ?? "");
-            });
-        }
+            // 组件无 project.json 可配置属性,只显示文件属性页
+            PropertiesWindow.Open(ToWallpaperItem(SelectedComponent), showPropsPage: false);
     }
 
-    private void AnimatePropertiesPanelOpen()
-        => AnimatePanelOpen(PropertiesPanel, PropertiesOverlayBackground);
-
-    private void AnimatePropertiesPanelClose(Action onCompleted)
-        => AnimatePanelClose(PropertiesPanel, PropertiesOverlayBackground, () =>
-        {
-            PropertiesOverlay.Visibility = Visibility.Collapsed;
-            onCompleted?.Invoke();
-        });
-
-    private void PropertiesOverlayBackground_Tapped(object sender, TappedRoutedEventArgs e)
-        => AnimatePropertiesPanelClose(() => { });
-
-    private void PropertiesCloseButton_Click(object sender, RoutedEventArgs e)
-        => AnimatePropertiesPanelClose(() => { });
-
-    private static void AnimatePanelOpen(FrameworkElement panel, FrameworkElement background)
+    /// <summary>ComponentInfo → WallpaperItem 映射(组件没有的字段置空,独立属性窗口文件页显示 "-")</summary>
+    private static WallpaperItem ToWallpaperItem(ComponentInfo c) => new()
     {
-        var panelVisual = ElementCompositionPreview.GetElementVisual(panel);
-        var backgroundVisual = ElementCompositionPreview.GetElementVisual(background);
-        var compositor = panelVisual.Compositor;
-
-        panelVisual.Opacity = 0f;
-        panelVisual.Scale = new Vector3(0.85f, 0.85f, 1f);
-        panelVisual.CenterPoint = new Vector3(
-            (float)(panel.ActualWidth / 2),
-            (float)(panel.ActualHeight / 2), 0f);
-
-        var bgFadeIn = compositor.CreateScalarKeyFrameAnimation();
-        bgFadeIn.InsertKeyFrame(0f, 0f);
-        bgFadeIn.InsertKeyFrame(1f, 1f);
-        bgFadeIn.Duration = TimeSpan.FromMilliseconds(200);
-
-        var scaleAnim = compositor.CreateSpringVector3Animation();
-        scaleAnim.Target = "Scale";
-        scaleAnim.FinalValue = new Vector3(1f, 1f, 1f);
-        scaleAnim.DampingRatio = 0.6f;
-        scaleAnim.Period = TimeSpan.FromMilliseconds(50);
-
-        var opacityAnim = compositor.CreateScalarKeyFrameAnimation();
-        opacityAnim.InsertKeyFrame(0f, 0f);
-        opacityAnim.InsertKeyFrame(1f, 1f);
-        opacityAnim.Duration = TimeSpan.FromMilliseconds(200);
-
-        backgroundVisual.StartAnimation("Opacity", bgFadeIn);
-        panelVisual.StartAnimation("Scale", scaleAnim);
-        panelVisual.StartAnimation("Opacity", opacityAnim);
-    }
-
-    private static void AnimatePanelClose(FrameworkElement panel, FrameworkElement background, Action onCompleted)
-    {
-        var panelVisual = ElementCompositionPreview.GetElementVisual(panel);
-        var backgroundVisual = ElementCompositionPreview.GetElementVisual(background);
-        var compositor = panelVisual.Compositor;
-
-        var bgFadeOut = compositor.CreateScalarKeyFrameAnimation();
-        bgFadeOut.InsertKeyFrame(0f, 1f);
-        bgFadeOut.InsertKeyFrame(1f, 0f);
-        bgFadeOut.Duration = TimeSpan.FromMilliseconds(150);
-
-        var scaleAnim = compositor.CreateScalarKeyFrameAnimation();
-        scaleAnim.Target = "Scale.X";
-        scaleAnim.InsertKeyFrame(0f, 1f);
-        scaleAnim.InsertKeyFrame(1f, 0.85f);
-        scaleAnim.Duration = TimeSpan.FromMilliseconds(150);
-
-        var opacityAnim = compositor.CreateScalarKeyFrameAnimation();
-        opacityAnim.InsertKeyFrame(0f, 1f);
-        opacityAnim.InsertKeyFrame(1f, 0f);
-        opacityAnim.Duration = TimeSpan.FromMilliseconds(150);
-
-        var batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (s, e) => onCompleted?.Invoke();
-
-        backgroundVisual.StartAnimation("Opacity", bgFadeOut);
-        panelVisual.StartAnimation("Scale.X", scaleAnim);
-        panelVisual.StartAnimation("Scale.Y", scaleAnim);
-        panelVisual.StartAnimation("Opacity", opacityAnim);
-
-        batch.End();
-    }
-
-    // ===================== 文件结构树（照抄 Papers） =====================
-    private async Task PopulateFileTreeAsync(string folderPath)
-    {
-        FileStructureTree.RootNodes.Clear();
-
-        if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
-            return;
-
-        var rootName = Path.GetFileName(folderPath);
-        var rootNode = new TreeViewNode
+        Title = c.Title,
+        Preview = c.Preview,
+        Type = c.ComponentType switch
         {
-            Content = new FileItem { Name = rootName, ItemType = FileItemType.Folder },
-            IsExpanded = true
-        };
-
-        await PopulateTreeNodeChildrenAsync(rootNode, folderPath);
-        FileStructureTree.RootNodes.Add(rootNode);
-    }
-
-    private async Task PopulateTreeNodeChildrenAsync(TreeViewNode node, string directoryPath)
-    {
-        node.HasUnrealizedChildren = false;
-
-        try
-        {
-            // 添加子目录（延迟加载）
-            foreach (var subDir in Directory.EnumerateDirectories(directoryPath))
-            {
-                var dirName = Path.GetFileName(subDir);
-                var dirNode = new TreeViewNode
-                {
-                    Content = new FileItem { Name = dirName, ItemType = FileItemType.Folder },
-                    HasUnrealizedChildren = true
-                };
-                node.Children.Add(dirNode);
-            }
-
-            // 添加文件（含大小）
-            foreach (var file in Directory.EnumerateFiles(directoryPath))
-            {
-                var fileInfo = new FileInfo(file);
-                var ext = Path.GetExtension(file).ToLowerInvariant();
-                var type = ext switch
-                {
-                    ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp" => FileItemType.Image,
-                    ".mp4" or ".webm" or ".avi" or ".mov" or ".mkv" => FileItemType.Video,
-                    ".json" or ".txt" or ".xml" or ".html" or ".htm" or ".css" or ".js" or ".md" => FileItemType.Document,
-                    _ => FileItemType.Other
-                };
-                var fileNode = new TreeViewNode
-                {
-                    Content = new FileItem { Name = fileInfo.Name, ItemType = type, Size = fileInfo.Length }
-                };
-                node.Children.Add(fileNode);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, $"填充 TreeView 节点时异常: {directoryPath}");
-            node.Children.Add(new TreeViewNode
-            {
-                Content = new FileItem { Name = "(访问被拒绝)", ItemType = FileItemType.Other }
-            });
-        }
-
-        await Task.CompletedTask;
-    }
-
-    private async void FileStructureTree_Expanding(TreeView sender, TreeViewExpandingEventArgs args)
-    {
-        var node = args.Node;
-
-        // 查找对应的文件夹路径
-        if (node.Content is FileItem fileItem && fileItem.ItemType == FileItemType.Folder && node.Parent != null)
-        {
-            var path = GetNodePath(node);
-            if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
-            {
-                await PopulateTreeNodeChildrenAsync(node, path);
-            }
-        }
-    }
-
-    private string? GetNodePath(TreeViewNode node)
-    {
-        var segments = new List<string>();
-        var current = node;
-
-        // 从叶子节点向上收集路径段
-        while (current != null)
-        {
-            if (current.Content is FileItem fi && !string.IsNullOrEmpty(fi.Name))
-            {
-                segments.Insert(0, fi.Name);
-            }
-            current = current.Parent;
-        }
-
-        if (segments.Count == 0) return null;
-
-        // 根节点 = 组件文件夹名，需要找到对应的完整路径
-        var root = segments[0];
-        var basePath = SelectedComponent?.FolderPath;
-        if (string.IsNullOrEmpty(basePath) || Path.GetFileName(basePath) != root)
-            return null;
-
-        var relative = segments.Count > 1
-            ? string.Join(Path.DirectorySeparatorChar.ToString(), segments.Skip(1))
-            : "";
-        return Path.Combine(basePath, relative);
-    }
-
-    private void FileStructureTree_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-    {
-        // 找到双击的 TreeViewItem
-        var source = e.OriginalSource as DependencyObject;
-        while (source != null && source is not TreeViewItem)
-            source = VisualTreeHelper.GetParent(source);
-        if (source is not TreeViewItem treeViewItem) return;
-
-        var node = FileStructureTree.NodeFromContainer(treeViewItem);
-        if (node?.Content is not FileItem fileItem || fileItem.ItemType == FileItemType.Folder)
-            return;
-
-        // 构造完整文件路径并打开
-        var fullPath = GetNodePath(node);
-        if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, $"打开文件失败: {fullPath}");
-            }
-        }
-    }
+            ComponentType.Layer => "图层",
+            ComponentType.Script => "脚本",
+            ComponentType.Effect => "特效",
+            _ => "未知"
+        },
+        ContentRating = c.ContentRating,
+        Tags = c.Tags,
+        Description = c.Description,
+        FileSize = c.FileSize,
+        FolderPath = c.FolderPath,
+        WorkshopID = c.WorkshopID,
+        CreationTime = c.CreationTime,
+        UpdateTime = c.CreationTime,
+        AcfUpdateTime = c.AcfUpdateTime
+    };
 
     private void OnTagDisplayChanged(object sender, RoutedEventArgs e)
     {
@@ -2096,7 +1852,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
             visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
 
-            // 缩放回 1.0 (250px)
+            // 缩放回 1.0 (280px)
             var scaleReturnAnim = visual.Compositor.CreateSpringVector3Animation();
             scaleReturnAnim.Target = "Scale";
             scaleReturnAnim.FinalValue = new Vector3(1.0f, 1.0f, 1.0f);

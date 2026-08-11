@@ -9,17 +9,17 @@
     mc:Ignorable="d"
     xmlns:winuiex="using:WinUIEx"
     Title="WE Tool"
-    MinWidth="800"
+    MinWidth="900"
     MinHeight="600">
     <winuiex:WindowEx.SystemBackdrop>
         <DesktopAcrylicBackdrop/>
     </winuiex:WindowEx.SystemBackdrop>
     <Grid Background="Transparent" >
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="47"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid Height="40" VerticalAlignment="Top" IsHitTestVisible="False">
+        <Grid VerticalAlignment="Center" IsHitTestVisible="False">
             <TextBlock Text="WE Tool" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
         <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="NvSample_ItemInvoked" IsSettingsVisible="True" IsBackButtonVisible="Collapsed" IsPaneOpen="False">

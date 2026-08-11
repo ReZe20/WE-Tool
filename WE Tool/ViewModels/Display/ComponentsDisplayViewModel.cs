@@ -22,8 +22,8 @@ public partial class ComponentsDisplayViewModel : ObservableObject
         ComponentListMinWidth = value switch
         {
             0 => 180,
-            1 => 240,
-            2 => 300,
+            1 => 210,
+            2 => 240,
             _ => 180
         };
         OnPropertyChanged(nameof(SmallIconItem));

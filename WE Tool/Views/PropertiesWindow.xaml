@@ -124,6 +124,87 @@
                 </Grid>
             </Grid>
         </DataTemplate>
+        <!-- 文件属性页虚拟化行模板:预览/标题/节标题/信息行/分隔线/文件树 单模板按行类型 Visibility 切换
+             (同 PropertyRowTemplate 模式);标签/值在 code-behind 预计算(快照语义) -->
+        <DataTemplate x:Key="FileInfoRowTemplate">
+            <Grid Margin="24,0,24,0">
+                <!-- 预览图 -->
+                <Border Visibility="{Binding PreviewVisibility, Mode=OneWay}"
+                        Width="200" Height="200" HorizontalAlignment="Center"
+                        Margin="0,20,0,0"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4">
+                    <Image Source="{Binding Value}" Stretch="Uniform"/>
+                </Border>
+                <!-- 壁纸标题 -->
+                <TextBlock Visibility="{Binding TitleVisibility, Mode=OneWay}" Text="{Binding Value}"
+                           Style="{StaticResource SubtitleTextBlockStyle}" FontSize="28" FontWeight="SemiBold"
+                           Padding="0,20,0,4" TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True"/>
+                <!-- 节标题 -->
+                <TextBlock Visibility="{Binding SectionVisibility, Mode=OneWay}" Text="{Binding SectionTitle}"
+                           Style="{StaticResource SubtitleTextBlockStyle}" FontWeight="SemiBold"
+                           Margin="0,8,0,8" Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
+                <!-- 信息行:左标签(100) + 右值 -->
+                <Grid Visibility="{Binding InfoVisibility, Mode=OneWay}" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding Label}" Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Value}" Style="{StaticResource BodyTextBlockStyle}"
+                               TextWrapping="{Binding ValueWrap}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
+                </Grid>
+                <!-- 分隔线 -->
+                <Rectangle Visibility="{Binding DividerVisibility, Mode=OneWay}" Height="1"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
+                <!-- 文件结构树:虚拟化回收后重新实化时由 Loaded 从缓存重建根节点 -->
+                <TreeView Visibility="{Binding TreeVisibility, Mode=OneWay}"
+                          MaxHeight="200" Margin="0,0,0,20"
+                          Loaded="FileStructureTree_Loaded"
+                          Expanding="FileStructureTree_Expanding"
+                          DoubleTapped="FileStructureTree_DoubleTapped"
+                          ItemTemplateSelector="{StaticResource FileTreeTemplateSelector}"
+                          CanDragItems="False" CanReorderItems="False" AllowDrop="False"/>
+            </Grid>
+        </DataTemplate>
+
+        <!-- TreeView 文件结构模板(自 ScrollViewer.Resources 移入:模板内 StaticResource 以定义处解析) -->
+        <DataTemplate x:Key="FileTreeFolderTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE8B7;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FileTreeImageTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xEB9F;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FileTreeVideoTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE8B2;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FileTreeDocumentTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE8A5;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FileTreeOtherTemplate">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE7C3;" FontSize="14"/>
+                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
+        <models:FileTreeTemplateSelector x:Key="FileTreeTemplateSelector"
+                                         FolderTemplate="{StaticResource FileTreeFolderTemplate}"
+                                         ImageTemplate="{StaticResource FileTreeImageTemplate}"
+                                         VideoTemplate="{StaticResource FileTreeVideoTemplate}"
+                                         DocumentTemplate="{StaticResource FileTreeDocumentTemplate}"
+                                         OtherTemplate="{StaticResource FileTreeOtherTemplate}"/>
         </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="48"/>
@@ -149,7 +230,7 @@
                         <FontIcon Glyph="&#xE8B7;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="PropertiesWindow_WallpaperProps" Tag="props">
+                <NavigationViewItem x:Name="WallpaperPropsNavItem" x:Uid="PropertiesWindow_WallpaperProps" Tag="props">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE90F;"/>
                     </NavigationViewItem.Icon>
@@ -159,252 +240,10 @@
                 <Grid>
                     <!-- ========== 文件属性页 ========== -->
                     <ScrollViewer x:Name="ContentRoot" Visibility="Visible" VerticalScrollBarVisibility="Auto">
-                        <ScrollViewer.Resources>
-                            <converters:FileSizeToString x:Key="FileSizeToString"/>
-                            <converters:TypeToDisplay x:Key="TypeToDisplay"/>
-                            <converters:SourceToDisplay x:Key="SourceToDisplay"/>
-                            <converters:RatingToDisplay x:Key="RatingToDisplay"/>
-                            <converters:TagToDisplay x:Key="TagToDisplay"/>
-                            <converters:DescriptionToDisplay x:Key="DescriptionToDisplay"/>
-                            <converters:DateTimeToString x:Key="DateTimeToString"/>
-
-                            <!-- TreeView 文件结构模板 -->
-                            <DataTemplate x:Key="FileTreeFolderTemplate">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE8B7;" FontSize="14"/>
-                                    <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate x:Key="FileTreeImageTemplate">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xEB9F;" FontSize="14"/>
-                                    <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate x:Key="FileTreeVideoTemplate">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE8B2;" FontSize="14"/>
-                                    <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate x:Key="FileTreeDocumentTemplate">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE8A5;" FontSize="14"/>
-                                    <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate x:Key="FileTreeOtherTemplate">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE7C3;" FontSize="14"/>
-                                    <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                            <models:FileTreeTemplateSelector x:Key="FileTreeTemplateSelector"
-                                                             FolderTemplate="{StaticResource FileTreeFolderTemplate}"
-                                                             ImageTemplate="{StaticResource FileTreeImageTemplate}"
-                                                             VideoTemplate="{StaticResource FileTreeVideoTemplate}"
-                                                             DocumentTemplate="{StaticResource FileTreeDocumentTemplate}"
-                                                             OtherTemplate="{StaticResource FileTreeOtherTemplate}"/>
-                        </ScrollViewer.Resources>
-                        <StackPanel Padding="24,20,24,16" Spacing="0">
-                            <!-- 壁纸预览图 -->
-                            <Border Width="200" Height="200" HorizontalAlignment="Center"
-                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4">
-                                <Image Source="{Binding Preview, Mode=OneWay, FallbackValue=null}" Stretch="Uniform"/>
-                            </Border>
-                            <!-- 壁纸标题 -->
-                            <TextBlock Text="{Binding Title, Mode=OneWay, FallbackValue=''}"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontSize="28"
-                                       FontWeight="SemiBold"
-                                       Padding="0,20,0,4"
-                                       TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True"/>
-
-                            <!-- 基本信息 -->
-                            <TextBlock x:Uid="PropertiesPanel_BasicInfo"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,8,0,8"
-                                       Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                            <Grid ColumnSpacing="12">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- Type -->
-                                <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="PropertiesPanel_TypeLabel"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1"
-                                           Text="{Binding Type, Mode=OneWay, Converter={StaticResource TypeToDisplay}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- Source -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="PropertiesPanel_SourceLabel"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1"
-                                           Text="{Binding Source, Mode=OneWay, Converter={StaticResource SourceToDisplay}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- ContentRating -->
-                                <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="PropertiesPanel_RatingLabel"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1"
-                                           Text="{Binding ContentRating, Mode=OneWay, Converter={StaticResource RatingToDisplay}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- Tags -->
-                                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="PropertiesPanel_TagLabel"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1"
-                                           Text="{Binding Tags, Mode=OneWay, Converter={StaticResource TagToDisplay}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- Description -->
-                                <TextBlock Grid.Row="4" Grid.Column="0"
-                                           x:Uid="Description"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="4" Grid.Column="1"
-                                           Text="{Binding Description, Mode=OneWay, Converter={StaticResource DescriptionToDisplay}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           TextWrapping="Wrap"
-                                           TextTrimming="None"
-                                           Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                            </Grid>
-
-                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
-
-                            <!-- 文件信息 -->
-                            <TextBlock x:Uid="PropertiesPanel_FileInfo"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,8,0,8"
-                                       Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                            <Grid ColumnSpacing="12">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- FileSize -->
-                                <TextBlock Grid.Row="0" Grid.Column="0"
-                                           x:Uid="FileSize"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1"
-                                           Text="{Binding FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- AcfSize (壁纸大小) -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="AcfSize"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1"
-                                           Text="{Binding AcfSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- FolderPath -->
-                                <TextBlock Grid.Row="2" Grid.Column="0"
-                                           x:Uid="FolderPath"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1"
-                                           Text="{Binding FolderPath, Mode=OneWay, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- WorkshopID -->
-                                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="WorkshopID"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1"
-                                           Text="{Binding WorkshopID, Mode=OneWay, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           IsTextSelectionEnabled="True"
-                                           Margin="0,4,0,4"/>
-                                <!-- Dependency -->
-                                <TextBlock Grid.Row="4" Grid.Column="0" x:Uid="Dependency"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="4" Grid.Column="1"
-                                           Text="{Binding Dependency, Mode=OneWay, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                            </Grid>
-
-                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
-
-                            <!-- 时间信息 -->
-                            <TextBlock x:Uid="PropertiesPanel_TimeInfo"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,8,0,8"
-                                       Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                            <Grid ColumnSpacing="12">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- CreationTime -->
-                                <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="CreationTime"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1"
-                                           Text="{Binding CreationTime, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- UpdateTime -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="UpdateTime"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1"
-                                           Text="{Binding UpdateTime, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <!-- AcfUpdateTime -->
-                                <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="AcfUpdateTime"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1"
-                                           Text="{Binding AcfUpdateTime, Mode=OneWay, Converter={StaticResource DateTimeToString}, FallbackValue='-'}"
-                                           Style="{StaticResource BodyTextBlockStyle}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                            </Grid>
-
-                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
-
-                            <TextBlock x:Uid="FileStructure"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       FontWeight="SemiBold"
-                                       Margin="0,8,0,6"
-                                       Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
-                            <TreeView x:Name="FileStructureTree"
-                                      MaxHeight="200"
-                                      Margin="0,0,0,4"
-                                      Expanding="FileStructureTree_Expanding"
-                                      DoubleTapped="FileStructureTree_DoubleTapped"
-                                      ItemTemplateSelector="{StaticResource FileTreeTemplateSelector}"
-                                      CanDragItems="False" CanReorderItems="False" AllowDrop="False"/>
-                        </StackPanel>
+                        <!-- 文件属性页虚拟化列表:ItemsRepeater 由 code-behind 创建(XamlCompiler 对窗口内
+                             ItemsRepeater 标签稳定 Pass1 崩溃,同壁纸属性页 PropertyItemsHost 模式);
+                             直接挂 ScrollViewer.Content 获得有界视口,StackLayout 才真正虚拟化 -->
                     </ScrollViewer>
-
                     <!-- ========== 壁纸属性页(DataContext = 窗口实例,绑定窗口的 Properties 等) ========== -->
                     <Grid x:Name="WallpaperPropsRoot" Visibility="Collapsed">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">

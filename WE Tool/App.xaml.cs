@@ -83,6 +83,9 @@ namespace WE_Tool
             // 保存完整扫描链路任务，页面可等待它确保扫描已开始
             InitialScanTask = ScanWallpaperWhenStart();
 
+            // 系统通知(AppNotification):非打包应用注册 AUMID + 通知平台(失败仅记日志)
+            NotificationService.Initialize();
+
             _window.Activate();
             LoadTheme();
         }
