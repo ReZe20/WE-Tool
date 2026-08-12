@@ -35,35 +35,6 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial bool IsWallpaperEnterAnimationEnabled { get; set; }
 
-        [ObservableProperty]
-        public partial bool IsAnnotatedScrollBarEnabled { get; set; }
-
-        partial void OnIsAnnotatedScrollBarEnabledChanged(bool value)
-        {
-            OnPropertyChanged(nameof(PapersScrollViewBarVisibility));
-            OnPropertyChanged(nameof(PapersScrollViewMargin));
-        }
-
-        public ScrollingScrollBarVisibility PapersScrollViewBarVisibility
-        {
-            get => IsAnnotatedScrollBarEnabled
-                    ? ScrollingScrollBarVisibility.Hidden
-                    : ScrollingScrollBarVisibility.Visible;
-            set
-            {
-                SetProperty(ref field, value);
-            }
-        }
-
-        public Microsoft.UI.Xaml.Thickness PapersScrollViewMargin
-        {
-            get => IsAnnotatedScrollBarEnabled ?
-                new Microsoft.UI.Xaml.Thickness(4, 0, 44, 0) :
-                new Microsoft.UI.Xaml.Thickness(4, 0, 4, 0);
-
-            set => SetProperty(ref field, value);
-        }
-
         // === 分页 ===
         // PaginationMode: 0=不分页, 1=每页30, 2=每页50, 3=每页70, 4=每页90
         [ObservableProperty]

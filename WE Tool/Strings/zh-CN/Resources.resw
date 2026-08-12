@@ -497,11 +497,7 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>大图标</value>
-  </data>
-  <data name="AppBarButton_IsAnnotatedScrollBarEnabled.Text" xml:space="preserve">
-    <value>带注释滚动条</value>
-  </data>
-  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>壁纸图标大小</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">

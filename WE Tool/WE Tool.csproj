@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
     <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
@@ -70,37 +71,29 @@
   </ItemGroup>
   <!-- SteamworksBridge 部署:应用对桥接无编译期引用(仅进程调用),不能 ProjectReference
        (自包含发布会报 NETSDK1150);构建/发布时构建桥接并把输出拷进目标目录 -->
-  <Target Name="CopySteamworksBridge" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher"
-          Condition="Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj')">
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj"
-             Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
+  <Target Name="CopySteamworksBridge" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher" Condition="Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj')">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
     <ItemGroup>
-      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\net8.0\**\*"
-                    Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\net8.0\*.pdb" />
+      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\net8.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\net8.0\*.pdb" />
     </ItemGroup>
     <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true"
-          Condition="'$(PublishDir)' != ''" />
+    <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
   </Target>
   <!-- 从 external/repkg_Re 仓库 csproj 读取目标后端版本,构建时生成 RepkgVersion.g.cs 常量供运行时校验。
        不依赖 SDK 的 AssemblyMetadata 管线(其特性转换发生在 CreateGeneratedAssemblyInfoInputsCacheFile,
        顺序敏感且增量缓存易跳过);直接生成源码文件最稳 -->
-  <Target Name="InjectRepkgVersion" BeforeTargets="MarkupCompilePass1;CoreCompile"
-          Condition="Exists('$(MSBuildThisFileDirectory)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj')">
+  <Target Name="InjectRepkgVersion" BeforeTargets="MarkupCompilePass1;CoreCompile" Condition="Exists('$(MSBuildThisFileDirectory)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj')">
     <XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj" Query="/Project/PropertyGroup/Version/text()">
       <Output TaskParameter="Result" PropertyName="RepkgVersion" />
     </XmlPeek>
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)RepkgVersion.g.cs" />
     </ItemGroup>
-    <WriteLinesToFile File="$(IntermediateOutputPath)RepkgVersion.g.cs"
-                      Lines="namespace WE_Tool { internal static class RepkgVersionInfo { public const string Required = &quot;$(RepkgVersion)&quot;%3B } }"
-                      Overwrite="true" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)RepkgVersion.g.cs" Lines="namespace WE_Tool { internal static class RepkgVersionInfo { public const string Required = &quot;$(RepkgVersion)&quot;%3B } }" Overwrite="true" />
   </Target>
   <!-- 翻译完成度:构建时统计各语言 resw 填充比例,生成 TranslationStatus.g.cs 常量
        (基准 = zh-CN 完整键集;zh-CN 恒为 100%) -->
-  <UsingTask TaskName="ComputeTranslationStatus" TaskFactory="RoslynCodeTaskFactory"
-             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="ComputeTranslationStatus" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <StringsDir ParameterType="System.String" Required="true" />
       <OutputFile ParameterType="System.String" Required="true" />
@@ -162,8 +155,7 @@
   </UsingTask>
 
   <Target Name="InjectTranslationStatus" BeforeTargets="MarkupCompilePass1;CoreCompile">
-    <ComputeTranslationStatus StringsDir="$(MSBuildThisFileDirectory)Strings"
-                              OutputFile="$(IntermediateOutputPath)TranslationStatus.g.cs" />
+    <ComputeTranslationStatus StringsDir="$(MSBuildThisFileDirectory)Strings" OutputFile="$(IntermediateOutputPath)TranslationStatus.g.cs" />
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)TranslationStatus.g.cs" />
     </ItemGroup>

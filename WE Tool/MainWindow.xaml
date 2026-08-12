@@ -9,7 +9,7 @@
     mc:Ignorable="d"
     xmlns:winuiex="using:WinUIEx"
     Title="WE Tool"
-    MinWidth="900"
+    MinWidth="700"
     MinHeight="600">
     <winuiex:WindowEx.SystemBackdrop>
         <DesktopAcrylicBackdrop/>

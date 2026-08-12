@@ -479,11 +479,7 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>Icone grandi</value>
-  </data>
-  <data name="AppBarButton_IsAnnotatedScrollBarEnabled.Text" xml:space="preserve">
-    <value>Barra di scorrimento annotata</value>
-  </data>
-  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>Dimensione icona sfondo</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">

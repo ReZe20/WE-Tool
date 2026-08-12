@@ -1,3 +1,4 @@
+using CommunityToolkit.WinUI.Animations;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -6,6 +7,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Serilog;
 using System;
@@ -172,7 +174,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             FilteredComponents.Add(item);
         }
-        ComponentsScrollView.ScrollTo(0, 0);
+        ScrollVisibleComponentGridToTop();
     }
 
     /// <summary>取当前页应显示的组件；分页关闭时返回完整列表（照抄 Papers）</summary>
@@ -183,6 +185,68 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (size <= 0) size = 30;
         int skip = (CurrentPage - 1) * size;
         return source.Skip(skip).Take(size).ToList();
+    }
+
+    // ============= GridView 列表辅助(自适应列宽/回顶,照抄 Papers) =============
+
+    /// <summary>三个组件 GridView(图标/内容/列表模式)</summary>
+    private GridView[] AllComponentGridViews => new[] { ComponentsGridView, ComponentsContentGridView, ComponentsListGridView };
+
+    /// <summary>窗口尺寸变化:实时重算 ItemWidth</summary>
+    private void ComponentGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+        => UpdateAllComponentGridItemWidths();
+
+    /// <summary>按各模式档位重算 ItemWidth(照抄 Papers:ItemWidth = 槽位步长,容器 = ItemWidth - 10,留 2px 余量)</summary>
+    private void UpdateAllComponentGridItemWidths()
+    {
+        UpdateGridItemWidth(ComponentsGridView, ViewModel.ComponentsDisplayVM.ComponentListMinWidth, 10);
+        UpdateGridItemWidth(ComponentsListGridView, 400, 10);
+        UpdateGridItemWidth(ComponentsContentGridView, 0, 10); // 内容模式单列
+    }
+
+    /// <param name="itemMarginTotal">容器左右 Margin 总和(判断列数用)</param>
+    private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
+    {
+        if (gridView == null || gridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
+        double available = gridView.ActualWidth;
+        if (available <= 0) return;
+        if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10
+        {
+            wrap.ItemWidth = available;
+            return;
+        }
+        int cols = Math.Max(1, (int)(available / (minItemWidth + itemMarginTotal)));
+        // ItemsWrapGrid 语义(已实测):ItemWidth = 槽位步长(含容器 Margin),容器实际宽 = ItemWidth - 10;
+        // 换行判断为严格比较,ItemWidth = available/cols 会因浮点误差恰好放不下最后一列(空一列),
+        // 故留 2px/列余量;卡片 = available/cols - 12,行尾余量 cols×2px 不可见
+        wrap.ItemWidth = available / cols - 2;
+    }
+
+    /// <summary>当前可见的 GridView(滚动回顶用)</summary>
+    private GridView? GetVisibleComponentGridView()
+    {
+        foreach (var gv in AllComponentGridViews)
+            if (gv.Visibility == Visibility.Visible)
+                return gv;
+        return null;
+    }
+
+    /// <summary>可见 GridView 滚动回顶(分页/刷新后)</summary>
+    private void ScrollVisibleComponentGridToTop()
+    {
+        if (GetVisibleComponentGridView() is GridView gv && FindScrollViewer(gv) is ScrollViewer sv)
+            sv.ChangeView(0, 0, null);
+    }
+
+    private static ScrollViewer? FindScrollViewer(DependencyObject root)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is ScrollViewer sv) return sv;
+            if (FindScrollViewer(child) is ScrollViewer found) return found;
+        }
+        return null;
     }
 
     private ComponentInfo? _selectedComponent;
@@ -279,6 +343,20 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             {
                 ApplyPaneState();
             }
+            else if (e.PropertyName == nameof(ComponentsDisplayViewModel.ComponentListMinWidth))
+            {
+                // 小/中/大档位变化:列宽公式随档位值联动重算(照抄 Papers)
+                UpdateAllComponentGridItemWidths();
+            }
+        };
+
+        // 首次布局后重算列宽 + 挂补位移动动画(照抄 Papers)
+        this.Loaded += (s, e) =>
+        {
+            UpdateAllComponentGridItemWidths();
+            var reorderDuration = TimeSpan.FromMilliseconds(100);
+            foreach (var gv in AllComponentGridViews)
+                ItemsReorderAnimation.SetDuration(gv, reorderDuration);
         };
 
         // 多选集合变化时刷新计数、堆叠图与面板（批量操作时抑制，避免逐项触发）
@@ -553,13 +631,14 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             // 未扫描到任何组件：显示引导并结束（对齐 Papers 独立分支）
             if (_allComponents.Count == 0)
             {
-                NoScanResultTip.Visibility = Visibility.Visible;
-                NoResultTip.Visibility = Visibility.Collapsed;
+                ShowTip(NoScanResultTip, true);
+                ShowTip(NoResultTip, false);
                 return;
             }
 
             // === 分页 ===
             bool listUnchanged = IsComponentListEqual(_filteredComponents, filteredResult);
+            int pageBefore = CurrentPage; // 记录翻页判断基准
             _filteredComponents = filteredResult;
 
             // 筛选/排序变化后回到第一页
@@ -573,22 +652,100 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             // 结果未变化时跳过，避免 Clear + 逐项 Add 的布局风暴（照抄 Papers.IsListEqual）
             if (listUnchanged && IsComponentListEqual(FilteredComponents, pageItems)) return;
 
-            FilteredComponents.Clear();
+            // 翻页(页码变化)整页替换:Reset 无动画;同页筛选:增量 diff,动画只作用于真实变化的项(照抄 Papers)
+            bool pageChanged = CurrentPage != pageBefore;
 
             // 筛选无结果时显示提示（未扫描到组件的引导已在上方独立分支处理）
-            NoResultTip.Visibility = filteredResult.Count == 0
-                ? Visibility.Visible : Visibility.Collapsed;
+            ShowTip(NoResultTip, filteredResult.Count == 0);
 
-            // 填充当前页（分页模式每页最多 90 项，无需分批；照抄 Papers）
+            // 填充当前页(分页模式每页最多 90 项,无需分批;照抄 Papers)
             var uiQueue = DispatcherQueue;
             uiQueue.TryEnqueue(() =>
             {
                 if (token.IsCancellationRequested) return;
-                foreach (var item in pageItems)
-                    FilteredComponents.Add(item);
+                if (pageChanged)
+                {
+                    FilteredComponents.Clear();
+                    foreach (var item in pageItems)
+                        FilteredComponents.Add(item);
+                }
+                else
+                {
+                    ApplyComponentListDiff(FilteredComponents, pageItems);
+                }
             });
         }
         catch (OperationCanceledException) { }
+    }
+
+    /// <summary>增量同步列表:删除/插入/移动只作用于真实变化的项,触发 GridView 补位动画(照抄 Papers.ApplyListDiff)</summary>
+    private static void ApplyComponentListDiff(ObservableCollection<ComponentInfo> target, IReadOnlyList<ComponentInfo> desired)
+    {
+        // 1) 删除:目标有、期望没有的项(移除后剩余项自动补位动画)
+        var desiredSet = new HashSet<ComponentInfo>(desired);
+        for (int i = target.Count - 1; i >= 0; i--)
+            if (!desiredSet.Contains(target[i]))
+                target.RemoveAt(i);
+
+        // 2) 重排 + 新增:按期望顺序双指针同步(删除后 target 是 desired 的子序列;Move 触发容器平移动画,Insert 为新增)
+        int targetIdx = 0;
+        for (int i = 0; i < desired.Count; i++)
+        {
+            var item = desired[i];
+            if (targetIdx < target.Count && ReferenceEquals(target[targetIdx], item))
+            {
+                targetIdx++;
+                continue;
+            }
+            int found = -1;
+            for (int j = targetIdx + 1; j < target.Count; j++)
+            {
+                if (ReferenceEquals(target[j], item)) { found = j; break; }
+            }
+            if (found >= 0)
+            {
+                target.Move(found, targetIdx);
+                targetIdx++;
+            }
+            else
+            {
+                target.Insert(targetIdx, item);
+                targetIdx++;
+            }
+        }
+    }
+
+    /// <summary>淡入淡出切换空状态提示(120ms,匹配列表动画节奏;照抄 Papers.ShowTip)</summary>
+    private static void ShowTip(FrameworkElement tip, bool show)
+    {
+        if (show)
+        {
+            if (tip.Visibility == Visibility.Visible) return;
+            tip.Opacity = 0;
+            tip.Visibility = Visibility.Visible;
+            AnimateTipOpacity(tip, 1, null);
+        }
+        else
+        {
+            if (tip.Visibility == Visibility.Collapsed) return;
+            AnimateTipOpacity(tip, 0, () => tip.Visibility = Visibility.Collapsed);
+        }
+    }
+
+    private static void AnimateTipOpacity(FrameworkElement tip, double to, Action? onCompleted)
+    {
+        var animation = new DoubleAnimation
+        {
+            To = to,
+            Duration = TimeSpan.FromMilliseconds(120),
+        };
+        Storyboard.SetTarget(animation, tip);
+        Storyboard.SetTargetProperty(animation, "Opacity");
+        var storyboard = new Storyboard();
+        storyboard.Children.Add(animation);
+        if (onCompleted != null)
+            storyboard.Completed += (s, e) => onCompleted();
+        storyboard.Begin();
     }
 
     /// <summary>比较当前结果与新一轮筛选结果是否一致（照抄 Papers.IsListEqual）</summary>
@@ -993,12 +1150,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void OnTagDisplayChanged(object sender, RoutedEventArgs e)
     {
         // 切换标签显示模式后重置 ItemsSource，强制重新生成项以刷新右上角角标
-        foreach (var repeater in new ItemsRepeater[] { ComponentsRepeater, ComponentsContentRepeater, ComponentsListRepeater })
-        {
-            if (repeater == null) continue;
-            repeater.ItemsSource = null;
-            repeater.ItemsSource = FilteredComponents;
-        }
+        // 角标只在图标模式模板(照抄 Papers:只重置图标 GridView)
+        ComponentsGridView.ItemsSource = null;
+        ComponentsGridView.ItemsSource = FilteredComponents;
     }
 
     // ===================== 键盘快捷键（对齐 Papers） =====================
@@ -1642,33 +1796,17 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private void UpdateAllVisibleCheckBoxes()
     {
-        foreach (var repeater in new ItemsRepeater[] { ComponentsRepeater, ComponentsContentRepeater, ComponentsListRepeater })
+        foreach (var gv in AllComponentGridViews)
         {
-            if (repeater == null || repeater.ItemsSourceView == null) continue;
-            for (int i = 0; i < repeater.ItemsSourceView.Count; i++)
+            if (gv == null) continue;
+            for (int i = 0; i < gv.Items.Count; i++)
             {
-                var element = repeater.TryGetElement(i) as FrameworkElement;
-                if (element == null) continue;
-                var grid = element as Grid ?? FindChildGrid(element);
-                if (grid?.DataContext is ComponentInfo item)
+                if (gv.ContainerFromIndex(i) is not GridViewItem container) continue;
+                // 容器 Content = DataTemplate 根(Grid,DataContext = ComponentInfo)
+                if (container.Content is Grid grid && grid.DataContext is ComponentInfo item)
                     UpdateItemCheckBoxOpacity(grid, item);
             }
         }
-    }
-
-    private static Grid? FindChildGrid(FrameworkElement element)
-    {
-        if (element is Grid g) return g;
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++)
-        {
-            var child = VisualTreeHelper.GetChild(element, i) as FrameworkElement;
-            if (child != null)
-            {
-                var result = FindChildGrid(child);
-                if (result != null) return result;
-            }
-        }
-        return null;
     }
 
     private void UpdateMultiSelectCount()

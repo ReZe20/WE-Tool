@@ -479,11 +479,7 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>大アイコン</value>
-  </data>
-  <data name="AppBarButton_IsAnnotatedScrollBarEnabled.Text" xml:space="preserve">
-    <value>注釈付きスクロールバー</value>
-  </data>
-  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>壁紙アイコンサイズ</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">

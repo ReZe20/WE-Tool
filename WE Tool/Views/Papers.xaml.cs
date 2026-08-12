@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.Animations;
 using Microsoft.UI.Composition;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Serilog;
@@ -532,10 +533,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 // 分页开关/每页数量变化：立即刷新翻页栏状态（ApplyFilters 有延迟，先同步一次）
                 NotifyPagerStateChanged();
             }
-            if (e.PropertyName == nameof(WallpaperDisplayViewModel.IsAnnotatedScrollBarEnabled))
+            if (e.PropertyName == nameof(WallpaperDisplayViewModel.WallpaperListMinWidth))
             {
-                // 详情滚动条开关:同步 GridView 内部滚动条可见性
-                SyncGridViewScrollBarVisibility();
+                // 小/中/大档位变化:列宽公式随档位值联动重算(切换档位立即生效,不等窗口 resize)
+                UpdateAllGridItemWidths();
                 return;
             }
             _ = ApplyFilters();
@@ -552,9 +553,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 await RefreshWallpaperList();
             }
 
-            // GridView 首次布局后同步内部滚动条可见性 + 自适应列宽
-            SyncGridViewScrollBarVisibility();
+            // GridView 首次布局后重算自适应列宽
             UpdateAllGridItemWidths();
+
+            // 补位移动动画(Composition 隐式 Offset):列表项重排时平滑滑到新位置
+            var reorderDuration = TimeSpan.FromMilliseconds(100);
+            foreach (var gv in AllWallpaperGridViews)
+                ItemsReorderAnimation.SetDuration(gv, reorderDuration);
         };
 
         OpenSelectedFoldersCommand = new AsyncRelayCommand(async () =>
@@ -1074,14 +1079,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 Wallpapers.Clear();
                 DispatcherQueue.TryEnqueue(() =>
                 {
-                    NoScanResultTip.Visibility = Visibility.Visible;
-                    NoResultTip.Visibility = Visibility.Collapsed;
+                    ShowTip(NoScanResultTip, true);
+                    ShowTip(NoResultTip, false);
                 });
                 return;
             }
 
             // === 分页 ===
             bool listUnchanged = IsListEqual(_filteredWallpapers, filteredResult);
+            int pageBefore = CurrentPage; // 记录翻页判断基准
             _filteredWallpapers = filteredResult;
 
             // 筛选/排序变化后回到第一页
@@ -1096,33 +1102,42 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             if (!token.IsCancellationRequested)
             {
-                Wallpapers.Clear();
+                // 翻页(页码变化)整页替换:Reset 无动画;同页筛选:增量 diff,动画只作用于真实变化的项
+                bool pageChanged = CurrentPage != pageBefore;
 
                 DispatcherQueue.TryEnqueue(() =>
                 {
                     if (_allWallpapers.Count == 0)
                     {
-                        NoScanResultTip.Visibility = Visibility.Visible;
-                        NoResultTip.Visibility = Visibility.Collapsed;
+                        ShowTip(NoScanResultTip, true);
+                        ShowTip(NoResultTip, false);
                     }
                     else if (filteredResult.Count == 0)
                     {
-                        NoScanResultTip.Visibility = Visibility.Collapsed;
-                        NoResultTip.Visibility = Visibility.Visible;
+                        ShowTip(NoScanResultTip, false);
+                        ShowTip(NoResultTip, true);
                     }
                     else
                     {
-                        NoScanResultTip.Visibility = Visibility.Collapsed;
-                        NoResultTip.Visibility = Visibility.Collapsed;
+                        ShowTip(NoScanResultTip, false);
+                        ShowTip(NoResultTip, false);
                     }
                 });
 
                 DispatcherQueue.TryEnqueue(() =>
                 {
                     if (token.IsCancellationRequested) return;
-                    foreach (var item in pageItems)
+                    if (pageChanged)
                     {
-                        Wallpapers.Add(item);
+                        Wallpapers.Clear();
+                        foreach (var item in pageItems)
+                        {
+                            Wallpapers.Add(item);
+                        }
+                    }
+                    else
+                    {
+                        ApplyListDiff(Wallpapers, pageItems);
                     }
                 });
             }
@@ -1132,6 +1147,76 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             Log.Error(ex,"筛选结果时出现异常。");
         }
+    }
+
+    /// <summary>增量同步列表:删除/插入/移动只作用于真实变化的项,触发 GridView 补位动画(翻页不走这里,用 Reset)</summary>
+    private static void ApplyListDiff(ObservableCollection<WallpaperItem> target, IReadOnlyList<WallpaperItem> desired)
+    {
+        // 1) 删除:目标有、期望没有的项(移除后剩余项自动补位动画)
+        var desiredSet = new HashSet<WallpaperItem>(desired);
+        for (int i = target.Count - 1; i >= 0; i--)
+            if (!desiredSet.Contains(target[i]))
+                target.RemoveAt(i);
+
+        // 2) 重排 + 新增:按期望顺序双指针同步(删除后 target 是 desired 的子序列;Move 触发容器平移动画,Insert 为新增)
+        int targetIdx = 0;
+        for (int i = 0; i < desired.Count; i++)
+        {
+            var item = desired[i];
+            if (targetIdx < target.Count && ReferenceEquals(target[targetIdx], item))
+            {
+                targetIdx++;
+                continue;
+            }
+            int found = -1;
+            for (int j = targetIdx + 1; j < target.Count; j++)
+            {
+                if (ReferenceEquals(target[j], item)) { found = j; break; }
+            }
+            if (found >= 0)
+            {
+                target.Move(found, targetIdx);
+                targetIdx++;
+            }
+            else
+            {
+                target.Insert(targetIdx, item);
+                targetIdx++;
+            }
+        }
+    }
+
+    /// <summary>淡入淡出切换空状态提示(120ms,匹配列表动画节奏)</summary>
+    private static void ShowTip(FrameworkElement tip, bool show)
+    {
+        if (show)
+        {
+            if (tip.Visibility == Visibility.Visible) return;
+            tip.Opacity = 0;
+            tip.Visibility = Visibility.Visible;
+            AnimateTipOpacity(tip, 1, null);
+        }
+        else
+        {
+            if (tip.Visibility == Visibility.Collapsed) return;
+            AnimateTipOpacity(tip, 0, () => tip.Visibility = Visibility.Collapsed);
+        }
+    }
+
+    private static void AnimateTipOpacity(FrameworkElement tip, double to, Action? onCompleted)
+    {
+        var animation = new DoubleAnimation
+        {
+            To = to,
+            Duration = TimeSpan.FromMilliseconds(120),
+        };
+        Storyboard.SetTarget(animation, tip);
+        Storyboard.SetTargetProperty(animation, "Opacity");
+        var storyboard = new Storyboard();
+        storyboard.Children.Add(animation);
+        if (onCompleted != null)
+            storyboard.Completed += (s, e) => onCompleted();
+        storyboard.Begin();
     }
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
@@ -1166,46 +1251,38 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     /// <summary>三个壁纸 GridView(图标/内容/列表模式)</summary>
     private GridView[] AllWallpaperGridViews => new[] { WallpapersGridView, WallpapersContentGridView, WallpapersListGridView };
 
-    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _gridItemWidthTimer;
-
-    /// <summary>窗口尺寸变化:防抖 100ms 后重算 ItemWidth(拖动中零计算,列数由 ItemsWrapGrid 原生自适应换行)</summary>
+    /// <summary>窗口尺寸变化:实时重算 ItemWidth(布局脏标记同帧合并,138 项毫秒级;拖动中列数与拉伸同步更新)</summary>
     private void WallpaperGrid_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        _gridItemWidthTimer ??= DispatcherQueue.CreateTimer();
-        _gridItemWidthTimer.Interval = TimeSpan.FromMilliseconds(100);
-        _gridItemWidthTimer.IsRepeating = false;
-        _gridItemWidthTimer.Tick += (s, _) => UpdateAllGridItemWidths();
-        _gridItemWidthTimer.Start();
-    }
+        => UpdateAllGridItemWidths();
 
     /// <summary>按各模式档位重算 ItemWidth,复刻 UniformGridLayout 的"拉伸填满行尾"</summary>
     private void UpdateAllGridItemWidths()
     {
+        // 间距来自容器 Margin(ItemContainerStyle 左右各 5,共 10),在槽位内部;槽位宽 = available/列数 填满整行,行尾零留白
         UpdateGridItemWidth(WallpapersGridView, ViewModel.WallpaperDisplayVM.WallpaperListMinWidth, 10);
-        UpdateGridItemWidth(WallpapersListGridView, 400, 6);
-        UpdateGridItemWidth(WallpapersContentGridView, 1, 0); // 内容模式单列
+        UpdateGridItemWidth(WallpapersListGridView, 400, 10);
+        UpdateGridItemWidth(WallpapersContentGridView, 0, 10); // 内容模式单列
     }
 
-    private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, double spacing)
+    /// <param name="itemMarginTotal">容器左右 Margin 总和(判断列数用;ItemWidth 不扣除,卡片占满槽位)</param>
+    private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
     {
         if (gridView == null || gridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
         double available = gridView.ActualWidth;
         if (available <= 0) return;
-        int cols = Math.Max(1, (int)((available + spacing) / (minItemWidth + spacing)));
-        wrap.ItemWidth = (available - spacing * (cols - 1)) / cols;
+        if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10
+        {
+            wrap.ItemWidth = available;
+            return;
+        }
+        int cols = Math.Max(1, (int)(available / (minItemWidth + itemMarginTotal)));
+        // ItemsWrapGrid 语义(已实测):ItemWidth = 槽位步长(含容器 Margin),容器实际宽 = ItemWidth - 10;
+        // 换行判断为严格比较,ItemWidth = available/cols 会因浮点误差恰好放不下最后一列(空一列),
+        // 故留 1px/列余量;卡片 = available/cols - 11,行尾余量 cols×1px 不可见
+        wrap.ItemWidth = available / cols - 2;
     }
 
-    /// <summary>AnnotatedScrollBar 开启时隐藏系统滚动条(对齐原 ScrollView 行为),关闭时恢复 Auto</summary>
-    private void SyncGridViewScrollBarVisibility()
-    {
-        var bar = ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled
-            ? ScrollBarVisibility.Hidden : ScrollBarVisibility.Auto;
-        foreach (var gv in AllWallpaperGridViews)
-            if (FindScrollViewer(gv) is ScrollViewer sv)
-                sv.VerticalScrollBarVisibility = bar;
-    }
-
-    /// <summary>当前可见的 GridView(AnnotatedScrollBar 详情标签用)</summary>
+    /// <summary>当前可见的 GridView(滚动回顶用)</summary>
     private GridView? GetVisibleGridView()
     {
         foreach (var gv in AllWallpaperGridViews)
@@ -2301,10 +2378,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         WallpapersGridView.ItemsSource = null;
         WallpapersGridView.ItemsSource = Wallpapers;
     }
-    private async void ChangeAnnotatedScrollBarEnabled(object sender, RoutedEventArgs e)
-    {
-        HideWallpaperContextMenu();
-    }
     private void CancelMultiSelect_Click(object sender, RoutedEventArgs e)
     {
         IsMultiSelectMode = false;
@@ -2721,58 +2794,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             // 如果是通过键盘（Shift+F10）触发，在元素中心弹出
             WallpaperContextMenu.ShowAt(sender);
         }
-    }
-    private void Papers_AnnotatedScrollBarControl_DetailLabelRequested(AnnotatedScrollBar sender, AnnotatedScrollBarDetailLabelRequestedEventArgs args)
-    {
-        // 如果列表为空，直接返回
-        if (Wallpapers == null || Wallpapers.Count == 0) return;
-
-        // GridView 内部 ScrollViewer(替代原 ScrollView.ScrollPresenter)
-        if (GetVisibleGridView() is not GridView gv || FindScrollViewer(gv) is not ScrollViewer sv) return;
-
-        // 计算总可滚动高度 (总内容高度 - 视口可见高度)
-        double maxOffset = sv.ExtentHeight - sv.ViewportHeight;
-        if (maxOffset <= 0) return;
-
-        // 计算当前滚动的百分比进度
-        double fraction = args.ScrollOffset / maxOffset;
-
-        // 严谨处理：限制比例在 0 到 1 之间，防止越界计算
-        fraction = Math.Clamp(fraction, 0.0, 1.0);
-
-        // 根据百分比映射到当前数据集合的 Index
-        int index = (int)(fraction * (Wallpapers.Count - 1));
-        index = Math.Clamp(index, 0, Wallpapers.Count - 1);
-
-        var item = Wallpapers[index];
-
-        // 根据当前的排序方式（SortOrder），动态决定悬浮标签应该显示什么内容
-        string label = string.Empty;
-        switch (ViewModel.WallpaperDisplayVM.SortOrder)
-        {
-            case 0: // 按名称排序
-                label = string.IsNullOrWhiteSpace(item.Title) ? "#" : item.Title.Substring(0, 1).ToUpper();
-                break;
-            case 1: // 按订阅/创建时间排序
-                label = item.CreationTime.ToString("yyyy/MM");
-                break;
-            case 2: // 按最后更新时间排序
-                label = item.UpdateTime.ToString("yyyy/MM");
-                break;
-            case 3: // 按文件大小排序 (转换为 MB 显示)
-                double mbSize = item.FileSize / 1048576.0;
-                label = mbSize > 1024 ? $"{mbSize / 1024:F1} GB" : $"{mbSize:F0} MB";
-                break;
-            case 4: // 按修改时间排序
-                label = item.AcfUpdateTime?.ToString("yyyy/MM") ?? "??";
-                break;
-            default:
-                label = "•";
-                break;
-        }
-
-        // 将计算好的标签赋值给事件参数
-        args.Content = label;
     }
 
     // ... INotifyPropertyChanged 标准实现 ...

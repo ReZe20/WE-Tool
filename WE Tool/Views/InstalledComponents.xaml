@@ -17,6 +17,22 @@
 
     <Page.Resources>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <Style x:Key="TransparentGridViewItemStyle" TargetType="GridViewItem">
+            <Setter Property="Margin" Value="5,5,5,5"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <!-- 去掉 GridViewItem 默认悬停/选中/焦点视觉(卡片自带悬停阴影,与 ItemsRepeater 观感一致) -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GridViewItem">
+                        <ContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <converters:FileSizeToString x:Key="FileSizeToString"/>
         <converters:DateTimeToString x:Key="DateTimeToString"/>
         <converters:RatingToDisplay x:Key="RatingToDisplay"/>
@@ -163,8 +179,6 @@
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode" GroupName="CompViewGroup"
                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ListViewItem, Mode=TwoWay}"/>
                 <MenuFlyoutSeparator/>
-                <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsAnnotatedScrollBarEnabled, Mode=TwoWay}"/>
                 <MenuFlyoutSeparator/>
                 <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
                     <RadioMenuFlyoutItem x:Uid="AppBarButton_Type" GroupName="CompLabelGroup"
@@ -328,8 +342,6 @@
                             <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode" GroupName="ViewGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ListViewItem, Mode=TwoWay}"/>
                             <MenuFlyoutSeparator/>
-                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.IsAnnotatedScrollBarEnabled, Mode=TwoWay}"/>
                             <MenuFlyoutSeparator/>
                             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
                                 <RadioMenuFlyoutItem x:Uid="AppBarButton_Type" GroupName="LabelGroup"
@@ -563,9 +575,9 @@
                                            Style="{StaticResource TitleTextBlockStyle}"
                                            HorizontalAlignment="Center" Margin="0,0,0,10"/>
                                 <Grid>
-                                    <Button x:Uid="MultiSelect_SelectAll" Width="130" Margin="0,0,4,0" HorizontalAlignment="Left"
+                                    <Button x:Uid="MultiSelect_SelectAll" Width="150" Margin="0,0,4,0" HorizontalAlignment="Left"
                                             Click="SelectAllComponents_Click" Style="{StaticResource AccentButtonStyle}"/>
-                                    <Button x:Uid="MultiSelect_InvertSelection" Width="130" Margin="14,0,0,0" HorizontalAlignment="Right"
+                                    <Button x:Uid="MultiSelect_InvertSelection" Width="150" Margin="14,0,0,0" HorizontalAlignment="Right"
                                             Click="InvertSelection_Click"/>
                                 </Grid>
                                 <Button x:Uid="MultiSelect_Cancel" HorizontalAlignment="Stretch"
@@ -690,51 +702,23 @@
                         <!-- 内容 -->
                         <SplitView.Content>
                             <Grid>
-                                <ScrollView x:Name="ComponentsScrollView"
+                                                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <GridView x:Name="ComponentsGridView"
+                                              ItemsSource="{x:Bind FilteredComponents}"
+                                              Margin="4,0,4,0"
+                                              Visibility="{x:Bind ViewModel.ComponentsDisplayVM.IconModeVisibility, Mode=OneWay}"
+                                              ContextFlyout="{StaticResource ComponentContextMenuFlyout}"
                                               Tapped="ComponentsList_Tapped"
-                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}">
-                                    <StackPanel>
-                                        <!-- 未扫描到组件提示（照抄 Papers） -->
-                                        <StackPanel x:Name="NoScanResultTip" Visibility="Collapsed" Margin="0,100,0,0" HorizontalAlignment="Center">
-                                            <TextBlock x:Uid="NoScanResultTip_Components"
-                                                       Style="{StaticResource TitleTextBlockStyle}"
-                                                       FontSize="20"
-                                                       TextWrapping="Wrap"
-                                                       Margin="0,0,0,20"/>
-                                            <Button x:Uid="GoToSettings"
-                                                    Click="GoToSettings_Click"
-                                                    Style="{StaticResource AccentButtonStyle}"
-                                                    HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                        <!-- 暂无结果提示 -->
-                                        <StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
-                                            <TextBlock x:Uid="NoMatchTip1"
-                                                       Style="{StaticResource TitleTextBlockStyle}"
-                                                       TextWrapping="Wrap" FontSize="20"
-                                                       HorizontalAlignment="Center"/>
-                                            <TextBlock x:Uid="NoMatchTip2"
-                                                       Style="{StaticResource TitleTextBlockStyle}"
-                                                       TextWrapping="Wrap" FontSize="20"
-                                                       HorizontalAlignment="Center"/>
-                                        </StackPanel>
-
-                                        <!-- 图标模式 -->
-                                        <ItemsRepeater ItemsSource="{x:Bind FilteredComponents}"
-                                                       Margin="8,0,8,0"
-                                                       x:Name="ComponentsRepeater"
-                                                       Visibility="{x:Bind ViewModel.ComponentsDisplayVM.IconModeVisibility, Mode=OneWay}"
-                                                       ContextFlyout="{StaticResource ComponentContextMenuFlyout}">
-                                            <ItemsRepeater.Layout>
-                                                <UniformGridLayout
-                                                    MinItemWidth="{x:Bind ViewModel.ComponentsDisplayVM.ComponentListMinWidth, Mode=OneWay}"
-                                                    MinColumnSpacing="10"
-                                                    MinRowSpacing="10"
-                                                    ItemsStretch="Fill"
-                                                    Orientation="Horizontal"/>
-                                            </ItemsRepeater.Layout>
-
-                                            <ItemsRepeater.ItemTemplate>
-                                                <DataTemplate x:DataType="models:ComponentInfo">
+                                              SelectionMode="None"
+                                              SizeChanged="ComponentGrid_SizeChanged"
+                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
+                                        <GridView.ItemTemplate>
+<DataTemplate x:DataType="models:ComponentInfo">
                                                     <Grid x:Name="ItemContainer">
                                                         <ProgressRing IsActive="True" Background="Transparent"/>
                                                         <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
@@ -816,21 +800,20 @@
                                                         </Grid>
                                                     </Grid>
                                                 </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                        </ItemsRepeater>
+                                        </GridView.ItemTemplate>
+                                    </GridView>
 
-                                        <!-- 内容模式 -->
-                                        <ItemsRepeater ItemsSource="{x:Bind FilteredComponents}"
-                                                       Margin="8,0,8,0"
-                                                       x:Name="ComponentsContentRepeater"
-                                                       Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ContentModeVisibility, Mode=OneWay}"
-                                                       ContextFlyout="{StaticResource ComponentContextMenuFlyout}">
-                                            <ItemsRepeater.Layout>
-                                                <StackLayout Orientation="Vertical" Spacing="2"/>
-                                            </ItemsRepeater.Layout>
-
-                                            <ItemsRepeater.ItemTemplate>
-                                                <DataTemplate x:DataType="models:ComponentInfo">
+                                    <GridView x:Name="ComponentsContentGridView"
+                                              ItemsSource="{x:Bind FilteredComponents}"
+                                              Margin="4,0,4,0"
+                                              Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ContentModeVisibility, Mode=OneWay}"
+                                              ContextFlyout="{StaticResource ComponentContextMenuFlyout}"
+                                              Tapped="ComponentsList_Tapped"
+                                              SelectionMode="None"
+                                              SizeChanged="ComponentGrid_SizeChanged"
+                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
+                                        <GridView.ItemTemplate>
+<DataTemplate x:DataType="models:ComponentInfo">
                                                     <Grid x:Name="ContentItemContainer"
                                                           Height="86"
                                                           CornerRadius="4"
@@ -935,25 +918,20 @@
                                                                    TextTrimming="CharacterEllipsis"/>
                                                     </Grid>
                                                 </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                        </ItemsRepeater>
+                                        </GridView.ItemTemplate>
+                                    </GridView>
 
-                                        <!-- 列表模式 -->
-                                        <ItemsRepeater ItemsSource="{x:Bind FilteredComponents}"
-                                                       Margin="8,0,8,0"
-                                                       x:Name="ComponentsListRepeater"
-                                                       Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ListModeVisibility, Mode=OneWay}"
-                                                       ContextFlyout="{StaticResource ComponentContextMenuFlyout}">
-                                            <ItemsRepeater.Layout>
-                                                <UniformGridLayout
-                                                    MinItemWidth="400"
-                                                    MinColumnSpacing="6"
-                                                    MinRowSpacing="6"
-                                                    ItemsStretch="Fill"
-                                                    Orientation="Horizontal"/>
-                                            </ItemsRepeater.Layout>
-                                            <ItemsRepeater.ItemTemplate>
-                                                <DataTemplate x:DataType="models:ComponentInfo">
+                                    <GridView x:Name="ComponentsListGridView"
+                                              ItemsSource="{x:Bind FilteredComponents}"
+                                              Margin="4,0,4,0"
+                                              Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ListModeVisibility, Mode=OneWay}"
+                                              ContextFlyout="{StaticResource ComponentContextMenuFlyout}"
+                                              Tapped="ComponentsList_Tapped"
+                                              SelectionMode="None"
+                                              SizeChanged="ComponentGrid_SizeChanged"
+                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
+                                        <GridView.ItemTemplate>
+<DataTemplate x:DataType="models:ComponentInfo">
                                                     <Grid x:Name="ListItemContainer"
                                                           Height="36"
                                                           CornerRadius="4"
@@ -989,12 +967,34 @@
                                                         </StackPanel>
                                                     </Grid>
                                                 </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                        </ItemsRepeater>
+                                        </GridView.ItemTemplate>
+                                    </GridView>
 
-                                        <!-- 分页栏（位于每页列表末尾） -->
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,8,0,0"
-                                                    Visibility="{x:Bind ViewModel.ComponentsDisplayVM.PaginationBarVisibility, Mode=OneWay}">
+<StackPanel x:Name="NoScanResultTip" Visibility="Collapsed" Margin="0,100,0,0" HorizontalAlignment="Center">
+                                            <TextBlock x:Uid="NoScanResultTip_Components"
+                                                       Style="{StaticResource TitleTextBlockStyle}"
+                                                       FontSize="20"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,0,0,20"/>
+                                            <Button x:Uid="GoToSettings"
+                                                    Click="GoToSettings_Click"
+                                                    Style="{StaticResource AccentButtonStyle}"
+                                                    HorizontalAlignment="Center"/>
+                                        </StackPanel>
+
+<StackPanel x:Name="NoResultTip" Visibility="Collapsed" Margin="0,100,0,0">
+                                            <TextBlock x:Uid="NoMatchTip1"
+                                                       Style="{StaticResource TitleTextBlockStyle}"
+                                                       TextWrapping="Wrap" FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock x:Uid="NoMatchTip2"
+                                                       Style="{StaticResource TitleTextBlockStyle}"
+                                                       TextWrapping="Wrap" FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                        </StackPanel>
+
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,8,0,0"
+                                            Visibility="{x:Bind ViewModel.ComponentsDisplayVM.PaginationBarVisibility, Mode=OneWay}">
                                             <Button x:Uid="Pagination_PrevPage" x:Name="ComponentsPrevPageButton"
                                                     Click="ComponentsPrevPage_Click"
                                                     IsEnabled="{x:Bind ComponentsCanGoPrevious, Mode=OneWay}"
@@ -1009,8 +1009,7 @@
                                                 <FontIcon Glyph="&#xE76C;" FontSize="14"/>
                                             </Button>
                                         </StackPanel>
-                                    </StackPanel>
-                                </ScrollView>
+                                </Grid>
                             </Grid>
                         </SplitView.Content>
                     </SplitView>

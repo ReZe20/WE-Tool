@@ -28,7 +28,6 @@ namespace WE_Tool.Models
         public bool IsBottomBarOpen { get; set; } = true;
         public bool AutoPlayGif { get; set; } = true;
         public bool IsWallpaperEnterAnimationEnabled { get; set; } = false;
-        public bool IsAnnotatedScrollBarEnabled { get; set; } = false;
         public int WallpaperTagDisplayIndex { get; set; } = 0;
         public int WallpaperViewIndex { get; set; } = 0;
         public int WallpaperDisplayMode { get; set; } = 0;
@@ -153,7 +152,6 @@ namespace WE_Tool.Models
 
     public class ComponentsConfig
     {
-        public bool IsAnnotatedScrollBarEnabled { get; set; } = false;
         public int ComponentViewIndex { get; set; } = 0;
         public int ComponentTagDisplayIndex { get; set; } = 0;
         public int ComponentListMinWidth { get; set; } = 180;

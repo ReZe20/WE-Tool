@@ -101,7 +101,7 @@ namespace WE_Tool.Service
                 string[] movedFields =
                 [
                     "Expander", "IsBottomBarOpen", "AutoPlayGif", "IsWallpaperEnterAnimationEnabled",
-                    "IsAnnotatedScrollBarEnabled", "WallpaperTagDisplayIndex", "WallpaperViewIndex",
+                    "WallpaperTagDisplayIndex", "WallpaperViewIndex",
                     "WallpaperListMinWidth", "LeftSplitViewPaneOpen", "RightSplitViewPaneOpen",
                     "SortOrder", "IsSortAscending", "DetailSelectionEnabled", "FilterResultResponseDelay"
                 ];

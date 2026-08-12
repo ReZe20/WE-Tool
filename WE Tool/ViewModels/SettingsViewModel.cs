@@ -33,7 +33,6 @@ namespace WE_Tool.ViewModels
         private ObservableCollection<WallpaperItem>? _previousSelectedWallpapers;
         public bool _isBatchUpdating = false;
         public int _wallpaperViewIndex;
-        public bool _isAnnotatedScrollBarEnabled;
 
         private readonly IConfigService _configService;
         private readonly IPickerService _pickerService;
@@ -335,7 +334,6 @@ namespace WE_Tool.ViewModels
             WallpaperDisplayVM.IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             WallpaperDisplayVM.AutoPlayGif = _settings.Papers.AutoPlayGif;
             WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled = _settings.Papers.IsWallpaperEnterAnimationEnabled;
-            WallpaperDisplayVM.IsAnnotatedScrollBarEnabled = _settings.Papers.IsAnnotatedScrollBarEnabled;
             WallpaperDisplayVM.WallpaperTagDisplayIndex = _settings.Papers.WallpaperTagDisplayIndex;
             WallpaperDisplayVM.WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
             WallpaperDisplayVM.WallpaperDisplayMode = _settings.Papers.WallpaperDisplayMode;
@@ -438,7 +436,6 @@ namespace WE_Tool.ViewModels
             ComponentsDisplayVM.SortOrder = _settings.Components.SortOrder;
             ComponentsDisplayVM.IsSortAscending = _settings.Components.IsSortAscending;
             ComponentsDisplayVM.PaginationMode = _settings.Components.PaginationMode;
-            ComponentsDisplayVM.IsAnnotatedScrollBarEnabled = _settings.Components.IsAnnotatedScrollBarEnabled;
 
             PathManagementVM.LoadFromSettings(_settings);
             if (string.IsNullOrEmpty(PathManagementVM.DownloadPath))
@@ -714,7 +711,6 @@ namespace WE_Tool.ViewModels
                     _settings.Papers.AutoPlayGif = WallpaperDisplayVM.AutoPlayGif;
                     _settings.Papers.IsWallpaperEnterAnimationEnabled = WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled;
                     _settings.Papers.WallpaperTagDisplayIndex = WallpaperDisplayVM.WallpaperTagDisplayIndex;
-                    _settings.Papers.IsAnnotatedScrollBarEnabled = WallpaperDisplayVM.IsAnnotatedScrollBarEnabled;
                     _settings.Papers.WallpaperListMinWidth = WallpaperDisplayVM.WallpaperListMinWidth;
                     _settings.Papers.LeftSplitViewPaneOpen = WallpaperDisplayVM.LeftSplitViewPaneOpen;
                     _settings.Papers.RightSplitViewPaneOpen = WallpaperDisplayVM.RightSplitViewPaneOpen;
@@ -814,7 +810,6 @@ namespace WE_Tool.ViewModels
                     _settings.Components.SortOrder = ComponentsDisplayVM.SortOrder;
                     _settings.Components.IsSortAscending = ComponentsDisplayVM.IsSortAscending;
                     _settings.Components.PaginationMode = ComponentsDisplayVM.PaginationMode;
-                    _settings.Components.IsAnnotatedScrollBarEnabled = ComponentsDisplayVM.IsAnnotatedScrollBarEnabled;
 
                     _settings.Path.DownloadPath = PathManagementVM.DownloadPath;
                     _settings.Path.WorkshopPath = PathManagementVM.WorkshopPath;

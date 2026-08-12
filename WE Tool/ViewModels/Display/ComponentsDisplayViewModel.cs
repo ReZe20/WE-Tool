@@ -306,9 +306,6 @@ public partial class ComponentsDisplayViewModel : ObservableObject
     [ObservableProperty]
     public partial bool RightSplitViewPaneOpen { get; set; } = true;
 
-    [ObservableProperty]
-    public partial bool IsAnnotatedScrollBarEnabled { get; set; }
-
     // ===================== 分页 =====================
     // PaginationMode: 0=不分页, 1=每页30, 2=每页50, 3=每页70, 4=每页90
     [ObservableProperty]

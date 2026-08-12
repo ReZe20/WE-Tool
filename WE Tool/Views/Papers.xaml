@@ -159,9 +159,6 @@
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.ListViewItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
                     <MenuFlyoutSeparator/>
-                <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
-                                     Click="ChangeAnnotatedScrollBarEnabled"/>
                 <MenuFlyoutSeparator/>
                 <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
                     <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
@@ -354,9 +351,6 @@
                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.ListViewItem,Mode=TwoWay}"
                                                  GroupName="ViewGroup"/>
                             <MenuFlyoutSeparator/>
-                            <ToggleMenuFlyoutItem x:Uid="AppBarButton_IsAnnotatedScrollBarEnabled"
-                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled,Mode=TwoWay}"
-                                                  Click="ChangeAnnotatedScrollBarEnabled"/>
                             <MenuFlyoutSeparator/>
                             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
                                 <RadioMenuFlyoutItem GroupName="LabelGroup"
@@ -621,8 +615,8 @@
                             <StackPanel x:Name="MultiSelectionInfoPanel" Spacing="10" Visibility="Collapsed" HorizontalAlignment="Stretch">
                                 <TextBlock x:Name="MultiSelectCountText" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                                 <Grid>
-                                    <Button x:Uid="MultiSelect_SelectAll" Click="SelectAllWallpapers_Click" Width="130" Margin="0,0,4,0" HorizontalAlignment="Left" Style="{StaticResource AccentButtonStyle}"/>
-                                    <Button x:Uid="MultiSelect_InvertSelection" Click="InvertSelection_CLick" Width="130" Margin="14,0,0,0" HorizontalAlignment="Right" />
+                                    <Button x:Uid="MultiSelect_SelectAll" Click="SelectAllWallpapers_Click" Width="150" Margin="0,0,4,0" HorizontalAlignment="Left" Style="{StaticResource AccentButtonStyle}"/>
+                                    <Button x:Uid="MultiSelect_InvertSelection" Click="InvertSelection_CLick" Width="150" Margin="14,0,0,0" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Button x:Uid="MultiSelect_Cancel" Click="CancelMultiSelect_Click" HorizontalAlignment="Stretch" Style="{StaticResource DefaultButtonStyle}"/>
                             </StackPanel>
@@ -735,19 +729,14 @@
 
                                     <GridView x:Name="WallpapersGridView"
                                               ItemsSource="{x:Bind Wallpapers}"
-                                              Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}"
                                               Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IconModeVisibility, Mode=OneWay}"
                                               ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                               Tapped="WallpaperList_Tapped"
                                               SelectionMode="None"
                                               SizeChanged="WallpaperGrid_SizeChanged"
-                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
-                                        <GridView.ItemContainerTransitions>
-                                            <TransitionCollection>
-                                                <AddDeleteThemeTransition/>
-                                                <RepositionThemeTransition/>
-                                            </TransitionCollection>
-                                        </GridView.ItemContainerTransitions>
+                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}"
+                                              HorizontalAlignment="Stretch"
+                                              Margin="4,0,4,0">
                                         <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ItemContainer">
@@ -836,19 +825,13 @@
 
                                     <GridView x:Name="WallpapersContentGridView"
                                               ItemsSource="{x:Bind Wallpapers}"
-                                              Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}"
+                                              Margin="4,0,4,0"
                                               Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ContentModeVisibility, Mode=OneWay}"
                                               ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                               Tapped="WallpaperList_Tapped"
                                               SelectionMode="None"
                                               SizeChanged="WallpaperGrid_SizeChanged"
                                               ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
-                                        <GridView.ItemContainerTransitions>
-                                            <TransitionCollection>
-                                                <AddDeleteThemeTransition/>
-                                                <RepositionThemeTransition/>
-                                            </TransitionCollection>
-                                        </GridView.ItemContainerTransitions>
                                         <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ContentItemContainer"
@@ -958,19 +941,13 @@
 
                                     <GridView x:Name="WallpapersListGridView"
                                               ItemsSource="{x:Bind Wallpapers}"
-                                              Margin="{x:Bind ViewModel.WallpaperDisplayVM.PapersScrollViewMargin, Mode=OneWay}"
+                                              Margin="4,0,4,0"
                                               Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ListModeVisibility, Mode=OneWay}"
                                               ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                               Tapped="WallpaperList_Tapped"
                                               SelectionMode="None"
                                               SizeChanged="WallpaperGrid_SizeChanged"
                                               ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
-                                        <GridView.ItemContainerTransitions>
-                                            <TransitionCollection>
-                                                <AddDeleteThemeTransition/>
-                                                <RepositionThemeTransition/>
-                                            </TransitionCollection>
-                                        </GridView.ItemContainerTransitions>
                                         <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ListItemContainer"
@@ -1058,13 +1035,6 @@
                                             </Button>
                                         </StackPanel>
                                 </Grid>
-                                <AnnotatedScrollBar x:Name="Papers_AnnotatedScrollBarControl"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Stretch"
-                                                    MaxWidth="10"
-                                                    Margin="0,0,8,0"
-                                                    Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IsAnnotatedScrollBarEnabled, Mode=OneWay}"
-                                                    DetailLabelRequested="Papers_AnnotatedScrollBarControl_DetailLabelRequested"/>
                             </Grid>
                         </SplitView.Content>
                     </SplitView>
