@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Serilog;
 using System.Text.Json;
 using WE_Tool.Models;
 
@@ -31,6 +32,7 @@ namespace WE_Tool.Helper
             }
             catch (Exception ex)
             {
+                Log.Warning(ex, "读取 project.json 失败: {Path}", path);
                 return (false, $"读取 project.json 失败: {ex.Message}");
             }
 
@@ -63,6 +65,7 @@ namespace WE_Tool.Helper
             }
             catch (Exception ex)
             {
+                Log.Warning(ex, "写回结果 JSON 校验失败,已取消保存: {Path}", path);
                 return (false, $"写回结果 JSON 校验失败，已取消保存: {ex.Message}");
             }
 
@@ -77,6 +80,7 @@ namespace WE_Tool.Helper
             catch (Exception ex)
             {
                 try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+                Log.Warning(ex, "写入 project.json 失败: {Path}", path);
                 return (false, $"写入 project.json 失败: {ex.Message}");
             }
         }

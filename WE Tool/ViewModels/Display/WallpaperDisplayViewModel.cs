@@ -209,6 +209,16 @@ namespace WE_Tool.ViewModels
             }
         }
 
+        /// <summary>预览模糊年龄段开关(查看菜单"预览模糊"复选):勾选后该年龄段壁纸的预览图高斯模糊</summary>
+        [ObservableProperty]
+        public partial bool BlurEveryone { get; set; }
+
+        [ObservableProperty]
+        public partial bool BlurTeen { get; set; }
+
+        [ObservableProperty]
+        public partial bool BlurAdult { get; set; }
+
         private bool _isUpdatingViewMode;
 
         [ObservableProperty]

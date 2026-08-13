@@ -7,6 +7,8 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,6 +37,8 @@ namespace WE_Tool
         private readonly IConfigService _configService = new ConfigService();
         public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = [];
         public static Task ScanTask { get; private set; } = Task.CompletedTask;
+        /// <summary>日志级别运行时开关(设置页修改即时生效,无需重启)</summary>
+        public static LoggingLevelSwitch LogLevelSwitch { get; } = new(LogEventLevel.Debug);
         /// <summary>启动时的完整扫描链路（读配置 → StartBackgroundScan），页面可等待它确保扫描已开始</summary>
         public static Task? InitialScanTask { get; private set; }
         public static event EventHandler? ScanCompleted;
@@ -53,7 +57,7 @@ namespace WE_Tool
             string logPath = System.IO.Path.Combine(appDataRoot, "logs", "log.txt");
 
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
+                .MinimumLevel.ControlledBy(LogLevelSwitch) // 级别由设置页控制,运行时即时生效
                 .WriteTo.File(logPath) // 统一写入单个 log.txt,不做按天滚动
                 .CreateLogger();
 
@@ -143,6 +147,12 @@ namespace WE_Tool
                 var settings = await _configService.LoadAsync();
                 if (settings != null)
                 {
+                    // 应用日志级别配置(非法值回落 Debug)
+                    if (Enum.TryParse<LogEventLevel>(settings.LogLevel, true, out var configuredLevel))
+                    {
+                        LogLevelSwitch.MinimumLevel = configuredLevel;
+                    }
+
                     StartBackgroundScan(
                         settings.Path.WorkshopPath,
                         settings.Path.OfficialPath,

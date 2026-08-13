@@ -165,6 +165,21 @@
   <data name="Source_Workshop.Content" xml:space="preserve">
     <value>Workshop</value>
   </data>
+  <data name="Subscription.Header" xml:space="preserve">
+    <value>Subscription</value>
+  </data>
+  <data name="Subscription_Subscribed.Content" xml:space="preserve">
+    <value>Subscribed</value>
+  </data>
+  <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
+    <value>Unsubscribed</value>
+  </data>
+  <data name="Unsubscribed_Badge.Text" xml:space="preserve">
+    <value>Unsubscribed</value>
+  </data>
+  <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
+    <value>This wallpaper is not in the active subscription list. It may have been unsubscribed or disabled locally in Steam, and Steam may no longer update or keep its local files.</value>
+  </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>Tags</value>
   </data>
@@ -435,6 +450,24 @@
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
     <value>Log File Path</value>
   </data>
+  <data name="LogLevel_TextBlock.Text" xml:space="preserve">
+    <value>Log Level</value>
+  </data>
+  <data name="LogLevel.Description" xml:space="preserve">
+    <value>Controls how detailed the log file is. Changes take effect immediately.</value>
+  </data>
+  <data name="LogLevel_Debug.Content" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="LogLevel_Information.Content" xml:space="preserve">
+    <value>Information</value>
+  </data>
+  <data name="LogLevel_Warning.Content" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="LogLevel_Error.Content" xml:space="preserve">
+    <value>Error</value>
+  </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>Extract</value>
   </data>
@@ -493,6 +526,18 @@
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>View</value>
+  </data>
+  <data name="MenuFlyoutSubItem_PreviewBlur.Text" xml:space="preserve">
+    <value>Preview Blur</value>
+  </data>
+  <data name="Blur_Everyone.Text" xml:space="preserve">
+    <value>Everyone</value>
+  </data>
+  <data name="Blur_Teen.Text" xml:space="preserve">
+    <value>Teen</value>
+  </data>
+  <data name="Blur_Adult.Text" xml:space="preserve">
+    <value>Adult</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
     <value>Sort</value>

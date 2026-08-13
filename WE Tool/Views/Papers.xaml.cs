@@ -506,6 +506,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                         ? Visibility.Visible : Visibility.Collapsed;
                     NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
                         ? Visibility.Collapsed : Visibility.Visible;
+                    UpdateDetailBlur(); // 详情大图模糊层与列表预览同步
                 }
                 return;
             }
@@ -519,6 +520,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             if (ViewModel._isBatchUpdating) return;
             _ = ApplyFilters();
+        };
+
+        // 虚拟化容器每次数据绑定(含回收复用)都触发——弥补 Loaded 在容器复用时不重发导致的模糊层缺失
+        WallpapersGridView.ContainerContentChanging += (s, e) =>
+        {
+            if (e.Item is WallpaperItem changingItem &&
+                FindDescendantGrid(e.ItemContainer, "ItemRootGrid") is Grid changingRoot)
+            {
+                UpdateItemBlur(changingRoot, changingItem);
+            }
         };
         ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) =>
         {
@@ -537,6 +548,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 // 小/中/大档位变化:列宽公式随档位值联动重算(切换档位立即生效,不等窗口 resize)
                 UpdateAllGridItemWidths();
+                return;
+            }
+            if (e.PropertyName is nameof(WallpaperDisplayViewModel.BlurEveryone)
+                or nameof(WallpaperDisplayViewModel.BlurTeen)
+                or nameof(WallpaperDisplayViewModel.BlurAdult))
+            {
+                // 预览模糊年龄段开关变化:刷新所有可见卡片的模糊层
+                RefreshAllItemBlurs();
+                UpdateDetailBlur(); // 详情大图同步
                 return;
             }
             _ = ApplyFilters();
@@ -591,6 +611,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 await DeleteItemAsync(toDelete, skipConfirm: itemsToDelete.Count > 1);
             }
+
+            Log.Information("已删除 {Count} 个壁纸: {Titles}", itemsToDelete.Count,
+                string.Join("; ", itemsToDelete.Select(w => w.Title ?? w.WorkshopID ?? "未知")));
 
             ViewModel.SelectedWallpaper = null;
         });
@@ -1048,6 +1071,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     if (ViewModel.FilterExpanderVM.Workshop && s == "workshop") source = true;
                     if (ViewModel.FilterExpanderVM.Mine && s == "mine") source = true;
 
+                    // 订阅状态:非工坊壁纸 ShouldNotExist 恒为 false,自然归入"已订阅"侧
+                    bool subscriptionMatch = false;
+                    if (ViewModel.FilterExpanderVM.Subscribed && !w.ShouldNotExist) subscriptionMatch = true;
+                    if (ViewModel.FilterExpanderVM.Unsubscribed && w.ShouldNotExist) subscriptionMatch = true;
+
                     var rawTag = w.Tags ?? "";
                     var normalizedTag = rawTag.Replace(" ", "").Replace("-", "");
                     bool tagsMatch = selectedTags.Count > 0 && selectedTags.Contains(normalizedTag);
@@ -1056,7 +1084,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                                         (w.Title?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                         (w.WorkshopID?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false);
 
-                    return typeMatch && ratingMatch && tagsMatch && source && searchMatch;
+                    return typeMatch && ratingMatch && tagsMatch && source && searchMatch && subscriptionMatch;
                 });
 
                 IOrderedEnumerable<WallpaperItem> sortedQuery;
@@ -1255,6 +1283,147 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void WallpaperGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         => UpdateAllGridItemWidths();
 
+    // ============ 预览内容过滤(高斯模糊) ============
+
+    /// <summary>模糊位图缓存(按预览路径,GPU 生成一次复用;138 张中仅露骨壁纸会进缓存)</summary>
+    private readonly Dictionary<string, BitmapImage> _blurCache = [];
+
+    /// <summary>该壁纸在当前预览模糊开关下是否需要模糊:勾选哪个年龄段,该年龄段分级的壁纸就模糊</summary>
+    private bool ShouldBlurPreview(WallpaperItem item)
+    {
+        return item.ContentRating?.ToLower() switch
+        {
+            "everyone" => ViewModel.WallpaperDisplayVM.BlurEveryone,
+            "questionable" => ViewModel.WallpaperDisplayVM.BlurTeen,
+            "mature" => ViewModel.WallpaperDisplayVM.BlurAdult,
+            _ => false
+        };
+    }
+
+    /// <summary>按当前年龄段设置切换单个卡片的模糊叠加层</summary>
+    private void UpdateItemBlur(Grid itemRootGrid, WallpaperItem item)
+    {
+        if (itemRootGrid.FindName("ItemBlurOverlay") is not Image blurOverlay) return;
+        if (ShouldBlurPreview(item))
+        {
+            _ = ShowBlurOverlayAsync(blurOverlay, item);
+        }
+        else
+        {
+            blurOverlay.Visibility = Visibility.Collapsed;
+            blurOverlay.Source = null;
+        }
+    }
+
+    private async Task ShowBlurOverlayAsync(Image blurOverlay, WallpaperItem item)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(item.Preview) || !File.Exists(item.Preview)) return;
+            var blurred = await GetBlurredPreviewAsync(item.Preview);
+            if (blurred == null) return;
+            // 竞态防护:await 期间勾选状态可能已变(取消勾选)或容器已换绑到别的壁纸,复查后再上屏
+            if (!ShouldBlurPreview(item)) return;
+            blurOverlay.Source = blurred;
+            blurOverlay.Visibility = Visibility.Visible;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "创建预览模糊层失败: {Path}", item.Preview);
+        }
+    }
+
+    /// <summary>Win2D GPU 高斯模糊:加载原图 → 降采样到 480 内 → GaussianBlurEffect → PNG 流 → BitmapImage(缓存复用)</summary>
+    private async Task<BitmapImage?> GetBlurredPreviewAsync(string previewPath)
+    {
+        if (_blurCache.TryGetValue(previewPath, out var cached)) return cached;
+
+        var device = Microsoft.Graphics.Canvas.CanvasDevice.GetSharedDevice();
+        using var canvasBitmap = await Microsoft.Graphics.Canvas.CanvasBitmap.LoadAsync(device, previewPath);
+
+        // 先缩放到 480 内再模糊:模糊半径按目标分辨率折算(在原图上模糊 18px 相对 1920 宽几乎不可见)
+        var src = canvasBitmap.SizeInPixels;
+        float scale = Math.Min(1f, 480f / Math.Max(src.Width, src.Height));
+        int w = Math.Max(1, (int)(src.Width * scale));
+        int h = Math.Max(1, (int)(src.Height * scale));
+
+        var scaleEffect = new Microsoft.Graphics.Canvas.Effects.Transform2DEffect
+        {
+            Source = canvasBitmap,
+            TransformMatrix = System.Numerics.Matrix3x2.CreateScale(scale)
+        };
+        // BorderEffect(clamp)让模糊在图像边缘也能采样到延伸像素,避免"中心糊边缘清晰"的不均匀
+        var borderEffect = new Microsoft.Graphics.Canvas.Effects.BorderEffect
+        {
+            Source = scaleEffect,
+            ExtendX = Microsoft.Graphics.Canvas.CanvasEdgeBehavior.Clamp,
+            ExtendY = Microsoft.Graphics.Canvas.CanvasEdgeBehavior.Clamp
+        };
+        var blurEffect = new Microsoft.Graphics.Canvas.Effects.GaussianBlurEffect
+        {
+            BlurAmount = 26f,
+            BorderMode = Microsoft.Graphics.Canvas.Effects.EffectBorderMode.Hard,
+            Optimization = Microsoft.Graphics.Canvas.Effects.EffectOptimization.Speed,
+            Source = borderEffect
+        };
+
+        using var target = new Microsoft.Graphics.Canvas.CanvasRenderTarget(device, w, h, 96);
+        using (var ds = target.CreateDrawingSession())
+        {
+            ds.Clear(Microsoft.UI.Colors.Transparent);
+            ds.DrawImage(blurEffect);
+        }
+
+        using var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+        await target.SaveAsync(stream, Microsoft.Graphics.Canvas.CanvasBitmapFileFormat.Png);
+        stream.Seek(0);
+        var bmp = new BitmapImage();
+        await bmp.SetSourceAsync(stream);
+        _blurCache[previewPath] = bmp;
+        return bmp;
+    }
+
+    /// <summary>年龄段设置变化:遍历当前页所有可见卡片刷新模糊层</summary>
+    private void RefreshAllItemBlurs()
+    {
+        foreach (var item in Wallpapers)
+        {
+            if (WallpapersGridView.ContainerFromItem(item) is FrameworkElement container)
+            {
+                var itemRootGrid = FindDescendantGrid(container, "ItemRootGrid");
+                if (itemRootGrid != null) UpdateItemBlur(itemRootGrid, item);
+            }
+        }
+    }
+
+    /// <summary>详情面板大图的模糊层:与查看菜单"预览模糊"选项同步</summary>
+    private void UpdateDetailBlur()
+    {
+        if (SinglePreviewBlurOverlay is not Image blurOverlay) return;
+        if (ViewModel.SelectedWallpaper is WallpaperItem item && ShouldBlurPreview(item))
+        {
+            _ = ShowBlurOverlayAsync(blurOverlay, item);
+        }
+        else
+        {
+            blurOverlay.Visibility = Visibility.Collapsed;
+            blurOverlay.Source = null;
+        }
+    }
+
+    /// <summary>视觉树深搜指定名字的 Grid(从容器进模板根,规避模板命名作用域)</summary>
+    private static Grid? FindDescendantGrid(DependencyObject root, string name)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is Grid g && g.Name == name) return g;
+            var found = FindDescendantGrid(child, name);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
     /// <summary>按各模式档位重算 ItemWidth,复刻 UniformGridLayout 的"拉伸填满行尾"</summary>
     private void UpdateAllGridItemWidths()
     {
@@ -1378,6 +1547,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (sender is FrameworkElement casterElement)
         {
+            // 内容过滤:按年龄段为露骨壁纸创建/移除预览模糊层(容器重挂载时同步)
+            if (casterElement is Grid itemRootGrid && itemRootGrid.DataContext is WallpaperItem blurItem)
+            {
+                UpdateItemBlur(itemRootGrid, blurItem);
+            }
+
             if (casterElement.Shadow is ThemeShadow themeShadow)
             {
 
@@ -1712,6 +1887,17 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 Canvas.SetZIndex(parent, 10000);
             }
 
+            // 真正置顶:GridView 的绘制顺序由 GridViewItem 容器的 Canvas.ZIndex 决定(设 ItemContainer 不生效)
+            DependencyObject topContainer = grid;
+            while (topContainer != null && topContainer is not GridViewItem)
+            {
+                topContainer = VisualTreeHelper.GetParent(topContainer);
+            }
+            if (topContainer is GridViewItem gridViewItem)
+            {
+                Canvas.SetZIndex(gridViewItem, 10000);
+            }
+
             if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
                 Item_PointerPressed(sender,e);
@@ -1791,6 +1977,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             var capturedParent = VisualTreeHelper.GetParent(grid) as UIElement;
 
+            // 捕获 GridViewItem 容器用于复位置顶
+            DependencyObject capturedContainer = grid;
+            while (capturedContainer != null && capturedContainer is not GridViewItem)
+            {
+                capturedContainer = VisualTreeHelper.GetParent(capturedContainer);
+            }
+
             visual.StartAnimation("Scale", scaleAnimation);
 
             DispatcherQueue.TryEnqueue(async () =>
@@ -1801,6 +1994,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 if (capturedParent != null)
                 {
                     Canvas.SetZIndex(capturedParent, 0);
+                }
+                if (capturedContainer is GridViewItem capturedGridViewItem)
+                {
+                    Canvas.SetZIndex(capturedGridViewItem, 0);
                 }
                 grid.Translation = new System.Numerics.Vector3(0f, 0f, 64f);
             });

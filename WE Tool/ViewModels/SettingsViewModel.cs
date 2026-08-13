@@ -206,6 +206,18 @@ namespace WE_Tool.ViewModels
         /// <summary>分块解析，逐条读取减少内存占用</summary>
         [ObservableProperty]
         public partial bool LazyLoad { get; set; } = true;
+        /// <summary>日志记录级别(Verbose/Debug/Information/Warning/Error/Fatal),修改即时生效</summary>
+        [ObservableProperty]
+        public partial string LogLevel { get; set; } = "Debug";
+
+        partial void OnLogLevelChanged(string value)
+        {
+            // 运行时切换 Serilog 最小级别,无需重启
+            if (Enum.TryParse<Serilog.Events.LogEventLevel>(value, true, out var level))
+            {
+                App.LogLevelSwitch.MinimumLevel = level;
+            }
+        }
 
         public SettingsViewModel(IConfigService configService, IPickerService pickerService)
         {
@@ -336,6 +348,9 @@ namespace WE_Tool.ViewModels
             WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled = _settings.Papers.IsWallpaperEnterAnimationEnabled;
             WallpaperDisplayVM.WallpaperTagDisplayIndex = _settings.Papers.WallpaperTagDisplayIndex;
             WallpaperDisplayVM.WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
+            WallpaperDisplayVM.BlurEveryone = _settings.Papers.BlurEveryone;
+            WallpaperDisplayVM.BlurTeen = _settings.Papers.BlurTeen;
+            WallpaperDisplayVM.BlurAdult = _settings.Papers.BlurAdult;
             WallpaperDisplayVM.WallpaperDisplayMode = _settings.Papers.WallpaperDisplayMode;
             WallpaperDisplayVM.WallpaperListMinWidth = _settings.Papers.WallpaperListMinWidth;
             WallpaperDisplayVM.LeftSplitViewPaneOpen = _settings.Papers.LeftSplitViewPaneOpen;
@@ -365,6 +380,10 @@ namespace WE_Tool.ViewModels
             FilterExpanderVM.Official = _settings.Papers.Expander.Official;
             FilterExpanderVM.Workshop = _settings.Papers.Expander.Workshop;
             FilterExpanderVM.Mine = _settings.Papers.Expander.Mine;
+
+            FilterExpanderVM.SubscriptionExpander = _settings.Papers.Expander.SubscriptionExpander;
+            FilterExpanderVM.Subscribed = _settings.Papers.Expander.Subscribed;
+            FilterExpanderVM.Unsubscribed = _settings.Papers.Expander.Unsubscribed;
 
             FilterExpanderVM.TagsExpander = _settings.Papers.Expander.TagsExpander;
             FilterExpanderVM.Abstract = _settings.Papers.Expander.Abstract;
@@ -480,6 +499,7 @@ namespace WE_Tool.ViewModels
             ProcessPriority = _settings.Extract.ProcessPriority;
             SkipExistingOutput = _settings.Extract.SkipExistingOutput;
             LazyLoad = _settings.Extract.LazyLoad;
+            LogLevel = _settings.LogLevel;
 
             if (mode.Contains('1') || string.IsNullOrEmpty(_settings.Path.DownloadPath))
             {
@@ -529,6 +549,8 @@ namespace WE_Tool.ViewModels
                         () => FilterExpanderVM.Official = selectmode,
                         () => FilterExpanderVM.Workshop = selectmode,
                         () => FilterExpanderVM.Mine = selectmode,
+                        () => FilterExpanderVM.Subscribed = selectmode,
+                        () => FilterExpanderVM.Unsubscribed = selectmode,
                     };
                     foreach (var action in actions)
                     {
@@ -707,6 +729,9 @@ namespace WE_Tool.ViewModels
 
                     _settings.Papers.IsBottomBarOpen = WallpaperDisplayVM.IsBottomBarOpen;
                     _settings.Papers.WallpaperViewIndex = WallpaperDisplayVM.WallpaperViewIndex;
+                    _settings.Papers.BlurEveryone = WallpaperDisplayVM.BlurEveryone;
+                    _settings.Papers.BlurTeen = WallpaperDisplayVM.BlurTeen;
+                    _settings.Papers.BlurAdult = WallpaperDisplayVM.BlurAdult;
                     _settings.Papers.WallpaperDisplayMode = WallpaperDisplayVM.WallpaperDisplayMode;
                     _settings.Papers.AutoPlayGif = WallpaperDisplayVM.AutoPlayGif;
                     _settings.Papers.IsWallpaperEnterAnimationEnabled = WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled;
@@ -739,6 +764,10 @@ namespace WE_Tool.ViewModels
                     _settings.Papers.Expander.Official = FilterExpanderVM.Official;
                     _settings.Papers.Expander.Workshop = FilterExpanderVM.Workshop;
                     _settings.Papers.Expander.Mine = FilterExpanderVM.Mine;
+
+                    _settings.Papers.Expander.SubscriptionExpander = FilterExpanderVM.SubscriptionExpander;
+                    _settings.Papers.Expander.Subscribed = FilterExpanderVM.Subscribed;
+                    _settings.Papers.Expander.Unsubscribed = FilterExpanderVM.Unsubscribed;
 
                     _settings.Papers.Expander.TagsExpander = FilterExpanderVM.TagsExpander;
                     _settings.Papers.Expander.Abstract = FilterExpanderVM.Abstract;
@@ -840,6 +869,7 @@ namespace WE_Tool.ViewModels
                     _settings.Extract.ProcessPriority = ProcessPriority;
                     _settings.Extract.SkipExistingOutput = OverwriteMode == 1;
                     _settings.Extract.LazyLoad = LazyLoad;
+                    _settings.LogLevel = LogLevel;
 
                     await _configService.SaveAsync(_settings);
                 }

@@ -334,7 +334,10 @@ internal class WallpaperScanner
                         var comp = await ParseComponentAsync(dir, "", acfUpdateTimes, token);
                         if (comp != null) componentBag.Add(comp);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "组件解析失败,已跳过: {Dir}", dir);
+                    }
                 });
 
                 LastComponents = [.. componentBag];
@@ -720,7 +723,10 @@ internal class WallpaperScanner
                 .EnumerateFiles("*", SearchOption.AllDirectories)
                 .Sum(fi => fi.Length);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "统计组件目录大小失败,按 0 处理: {Dir}", componentDir);
+        }
 
         return new ComponentInfo
         {

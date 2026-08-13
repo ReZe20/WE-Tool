@@ -171,6 +171,25 @@
                     </ComboBox>
                 </controls:SettingsCard>
 
+                <controls:SettingsCard x:Uid="LogLevel" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xF738;"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Uid="LogLevel_TextBlock"/>
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                    <ComboBox SelectedValuePath="Tag"
+                              SelectedValue="{x:Bind ViewModel.LogLevel, Mode=TwoWay}"
+                              MinWidth="150">
+                        <ComboBoxItem Tag="Debug" x:Uid="LogLevel_Debug"/>
+                        <ComboBoxItem Tag="Information" x:Uid="LogLevel_Information"/>
+                        <ComboBoxItem Tag="Warning" x:Uid="LogLevel_Warning"/>
+                        <ComboBoxItem Tag="Error" x:Uid="LogLevel_Error"/>
+                    </ComboBox>
+                </controls:SettingsCard>
+
                 <controls:SettingsExpander Header="窗口行为" Description="控制程序启动时是否恢复窗口位置、大小和最大化状态" Margin="0,0,0,10">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE73F;"/>

@@ -196,6 +196,7 @@ namespace WE_Tool.ViewModels
                 catch (Exception ex)
                 {
                     await DialogHelper.ShowMessageAsync("错误", $"尝试打开目录时发现目录不存在，尝试创建目录失败：{ex.Message}");
+                    Log.Warning(ex, "尝试创建目录失败: {Path}", path);
                 }
             }
 

@@ -165,6 +165,21 @@
   <data name="Source_Workshop.Content" xml:space="preserve">
     <value>创意工坊</value>
   </data>
+  <data name="Subscription.Header" xml:space="preserve">
+    <value>订阅状态</value>
+  </data>
+  <data name="Subscription_Subscribed.Content" xml:space="preserve">
+    <value>已订阅</value>
+  </data>
+  <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
+    <value>未订阅</value>
+  </data>
+  <data name="Unsubscribed_Badge.Text" xml:space="preserve">
+    <value>未订阅</value>
+  </data>
+  <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
+    <value>该壁纸当前不在有效订阅名单中，可能已取消订阅或已在 Steam 中本地停用；Steam 可能不再更新或保留其本地文件。</value>
+  </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>标签</value>
   </data>
@@ -441,6 +456,24 @@
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
     <value>日志文件路径</value>
   </data>
+  <data name="LogLevel_TextBlock.Text" xml:space="preserve">
+    <value>日志级别</value>
+  </data>
+  <data name="LogLevel.Description" xml:space="preserve">
+    <value>控制日志记录的详细程度，修改后立即生效</value>
+  </data>
+  <data name="LogLevel_Debug.Content" xml:space="preserve">
+    <value>调试</value>
+  </data>
+  <data name="LogLevel_Information.Content" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="LogLevel_Warning.Content" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="LogLevel_Error.Content" xml:space="preserve">
+    <value>错误</value>
+  </data>
   <data name="CachePath.Description" xml:space="preserve">
     <value>存储扫描缓存数据的文件路径</value>
   </data>
@@ -505,6 +538,18 @@
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>查看</value>
+  </data>
+  <data name="MenuFlyoutSubItem_PreviewBlur.Text" xml:space="preserve">
+    <value>预览模糊</value>
+  </data>
+  <data name="Blur_Everyone.Text" xml:space="preserve">
+    <value>全年龄</value>
+  </data>
+  <data name="Blur_Teen.Text" xml:space="preserve">
+    <value>青少年</value>
+  </data>
+  <data name="Blur_Adult.Text" xml:space="preserve">
+    <value>成人</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
     <value>排序</value>

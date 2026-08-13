@@ -140,9 +140,10 @@ public class SteamWorkshopService : IDisposable
                 _hadGoodStatus = true;
             }
         }
-        catch
+        catch (Exception ex)
         {
             UserName = null;
+            Log.Warning(ex, "读取 Steam 状态失败,用户名置空");
         }
     }
 
@@ -236,8 +237,9 @@ public class SteamWorkshopService : IDisposable
                     bridge.Kill();
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Log.Warning(ex, "停止 Steamworks 桥接进程失败");
             try { bridge.Kill(); } catch { }
         }
         finally

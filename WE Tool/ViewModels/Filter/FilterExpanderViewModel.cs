@@ -50,6 +50,15 @@ namespace WE_Tool.ViewModels
         public partial bool Mine { get; set; }
 
         [ObservableProperty]
+        public partial bool SubscriptionExpander { get; set; }
+
+        [ObservableProperty]
+        public partial bool Subscribed { get; set; }
+
+        [ObservableProperty]
+        public partial bool Unsubscribed { get; set; }
+
+        [ObservableProperty]
         public partial bool TagsExpander { get; set; }
 
         [ObservableProperty]

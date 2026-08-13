@@ -10,6 +10,7 @@ namespace WE_Tool.Models
         public string AppLanguage { get; set; } = "default";
         public string StartPageTag { get; set; } = "Papers";
         public string Theme { get; set; } = "Default";
+        public string LogLevel { get; set; } = "Debug";
         public int WindowX { get; set; } = -1;
         public int WindowY { get; set; } = -1;
         public int WindowWidth { get; set; } = -1;
@@ -30,6 +31,10 @@ namespace WE_Tool.Models
         public bool IsWallpaperEnterAnimationEnabled { get; set; } = false;
         public int WallpaperTagDisplayIndex { get; set; } = 0;
         public int WallpaperViewIndex { get; set; } = 0;
+        /// <summary>预览模糊(按年龄段):勾选哪个年龄段,该年龄段壁纸的预览图就高斯模糊</summary>
+        public bool BlurEveryone { get; set; } = false;
+        public bool BlurTeen { get; set; } = false;
+        public bool BlurAdult { get; set; } = false;
         public int WallpaperDisplayMode { get; set; } = 0;
         public int WallpaperListMinWidth { get; set; } = 180;
         public bool LeftSplitViewPaneOpen { get; set; } = true;
@@ -62,6 +67,10 @@ namespace WE_Tool.Models
             public bool Official { get; set; } = true;
             public bool Workshop { get; set; } = true;
             public bool Mine { get; set; } = true;
+
+            public bool SubscriptionExpander { get; set; } = true;
+            public bool Subscribed { get; set; } = true;
+            public bool Unsubscribed { get; set; } = true;
 
             public bool TagsExpander { get; set; } = true;
             public bool Abstract { get; set; } = true;

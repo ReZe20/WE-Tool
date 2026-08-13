@@ -158,7 +158,6 @@
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.ListViewItem,Mode=TwoWay}"
                                      GroupName="MenuViewGroup"/>
-                    <MenuFlyoutSeparator/>
                 <MenuFlyoutSeparator/>
                 <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
                     <RadioMenuFlyoutItem GroupName="MenuLabelGroup"
@@ -181,9 +180,8 @@
                                          x:Uid="AppBarButton_None"
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
-                    </MenuFlyoutSubItem>
-                    <MenuFlyoutSeparator/>
-                    <MenuFlyoutSubItem x:Uid="Pagination">
+                </MenuFlyoutSubItem>
+                <MenuFlyoutSubItem x:Uid="Pagination">
                         <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_None"
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_30"
@@ -351,7 +349,6 @@
                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.ListViewItem,Mode=TwoWay}"
                                                  GroupName="ViewGroup"/>
                             <MenuFlyoutSeparator/>
-                            <MenuFlyoutSeparator/>
                             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
                                 <RadioMenuFlyoutItem GroupName="LabelGroup"
                                                      x:Uid="AppBarButton_Type"
@@ -374,7 +371,14 @@
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
                             </MenuFlyoutSubItem>
-                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_PreviewBlur">
+                                <ToggleMenuFlyoutItem x:Uid="Blur_Everyone"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.BlurEveryone, Mode=TwoWay}"/>
+                                <ToggleMenuFlyoutItem x:Uid="Blur_Teen"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.BlurTeen, Mode=TwoWay}"/>
+                                <ToggleMenuFlyoutItem x:Uid="Blur_Adult"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.BlurAdult, Mode=TwoWay}"/>
+                            </MenuFlyoutSubItem>
                             <MenuFlyoutSubItem x:Uid="Pagination">
                                 <RadioMenuFlyoutItem GroupName="PageSizeGroup" x:Uid="Pagination_None"
                                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
@@ -467,11 +471,15 @@
                         <StackPanel Spacing="15">
                             <Grid x:Name="PreviewImageContainer" Height="280" Width="280" HorizontalAlignment="Center">
                                 <Border x:Name="SinglePreviewBorder" Margin="0,10,0,0" Width="280" Height="280" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                                    <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue=null}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
-                                        <Image.RenderTransform>
-                                            <ScaleTransform x:Name="ImageScale" />
-                                        </Image.RenderTransform>
-                                    </Image>
+                                    <Grid>
+                                        <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue=null}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
+                                            <Image.RenderTransform>
+                                                <ScaleTransform x:Name="ImageScale" />
+                                            </Image.RenderTransform>
+                                        </Image>
+                                        <!-- 详情大图模糊层:与查看菜单"预览模糊"选项同步 -->
+                                        <Image x:Name="SinglePreviewBlurOverlay" Stretch="UniformToFill" Visibility="Collapsed"/>
+                                    </Grid>
                                 </Border>
 
                                 <ItemsControl x:Name="StackedImagesControl" ItemsSource="{x:Bind DisplayedSelectedWallpapers}" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -646,6 +654,13 @@
                                                 </StackPanel>
                                             </Button.Content>
                                         </Button>
+                                        <Expander x:Uid="Subscription" x:Name="SubscriptionExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.SubscriptionExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ContextFlyout="{StaticResource FilterExpanderContextMenu}">
+                                            <StackPanel x:Name="SubscriptionFilterPanel">
+                                                <CheckBox x:Uid="Subscription_Subscribed" Tag="Subscribed" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Subscribed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox x:Uid="Subscription_Unsubscribed" Tag="Unsubscribed" IsChecked="{x:Bind ViewModel.FilterExpanderVM.Unsubscribed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </StackPanel>
+                                        </Expander>
                                         <Expander x:Uid="Type" x:Name="TypeExpander" HorizontalAlignment="Stretch" Margin="0,4,0,4" IsExpanded="{x:Bind ViewModel.FilterExpanderVM.TypeExpander, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                             ContextFlyout="{StaticResource FilterExpanderContextMenu}">
                                             <StackPanel x:Name="TypeFilterPanel">
@@ -740,7 +755,6 @@
                                         <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ItemContainer">
-                                                        <ProgressRing IsActive="True" Background="Transparent"/>
                                                         <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
                                                         <Grid CornerRadius="8"
                                                               Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -759,26 +773,42 @@
                                                                 <Canvas Width="100" Height="100"/>
                                                             </Viewbox>
 
-                                                            <Image Stretch="UniformToFill">
+                                                            <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
                                                                 <Image.Source>
                                                                     <BitmapImage UriSource="{x:Bind Preview}" 
                                                                          AutoPlay="{Binding DataContext.ViewModel.WallpaperDisplayVM.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
                                                                 </Image.Source>
                                                             </Image>
+                                                            <!-- 内容过滤模糊层:露骨壁纸按年龄段设置显示高斯模糊位图,平时隐藏 -->
+                                                            <Image x:Name="ItemBlurOverlay" Stretch="UniformToFill" Visibility="Collapsed"/>
 
-                                                            <Grid VerticalAlignment="Bottom" Height="45">
-                                                                <Grid.Background>
-                                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                                        <GradientStop Color="Transparent" Offset="0"/>
-                                                                        <GradientStop Color="#CC000000" Offset="1"/>
-                                                                    </LinearGradientBrush>
-                                                                </Grid.Background>
-                                                                <TextBlock Text="{x:Bind Title}" 
-                                                                           Foreground="White" 
+                                                        <Grid VerticalAlignment="Bottom" Height="45" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0"
+                                                                           Text="{x:Bind Title}" 
+                                                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}" 
                                                                            FontSize="12" 
-                                                                           VerticalAlignment="Bottom"
-                                                                           Margin="10,0,10,8" 
-                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                           VerticalAlignment="Center"
+                                                                           HorizontalAlignment="Center"
+                                                                           Margin="4,4,4,4" 
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           TextWrapping="WrapWholeWords"/>
+                                                                <!-- 未订阅角标(vdf 校验未通过 = ShouldNotExist):数据驱动,平时 Collapsed -->
+                                                                <Border Grid.Column="1"
+                                                                        CornerRadius="4"
+                                                                        Padding="6,2"
+                                                                        Margin="4,0,6,0"
+                                                                        Background="#20808080"
+                                                                        VerticalAlignment="Center"
+                                                                        Visibility="{x:Bind ShouldNotExist, Mode=OneWay, FallbackValue=Collapsed}">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                        <FontIcon Glyph="&#xE7BA;" FontSize="12" Foreground="{ThemeResource SystemFillColorCautionBrush}"/>
+                                                                        <TextBlock x:Uid="Unsubscribed_Badge" FontSize="12" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                </Border>
                                                             </Grid>
                                                             <Border HorizontalAlignment="Right"
                                                                     VerticalAlignment="Top"
@@ -787,7 +817,7 @@
                                                                     MinWidth="50"
                                                                     MinHeight="20"
                                                                     Padding="4"
-                                                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
                                                                     Visibility="{Binding DataContext.ViewModel.WallpaperDisplayVM.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
                                                                     x:Name="TagDisplayBorder">
                                                                 <TextBlock Text="{x:Bind Converter={StaticResource PapersTagContentChoose}}"

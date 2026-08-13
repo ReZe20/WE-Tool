@@ -8,7 +8,8 @@
     <BuildType Solution="Release|x64" Project="Debug" />
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|x86" Project="x86" />
+    <Platform Solution="Debug|x86" Project="x64" />
+    <Platform Solution="Release|x86" Project="x86" />
     <Deploy />
   </Project>
   <Project Path="WE_Tool.Launcher/WE_Tool.Launcher.csproj" />

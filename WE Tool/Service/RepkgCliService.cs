@@ -551,7 +551,11 @@ public class RepkgCliService
             return dir.EnumerateFiles("*.pkg", SearchOption.AllDirectories).Any()
                 || dir.EnumerateFiles("*.mpkg", SearchOption.AllDirectories).Any();
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "检查壁纸 pkg 文件失败,按无 pkg 处理: {Path}", folderPath);
+            return false;
+        }
     }
 
     /// <summary>壁纸提取完成后的统一后处理:project.json/预览图导出 + 平铺模式重命名。</summary>
