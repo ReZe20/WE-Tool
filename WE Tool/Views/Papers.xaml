@@ -775,8 +775,8 @@
 
                                                             <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
                                                                 <Image.Source>
-                                                                    <BitmapImage UriSource="{x:Bind Preview}" 
-                                                                         AutoPlay="{Binding DataContext.ViewModel.WallpaperDisplayVM.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
+                                                                    <!-- GIF 由 GifFramePlayer 代码接管播放;AutoPlay=false 静态第一帧兜底(0 解码 CPU) -->
+                                                                    <BitmapImage x:Name="ItemFallbackBitmap" UriSource="{x:Bind Preview}" AutoPlay="False"/>
                                                                 </Image.Source>
                                                             </Image>
                                                             <!-- 内容过滤模糊层:露骨壁纸按年龄段设置显示高斯模糊位图,平时隐藏 -->

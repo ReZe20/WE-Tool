@@ -735,10 +735,9 @@
                                                                 <Canvas Width="100" Height="100"/>
                                                             </Viewbox>
 
-                                                            <Image Stretch="UniformToFill">
+                                                            <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
                                                                 <Image.Source>
-                                                                    <BitmapImage UriSource="{x:Bind Preview}"
-                                                                         AutoPlay="{Binding DataContext.ViewModel.ComponentsDisplayVM.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
+                                                                    <BitmapImage x:Name="ItemFallbackBitmap" UriSource="{x:Bind Preview}" AutoPlay="False"/>
                                                                 </Image.Source>
                                                             </Image>
 
@@ -849,10 +848,9 @@
                                                         <!-- 缩略图 -->
                                                         <Grid Grid.Column="1" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                                                             <ProgressRing IsActive="True" Background="Transparent" Width="20" Height="20"/>
-                                                            <Image Stretch="UniformToFill" Width="80" Height="80">
+                                                            <Image x:Name="ItemPreviewImage" Stretch="UniformToFill" Width="80" Height="80">
                                                                 <Image.Source>
-                                                                    <BitmapImage UriSource="{x:Bind Preview}"
-                                                                         AutoPlay="{Binding DataContext.ViewModel.ComponentsDisplayVM.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
+                                                                    <BitmapImage x:Name="ItemFallbackBitmap" UriSource="{x:Bind Preview}" AutoPlay="False"/>
                                                                 </Image.Source>
                                                             </Image>
                                                         </Grid>

@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Models;
+using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
@@ -43,6 +44,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private DateTime _lastDrillInAnimationTime;
     private CancellationTokenSource? _filterCts;
     private readonly Service.PickerService _pickerService = new();
+    private readonly GifFramePlayer _gifPlayer = new(); // GIF 预览播放器(UI 线程构造;共享定时器驱动)
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _viewportTimer; // 视口对账防抖(滚动/挂载)
 
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<ComponentInfo> FilteredComponents { get; } = [];
@@ -322,8 +325,17 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (_isUpdating) return;
             if (e.PropertyName == nameof(ComponentsDisplayViewModel.AutoPlayGif))
             {
-                // 仅刷新本页可见动图，不清其它页面缓存（方案 A：页面订阅 VM 变化自刷新）
-                UiHelper.ReloadGifImages(this);
+                // GIF 预览管线接管:开=视口对账启动,关=全停+清缓存(照 Papers)
+                if (ViewModel.ComponentsDisplayVM.AutoPlayGif)
+                {
+                    ScheduleViewportReconcile();
+                }
+                else
+                {
+                    _gifPlayer.StopAll();
+                    _gifPlayer.ClearCache();
+                    ScheduleViewportReconcile();
+                }
                 return;
             }
             if (e.PropertyName == nameof(ComponentsDisplayViewModel.SortOrder)
@@ -356,7 +368,49 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             var reorderDuration = TimeSpan.FromMilliseconds(100);
             foreach (var gv in AllComponentGridViews)
                 ItemsReorderAnimation.SetDuration(gv, reorderDuration);
+
+            // GIF 视口对账:滚动停止后只播视口内的卡片(缓冲容器不解码 → 缓存=可见数)
+            foreach (var gv in AllComponentGridViews)
+            {
+                if (FindScrollViewer(gv) is ScrollViewer sv)
+                    sv.ViewChanged += (_, _) => ScheduleViewportReconcile();
+            }
+            ScheduleViewportReconcile();
         };
+
+        // 页面切走:停止全部播放并释放原生帧缓存(切回时 Loaded 对账重启)
+        this.Unloaded += (s, e) =>
+        {
+            _gifPlayer.StopAll();
+            _gifPlayer.ClearCache();
+        };
+
+        // GIF 预览:容器绑定/回收钩子(照 Papers)。
+        // 回收时 e.Item 可能为 null,owner 用容器(一定可用);绑定分支按视口启动,缓冲容器不解码
+        foreach (var gv in AllComponentGridViews)
+        {
+            gv.ContainerContentChanging += (s, e) =>
+            {
+                if (e.InRecycleQueue)
+                {
+                    _gifPlayer.Stop(e.ItemContainer);
+                    return;
+                }
+                if (e.Item is ComponentInfo changingItem && e.ItemContainer is GridViewItem container)
+                {
+                    if (container.IsLoaded && IsInViewport(container))
+                    {
+                        UpdateGifPlayback(container, changingItem);
+                    }
+                    else
+                    {
+                        _gifPlayer.Stop(container); // 缓冲容器(视口外):不解码
+                        // 非 GIF:恢复 BitmapImage 兜底 —— 否则 Source 残留上一张 GIF 帧(显示错误壁纸)
+                        if (!IsGifPreview(changingItem)) RestoreFallbackPreview(container);
+                    }
+                }
+            };
+        }
 
         // 多选集合变化时刷新计数、堆叠图与面板（批量操作时抑制，避免逐项触发）
         SelectedComponents.CollectionChanged += (s, e) =>
@@ -672,6 +726,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 {
                     ApplyComponentListDiff(FilteredComponents, pageItems);
                 }
+                RefreshAllGifPlayback(); // 列表内容变化:释放已离开列表的帧 + 视口对账(照 Papers)
             });
         }
         catch (OperationCanceledException) { }
@@ -1305,8 +1360,152 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (casterElement is Grid grid && grid.DataContext is ComponentInfo item)
             {
                 UpdateItemCheckBoxOpacity(grid, item);
+                // GIF:模板实例化晚于 ContainerContentChanging 的兜底对账(照 Papers)
+                ScheduleViewportReconcile();
             }
         }
+    }
+
+    // ===================== GIF 预览管线(照 Papers 定稿方案) =====================
+
+    private static bool IsGifPreview(ComponentInfo item)
+        => item.Preview != null && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>容器绑定/对账启动播放;非 GIF 或开关关闭时停止(Source 保持静态不闪)。
+    /// owner 统一用 GridViewItem 容器(回收时容器引用一定可用,模板元素可能已拆)。</summary>
+    private void UpdateGifPlayback(GridViewItem container, ComponentInfo item)
+    {
+        if (container.ContentTemplateRoot is not FrameworkElement root) return;
+        if (root.FindName("ItemPreviewImage") is not Image img) return;
+
+        if (ViewModel.ComponentsDisplayVM.AutoPlayGif && IsGifPreview(item))
+        {
+            // 不置空 Source —— 解码期间保持旧内容,Register 时直接换帧(防滚动停止对账大片空白闪烁)
+            if (!_gifPlayer.IsPlaying(container))
+            {
+                _gifPlayer.Start(container, img, item.Preview!);
+            }
+        }
+        else
+        {
+            _gifPlayer.Stop(container);
+            // 非 GIF:恢复 BitmapImage 兜底(带引用检查防重复设置闪烁);GIF 静态:保持当前帧
+            if (!IsGifPreview(item)) RestoreFallbackPreview(container);
+        }
+    }
+
+    /// <summary>视口对账(防抖 200ms):只对可见 GridView 视口内的容器启动播放,
+    /// 视口外的(预实化缓冲容器)立即停止 → 缓存严格=可见数而非全部实化数。</summary>
+    private void ScheduleViewportReconcile()
+    {
+        if (_viewportTimer == null)
+        {
+            _viewportTimer = DispatcherQueue.CreateTimer();
+            _viewportTimer.Interval = TimeSpan.FromMilliseconds(200);
+            _viewportTimer.IsRepeating = false;
+            _viewportTimer.Tick += (_, _) => RefreshViewportGifPlayback();
+        }
+        _viewportTimer.Stop();
+        _viewportTimer.Start();
+    }
+
+    private void RefreshViewportGifPlayback()
+    {
+        if (GetVisibleComponentGridView() is not GridView gv) return;
+        if (gv.ItemsPanelRoot is not ItemsWrapGrid panel) return;
+        foreach (var child in panel.Children)
+        {
+            if (child is not GridViewItem container) continue;
+            // 容器→项:用 ItemFromContainer(官方 API)。GridViewItem.DataContext 实测为 null,不可靠
+            if (gv.ItemFromContainer(container) is not ComponentInfo item) continue;
+
+            if (!IsGifPreview(item))
+            {
+                // 非 GIF:恢复 BitmapImage 兜底(复用容器可能残留上一张 GIF 的帧 → 显示错误壁纸)
+                RestoreFallbackPreview(container);
+                continue;
+            }
+
+            bool inView = container.IsLoaded && IsInViewport(container);
+            if (inView && ViewModel.ComponentsDisplayVM.AutoPlayGif)
+            {
+                UpdateGifPlayback(container, item); // 视口内 GIF:启动(缓存命中零解码)
+            }
+            else
+            {
+                _gifPlayer.Stop(container); // 视口外/关闭:停止并释放原生帧(滚回时重解码)
+            }
+        }
+    }
+
+    /// <summary>容器是否在可见 GridView 视口内(粗略 Y 轴判断,含缓冲边界)</summary>
+    private bool IsInViewport(FrameworkElement container)
+    {
+        if (GetVisibleComponentGridView() is not GridView gv) return false;
+        try
+        {
+            double gvTop = gv.TransformToVisual(null).TransformPoint(new Windows.Foundation.Point(0, 0)).Y;
+            double gvBottom = gvTop + gv.ActualHeight;
+            double cTop = container.TransformToVisual(null).TransformPoint(new Windows.Foundation.Point(0, 0)).Y;
+            double cBottom = cTop + container.ActualHeight;
+            return cBottom >= gvTop && cTop <= gvBottom;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>非 GIF 壁纸恢复 XAML BitmapImage 兜底(仅当 Source 不是它时设置,避免重复设置闪烁)。
+    /// BitmapImage 不是视觉树节点,须用 XAML 命名作用域 FindName(ContentTemplateRoot)查找</summary>
+    private static void RestoreFallbackPreview(GridViewItem container)
+    {
+        if (container.ContentTemplateRoot is not FrameworkElement root) return;
+        if (root.FindName("ItemPreviewImage") is not Image img) return;
+        if (root.FindName("ItemFallbackBitmap") is BitmapImage fallback
+            && !ReferenceEquals(img.Source, fallback))
+        {
+            img.Source = fallback;
+        }
+    }
+
+    /// <summary>列表内容变化后对账 GIF 播放:停全部会话、释放已不在当前列表的帧、空列表重建清容器池(照 Papers)</summary>
+    private void RefreshAllGifPlayback()
+    {
+        _gifPlayer.StopAll();
+        var currentPaths = new HashSet<string>(FilteredComponents.Where(IsGifPreview).Select(i => i.Preview!));
+        _gifPlayer.RemoveCacheExcept(currentPaths);
+
+        // 空列表:无条件重建可见 GridView 清空虚拟化容器池(条件不能看 Children.Count——回收后已空但池仍在)
+        if (FilteredComponents.Count == 0)
+        {
+            if (GetVisibleComponentGridView() is GridView gv)
+            {
+                var items = gv.ItemsSource;
+                gv.ItemsSource = null;
+                gv.ItemsSource = items;
+            }
+            ScheduleGifGc();
+            return;
+        }
+
+        ScheduleViewportReconcile();
+    }
+
+    /// <summary>延迟后台强制 GC(列表清空/开关切换后清托管残留,照 Papers)</summary>
+    private void ScheduleGifGc()
+    {
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(1500);
+            try
+            {
+                GC.Collect(2, GCCollectionMode.Aggressive, true, true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect(2, GCCollectionMode.Aggressive, true, true);
+            }
+            catch { /* 后台 GC 失败无碍 */ }
+        });
     }
 
     private void SelectionCheckBox_Click(object sender, RoutedEventArgs e)
