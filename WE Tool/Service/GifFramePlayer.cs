@@ -35,6 +35,10 @@ public sealed class GifFramePlayer
 
     private const int TickMs = 16;
 
+    /// <summary>解析缓存开关:关=不存储任何解析缓存,帧只活在播放会话里,停止即释放,
+    /// 下次播放(滚回/重开)重新解析。实验——测试无缓存下的内存/并发表现。</summary>
+    private const bool CacheEnabled = false;
+
     private readonly GifFrameCache _cache;
     private readonly Dictionary<object, GifPlaybackSession> _sessions = [];
     private readonly Dictionary<object, PendingDecode> _pending = []; // owner → 进行中的解码任务(记录 path,区分同 path 双触发与换绑)
@@ -74,7 +78,7 @@ public sealed class GifFramePlayer
             _pending.Remove(owner);
         }
 
-        if (_cache.TryGet(path) is { } frames)
+        if (CacheEnabled && _cache.TryGet(path) is { } frames)
         {
             Register(owner, path, frames, target);
             return;
@@ -193,8 +197,15 @@ public sealed class GifFramePlayer
                         _pending.Remove(owner);
                     return;
                 }
-                _cache.Put(path, frames); // 缓存持 1 份引用
-                DiagPutCount++;
+                if (CacheEnabled)
+                {
+                    _cache.Put(path, frames); // Put 内部 AddRef(缓存持有)
+                    DiagPutCount++;
+                }
+                else
+                {
+                    frames.AddRef(); // 缓存关闭:解码任务临时持有(Register/失败时释放)
+                }
 
                 // 竞态三复查:解码期间容器可能已回收/换绑/开关已关
                 if (cts.IsCancellationRequested
@@ -202,12 +213,20 @@ public sealed class GifFramePlayer
                     || !ReferenceEquals(current.Cts, cts)
                     || current.Path != path)
                 {
-                    // 无主帧立即释放(否则缓存堆积,内存与可见数脱钩)
-                    if (!IsPathActive(path)) _cache.Remove(path);
+                    // 无主帧立即释放(否则帧滞留,内存与可见数脱钩)
+                    if (CacheEnabled)
+                    {
+                        if (!IsPathActive(path)) _cache.Remove(path);
+                    }
+                    else
+                    {
+                        frames.Release(); // 缓存关闭:解码临时引用释放 → 归零即 Free
+                    }
                     return;
                 }
 
                 Register(owner, path, frames, target);
+                if (!CacheEnabled) frames.Release(); // 缓存关闭:会话已持 1 份,释放解码临时引用
             }
             finally
             {
