@@ -69,6 +69,42 @@ public sealed class GifFrames : IDisposable
         return gif;
     }
 
+    /// <summary>先分配后填充(解码器直接写原生块 —— 不再收集托管帧数组,解码过程零 LOH 分配)。
+    /// 引用计数从 0 起:解码完成后由调用方 AddRef(Put/会话)持有。</summary>
+    public static GifFrames CreateForDecode(int count, int width, int height, int[] delaysMs)
+    {
+        int frameBytes = width * height * 4;
+        nint block = VirtualAlloc(0, (nuint)((long)frameBytes * count), MEM_COMMIT_RESERVE, PAGE_READWRITE);
+        if (block == 0) throw new OutOfMemoryException("VirtualAlloc 失败");
+
+        var gif = new GifFrames
+        {
+            DelaysMs = delaysMs,
+            Width = width,
+            Height = height,
+            FrameBytes = frameBytes
+        };
+        gif._block = block;
+        gif._frameCount = count;
+        return gif;
+    }
+
+    /// <summary>解码临时缓冲分配(VirtualAlloc 页面级;给 GifPreviewDecoder 用,解码完 FreeNative 归还)</summary>
+    internal static nint AllocNative(int bytes)
+        => VirtualAlloc(0, (nuint)bytes, MEM_COMMIT_RESERVE, PAGE_READWRITE);
+
+    /// <summary>解码临时缓冲释放(立即归还 OS)</summary>
+    internal static void FreeNative(nint ptr)
+        => VirtualFree(ptr, 0, MEM_RELEASE);
+
+    /// <summary>解码器写入第 index 帧(源为托管数组,如 WIC 像素输出)</summary>
+    public void WriteFrame(int index, byte[] source)
+        => Marshal.Copy(source, 0, _block + (nint)((long)index * FrameBytes), FrameBytes);
+
+    /// <summary>解码器写入第 index 帧(源为原生画布指针,memcpy)</summary>
+    public unsafe void WriteFrameNative(int index, byte* source)
+        => System.Buffer.MemoryCopy(source, (byte*)(_block + (nint)((long)index * FrameBytes)), FrameBytes, FrameBytes);
+
     /// <summary>拷贝指定帧到目标数组(播放换帧用;中间数组由调用方池化)</summary>
     public void CopyFrameTo(int index, byte[] destination)
         => Marshal.Copy(_block + (nint)((long)index * FrameBytes), destination, 0, FrameBytes);
@@ -105,13 +141,11 @@ public static class GifPreviewDecoder
 
     public static async Task<GifFrames?> DecodeAsync(string path, CancellationToken ct)
     {
-        List<byte[]>? managedFrames = null;
         try
         {
-            // ① 后台线程池:WinRT 解码 + 流式合成完整帧(不占用 UI 线程)。
-            // 内存关键:合成临时数组走 ArrayPool(池内复用,不反复向 LOH 申请);
-            // 帧像素逐帧处理不累积(峰值 = 单帧 + 画布 + 输出)。
-            var result = await Task.Run<(List<byte[]> Frames, int[] Delays, int W, int H)?>(async () =>
+            // ① 后台线程池:WinRT 解码 + 原生内存流式合成(零 LOH 分配 —— 画布/快照/帧块全 VirtualAlloc,
+            // 解码完成即 VirtualFree 归还;方案 B:无缓存滚动时不再有 LOH 积累)
+            var result = await Task.Run<(GifFrames? Frames, int[] Delays, int W, int H)?>(async () =>
             {
                 using var stream = await FileRandomAccessStream.OpenAsync(path, FileAccessMode.Read).AsTask(ct);
                 var decoder = await BitmapDecoder.CreateAsync(stream).AsTask(ct);
@@ -124,18 +158,21 @@ public static class GifPreviewDecoder
 
                 var meta = ReadGifMeta(path); // 帧延迟/偏移/disposal 手动解析(WinRT 投影无 Duration/偏移)
                 var delays = new int[count];
-                var frames = new List<byte[]>((int)count);
                 int frameBytes = logicalW * logicalH * 4;
 
-                // 画布(增量帧合成目标)与快照(disposal 3)均直接 new 用完即弃:
-                // ArrayPool 静态池持有解码缓冲不归还(dump 实测 95MB 残留),解码是瞬时操作,无池化收益
-                var canvas = new byte[frameBytes];
-                byte[]? snapshot = null;
-                int prevD = 0, prevL = 0, prevT = 0, prevW = 0, prevH = 0;
-
-                for (uint i = 0; i < count; i++)
+                // 原生画布与快照(解码完 VirtualFree 立即归还 OS,不产生托管大数组)
+                nint canvas = GifFrames.AllocNative(frameBytes);
+                if (canvas == 0) throw new OutOfMemoryException("VirtualAlloc 失败");
+                nint snapshot = 0;
+                GifFrames? gif = null;
+                try
                 {
-                    ct.ThrowIfCancellationRequested();
+                    gif = GifFrames.CreateForDecode((int)count, logicalW, logicalH, delays);
+                    int prevD = 0, prevL = 0, prevT = 0, prevW = 0, prevH = 0;
+
+                    for (uint i = 0; i < count; i++)
+                    {
+                        ct.ThrowIfCancellationRequested();
                         var frame = await decoder.GetFrameAsync(i).AsTask(ct);
                         var provider = await frame.GetPixelDataAsync(
                             BitmapPixelFormat.Bgra8,
@@ -143,7 +180,7 @@ public static class GifPreviewDecoder
                             new BitmapTransform(),
                             ExifOrientationMode.IgnoreExifOrientation,
                             ColorManagementMode.DoNotColorManage).AsTask(ct);
-                        var pixels = provider.DetachPixelData(); // 单帧数组,处理完即弃(不复用累积)
+                        var pixels = provider.DetachPixelData(); // 单帧数组(池化复用,不向 LOH 反复申请)
 
                         int fw = (int)frame.PixelWidth, fh = (int)frame.PixelHeight;
                         int l, t, d;
@@ -158,41 +195,49 @@ public static class GifPreviewDecoder
                             l = t = d = 0;
                         }
 
-                        // 上一帧显示后的处置(渲染本帧前画布已处于"上一帧显示完毕"状态)
-                        if (prevD == 2) ClearRect(canvas, prevL, prevT, prevW, prevH, logicalW, logicalH);
-                        else if (prevD == 3 && snapshot != null)
+                        unsafe
                         {
-                            canvas = snapshot; // 旧画布弃(GC 回收)
-                            snapshot = null;
+                            byte* cp = (byte*)canvas;
+                            // 上一帧显示后的处置(渲染本帧前画布已处于"上一帧显示完毕"状态)
+                            if (prevD == 2) ClearRectNative(cp, prevL, prevT, prevW, prevH, logicalW, logicalH);
+                            else if (prevD == 3 && snapshot != 0)
+                                System.Buffer.MemoryCopy((byte*)snapshot, cp, frameBytes, frameBytes);
+
+                            // 本帧 disposal==3:显示前保存快照(用于本帧显示后的恢复)
+                            if (d == 3)
+                            {
+                                if (snapshot == 0)
+                                    snapshot = GifFrames.AllocNative(frameBytes);
+                                System.Buffer.MemoryCopy(cp, (byte*)snapshot, frameBytes, frameBytes);
+                            }
+
+                            // 绘制本帧(透明像素跳过,保留画布内容)
+                            fixed (byte* sp = pixels)
+                                BlitNative(cp, sp, l, t, fw, fh, logicalW, logicalH);
+
+                            // 输出完整帧 → 原生帧块(零托管大数组)
+                            gif.WriteFrameNative((int)i, cp);
                         }
-
-                        // 本帧 disposal==3:显示前保存快照(用于本帧显示后的恢复)
-                        if (d == 3)
-                        {
-                            snapshot = new byte[frameBytes];
-                            System.Buffer.BlockCopy(canvas, 0, snapshot, 0, frameBytes);
-                        }
-
-                        // 绘制本帧(透明像素跳过,保留画布内容)
-                        Blit(canvas, pixels, l, t, fw, fh, logicalW, logicalH);
-
-                        // 输出完整帧副本(转原生内存后即弃)
-                        var outBuf = new byte[frameBytes];
-                        System.Buffer.BlockCopy(canvas, 0, outBuf, 0, frameBytes);
-                        frames.Add(outBuf);
 
                         prevD = d; prevL = l; prevT = t; prevW = fw; prevH = fh;
-                }
+                    }
 
-                return (frames, delays, logicalW, logicalH);
+                    return (gif, delays, logicalW, logicalH);
+                }
+                catch
+                {
+                    gif?.Release(); // 取消/异常:释放已分配的原生帧块(引用 0 → Free)
+                    throw;
+                }
+                finally
+                {
+                    if (canvas != 0) GifFrames.FreeNative(canvas);
+                    if (snapshot != 0) GifFrames.FreeNative(snapshot);
+                }
             }, ct);
 
-            if (result == null) return null;
-
-            // ② 托管帧 → 原生内存(持久);托管数组即弃(GC 回收,不驻留池)
-            var (framesOut, delays, w, h) = result.Value;
-            managedFrames = framesOut;
-            return GifFrames.Create(framesOut, delays, w, h);
+            if (result == null || result.Value.Frames == null) return null;
+            return result.Value.Frames; // 引用 0 返回,由调用方 Put/AddRef 持有
         }
         catch (OperationCanceledException)
         {
@@ -205,8 +250,8 @@ public static class GifPreviewDecoder
         }
     }
 
-    /// <summary>帧像素拷贝到画布指定偏移;alpha=0 像素跳过(GIF 透明色索引 → WIC 输出 alpha=0)。</summary>
-    private static void Blit(byte[] dst, byte[] src, int left, int top, int srcW, int srcH, int dstW, int dstH)
+    /// <summary>帧像素拷贝到画布指定偏移;alpha=0 像素跳过(GIF 透明色索引 → WIC 输出 alpha=0)。原生指针版。</summary>
+    private static unsafe void BlitNative(byte* dst, byte* src, int left, int top, int srcW, int srcH, int dstW, int dstH)
     {
         for (int y = 0; y < srcH; y++)
         {
@@ -227,15 +272,18 @@ public static class GifPreviewDecoder
         }
     }
 
-    /// <summary>清除画布区域为透明(disposal 2:恢复到背景色)。注意行清除宽度按实际区间计算,防越界。</summary>
-    private static void ClearRect(byte[] canvas, int left, int top, int w, int h, int logicalW, int logicalH)
+    /// <summary>清除画布区域为透明(disposal 2:恢复到背景色)。注意行清除宽度按实际区间计算,防越界。原生指针版。</summary>
+    private static unsafe void ClearRectNative(byte* canvas, int left, int top, int w, int h, int logicalW, int logicalH)
     {
         int x0 = Math.Max(0, left);
         int x1 = Math.Min(logicalW, left + w);
         if (x1 <= x0) return;
         int rowBytes = (x1 - x0) * 4;
         for (int y = Math.Max(0, top); y < Math.Min(logicalH, top + h); y++)
-            Array.Clear(canvas, (y * logicalW + x0) * 4, rowBytes);
+        {
+            byte* row = canvas + (long)(y * logicalW + x0) * 4;
+            NativeMemory.Clear(row, (nuint)rowBytes);
+        }
     }
 
     /// <summary>手动解析 GIF 文件:每帧延迟(GCE,1/100s→ms)、图像描述符偏移/尺寸、disposal。

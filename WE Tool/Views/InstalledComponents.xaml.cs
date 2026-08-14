@@ -47,6 +47,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private readonly GifFramePlayer _gifPlayer = new(); // GIF 预览播放器(UI 线程构造;共享定时器驱动)
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _viewportTimer; // 视口对账防抖(滚动/挂载)
 
+    /// <summary>滚动中标志:滚动中绑定布局未就绪,延迟 100ms 判视口预热解码;对账(停止后)复位</summary>
+    private bool _scrolling;
+
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<ComponentInfo> FilteredComponents { get; } = [];
     public ObservableCollection<ComponentInfo> SelectedComponents { get; } = [];
@@ -373,9 +376,16 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             foreach (var gv in AllComponentGridViews)
             {
                 if (FindScrollViewer(gv) is ScrollViewer sv)
-                    sv.ViewChanged += (_, _) => ScheduleViewportReconcile();
+                    sv.ViewChanged += (_, _) => { _scrolling = true; ScheduleViewportReconcile(); };
             }
             ScheduleViewportReconcile();
+
+            // 软挂起:闲置 3 分钟无输入 → 停播全部 GIF + 清缓存(内存回落);任意输入唤醒对账重启
+            GifSoftSuspend.Register(this, () =>
+            {
+                _gifPlayer.StopAll();
+                _gifPlayer.ClearCache();
+            }, ScheduleViewportReconcile);
         };
 
         // 页面切走:停止全部播放并释放原生帧缓存(切回时 Loaded 对账重启)
@@ -383,6 +393,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             _gifPlayer.StopAll();
             _gifPlayer.ClearCache();
+            GifSoftSuspend.Unregister(this);
         };
 
         // GIF 预览:容器绑定/回收钩子(照 Papers)。
@@ -393,12 +404,25 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             {
                 if (e.InRecycleQueue)
                 {
-                    _gifPlayer.Stop(e.ItemContainer);
+                    _gifPlayer.StopSession(e.ItemContainer); // 停会话不取消解码:抖动滚回重绑时动画即刻恢复
                     return;
                 }
                 if (e.Item is ComponentInfo changingItem && e.ItemContainer is GridViewItem container)
                 {
-                    if (container.IsLoaded && IsInViewport(container))
+                    if (_scrolling)
+                    {
+                        // 滚动中:绑定瞬间布局未就绪(视口判断不可靠),延迟 100ms 等布局稳定再判;
+                        // 滚入视口的卡片立即预热解码(停止后即刻显示);快速滚过的由播放器 200ms 门槛兜底
+                        var c = container; var it = changingItem;
+                        _ = DispatcherQueue.TryEnqueue(async () =>
+                        {
+                            await Task.Delay(100);
+                            // Content 仍是原 item(防回收后重绑新 item 误启动),已加载且在视口内才启动
+                            if (c.IsLoaded && c.Content is ComponentInfo cur && ReferenceEquals(cur, it) && IsInViewport(c))
+                                UpdateGifPlayback(c, it);
+                        });
+                    }
+                    else if (container.IsLoaded && IsInViewport(container))
                     {
                         UpdateGifPlayback(container, changingItem);
                     }
@@ -1398,6 +1422,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     /// 视口外的(预实化缓冲容器)立即停止 → 缓存严格=可见数而非全部实化数。</summary>
     private void ScheduleViewportReconcile()
     {
+        _scrolling = false; // 防抖对账(200ms 后)执行时滚动已停止
         if (_viewportTimer == null)
         {
             _viewportTimer = DispatcherQueue.CreateTimer();
