@@ -113,7 +113,10 @@ internal class WallpaperScanner
             while (reader.Read())
             {
                 var entry = LoadCachedEntry(reader);
-                dict[entry.Item.FolderPath] = entry;
+                if (entry.Item.FolderPath != null)
+                {
+                    dict[entry.Item.FolderPath] = entry;
+                }
             }
         }
         catch (Exception ex)

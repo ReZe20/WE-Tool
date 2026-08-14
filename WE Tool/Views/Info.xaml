@@ -95,6 +95,7 @@
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine7" NavigateUri="https://github.com/serilog/serilog" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine8" NavigateUri="https://github.com/dotMorten/WinUIEx" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine9" NavigateUri="https://github.com/ReZe20/repkg-Re" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine11" NavigateUri="https://github.com/microsoft/Win2D" FontSize="12"/>
                                     </controls:WrapPanel>
                                 </StackPanel>
                             </controls:SettingsCard.Header>

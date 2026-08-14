@@ -596,9 +596,9 @@ public class RepkgCliService
         var sub = !string.IsNullOrEmpty(wallpaper.WorkshopID)
             ? wallpaper.WorkshopID
             : File.Exists(wallpaper.FolderPath ?? "")
-                ? Path.GetFileNameWithoutExtension(wallpaper.FolderPath)
+                ? Path.GetFileNameWithoutExtension(wallpaper.FolderPath!)
                 : new DirectoryInfo(wallpaper.FolderPath!).Name;
-        return Path.Combine(outputRoot, sub);
+        return Path.Combine(outputRoot, sub!);
     }
 
     private static string GetSafeName(string name)

@@ -38,7 +38,7 @@ namespace WE_Tool
         public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = [];
         public static Task ScanTask { get; private set; } = Task.CompletedTask;
         /// <summary>日志级别运行时开关(设置页修改即时生效,无需重启)</summary>
-        public static LoggingLevelSwitch LogLevelSwitch { get; } = new(LogEventLevel.Debug);
+        public static LoggingLevelSwitch LogLevelSwitch { get; } = new(LogEventLevel.Information);
         /// <summary>启动时的完整扫描链路（读配置 → StartBackgroundScan），页面可等待它确保扫描已开始</summary>
         public static Task? InitialScanTask { get; private set; }
         public static event EventHandler? ScanCompleted;

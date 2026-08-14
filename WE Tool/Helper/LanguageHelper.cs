@@ -32,7 +32,7 @@ namespace WE_Tool.Helper
             {
                 try
                 {
-                    string result = _loader.GetString(k + "/Content");
+                    string result = _loader?.GetString(k + "/Content") ?? "";
                     return string.IsNullOrEmpty(result) ? value : result;
                 }
                 catch
@@ -51,11 +51,11 @@ namespace WE_Tool.Helper
                 {
                     string lookupKey = k.Contains('.') ? k.Replace(".", "/") : k;
 
-                    string result = _loader.GetString(lookupKey);
+                    string result = _loader?.GetString(lookupKey) ?? "";
 
                     if (string.IsNullOrEmpty(result) && lookupKey != k)
                     {
-                        result = _loader.GetString(k);
+                        result = _loader?.GetString(k) ?? "";
                     }
 
                     return string.IsNullOrEmpty(result) ? k : result;

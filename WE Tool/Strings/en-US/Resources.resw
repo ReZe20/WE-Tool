@@ -1214,6 +1214,9 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (based on notscuffed/repkg)</value>
   </data>
+  <data name="Info_CreditsLine11.Content" xml:space="preserve">
+    <value>Win2D 1.4</value>
+  </data>
   <data name="Info_License.Header" xml:space="preserve">
     <value>Open Source License</value>
   </data>

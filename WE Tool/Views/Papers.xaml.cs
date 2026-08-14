@@ -430,7 +430,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
         }
     }
-    public IAsyncRelayCommand<WallpaperItem> DeleteWallpaperCommand { get; }
+    public IAsyncRelayCommand<WallpaperItem> DeleteWallpaperCommand { get; } = null!;
 
     /// <summary>取消订阅按钮是否可用（单选/多选中包含创意工坊壁纸）</summary>
     public bool IsUnsubscribeEnabled
@@ -1658,7 +1658,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (grid == null || item == null) return;
 
         var checkBox = FindCheckBoxInGrid(grid);
-        checkBox.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
+        if (checkBox != null)
+        {
+            checkBox.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
+        }
     }
 
     private static CheckBox? FindCheckBoxInGrid(Grid grid)
@@ -2292,33 +2295,33 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             switch (e.Key)
             {
                 case VirtualKey.A:
-                    SelectAllWallpaper_Accelerator_Invoked(null, null);
+                    SelectAllWallpaper_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
                 case VirtualKey.I:
-                    InvertSelection_Accelerator_Invoked(null, null);
+                    InvertSelection_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
                 case VirtualKey.C:
-                    Copy_Accelerator_Invoked(null, null);
+                    Copy_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
             }
         }
         else if (menu && e.Key == VirtualKey.Enter)
         {
-            Property_Accelerator_Invoked(null, null);
+            Property_Accelerator_Invoked(null!, null!);
             e.Handled = true;
         }
         else if (e.Key == VirtualKey.Delete)
         {
-            Delete_Accelerator_Invoked(null, null);
+            Delete_Accelerator_Invoked(null!, null!);
             e.Handled = true;
         }
         else if (e.Key == VirtualKey.F5)
         {
             // F5 刷新（刷新进行中时由 WallpaperListRefresh_Click_ByCommandBarFlyout 内部防连按兜底）
-            WallpaperListRefresh_Click_ByCommandBarFlyout(null, null);
+            WallpaperListRefresh_Click_ByCommandBarFlyout(null!, null!);
             e.Handled = true;
         }
     }

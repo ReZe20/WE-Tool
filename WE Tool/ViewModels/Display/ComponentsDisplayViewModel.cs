@@ -288,10 +288,11 @@ public partial class ComponentsDisplayViewModel : ObservableObject
         BottomBarHeight = value ? new GridLength(50) : new GridLength(0);
     }
 
+    private GridLength _bottomBarHeight;
     public GridLength BottomBarHeight
     {
         get => IsBottomBarOpen ? new GridLength(50) : new GridLength(0);
-        set => SetProperty(ref field, value);
+        set => SetProperty(ref _bottomBarHeight, value);
     }
 
     [ObservableProperty]

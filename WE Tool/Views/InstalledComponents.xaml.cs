@@ -1,4 +1,4 @@
-using CommunityToolkit.WinUI.Animations;
+﻿using CommunityToolkit.WinUI.Animations;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -20,7 +20,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Models;
@@ -503,11 +502,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
             // 元信息行
             ComponentFileSizeText.Text = new Converters.FileSizeToString()
-                .Convert(item.FileSize, null, "", "")?.ToString() ?? "";
+                .Convert(item.FileSize, null!, "", "")?.ToString() ?? "";
             ComponentTypeText.Text = new Converters.ComponentTypeToDisplay()
-                .Convert(item.ComponentType, null, "", "")?.ToString() ?? "";
+                .Convert(item.ComponentType, null!, "", "")?.ToString() ?? "";
             ComponentRatingText.Text = new Converters.RatingToDisplay()
-                .Convert(item.ContentRating ?? "Everyone", null, "", "")?.ToString() ?? "";
+                .Convert(item.ContentRating ?? "Everyone", null!, "", "")?.ToString() ?? "";
 
             // 标签徽章
             bool hasTags = !string.IsNullOrEmpty(item.Tags) && item.Tags != "Unspecified";
@@ -515,7 +514,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (hasTags)
             {
                 ComponentTagsText.Text = new Converters.TagToDisplay()
-                    .Convert(item.Tags, null, "", "")?.ToString() ?? item.Tags!;
+                    .Convert(item.Tags!, null!, "", "")?.ToString() ?? item.Tags!;
             }
 
             SingleSelectionInfoPanel.Visibility = Visibility.Visible;
@@ -1168,51 +1167,51 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             switch (e.Key)
             {
                 case VirtualKey.A:
-                    SelectAllComponents_Accelerator_Invoked(null, null);
+                    SelectAllComponents_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
                 case VirtualKey.I:
-                    InvertSelection_Accelerator_Invoked(null, null);
+                    InvertSelection_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
                 case VirtualKey.C:
-                    Copy_Accelerator_Invoked(null, null);
+                    Copy_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
             }
         }
         else if (menu && e.Key == VirtualKey.Enter)
         {
-            Properties_Accelerator_Invoked(null, null);
+            Properties_Accelerator_Invoked(null!, null!);
             e.Handled = true;
         }
         else if (e.Key == VirtualKey.Delete)
         {
-            Delete_Accelerator_Invoked(null, null);
+            Delete_Accelerator_Invoked(null!, null!);
             e.Handled = true;
         }
         else if (e.Key == VirtualKey.F5)
         {
             // F5 刷新（刷新进行中时由 ComponentsRefresh_Click 内部防连按兜底）
-            ComponentsRefresh_Click(null, null);
+            ComponentsRefresh_Click(null!, null!);
             e.Handled = true;
         }
     }
 
     private void SelectAllComponents_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-        => SelectAllComponents_Click(sender, null);
+        => SelectAllComponents_Click(sender, null!);
 
     private void InvertSelection_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-        => InvertSelection_Click(sender, null);
+        => InvertSelection_Click(sender, null!);
 
     private void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-        => CopyComponent_Click(sender, null);
+        => CopyComponent_Click(sender, null!);
 
     private void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-        => DeleteComponent_Click(sender, null);
+        => DeleteComponent_Click(sender, null!);
 
     private void Properties_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-        => ComponentProperties_Click(sender, null);
+        => ComponentProperties_Click(sender, null!);
 
     private void GoToSettings_Click(object sender, RoutedEventArgs e)
     {
@@ -1771,7 +1770,10 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (grid == null || item == null) return;
 
         var checkBox = FindCheckBoxInGrid(grid);
-        checkBox.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
+        if (checkBox != null)
+        {
+            checkBox.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
+        }
     }
 
     private static CheckBox? FindCheckBoxInGrid(Grid grid)

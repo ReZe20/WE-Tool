@@ -208,7 +208,7 @@ namespace WE_Tool.ViewModels
         public partial bool LazyLoad { get; set; } = true;
         /// <summary>日志记录级别(Verbose/Debug/Information/Warning/Error/Fatal),修改即时生效</summary>
         [ObservableProperty]
-        public partial string LogLevel { get; set; } = "Debug";
+        public partial string LogLevel { get; set; } = "Information";
 
         partial void OnLogLevelChanged(string value)
         {
@@ -289,7 +289,7 @@ namespace WE_Tool.ViewModels
             _previousSelectedWallpapers?.CollectionChanged += OnSelectedWallpapersCollectionChanged;
             OnSelectedWallpaperChanged(SelectedWallpaper);
         }
-        partial void OnSelectedWallpaperChanged(WallpaperItem value)
+        partial void OnSelectedWallpaperChanged(WallpaperItem? value)
         {
             OnPropertyChanged(nameof(IsButtonInGridColumnEnabled));
         }
@@ -460,17 +460,13 @@ namespace WE_Tool.ViewModels
             if (string.IsNullOrEmpty(PathManagementVM.DownloadPath))
                 await PathManagementVM.AutoDetectDownloadPathAsync();
 
-            string mode = "00000";
-            if (string.IsNullOrEmpty(PathManagementVM.WorkshopPath))
-                mode = mode.Remove(0, 1).Insert(0, "1");
-            if (string.IsNullOrEmpty(PathManagementVM.ProjectPath))
-                mode = mode.Remove(1, 1).Insert(1, "1");
-            if (string.IsNullOrEmpty(PathManagementVM.AcfPath))
-                mode = mode.Remove(2, 1).Insert(2, "1");
-            if (string.IsNullOrEmpty(PathManagementVM.OfficialPath))
-                mode = mode.Remove(3, 1).Insert(3, "1");
-            if (string.IsNullOrEmpty(PathManagementVM.VdfPath))
-                mode = mode.Remove(4, 1).Insert(4, "1");
+            // 缺哪个路径就把对应位标记为 1
+            string mode = string.Concat(
+                string.IsNullOrEmpty(PathManagementVM.WorkshopPath) ? '1' : '0',
+                string.IsNullOrEmpty(PathManagementVM.ProjectPath) ? '1' : '0',
+                string.IsNullOrEmpty(PathManagementVM.AcfPath) ? '1' : '0',
+                string.IsNullOrEmpty(PathManagementVM.OfficialPath) ? '1' : '0',
+                string.IsNullOrEmpty(PathManagementVM.VdfPath) ? '1' : '0');
 
             if (mode.Contains('1'))
                 await PathManagementVM.AutoDetectWorkshopPathAsync(mode);

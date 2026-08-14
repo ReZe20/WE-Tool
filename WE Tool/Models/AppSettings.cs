@@ -10,7 +10,7 @@ namespace WE_Tool.Models
         public string AppLanguage { get; set; } = "default";
         public string StartPageTag { get; set; } = "Papers";
         public string Theme { get; set; } = "Default";
-        public string LogLevel { get; set; } = "Debug";
+        public string LogLevel { get; set; } = "Information";
         public int WindowX { get; set; } = -1;
         public int WindowY { get; set; } = -1;
         public int WindowWidth { get; set; } = -1;

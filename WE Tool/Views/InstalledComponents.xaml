@@ -179,7 +179,6 @@
                 <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode" GroupName="CompViewGroup"
                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ListViewItem, Mode=TwoWay}"/>
                 <MenuFlyoutSeparator/>
-                <MenuFlyoutSeparator/>
                 <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
                     <RadioMenuFlyoutItem x:Uid="AppBarButton_Type" GroupName="CompLabelGroup"
                                          Click="OnTagDisplayChanged"
@@ -197,7 +196,6 @@
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
                 </MenuFlyoutSubItem>
-                <MenuFlyoutSeparator/>
                 <MenuFlyoutSubItem x:Uid="Pagination">
                     <RadioMenuFlyoutItem GroupName="MenuCompPageSizeGroup" x:Uid="Pagination_None"
                                          IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
@@ -342,7 +340,6 @@
                             <RadioMenuFlyoutItem x:Uid="AppBarButton_ListMode" GroupName="ViewGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.ListViewItem, Mode=TwoWay}"/>
                             <MenuFlyoutSeparator/>
-                            <MenuFlyoutSeparator/>
                             <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_TagDisplay">
                                 <RadioMenuFlyoutItem x:Uid="AppBarButton_Type" GroupName="LabelGroup"
                                                      Click="OnTagDisplayChanged"
@@ -360,7 +357,6 @@
                                                      Click="OnTagDisplayChanged"
                                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
                             </MenuFlyoutSubItem>
-                            <MenuFlyoutSeparator/>
                             <MenuFlyoutSubItem x:Uid="Pagination">
                                 <RadioMenuFlyoutItem GroupName="CompPageSizeGroup" x:Uid="Pagination_None"
                                                      IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
@@ -712,7 +708,7 @@
                                               ItemsSource="{x:Bind FilteredComponents}"
                                               Margin="4,0,4,0"
                                               Visibility="{x:Bind ViewModel.ComponentsDisplayVM.IconModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ComponentContextMenuFlyout}"
+                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                               Tapped="ComponentsList_Tapped"
                                               SelectionMode="None"
                                               SizeChanged="ComponentGrid_SizeChanged"
@@ -746,28 +742,24 @@
                                                                 </Image.Source>
                                                             </Image>
 
-                                                            <Grid VerticalAlignment="Bottom" Height="45">
-                                                                <Grid.Background>
-                                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                                        <GradientStop Color="Transparent" Offset="0"/>
-                                                                        <GradientStop Color="#CC000000" Offset="1"/>
-                                                                    </LinearGradientBrush>
-                                                                </Grid.Background>
+                                                            <Grid VerticalAlignment="Bottom" Height="45" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
                                                                 <TextBlock Text="{x:Bind Title}"
-                                                                           Foreground="White"
+                                                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                                                                            FontSize="12"
-                                                                           VerticalAlignment="Bottom"
-                                                                           Margin="10,0,10,8"
-                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                           VerticalAlignment="Center"
+                                                                           HorizontalAlignment="Center"
+                                                                           Margin="4,4,4,4"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           TextWrapping="WrapWholeWords"/>
                                                             </Grid>
                                                             <Border HorizontalAlignment="Right"
                                                                     VerticalAlignment="Top"
-                                                                    BorderBrush="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                                    BorderBrush="{ThemeResource LayerFillColorDefaultBrush}"
                                                                     CornerRadius="0,0,0,10"
                                                                     MinWidth="50"
                                                                     MinHeight="20"
                                                                     Padding="4"
-                                                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
                                                                     Visibility="{Binding DataContext.ViewModel.ComponentsDisplayVM.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
                                                                     x:Name="TagDisplayBorder">
                                                                 <TextBlock Text="{x:Bind Converter={StaticResource ComponentsTagContentChoose}}"
@@ -807,7 +799,7 @@
                                               ItemsSource="{x:Bind FilteredComponents}"
                                               Margin="4,0,4,0"
                                               Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ContentModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ComponentContextMenuFlyout}"
+                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                               Tapped="ComponentsList_Tapped"
                                               SelectionMode="None"
                                               SizeChanged="ComponentGrid_SizeChanged"
@@ -925,7 +917,7 @@
                                               ItemsSource="{x:Bind FilteredComponents}"
                                               Margin="4,0,4,0"
                                               Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ListModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ComponentContextMenuFlyout}"
+                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
                                               Tapped="ComponentsList_Tapped"
                                               SelectionMode="None"
                                               SizeChanged="ComponentGrid_SizeChanged"

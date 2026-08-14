@@ -21,12 +21,13 @@ namespace WE_Tool.ViewModels
             BottomBarHeight = value ? new Microsoft.UI.Xaml.GridLength(50) : new Microsoft.UI.Xaml.GridLength(0);
         }
 
+        private Microsoft.UI.Xaml.GridLength _bottomBarHeight;
         public Microsoft.UI.Xaml.GridLength BottomBarHeight
         {
             get => IsBottomBarOpen ?
                   new Microsoft.UI.Xaml.GridLength(50) :
                   new Microsoft.UI.Xaml.GridLength(0);
-            set => SetProperty(ref field, value);
+            set => SetProperty(ref _bottomBarHeight, value);
         }
 
         [ObservableProperty]

@@ -92,17 +92,17 @@ namespace WE_Tool
                 }
 
                 // 恢复窗口位置和大小（在导航之后执行，确保窗口布局已完成）
-                bool hasPosition = settings.RestoreWindowGeometry && settings is { WindowX: >= 0, WindowY: >= 0 };
-                bool hasSize = settings.RestoreWindowGeometry && settings is { WindowWidth: > 0, WindowHeight: > 0 };
+                bool hasPosition = settings is { RestoreWindowGeometry: true, WindowX: >= 0, WindowY: >= 0 };
+                bool hasSize = settings is { RestoreWindowGeometry: true, WindowWidth: > 0, WindowHeight: > 0 };
 
                 if (hasPosition || hasSize)
                 {
                     try
                     {
-                        int x = hasPosition ? settings.WindowX : this.AppWindow.Position.X;
-                        int y = hasPosition ? settings.WindowY : this.AppWindow.Position.Y;
-                        int w = hasSize ? settings.WindowWidth : this.AppWindow.Size.Width;
-                        int h = hasSize ? settings.WindowHeight : this.AppWindow.Size.Height;
+                        int x = hasPosition ? settings!.WindowX : this.AppWindow.Position.X;
+                        int y = hasPosition ? settings!.WindowY : this.AppWindow.Position.Y;
+                        int w = hasSize ? settings!.WindowWidth : this.AppWindow.Size.Width;
+                        int h = hasSize ? settings!.WindowHeight : this.AppWindow.Size.Height;
 
                         var rect = new RectInt32(x, y, w, h);
                         // 检查位置是否在有效显示器范围内（防止外接显示器被移除后窗口跑出屏幕可见区域）
@@ -119,7 +119,7 @@ namespace WE_Tool
                 }
 
                 // 恢复最大化状态（放在位置/大小之后，确保 restore bounds 先设置好）
-                if (settings.RestoreWindowGeometry && settings.WindowMaximized)
+                if (settings is { RestoreWindowGeometry: true, WindowMaximized: true })
                 {
                     try
                     {
