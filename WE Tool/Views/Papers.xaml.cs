@@ -624,35 +624,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 gifScroll.ViewChanged += (_, _) => ScheduleViewportReconcile();
             ScheduleViewportReconcile();
 
-            // [临时内存诊断] 20s 后输出内存构成(定位后删除;不强制 GC——避免诊断本身触发阻塞回收干扰测量)
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(20000);
-                try
-                {
-                    var mi = GC.GetGCMemoryInfo();
-                    var proc = System.Diagnostics.Process.GetCurrentProcess();
-                    long loh = mi.GenerationInfo.Length > 3 ? mi.GenerationInfo[3].SizeAfterBytes : 0;
-                    var ws = proc.WorkingSet64 / 1048576;
-                    var priv = proc.PrivateMemorySize64 / 1048576;
-                    var heap = mi.HeapSizeBytes / 1048576;
-                    var lohMb = loh / 1048576;
-                    var sessions = _gifPlayer.SessionCount;
-                    var cacheCount = _gifPlayer.CacheCount;
-                    var cacheMb = _gifPlayer.CacheBytes / 1048576;
-                    DispatcherQueue.TryEnqueue(() =>
-                    {
-                        int realized = WallpapersGridView.ItemsPanelRoot?.Children.Count ?? 0;
-                        var cacheSample = string.Join(",", _gifPlayer.CachePaths().Select(p => System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(p)) + "/" + System.IO.Path.GetFileName(p)).Take(6));
-                        var sessionSample = string.Join(",", _gifPlayer.SessionPaths().Select(p => System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(p)) + "/" + System.IO.Path.GetFileName(p)).Take(6));
-                        Log.Information($"[内存诊断] WS={ws}MB Private={priv}MB 托管堆={heap}MB LOH={lohMb}MB 会话={sessions} 去重路径={_gifPlayer.DistinctPathCount} 缓存条数={cacheCount} 交集={_gifPlayer.CacheSessionOverlap()} 缓存={cacheMb}MB 实化容器={realized} Put={_gifPlayer.DiagPutCount} Remove={_gifPlayer.DiagRemoveCount} 对账移除={_gifPlayer.DiagExceptRemoveCount} Register={_gifPlayer.DiagRegisterCount}");
-                        Log.Information($"[内存诊断] 缓存样本={cacheSample} 会话样本={sessionSample}");
-                    });
-                }
-                catch (Exception ex) { Log.Warning(ex, "[内存诊断] 失败"); }
-            });
-
-            // 软挂起:闲置 3 分钟无输入 → 停播全部 GIF + 清缓存(内存回落);任意输入唤醒对账重启
+                // 软挂起:闲置 3 分钟无输入 → 停播全部 GIF + 清缓存(内存回落);任意输入唤醒对账重启
             GifSoftSuspend.Register(this, () =>
             {
                 _gifPlayer.StopAll();

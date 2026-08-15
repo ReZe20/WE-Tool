@@ -477,12 +477,10 @@ public sealed class GifFrameCache
         foreach (var key in toRemove)
         {
             Remove(key);
-            DiagRemoveCount++;
         }
     }
 
     /// <summary>[内存诊断] RemoveExcept 移除计数(Stop 之外的移除路径)</summary>
-    public int DiagRemoveCount;
 
     /// <summary>[内存诊断] 帧缓存当前占用字节</summary>
     public long Bytes => _bytes;

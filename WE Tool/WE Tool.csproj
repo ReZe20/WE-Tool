@@ -15,7 +15,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>0.5.1</Version>
+    <Version>0.5.2</Version>
     <!-- Release 下 WinUI 默认禁用反射序列化,导致 config.json 读写失败(实测:设置全部丢失);显式开启 -->
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <Authors>ReZe20</Authors>

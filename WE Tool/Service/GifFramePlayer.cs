@@ -67,10 +67,8 @@ public sealed class GifFramePlayer
     public event Action? SessionSlotFreed;
 
     /// <summary>[内存诊断] 事件计数:Put/Remove/Register 次数(定位缓存条数与会话数脱钩的元凶)</summary>
-    public int DiagPutCount, DiagRemoveCount, DiagRegisterCount;
 
     /// <summary>[内存诊断] RemoveExcept(对账)移除计数</summary>
-    public int DiagExceptRemoveCount => _cache.DiagRemoveCount;
 
     /// <summary>上一版"节流 GC"的教训:非阻塞后台 Gen2(Optimized, blocking:false)不回收 LOH、
     /// 也不把已提交内存段归还 OS,滚动积累的 LOH 垃圾滞留 → 任务管理器内存只涨不降(600MB 水位);
@@ -171,7 +169,6 @@ public sealed class GifFramePlayer
             if (!IsPathActive(session.Path))
             {
                 _cache.Remove(session.Path);
-                DiagRemoveCount++;
             }
         }
         if (_sessions.Count == 0) StopTimer();
@@ -280,26 +277,8 @@ public sealed class GifFramePlayer
     public long CacheBytes => _cache.Bytes;
 
     /// <summary>[内存诊断] 会话去重后的 GIF 路径数(判断是否同路径多会话)</summary>
-    public int DistinctPathCount => _sessions.Values.Select(s => s.Path).Distinct().Count();
-
     /// <summary>[内存诊断] 帧缓存条数</summary>
     public int CacheCount => _cache.Count;
-
-    /// <summary>[内存诊断] 缓存 path 列表(前 N 个)</summary>
-    public IEnumerable<string> CachePaths() => _cache.Paths();
-
-    /// <summary>[内存诊断] 会话 path 列表(前 N 个)</summary>
-    public IEnumerable<string> SessionPaths() => _sessions.Values.Select(s => s.Path);
-
-    /// <summary>[内存诊断] 缓存与当前会话 path 的交集数(理想 = 缓存条数 = 会话去重数)</summary>
-    public int CacheSessionOverlap()
-    {
-        var sessionSet = _sessions.Values.Select(s => s.Path).ToHashSet();
-        int n = 0;
-        foreach (var k in _cache.Paths())
-            if (sessionSet.Contains(k)) n++;
-        return n;
-    }
 
     private async Task DecodeAndRegisterAsync(object owner, Image target, string path, CancellationTokenSource cts)
     {
@@ -324,7 +303,6 @@ public sealed class GifFramePlayer
             if (CacheEnabled)
             {
                 _cache.Put(path, frames); // Put 内部 AddRef(缓存持有)
-                DiagPutCount++;
                 frames.Release(); // 释放解码产物持有 → 缓存持 1 份
                 productReleased = true;
             }
@@ -383,7 +361,6 @@ public sealed class GifFramePlayer
     private void Register(object owner, string path, GifFrames frames, Image target)
     {
         _pending.Remove(owner);
-        DiagRegisterCount++;
         frames.AddRef(); // 会话持 1 份引用
 
         // 单帧显示位图(会话持有;换帧 = 拷贝原生像素到该位图 + Invalidate)
