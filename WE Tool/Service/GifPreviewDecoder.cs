@@ -139,6 +139,21 @@ public static class GifPreviewDecoder
     /// <summary>帧延迟钳制下限:0/过小延迟的工具生成 GIF 会疯转,统一 33ms(~30fps 上限)</summary>
     private const int MinFrameDelayMs = 33;
 
+    /// <summary>WIC 单帧像素输出数组池:DetachPixelData 每帧新分配(144KB+ 为 LOH 对象),
+    /// 弃后 Gen2 不勤收(滚动积累)且迫使节流 GC 阻塞回收(卡顿);入池持有(固定预算 32MB) →
+    /// 待回收 LOH 垃圾≈0,GC 几乎无事可做。</summary>
+    private static readonly System.Collections.Concurrent.ConcurrentBag<byte[]> PixelBufPool = [];
+    private static long _pixelBufBytes;
+    private const long PixelBufBudget = 32 * 1024 * 1024;
+
+    private static void ReturnPixelBuf(byte[] buf)
+    {
+        if (Interlocked.Add(ref _pixelBufBytes, buf.Length) <= PixelBufBudget)
+            PixelBufPool.Add(buf);
+        else
+            Interlocked.Add(ref _pixelBufBytes, -buf.Length);
+    }
+
     public static async Task<GifFrames?> DecodeAsync(string path, CancellationToken ct)
     {
         try
@@ -218,6 +233,8 @@ public static class GifPreviewDecoder
                             // 输出完整帧 → 原生帧块(零托管大数组)
                             gif.WriteFrameNative((int)i, cp);
                         }
+
+                        ReturnPixelBuf(pixels); // 像素数组入池(LOH 垃圾≈0,GC 无事可做)
 
                         prevD = d; prevL = l; prevT = t; prevW = fw; prevH = fh;
                     }

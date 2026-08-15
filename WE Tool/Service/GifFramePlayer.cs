@@ -51,6 +51,8 @@ public sealed class GifFramePlayer
     private readonly GifFrameCache _cache;
     private readonly Dictionary<object, GifPlaybackSession> _sessions = [];
     private readonly Dictionary<object, PendingDecode> _pending = []; // owner → 进行中的解码任务(记录 path,区分同 path 双触发与换绑)
+    // 解码并发上限 = 逻辑线程数(滚动瞬间大量容器进入时限并发,防解码风暴打满 CPU/瞬时内存峰值)
+    private readonly SemaphoreSlim _decodeGate = new(Math.Max(1, Environment.ProcessorCount));
     private readonly DispatcherQueueTimer _timer;
     private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew(); // 单调时钟,防系统时间跳变
     private bool _timerRunning;
@@ -61,9 +63,9 @@ public sealed class GifFramePlayer
     /// <summary>[内存诊断] RemoveExcept(对账)移除计数</summary>
     public int DiagExceptRemoveCount => _cache.DiagRemoveCount;
 
-    /// <summary>节流 GC 时间戳:解码/停止 churn 后每 3 秒最多一次后台 Gen2。
-    /// 根因:解码临时数组(50×256KB≈12.8MB/张)在 LOH,Gen2 不勤(要内存压力) → 无缓存滚动时
-    /// LOH 逐步积累(内存只涨不降,"偶尔减小"=Gen2 恰被触发);节流后台 GC 压住水位,不卡 UI。</summary>
+    /// <summary>节流 GC 时间戳:解码/停止 churn 后每 10 秒最多一次。
+    /// 像素池化后 LOH 垃圾≈0,GC 无事可做 —— 纯兜底(清 BitmapImage 等残余);10 秒节流 + 非阻塞
+    /// 后台 GC,不暂停 UI 线程(之前 3 秒 + 阻塞式 Aggressive 导致滚动停止后卡顿)。</summary>
     private DateTime _lastGc = DateTime.MinValue;
 
     /// <summary>必须在 UI 线程构造(定时器与 WriteableBitmap 都要求)</summary>
@@ -155,20 +157,19 @@ public sealed class GifFramePlayer
 
     /// <summary>延迟后台强制 GC:释放 BitmapImage/解码临时(LOH)等托管残留。
     /// 原因:.NET 无内存压力时不主动 GC,native 关联对象(位图)与 LOH 滞留 → 任务管理器内存只涨不降。
-    /// 节流:churn 频繁时每 3 秒最多一次,避免 GC 风暴。</summary>
+    /// 节流:churn 频繁时每 10 秒最多一次;非阻塞后台 GC(不暂停 UI 线程,防滚动停止后卡顿)。</summary>
     private void ScheduleBackgroundGc()
     {
         var now = DateTime.UtcNow;
-        if ((now - _lastGc).TotalSeconds < 3) return;
+        if ((now - _lastGc).TotalSeconds < 10) return;
         _lastGc = now;
         _ = Task.Run(async () =>
         {
             await Task.Delay(1500); // 等 UI 切换/解码完成
             try
             {
-                GC.Collect(2, GCCollectionMode.Aggressive, true, true);
+                GC.Collect(2, GCCollectionMode.Optimized, false, false); // 非阻塞:不冻结 UI 线程
                 GC.WaitForPendingFinalizers();
-                GC.Collect(2, GCCollectionMode.Aggressive, true, true);
             }
             catch { /* 后台 GC 失败无碍 */ }
         });
@@ -222,7 +223,10 @@ public sealed class GifFramePlayer
         bool productReleased = false; // 解码产物持有是否已释放(防 catch 误减已转移的会话/缓存引用)
         try
         {
-            // 无并发限制:滚动瞬间所有容器同时解码(方案 B 后解码临时全原生,瞬时峰值可控,解码最快)
+            // 并发上限 = 逻辑线程数(排队解码,防解码风暴)
+            await _decodeGate.WaitAsync(cts.Token);
+            try
+            {
             frames = await GifPreviewDecoder.DecodeAsync(path, cts.Token);
             if (frames == null)
             {
@@ -279,6 +283,11 @@ public sealed class GifFramePlayer
                 productReleased = true;
             }
             ScheduleBackgroundGc(); // 解码完成:节流清 LOH(解码临时数组 12.8MB/张)
+            }
+            finally
+            {
+                _decodeGate.Release();
+            }
         }
         catch (OperationCanceledException)
         {
