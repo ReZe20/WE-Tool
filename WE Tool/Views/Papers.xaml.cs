@@ -72,9 +72,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private readonly IPickerService _pickerService;
     private readonly GifFramePlayer _gifPlayer = new(); // GIF 预览播放器(UI 线程构造;共享定时器驱动)
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _viewportTimer; // 视口对账防抖(滚动/挂载)
-
-    /// <summary>滚动中标志:滚动中绑定布局未就绪,延迟 100ms 判视口预热解码;对账(停止后)复位</summary>
-    private bool _scrolling;
     private List<WallpaperItem> _allWallpapers = [];
     private bool _isFirstLoad = true;
     public SettingsViewModel ViewModel { get; }
@@ -551,20 +548,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 UpdateItemBlur(changingRoot, changingItem);
                 if (e.ItemContainer is GridViewItem container)
                 {
-                    if (_scrolling)
-                    {
-                        // 滚动中:绑定瞬间布局未就绪(视口判断不可靠),延迟 100ms 等布局稳定再判;
-                        // 滚入视口的卡片立即预热解码(停止后即刻显示);快速滚过的由播放器 200ms 门槛兜底
-                        var c = container; var r = changingRoot; var it = changingItem;
-                        _ = DispatcherQueue.TryEnqueue(async () =>
-                        {
-                            await Task.Delay(100);
-                            // Content 仍是原 item(防回收后重绑新 item 误启动),已加载且在视口内才启动
-                            if (c.IsLoaded && c.Content is WallpaperItem cur && ReferenceEquals(cur, it) && IsInViewport(c))
-                                UpdateGifPlayback(c, r, it);
-                        });
-                    }
-                    else if (container.IsLoaded && IsInViewport(container))
+                    if (container.IsLoaded && IsInViewport(container))
                     {
                         UpdateGifPlayback(container, changingRoot, changingItem);
                     }
@@ -637,18 +621,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             // GIF 视口对账:滚动停止后只播视口内的卡片(缓冲容器不解码 → 缓存=可见数)
             if (FindScrollViewer(WallpapersGridView) is ScrollViewer gifScroll)
-                gifScroll.ViewChanged += (_, _) => { _scrolling = true; ScheduleViewportReconcile(); };
+                gifScroll.ViewChanged += (_, _) => ScheduleViewportReconcile();
             ScheduleViewportReconcile();
 
-            // [临时内存诊断] 20s 后输出内存构成(定位后删除)
+            // [临时内存诊断] 20s 后输出内存构成(定位后删除;不强制 GC——避免诊断本身触发阻塞回收干扰测量)
             _ = Task.Run(async () =>
             {
                 await Task.Delay(20000);
                 try
                 {
-                    GC.Collect(2, GCCollectionMode.Aggressive, true, true);
-                    GC.WaitForPendingFinalizers();
-                    GC.Collect(2, GCCollectionMode.Aggressive, true, true);
                     var mi = GC.GetGCMemoryInfo();
                     var proc = System.Diagnostics.Process.GetCurrentProcess();
                     long loh = mi.GenerationInfo.Length > 3 ? mi.GenerationInfo[3].SizeAfterBytes : 0;
@@ -1459,7 +1440,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     /// 视口外的(GridView 预实化的缓冲容器)立即停止 → 缓存严格=可见数而非全部实化数。</summary>
     private void ScheduleViewportReconcile()
     {
-        _scrolling = false; // 防抖对账(200ms 后)执行时滚动已停止
         if (_viewportTimer == null)
         {
             _viewportTimer = DispatcherQueue.CreateTimer();
@@ -1699,6 +1679,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
     {
         if (gridView == null || gridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
+        // 备货限制:默认 4 屏(实化容器 ~80 棵,XAML 元素树 churn 是 GC 压力来源);
+        // 1 屏备货 → 实化减半,滚动仍流畅(0.5 实测偏卡,1 为折中;卡可调回 2)
+        wrap.CacheLength = 1;
         double available = gridView.ActualWidth;
         if (available <= 0) return;
         if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10

@@ -108,6 +108,10 @@ public sealed class GifFrames : IDisposable
     public void CopyFrameTo(int index, byte[] destination)
         => Marshal.Copy(_block + (nint)((long)index * FrameBytes), destination, 0, FrameBytes);
 
+    /// <summary>拷贝指定帧到原生目标地址(后台线程直接写 WriteableBitmap 像素缓冲用:一次 memcpy,零中间数组)</summary>
+    public unsafe void CopyFrameToNative(int index, IntPtr destination)
+        => System.Buffer.MemoryCopy((byte*)(_block + (nint)((long)index * FrameBytes)), (byte*)destination, FrameBytes, FrameBytes);
+
     public void AddRef() => Interlocked.Increment(ref _refs);
 
     public void Release()
@@ -396,7 +400,7 @@ public static class GifPreviewDecoder
 /// 缓存=活动会话模型:该路径无活动会话时立即移除并释放原生内存 → 内存严格跟随可见容器数。</summary>
 public sealed class GifFrameCache
 {
-    private const long BudgetBytes = 512L * 1024 * 1024; // 兜底预算(活动帧不淘汰,仅防异常残留)
+    private const long BudgetBytes = 1024L * 1024 * 1024; // 1GB 预算:全库帧驻留(138 张 × ~7.2MB ≈ 1GB),窗口最大化/视口大时滚回零解码(用户指定)
 
     private readonly Dictionary<string, GifFrames> _map = [];
     private readonly LinkedList<string> _lru = []; // 头 = 最近使用

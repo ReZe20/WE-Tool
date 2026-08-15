@@ -47,9 +47,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private readonly GifFramePlayer _gifPlayer = new(); // GIF 预览播放器(UI 线程构造;共享定时器驱动)
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _viewportTimer; // 视口对账防抖(滚动/挂载)
 
-    /// <summary>滚动中标志:滚动中绑定布局未就绪,延迟 100ms 判视口预热解码;对账(停止后)复位</summary>
-    private bool _scrolling;
-
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<ComponentInfo> FilteredComponents { get; } = [];
     public ObservableCollection<ComponentInfo> SelectedComponents { get; } = [];
@@ -217,6 +214,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
     {
         if (gridView == null || gridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
+        // 备货限制:默认 4 屏(实化容器 ~80 棵,XAML 元素树 churn 是 GC 压力来源);
+        // 1 屏备货 → 实化减半,滚动仍流畅(0.5 实测偏卡,1 为折中;卡可调回 2)
+        wrap.CacheLength = 1;
         double available = gridView.ActualWidth;
         if (available <= 0) return;
         if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10
@@ -380,7 +380,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             foreach (var gv in AllComponentGridViews)
             {
                 if (FindScrollViewer(gv) is ScrollViewer sv)
-                    sv.ViewChanged += (_, _) => { _scrolling = true; ScheduleViewportReconcile(); };
+                    sv.ViewChanged += (_, _) => ScheduleViewportReconcile();
             }
             ScheduleViewportReconcile();
 
@@ -416,20 +416,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 }
                 if (e.Item is ComponentInfo changingItem && e.ItemContainer is GridViewItem container)
                 {
-                    if (_scrolling)
-                    {
-                        // 滚动中:绑定瞬间布局未就绪(视口判断不可靠),延迟 100ms 等布局稳定再判;
-                        // 滚入视口的卡片立即预热解码(停止后即刻显示);快速滚过的由播放器 200ms 门槛兜底
-                        var c = container; var it = changingItem;
-                        _ = DispatcherQueue.TryEnqueue(async () =>
-                        {
-                            await Task.Delay(100);
-                            // Content 仍是原 item(防回收后重绑新 item 误启动),已加载且在视口内才启动
-                            if (c.IsLoaded && c.Content is ComponentInfo cur && ReferenceEquals(cur, it) && IsInViewport(c))
-                                UpdateGifPlayback(c, it);
-                        });
-                    }
-                    else if (container.IsLoaded && IsInViewport(container))
+                    if (container.IsLoaded && IsInViewport(container))
                     {
                         UpdateGifPlayback(container, changingItem);
                     }
@@ -1429,7 +1416,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     /// 视口外的(预实化缓冲容器)立即停止 → 缓存严格=可见数而非全部实化数。</summary>
     private void ScheduleViewportReconcile()
     {
-        _scrolling = false; // 防抖对账(200ms 后)执行时滚动已停止
         if (_viewportTimer == null)
         {
             _viewportTimer = DispatcherQueue.CreateTimer();
