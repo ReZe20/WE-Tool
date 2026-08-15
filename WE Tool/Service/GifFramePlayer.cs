@@ -40,9 +40,21 @@ public sealed class GifFramePlayer
 
         /// <summary>最新显示目标(解码期间容器模板重建重绑时更新 —— Register 用最新 Image)</summary>
         public Image Target = null!;
+
+        /// <summary>启动序号(错位用:同波启动按 150ms 间隔摊平,避免所有 GIF 同时开始解码)</summary>
+        public int Seq;
     }
 
     private const int TickMs = 16;
+
+    /// <summary>同时播放/解码的会话上限:防"一次性启动所有可见 GIF"导致的 CPU 峰值与内存峰值。
+    /// 满员时新项保持 BitmapImage 静态首帧,槽位释放后由 SessionSlotFreed → 页面对账补启动。
+    /// 注意:未来接入 GPU 硬解后解码会话数仍有硬件上限,此值仍需保留。</summary>
+    private const int MaxSessions = 10;
+
+    /// <summary>解码并发上限:WIC 解码是 CPU 密集操作,ProcessorCount 并发(=16 核 16 路)会在
+    /// 滚动停止瞬间打出 CPU 尖峰;压到 3 路后同样的总解码量摊平到 1~2 秒,峰值显著降低。</summary>
+    private const int MaxConcurrentDecodes = 3;
 
     /// <summary>解析缓存开关:关=不存储任何解析缓存,帧只活在播放会话里,停止即释放,
     /// 下次播放(滚回/重开)重新解析。实验——测试无缓存下的内存/并发表现。</summary>
@@ -51,11 +63,20 @@ public sealed class GifFramePlayer
     private readonly GifFrameCache _cache;
     private readonly Dictionary<object, GifPlaybackSession> _sessions = [];
     private readonly Dictionary<object, PendingDecode> _pending = []; // owner → 进行中的解码任务(记录 path,区分同 path 双触发与换绑)
-    // 解码并发上限 = 逻辑线程数(滚动瞬间大量容器进入时限并发,防解码风暴打满 CPU/瞬时内存峰值)
-    private readonly SemaphoreSlim _decodeGate = new(Math.Max(1, Environment.ProcessorCount));
+    // 解码并发上限:见 MaxConcurrentDecodes(CPU 密集,WIC 解码压小并发摊平尖峰)
+    private readonly SemaphoreSlim _decodeGate = new(MaxConcurrentDecodes);
     private readonly DispatcherQueueTimer _timer;
     private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew(); // 单调时钟,防系统时间跳变
     private bool _timerRunning;
+
+    /// <summary>曾因会话上限拒绝过启动:槽位释放时据此补触发一次页面对账(而非每次 Stop 都刷)</summary>
+    private bool _capWasFull;
+
+    /// <summary>启动序号分配器:每次新 Start 递增,解码按序号错位启动(防启动瞬间全部同时解码)</summary>
+    private int _startSeq;
+
+    /// <summary>槽位释放事件:上限满员后只要有会话/解码退出,页面借此补一次视口对账以填补空位</summary>
+    public event Action? SessionSlotFreed;
 
     /// <summary>[内存诊断] 事件计数:Put/Remove/Register 次数(定位缓存条数与会话数脱钩的元凶)</summary>
     public int DiagPutCount, DiagRemoveCount, DiagRegisterCount;
@@ -63,10 +84,22 @@ public sealed class GifFramePlayer
     /// <summary>[内存诊断] RemoveExcept(对账)移除计数</summary>
     public int DiagExceptRemoveCount => _cache.DiagRemoveCount;
 
-    /// <summary>节流 GC 时间戳:解码/停止 churn 后每 10 秒最多一次。
-    /// 像素池化后 LOH 垃圾≈0,GC 无事可做 —— 纯兜底(清 BitmapImage 等残余);10 秒节流 + 非阻塞
-    /// 后台 GC,不暂停 UI 线程(之前 3 秒 + 阻塞式 Aggressive 导致滚动停止后卡顿)。</summary>
+    /// <summary>上一版"节流 GC"的教训:非阻塞后台 Gen2(Optimized, blocking:false)不回收 LOH、
+    /// 也不把已提交内存段归还 OS,滚动积累的 LOH 垃圾滞留 → 任务管理器内存只涨不降(600MB 水位);
+    /// 阻塞式 Aggressive 每 3 秒则反复冻结 UI。折中方案见 ScheduleBackgroundGc。</summary>
+
+    /// <summary>churn 时间戳:解码完成/会话停止时更新。空闲回收以此为据 —— 停止后 5 秒无新 churn 才考虑回收。</summary>
+    private DateTime _lastChurn = DateTime.MinValue;
+
+    /// <summary>上一次真正执行回收的时刻(防 GC 风暴:两次回收至少间隔 20 秒)</summary>
     private DateTime _lastGc = DateTime.MinValue;
+
+    /// <summary>空闲回收任务是否已排队(0/1 防重复排队)</summary>
+    private int _gcPassScheduled;
+
+    /// <summary>进行中的解码数(static:两个页面各持一个播放器,低延迟窗口必须跨实例共享)。
+    /// >0 期间挂 SustainedLowLatency:抑制阻塞式 Gen2/LOH 收集 —— 启动/滚动时的解码风暴不再反复冻结 UI。</summary>
+    private static int _activeDecodes;
 
     /// <summary>必须在 UI 线程构造(定时器与 WriteableBitmap 都要求)</summary>
     public GifFramePlayer()
@@ -101,6 +134,22 @@ public sealed class GifFramePlayer
             _pending.Remove(owner);
         }
 
+        // 会话上限:满员时拒绝新启动(卡片保持静态首帧)。先尝试淘汰最旧的滞留解码腾位
+        // (滚动离开容器的解码通常已作废),没有可淘汰的才拒绝;槽位释放由 SessionSlotFreed 通知页面对账补启动
+        if (_sessions.Count + _pending.Count >= MaxSessions)
+        {
+            object? oldestOwner = null;
+            DateTime oldest = DateTime.MaxValue;
+            foreach (var kv in _pending)
+                if (kv.Value.EnteredAt < oldest) { oldest = kv.Value.EnteredAt; oldestOwner = kv.Key; }
+            if (oldestOwner == null || ReferenceEquals(oldestOwner, owner))
+            {
+                _capWasFull = true;
+                return;
+            }
+            _pending.Remove(oldestOwner, out var stale);
+            stale.Cts.Cancel(); // 滞留解码取消是正常路径(DecodeAsync 捕获 OCE 返回 null 自清理)
+        }
         if (CacheEnabled && _cache.TryGet(path) is { } frames)
         {
             Register(owner, path, frames, target);
@@ -108,7 +157,7 @@ public sealed class GifFramePlayer
         }
 
         var cts = new CancellationTokenSource();
-        _pending[owner] = new PendingDecode { Path = path, Cts = cts, EnteredAt = DateTime.UtcNow, Target = target };
+        _pending[owner] = new PendingDecode { Path = path, Cts = cts, EnteredAt = DateTime.UtcNow, Target = target, Seq = _startSeq++ };
         _ = DecodeAndRegisterAsync(owner, target, path, cts);
     }
 
@@ -119,6 +168,7 @@ public sealed class GifFramePlayer
     {
         if (_pending.Remove(owner, out var pd)) pd.Cts.Cancel();
         StopSession(owner);
+        NotifySlotFreed(); // 停止后槽位可能已空:若曾满员,通知页面补启动
     }
 
     /// <summary>仅停会话(容器回收用):释放原生帧,但【不取消解码任务】。
@@ -138,6 +188,7 @@ public sealed class GifFramePlayer
         }
         if (_sessions.Count == 0) StopTimer();
         ScheduleBackgroundGc(); // 停止 churn:节流清 LOH/托管残留
+        NotifySlotFreed(); // 会话移除释放播放槽位:若曾满员,通知页面补启动(对账 200ms 防抖)
     }
 
     /// <summary>全部停止(AutoPlayGif 关闭时)</summary>
@@ -150,29 +201,74 @@ public sealed class GifFramePlayer
         _cache.Trim();
         StopTimer();
         ScheduleBackgroundGc(); // 清托管残留(BitmapImage/堆段),防开关循环内存抬升
+        NotifySlotFreed(); // 全停后槽位全空:若曾满员,通知页面补启动
+    }
+
+    /// <summary>槽位释放通知:仅当曾因会话上限拒绝过启动、且当前确有富余槽位时才触发,
+    /// 避免滚动回收时每个 StopSession 都刷一次对账(抖动滚动不打断解码的设计不受影响)。</summary>
+    private void NotifySlotFreed()
+    {
+        if (_capWasFull && _sessions.Count + _pending.Count < MaxSessions)
+        {
+            _capWasFull = false;
+            SessionSlotFreed?.Invoke();
+        }
     }
 
     /// <summary>清空帧缓存(关闭动图时释放全部原生帧内存;重开时重新解码,一次性 CPU 成本)</summary>
     public void ClearCache() => _cache.ClearAll();
 
-    /// <summary>延迟后台强制 GC:释放 BitmapImage/解码临时(LOH)等托管残留。
-    /// 原因:.NET 无内存压力时不主动 GC,native 关联对象(位图)与 LOH 滞留 → 任务管理器内存只涨不降。
-    /// 节流:churn 频繁时每 10 秒最多一次;非阻塞后台 GC(不暂停 UI 线程,防滚动停止后卡顿)。</summary>
+    /// <summary>空闲触发的托管堆回收:churn(解码完成/会话停止)停歇 5 秒 + 堆垃圾超 100MB 时才执行一次阻塞式 Gen2。
+    /// 阻塞式 Gen2(不压缩)会回收 LOH 并把空段归还 OS —— 任务管理器内存水位回落;选在空闲时执行,UI 冻结不可感知。
+    /// 非阻塞后台 Gen2(上一版方案)不回收 LOH 也不归还内存段,故弃用;防风暴:实际回收间隔 ≥ 20 秒。</summary>
     private void ScheduleBackgroundGc()
     {
-        var now = DateTime.UtcNow;
-        if ((now - _lastGc).TotalSeconds < 10) return;
-        _lastGc = now;
+        _lastChurn = DateTime.UtcNow; // 每次 churn 都更新:空闲计时从最后一次活动起算
+        if (Interlocked.Exchange(ref _gcPassScheduled, 1) == 1) return; // 已有回收任务在排队,防 churn 风暴
+
         _ = Task.Run(async () =>
         {
-            await Task.Delay(1500); // 等 UI 切换/解码完成
+            await Task.Delay(5000); // 等 churn 停歇
             try
             {
-                GC.Collect(2, GCCollectionMode.Optimized, false, false); // 非阻塞:不冻结 UI 线程
+                if ((DateTime.UtcNow - _lastChurn).TotalSeconds < 5) return; // 仍在解码/停止,跳过
+                if ((DateTime.UtcNow - _lastGc).TotalSeconds < 20) return; // 防 GC 风暴:两次回收间隔 ≥ 20 秒
+                var info = GC.GetGCMemoryInfo();
+                long garbage = info.HeapSizeBytes - GC.GetTotalMemory(false);
+                if (garbage < 100L * 1024 * 1024) return; // 垃圾不多:不值得暂停
+                if (Volatile.Read(ref _activeDecodes) > 0) return; // 仍有解码在进行,不在此时开阻塞 GC
+                _lastGc = DateTime.UtcNow;
+                GC.Collect(2, GCCollectionMode.Aggressive, true, false); // 阻塞式 Gen2:回收 LOH,不压缩
                 GC.WaitForPendingFinalizers();
             }
             catch { /* 后台 GC 失败无碍 */ }
+            finally
+            {
+                Interlocked.Exchange(ref _gcPassScheduled, 0);
+            }
         });
+    }
+
+    /// <summary>解码开始:首个解码挂 SustainedLowLatency。解码的每帧 DetachPixelData 都是 LOH 大数组,
+    /// 自动 GC 会在加载/滚动瞬间反复触发阻塞式 Gen2(全线程停顿,UI 卡顿);低延迟窗口内 gen2 被抑制,
+    /// gen0/1 照常(亚毫秒级)。仅工作站 GC 支持;Server GC 下设置失败被吞,退化回原行为。</summary>
+    private static void EnterDecode()
+    {
+        if (Interlocked.Increment(ref _activeDecodes) == 1)
+        {
+            try { System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.SustainedLowLatency; }
+            catch { /* 环境不支持低延迟模式,忽略 */ }
+        }
+    }
+
+    /// <summary>解码结束:全部解码退出后恢复 Interactive,积压垃圾交给空闲触发回收。</summary>
+    private static void ExitDecode()
+    {
+        if (Interlocked.Decrement(ref _activeDecodes) == 0)
+        {
+            try { System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.Interactive; }
+            catch { }
+        }
     }
 
     /// <summary>释放不在保留集合中的帧缓存(列表变化后调用;仍在列表的帧保留,零解码复用)</summary>
@@ -221,9 +317,16 @@ public sealed class GifFramePlayer
     {
         GifFrames? frames = null;
         bool productReleased = false; // 解码产物持有是否已释放(防 catch 误减已转移的会话/缓存引用)
+        EnterDecode();
         try
         {
-            // 并发上限 = 逻辑线程数(排队解码,防解码风暴)
+            // 错位启动:同波启动按 150ms 间隔摊平(Seq % MaxSessions),把一次性全启动的
+            // 分配/CPU 峰摊开;再叠加 3 路并发闸门,峰值≈单路解码,总量不变、时间拉长
+            if (_pending.TryGetValue(owner, out var starter) && ReferenceEquals(starter.Cts, cts))
+            {
+                var staggerMs = (starter.Seq % MaxSessions) * 150;
+                if (staggerMs > 0) await Task.Delay(staggerMs, cts.Token);
+            }
             await _decodeGate.WaitAsync(cts.Token);
             try
             {
@@ -282,7 +385,7 @@ public sealed class GifFramePlayer
                 frames.Release(); // 缓存关闭:会话已持 1 份,释放解码临时引用
                 productReleased = true;
             }
-            ScheduleBackgroundGc(); // 解码完成:节流清 LOH(解码临时数组 12.8MB/张)
+            ScheduleBackgroundGc(); // 解码完成:登记 churn,空闲后回收 LOH(每帧 DetachPixelData 大数组)
             }
             finally
             {
@@ -302,6 +405,10 @@ public sealed class GifFramePlayer
             if (!productReleased) frames?.Release(); // 异常兜底:仅释放未转移的解码产物持有
             Log.Warning(ex, "GIF 播放启动失败: {Path}", path);
         }
+        finally
+        {
+            ExitDecode();
+        }
     }
 
     private void Register(object owner, string path, GifFrames frames, Image target)
@@ -319,7 +426,7 @@ public sealed class GifFramePlayer
             Target = target,
             Frame = frame,
             Index = 0,
-            NextDue = _clock.Elapsed + TimeSpan.FromMilliseconds(frames.DelaysMs[0]),
+            NextDue = _clock.Elapsed + TimeSpan.FromMilliseconds(frames.DelaysMs[0] + ((owner.GetHashCode() & 0x7F) % 8)), // 相位抖动 0~7ms:避免所有会话同一 tick 集中换帧
             RegisteredAt = DateTime.UtcNow
         };
         // 替换 Source 前显式清空兜底 BitmapImage:其内部可能已解码 GIF 全部帧(native),

@@ -199,7 +199,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     /// <summary>窗口尺寸变化:实时重算 ItemWidth</summary>
     private void ComponentGrid_SizeChanged(object sender, SizeChangedEventArgs e)
-        => UpdateAllComponentGridItemWidths();
+    {
+        UpdateAllComponentGridItemWidths();
+        // 同 Papers:最大化/拖边引起的列重排没有滚动事件,补一次视口对账(200ms 防抖)以启动/停止换行后的卡片
+        ScheduleViewportReconcile();
+    }
 
     /// <summary>按各模式档位重算 ItemWidth(照抄 Papers:ItemWidth = 槽位步长,容器 = ItemWidth - 10,留 2px 余量)</summary>
     private void UpdateAllComponentGridItemWidths()
@@ -395,6 +399,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             _gifPlayer.ClearCache();
             GifSoftSuspend.Unregister(this);
         };
+
+        // 会话上限:槽位释放后补一次视口对账,把静态首帧的卡片顶上来
+        _gifPlayer.SessionSlotFreed += ScheduleViewportReconcile;
 
         // GIF 预览:容器绑定/回收钩子(照 Papers)。
         // 回收时 e.Item 可能为 null,owner 用容器(一定可用);绑定分支按视口启动,缓冲容器不解码

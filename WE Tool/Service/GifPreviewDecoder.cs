@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml.Media.Imaging;
 using Serilog;
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -139,27 +138,20 @@ public static class GifPreviewDecoder
     /// <summary>帧延迟钳制下限:0/过小延迟的工具生成 GIF 会疯转,统一 33ms(~30fps 上限)</summary>
     private const int MinFrameDelayMs = 33;
 
-    /// <summary>WIC 单帧像素输出数组池:DetachPixelData 每帧新分配(144KB+ 为 LOH 对象),
-    /// 弃后 Gen2 不勤收(滚动积累)且迫使节流 GC 阻塞回收(卡顿);入池持有(固定预算 32MB) →
-    /// 待回收 LOH 垃圾≈0,GC 几乎无事可做。</summary>
-    private static readonly System.Collections.Concurrent.ConcurrentBag<byte[]> PixelBufPool = [];
-    private static long _pixelBufBytes;
-    private const long PixelBufBudget = 32 * 1024 * 1024;
+    /// <summary>列表预览最大解码边长:卡片显示 ~300~500px,按此降采样解码 —— 逐帧像素数组(LOH)
+    /// 与原生帧块体积按平方缩小,直接削减启动解码的 GC 分配风暴(采样证实:风暴=逐帧大数组 churn)。</summary>
+    private const int MaxDecodeDimension = 480;
 
-    private static void ReturnPixelBuf(byte[] buf)
-    {
-        if (Interlocked.Add(ref _pixelBufBytes, buf.Length) <= PixelBufBudget)
-            PixelBufPool.Add(buf);
-        else
-            Interlocked.Add(ref _pixelBufBytes, -buf.Length);
-    }
+    /// <summary>WIC 单帧像素输出(DetachPixelData)每帧新分配一个数组,144KB+ 即 LOH 对象;
+    /// WinRT API 不接受外部缓冲,无法预分配复用 —— 任其成为垃圾,由播放器的空闲触发回收清理。
+    /// 缓解:降采样解码(MaxDecodeDimension)把数组缩小 3~10 倍,分配风暴随之收敛。</summary>
 
     public static async Task<GifFrames?> DecodeAsync(string path, CancellationToken ct)
     {
         try
         {
-            // ① 后台线程池:WinRT 解码 + 原生内存流式合成(零 LOH 分配 —— 画布/快照/帧块全 VirtualAlloc,
-            // 解码完成即 VirtualFree 归还;方案 B:无缓存滚动时不再有 LOH 积累)
+            // ① 后台线程池:WinRT 解码 + 原生内存流式合成(画布/快照/帧块全 VirtualAlloc,解码完即归还;
+            // 托管侧仅剩逐帧像素数组,已用降采样解码压制体积)
             var result = await Task.Run<(GifFrames? Frames, int[] Delays, int W, int H)?>(async () =>
             {
                 using var stream = await FileRandomAccessStream.OpenAsync(path, FileAccessMode.Read).AsTask(ct);
@@ -173,7 +165,12 @@ public static class GifPreviewDecoder
 
                 var meta = ReadGifMeta(path); // 帧延迟/偏移/disposal 手动解析(WinRT 投影无 Duration/偏移)
                 var delays = new int[count];
-                int frameBytes = logicalW * logicalH * 4;
+                // 降采样:列表卡片最大显示 ~480px,解码尺寸按比例缩小(不放大);
+                // 逐帧 DetachPixelData 数组、原生帧块、每帧 memcpy 三者同比例变小,GC 风暴与内存一起降
+                float scale = Math.Min(1f, (float)MaxDecodeDimension / Math.Max(logicalW, logicalH));
+                int outW = Math.Max(1, (int)(logicalW * scale));
+                int outH = Math.Max(1, (int)(logicalH * scale));
+                int frameBytes = outW * outH * 4;
 
                 // 原生画布与快照(解码完 VirtualFree 立即归还 OS,不产生托管大数组)
                 nint canvas = GifFrames.AllocNative(frameBytes);
@@ -182,22 +179,30 @@ public static class GifPreviewDecoder
                 GifFrames? gif = null;
                 try
                 {
-                    gif = GifFrames.CreateForDecode((int)count, logicalW, logicalH, delays);
+                    gif = GifFrames.CreateForDecode((int)count, outW, outH, delays);
                     int prevD = 0, prevL = 0, prevT = 0, prevW = 0, prevH = 0;
 
                     for (uint i = 0; i < count; i++)
                     {
                         ct.ThrowIfCancellationRequested();
                         var frame = await decoder.GetFrameAsync(i).AsTask(ct);
+                        int fw = (int)frame.PixelWidth, fh = (int)frame.PixelHeight;
+                        // 降采样:本帧按比例缩放后解码(增量帧保持自身比例,输出 = fw*scale × fh*scale)
+                        int sw = Math.Max(1, (int)(fw * scale));
+                        int sh = Math.Max(1, (int)(fh * scale));
                         var provider = await frame.GetPixelDataAsync(
                             BitmapPixelFormat.Bgra8,
                             BitmapAlphaMode.Premultiplied,
-                            new BitmapTransform(),
+                            new BitmapTransform
+                            {
+                                ScaledWidth = (uint)sw,
+                                ScaledHeight = (uint)sh,
+                                InterpolationMode = BitmapInterpolationMode.Fant
+                            },
                             ExifOrientationMode.IgnoreExifOrientation,
                             ColorManagementMode.DoNotColorManage).AsTask(ct);
-                        var pixels = provider.DetachPixelData(); // 单帧数组(池化复用,不向 LOH 反复申请)
+                        var pixels = provider.DetachPixelData(); // 单帧数组(降采样后显著变小,LOH 压力大减)
 
-                        int fw = (int)frame.PixelWidth, fh = (int)frame.PixelHeight;
                         int l, t, d;
                         if (meta != null && i < meta.Value.Delays.Length && i < meta.Value.Rects.Length)
                         {
@@ -210,11 +215,14 @@ public static class GifPreviewDecoder
                             l = t = d = 0;
                         }
 
+                        // 偏移量同步缩放(增量帧左上角)
+                        int sl = (int)(l * scale), st = (int)(t * scale);
+
                         unsafe
                         {
                             byte* cp = (byte*)canvas;
                             // 上一帧显示后的处置(渲染本帧前画布已处于"上一帧显示完毕"状态)
-                            if (prevD == 2) ClearRectNative(cp, prevL, prevT, prevW, prevH, logicalW, logicalH);
+                            if (prevD == 2) ClearRectNative(cp, prevL, prevT, prevW, prevH, outW, outH);
                             else if (prevD == 3 && snapshot != 0)
                                 System.Buffer.MemoryCopy((byte*)snapshot, cp, frameBytes, frameBytes);
 
@@ -228,18 +236,16 @@ public static class GifPreviewDecoder
 
                             // 绘制本帧(透明像素跳过,保留画布内容)
                             fixed (byte* sp = pixels)
-                                BlitNative(cp, sp, l, t, fw, fh, logicalW, logicalH);
+                                BlitNative(cp, sp, sl, st, sw, sh, outW, outH);
 
                             // 输出完整帧 → 原生帧块(零托管大数组)
                             gif.WriteFrameNative((int)i, cp);
                         }
 
-                        ReturnPixelBuf(pixels); // 像素数组入池(LOH 垃圾≈0,GC 无事可做)
-
-                        prevD = d; prevL = l; prevT = t; prevW = fw; prevH = fh;
+                        prevD = d; prevL = sl; prevT = st; prevW = sw; prevH = sh;
                     }
 
-                    return (gif, delays, logicalW, logicalH);
+                    return (gif, delays, outW, outH);
                 }
                 catch
                 {

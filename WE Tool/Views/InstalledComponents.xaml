@@ -737,7 +737,7 @@
 
                                                             <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
                                                                 <Image.Source>
-                                                                    <BitmapImage x:Name="ItemFallbackBitmap" UriSource="{x:Bind Preview}" AutoPlay="False"/>
+                                                                    <BitmapImage x:Name="ItemFallbackBitmap" UriSource="{x:Bind Preview}" AutoPlay="False" DecodePixelWidth="480"/>
                                                                 </Image.Source>
                                                             </Image>
 
@@ -850,7 +850,7 @@
                                                             <ProgressRing IsActive="True" Background="Transparent" Width="20" Height="20"/>
                                                             <Image x:Name="ItemPreviewImage" Stretch="UniformToFill" Width="80" Height="80">
                                                                 <Image.Source>
-                                                                    <BitmapImage x:Name="ItemFallbackBitmap" UriSource="{x:Bind Preview}" AutoPlay="False"/>
+                                                                    <BitmapImage x:Name="ItemFallbackBitmap" UriSource="{x:Bind Preview}" AutoPlay="False" DecodePixelWidth="480"/>
                                                                 </Image.Source>
                                                             </Image>
                                                         </Grid>

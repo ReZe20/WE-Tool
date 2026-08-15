@@ -161,6 +161,23 @@ namespace WE_Tool
                         settings.Path.VdfPath,
                         settings.ScanCacheEnabled == "1"
                         );
+
+                    // [临时诊断] 启动 GC 采样:每秒记录 gen0/1/2 收集次数与最近一次暂停,定位"启动疯狂 GC"来源,定位后删除
+                    _ = Task.Run(async () =>
+                    {
+                        for (int i = 1; i <= 30; i++)
+                        {
+                            await Task.Delay(1000);
+                            try
+                            {
+                                var mi = GC.GetGCMemoryInfo();
+                                double pauseMs = mi.PauseDurations.Length > 0 ? mi.PauseDurations[^1].TotalMilliseconds : 0;
+                                long loh = mi.GenerationInfo.Length > 3 ? mi.GenerationInfo[3].SizeAfterBytes / 1048576 : 0;
+                                Log.Information($"[启动GC诊断] t={i}s gen0={GC.CollectionCount(0)} gen1={GC.CollectionCount(1)} gen2={GC.CollectionCount(2)} 上次暂停={pauseMs:F1}ms 堆={mi.HeapSizeBytes / 1048576}MB LOH={loh}MB");
+                            }
+                            catch { /* 采样失败无碍 */ }
+                        }
+                    });
                 }
             }
             catch (Exception ex)

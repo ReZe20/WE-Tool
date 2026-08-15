@@ -476,6 +476,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             GifSoftSuspend.Unregister(this);
         };
 
+        // 会话上限:槽位释放后补一次视口对账,把静态首帧的卡片顶上来
+        _gifPlayer.SessionSlotFreed += ScheduleViewportReconcile;
+
         this.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(Global_PointerPressed), true);
         this.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(Global_PointerReleased), true);
         this.AddHandler(UIElement.PointerCanceledEvent, new PointerEventHandler(Global_PointerReleased), true);
@@ -1378,7 +1381,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     /// <summary>窗口尺寸变化:实时重算 ItemWidth(布局脏标记同帧合并,138 项毫秒级;拖动中列数与拉伸同步更新)</summary>
     private void WallpaperGrid_SizeChanged(object sender, SizeChangedEventArgs e)
-        => UpdateAllGridItemWidths();
+    {
+        UpdateAllGridItemWidths();
+        // 最大化/拖边会引起列重排与容器回收重绑,但没有滚动事件 —— 不补视口对账,换行后进入视口的卡片永远不启动 GIF;
+        // 对账自带 200ms 防抖:连续拖边期间反复重置,松手后统一执行一次,不会抖动播放
+        ScheduleViewportReconcile();
+    }
 
     // ============ GIF 预览播放(虚拟化联动) ============
 
