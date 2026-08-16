@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       # RePKG_Re 是独立仓库（被 .gitignore 排除），构建时需要自行拉取
       - name: 获取 RePKG_Re（构建依赖）
