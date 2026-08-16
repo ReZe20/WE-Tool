@@ -30,6 +30,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
+using WE_Tool.Controls;
 using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
@@ -529,6 +530,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 FindDescendantGrid(e.ItemContainer, "ItemRootGrid") is Grid changingRoot)
             {
                 UpdateItemBlur(changingRoot, changingItem);
+                UpdateSkiaGif(changingRoot, changingItem); // 实验分支:Skia 流式播放(GIF 时覆盖 BitmapImage)
             }
         };
         ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) =>
@@ -667,6 +669,26 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             Canvas.SetZIndex(container, i);
         }
     }
+    /// <summary>实验分支(feature/skia-gif):GIF 卡片用 Skia 流式播放覆盖 BitmapImage 直播(验证流畅度/内存/CPU)</summary>
+    private static void UpdateSkiaGif(Grid root, WallpaperItem item)
+    {
+        if (root.FindName("ItemPreviewImage") is not Image img) return;
+        if (root.FindName("SkiaGifCanvas") is not SkiaGifView skia) return;
+        bool isGif = !string.IsNullOrEmpty(item.Preview) && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+        if (isGif)
+        {
+            skia.Visibility = Visibility.Visible;
+            img.Visibility = Visibility.Collapsed; // 隐藏 BitmapImage,避免双解码
+            skia.Start(item.Preview!);
+        }
+        else
+        {
+            skia.Stop();
+            skia.Visibility = Visibility.Collapsed;
+            img.Visibility = Visibility.Visible;
+        }
+    }
+
     private void StackedImage_Loaded(object sender, RoutedEventArgs e)
     {
         // 从 SelectedWallpapers 集合计算相对位置
@@ -1437,6 +1459,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
     {
         if (gridView == null || gridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
+        wrap.CacheLength = 0; // 不预渲染(仅实化可见项;滚动时即时实化,Skia 流式打开快)
         double available = gridView.ActualWidth;
         if (available <= 0) return;
         if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10

@@ -207,6 +207,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
     {
         if (gridView == null || gridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
+        wrap.CacheLength = 0; // 不预渲染(仅实化可见项;滚动时即时实化,Skia 流式打开快)
         double available = gridView.ActualWidth;
         if (available <= 0) return;
         if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10
