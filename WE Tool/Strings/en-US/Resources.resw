@@ -169,16 +169,16 @@
     <value>Subscription</value>
   </data>
   <data name="Subscription_Subscribed.Content" xml:space="preserve">
-    <value>Subscribed</value>
+    <value>Normal</value>
   </data>
   <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
-    <value>Unsubscribed</value>
+    <value>Abnormal</value>
   </data>
   <data name="Unsubscribed_Badge.Text" xml:space="preserve">
-    <value>Unsubscribed</value>
+    <value>Abnormal</value>
   </data>
   <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
-    <value>This wallpaper is not in the active subscription list. It may have been unsubscribed or disabled locally in Steam, and Steam may no longer update or keep its local files.</value>
+    <value>This wallpaper has an abnormal subscription status: it may have been unsubscribed, disabled locally in Steam, or delisted (project.json visibility is "private"). Steam may no longer update or keep its local files.</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>Tags</value>
@@ -357,11 +357,17 @@
   <data name="AboutPage.Content" xml:space="preserve">
     <value>About</value>
   </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>Residual Cleanup</value>
+  </data>
   <data name="SettingsPage.Content" xml:space="preserve">
     <value>Settings</value>
   </data>
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
     <value>Enter or Select Path</value>
+  </data>
+  <data name="Cleanup_UnderConstruction.Text" xml:space="preserve">
+    <value>Under Construction</value>
   </data>
   <data name="Type_Preset.Content" xml:space="preserve">
     <value>Preset</value>

@@ -57,6 +57,21 @@ namespace WE_Tool.Models
             }
         }
 
+        private bool _isDelisted;
+        /// <summary>壁纸已被下架(project.json visibility == "private")。下架壁纸归入"异常"订阅状态。</summary>
+        public bool IsDelisted
+        {
+            get => _isDelisted;
+            set
+            {
+                if (_isDelisted != value)
+                {
+                    _isDelisted = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         private bool _isMultiSelectMode;
         public bool IsInMultiSelectMode
         {

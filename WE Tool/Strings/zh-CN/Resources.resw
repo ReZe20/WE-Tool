@@ -169,16 +169,16 @@
     <value>订阅状态</value>
   </data>
   <data name="Subscription_Subscribed.Content" xml:space="preserve">
-    <value>已订阅</value>
+    <value>正常</value>
   </data>
   <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
-    <value>未订阅</value>
+    <value>异常</value>
   </data>
   <data name="Unsubscribed_Badge.Text" xml:space="preserve">
-    <value>未订阅</value>
+    <value>异常</value>
   </data>
   <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
-    <value>该壁纸当前不在有效订阅名单中，可能已取消订阅或已在 Steam 中本地停用；Steam 可能不再更新或保留其本地文件。</value>
+    <value>该壁纸订阅状态异常：可能已取消订阅、已在 Steam 中本地停用，或已被下架（project.json visibility 为 private）；Steam 可能不再更新或保留其本地文件。</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>标签</value>
@@ -357,11 +357,17 @@
   <data name="AboutPage.Content" xml:space="preserve">
     <value>关于</value>
   </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>残留清理</value>
+  </data>
   <data name="SettingsPage.Content" xml:space="preserve">
     <value>设置</value>
   </data>
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
     <value>输入或选择路径</value>
+  </data>
+  <data name="Cleanup_UnderConstruction.Text" xml:space="preserve">
+    <value>正在施工</value>
   </data>
   <data name="Type_Preset.Content" xml:space="preserve">
     <value>预设</value>

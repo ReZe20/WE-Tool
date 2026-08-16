@@ -22,6 +22,8 @@ using System.Threading;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
+using WE_Tool.Controls;
+using WE_Tool.Converters;
 using WE_Tool.Models;
 using WE_Tool.ViewModels;
 using Windows.ApplicationModel.DataTransfer;
@@ -357,6 +359,17 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             var reorderDuration = TimeSpan.FromMilliseconds(100);
             foreach (var gv in AllComponentGridViews)
                 ItemsReorderAnimation.SetDuration(gv, reorderDuration);
+            // Skia 流式播放 + 角标:容器绑定时刷新(照 Papers)
+            ComponentsGridView.ContainerContentChanging += (s2, e2) =>
+            {
+                if (e2.InRecycleQueue) return;
+                if (e2.Item is ComponentInfo cItem &&
+                    e2.ItemContainer.ContentTemplateRoot is Grid cRoot)
+                {
+                    UpdateSkiaGif(cRoot, cItem);
+                    UpdateTagBadge(cRoot, cItem);
+                }
+            };
         };
 
         // 多选集合变化时刷新计数、堆叠图与面板（批量操作时抑制，避免逐项触发）
@@ -403,10 +416,25 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     // ===================== 生命周期 =====================
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-        _ = LoadComponents();
-    }
+        {
+            base.OnNavigatedTo(e);
+            _ = LoadComponents();
+            // 页面缓存:切走时 Unloaded 停播,切回后容器不重新绑定 → 延迟一帧重启可见 GIF 动画
+            DispatcherQueue.TryEnqueue(() => RestartVisibleGifPlayback());
+        }
+
+        /// <summary>遍历可见容器重启 GIF 播放(页面缓存切回时;容器未就绪/无项时无害)</summary>
+        private void RestartVisibleGifPlayback()
+        {
+            if (ComponentsGridView.ItemsPanelRoot is not ItemsWrapGrid panel) return;
+            foreach (var child in panel.Children)
+            {
+                if (child is not GridViewItem container) continue;
+                if (container.ContentTemplateRoot is not Grid root) continue;
+                if (ComponentsGridView.ItemFromContainer(container) is ComponentInfo item)
+                    UpdateSkiaGif(root, item);
+            }
+        }
 
     protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
@@ -1149,10 +1177,47 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private void OnTagDisplayChanged(object sender, RoutedEventArgs e)
     {
-        // 切换标签显示模式后重置 ItemsSource，强制重新生成项以刷新右上角角标
-        // 角标只在图标模式模板(照抄 Papers:只重置图标 GridView)
-        ComponentsGridView.ItemsSource = null;
-        ComponentsGridView.ItemsSource = FilteredComponents;
+        // 优化:不再重置 ItemsSource 重建全列表——只遍历可见容器手动刷新角标(照 Papers)
+        if (ComponentsGridView.ItemsPanelRoot is not ItemsWrapGrid panel) return;
+        foreach (var child in panel.Children)
+        {
+            if (child is not GridViewItem container) continue;
+            if (container.ContentTemplateRoot is not Grid root) continue;
+            if (ComponentsGridView.ItemFromContainer(container) is ComponentInfo item)
+                UpdateTagBadge(root, item);
+        }
+    }
+
+    /// <summary>更新卡片右上角标签(按当前标签模式;容器绑定时也调用,照 Papers)</summary>
+    private void UpdateTagBadge(Grid root, ComponentInfo item)
+    {
+        if (root.FindName("TagDisplayBorder") is not Border border) return;
+        int index = ViewModel.ComponentsDisplayVM.ComponentTagDisplayIndex;
+        bool visible = index != 4; // 模式 4=None:隐藏(与 VM TagDisplayVisibility 一致)
+        border.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        if (!visible) return;
+        if (border.Child is TextBlock tb)
+            tb.Text = new ComponentsTagContentChoose().Convert(item, null, "", "") as string ?? "";
+    }
+
+    /// <summary>Skia 流式 GIF 播放(GIF 时覆盖 BitmapImage,照 Papers)</summary>
+    private static void UpdateSkiaGif(Grid root, ComponentInfo item)
+    {
+        if (root.FindName("ItemPreviewImage") is not Image img) return;
+        if (root.FindName("SkiaGifCanvas") is not SkiaGifView skia) return;
+        bool isGif = !string.IsNullOrEmpty(item.Preview) && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+        if (isGif)
+        {
+            skia.Visibility = Visibility.Visible;
+            img.Visibility = Visibility.Collapsed; // 隐藏 BitmapImage,避免双解码
+            skia.Start(item.Preview!);
+        }
+        else
+        {
+            skia.Stop();
+            skia.Visibility = Visibility.Collapsed;
+            img.Visibility = Visibility.Visible;
+        }
     }
 
     // ===================== 键盘快捷键（对齐 Papers） =====================

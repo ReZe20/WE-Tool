@@ -1,5 +1,27 @@
 # 更新日志
 
+## v0.5.3
+
+- 变更:GIF 预览切换到 Skia 流式方案(取代 v0.5.2 的自建 WIC 管线)——SkiaGifView:SKCodec 逐帧解码 + PriorFrame 帧依赖修复 + SKXamlCanvas 渲染 + cover 裁剪线性采样;壁纸页与组件页接入(容器绑定驱动),CacheLength=0 不预渲染
+- 变更:迁移 net8 → net10(SkiaSharp 4.151.1 Views.WinUI 要求 net10)
+- 变更:GIF 预览模板清理——BitmapImage 固定 AutoPlay=False(由标签/Skia 接管)、SkiaGifView 幂等 Start/StopAll/Unloaded 自停、删除冗余 Viewbox 空画布
+- 新增:订阅状态升级——扫描 project.json 的 visibility 字段(下架壁纸为 private),与 VDF 订阅校验合并判定:异常 = 未订阅/本地停用/已被下架;筛选器与角标同步
+- 变更:订阅状态文案「已订阅/未订阅」→「正常/异常」(筛选勾选项、异常角标、ToolTip 同步,zh-CN/en-US)
+- 修复:预览模糊"先显原图后出模糊"两段闪现——需要模糊的壁纸先隐藏静态图/动态图组件,模糊位图生成完毕再上屏,取消勾选/生成失败时恢复原图
+- 新增:残留清理页(施工占位)——为清理 Steam 取消订阅/下架后删除不彻底的遗留壁纸文件预留页面(E74D 图标)
+- 变更:壁纸页/组件页标签角标改为 code-behind 设置(替代 x:Bind OneTime + 列表重建,容器复用不错位)
+
+## v0.5.2
+
+- 新增:GIF 自建预览管线——WIC 自解码 + 原生内存帧缓存(引用计数,帧归零即释放)+ 虚拟化联动播放,替代 BitmapImage 直播(高 CPU/内存不可控)
+- 新增:解析缓存(默认开,LRU 预算 1GB 全库帧驻留,滚动回看零解码);会话上限 48(最大化视口全部卡片有动画)
+- 新增:软挂起——闲置 3 分钟停播全部 GIF 并清缓存,任意输入唤醒
+- 新增:壁纸预览模糊、日志级别切换、订阅筛选
+- 变更:GIF 调优路径简化——移除解码并发闸门/错位启动/滚动预热/200ms 停留门槛;节流 GC 改非阻塞;备货 1 屏(CacheLength=1)减少容器实化 churn
+- 变更:Win2D 兼容性修复与 UI 细节
+- 移除:调试用诊断代码(启动 GC 采样、内存构成输出、播放器诊断计数)
+
+
 ## v0.5.1
 
 - 新增:壁纸/组件列表全面 GridView 化——筛选/排序时被剔除的项消失、剩余项平滑补位移动(100ms Composition 隐式动画,CommunityToolkit.WinUI.Animations),新增项即时插入;窗口缩放实时重算列数,卡片拉伸填满行尾(小/中/大档位 180/210/240 联动,列宽公式按 ItemsWrapGrid 槽位语义实测校正)

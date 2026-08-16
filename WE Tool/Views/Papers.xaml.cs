@@ -31,6 +31,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Controls;
+using WE_Tool.Converters;
 using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
@@ -529,8 +530,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (e.Item is WallpaperItem changingItem &&
                 FindDescendantGrid(e.ItemContainer, "ItemRootGrid") is Grid changingRoot)
             {
-                UpdateItemBlur(changingRoot, changingItem);
+                // 先设原图组件(按类型:GIF→Skia,其余→静态图),后应用模糊——模糊会隐藏原图,顺序颠倒会被 UpdateSkiaGif 抵消
                 UpdateSkiaGif(changingRoot, changingItem); // 实验分支:Skia 流式播放(GIF 时覆盖 BitmapImage)
+                UpdateItemBlur(changingRoot, changingItem);
+                UpdateTagBadge(changingRoot, changingItem); // 角标按当前标签模式设置(替代 x:Bind OneTime+重建)
             }
         };
         ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) =>
@@ -686,6 +689,29 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             skia.Stop();
             skia.Visibility = Visibility.Collapsed;
             img.Visibility = Visibility.Visible;
+        }
+    }
+
+    protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        // 页面缓存:切走时 Unloaded 停播,切回后容器不重新绑定 → 延迟一帧重启可见 GIF 动画
+        DispatcherQueue.TryEnqueue(() => RestartVisibleGifPlayback());
+    }
+
+    /// <summary>遍历可见容器重启 GIF 播放+角标(页面缓存切回时;容器未就绪/无项时无害)</summary>
+    private void RestartVisibleGifPlayback()
+    {
+        if (WallpapersGridView.ItemsPanelRoot is not ItemsWrapGrid panel) return;
+        foreach (var child in panel.Children)
+        {
+            if (child is not GridViewItem container) continue;
+            if (container.ContentTemplateRoot is not Grid root) continue;
+            if (WallpapersGridView.ItemFromContainer(container) is WallpaperItem item)
+            {
+                UpdateSkiaGif(root, item);
+                UpdateTagBadge(root, item);
+            }
         }
     }
 
@@ -1093,7 +1119,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     if (ViewModel.FilterExpanderVM.Workshop && s == "workshop") source = true;
                     if (ViewModel.FilterExpanderVM.Mine && s == "mine") source = true;
 
-                    // 订阅状态:非工坊壁纸 ShouldNotExist 恒为 false,自然归入"已订阅"侧
+                    // 订阅状态:ShouldNotExist 已含"未订阅(取消/本地停用)+ 被下架(visibility=private)"两类异常;非工坊壁纸恒为 false,自然归入"正常"侧
                     bool subscriptionMatch = false;
                     if (ViewModel.FilterExpanderVM.Subscribed && !w.ShouldNotExist) subscriptionMatch = true;
                     if (ViewModel.FilterExpanderVM.Unsubscribed && w.ShouldNotExist) subscriptionMatch = true;
@@ -1328,29 +1354,56 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (itemRootGrid.FindName("ItemBlurOverlay") is not Image blurOverlay) return;
         if (ShouldBlurPreview(item))
         {
-            _ = ShowBlurOverlayAsync(blurOverlay, item);
+            // 先隐藏原图组件(静态图 Image / 动态图 SkiaGifView):模糊位图为异步生成,期间不露原图、避免"先原图后模糊"两段闪现
+            HideCardRawPreview(itemRootGrid);
+            _ = ShowBlurOverlayAsync(blurOverlay, item, () => UpdateSkiaGif(itemRootGrid, item));
         }
         else
         {
             blurOverlay.Visibility = Visibility.Collapsed;
             blurOverlay.Source = null;
+            UpdateSkiaGif(itemRootGrid, item); // 恢复原图显示(按类型:GIF → Skia 播放,其余 → 静态图)
         }
     }
 
-    private async Task ShowBlurOverlayAsync(Image blurOverlay, WallpaperItem item)
+    /// <summary>隐藏卡片原图组件(静态图+动态图),画面由模糊层接管</summary>
+    private static void HideCardRawPreview(Grid root)
+    {
+        if (root.FindName("ItemPreviewImage") is Image img) img.Visibility = Visibility.Collapsed;
+        if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
+        {
+            skia.Stop();
+            skia.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async Task ShowBlurOverlayAsync(Image blurOverlay, WallpaperItem item, Action restoreRawPreviews)
     {
         try
         {
-            if (string.IsNullOrEmpty(item.Preview) || !File.Exists(item.Preview)) return;
+            if (string.IsNullOrEmpty(item.Preview) || !File.Exists(item.Preview))
+            {
+                restoreRawPreviews();
+                return;
+            }
             var blurred = await GetBlurredPreviewAsync(item.Preview);
-            if (blurred == null) return;
+            if (blurred == null)
+            {
+                restoreRawPreviews();
+                return;
+            }
             // 竞态防护:await 期间勾选状态可能已变(取消勾选)或容器已换绑到别的壁纸,复查后再上屏
-            if (!ShouldBlurPreview(item)) return;
+            if (!ShouldBlurPreview(item))
+            {
+                restoreRawPreviews(); // 模糊层不上屏时恢复原图,避免卡片空白
+                return;
+            }
             blurOverlay.Source = blurred;
             blurOverlay.Visibility = Visibility.Visible;
         }
         catch (Exception ex)
         {
+            restoreRawPreviews();
             Log.Warning(ex, "创建预览模糊层失败: {Path}", item.Preview);
         }
     }
@@ -1424,12 +1477,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (SinglePreviewBlurOverlay is not Image blurOverlay) return;
         if (ViewModel.SelectedWallpaper is WallpaperItem item && ShouldBlurPreview(item))
         {
-            _ = ShowBlurOverlayAsync(blurOverlay, item);
+            // 同卡片:先隐藏详情大图原图,避免模糊位图异步生成期间"先原图后模糊"
+            SinglePreviewImage.Visibility = Visibility.Collapsed;
+            _ = ShowBlurOverlayAsync(blurOverlay, item, () => SinglePreviewImage.Visibility = Visibility.Visible);
         }
         else
         {
             blurOverlay.Visibility = Visibility.Collapsed;
             blurOverlay.Source = null;
+            SinglePreviewImage.Visibility = Visibility.Visible;
         }
     }
 
@@ -2595,12 +2651,30 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         HideWallpaperContextMenu();
     }
     private async void OnTagDisplayChanged(object sender, RoutedEventArgs e)
-    {
-        HideWallpaperContextMenu();
-        // 角标只在图标模式模板;重置 ItemsSource 强制重建容器刷新角标(观察:若触发全列表动画再改手动刷新)
-        WallpapersGridView.ItemsSource = null;
-        WallpapersGridView.ItemsSource = Wallpapers;
-    }
+        {
+            HideWallpaperContextMenu();
+            // 优化:不再重置 ItemsSource 重建全列表——只遍历可见容器手动刷新角标(滚动位置保留、无容器 churn)
+            if (WallpapersGridView.ItemsPanelRoot is not ItemsWrapGrid panel) return;
+            foreach (var child in panel.Children)
+            {
+                if (child is not GridViewItem container) continue;
+                if (container.ContentTemplateRoot is not Grid root) continue;
+                if (WallpapersGridView.ItemFromContainer(container) is WallpaperItem item)
+                    UpdateTagBadge(root, item);
+            }
+        }
+
+        /// <summary>更新卡片右上角标签(按当前标签模式;容器绑定时也调用,滚动回来的新容器自动正确)</summary>
+        private void UpdateTagBadge(Grid root, WallpaperItem item)
+        {
+            if (root.FindName("TagDisplayBorder") is not Border border) return;
+            int index = ViewModel.WallpaperDisplayVM.WallpaperTagDisplayIndex;
+            bool visible = index != 4; // 模式 4=None:隐藏(与 VM TagDisplayVisibility 一致)
+            border.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            if (!visible) return;
+            if (border.Child is TextBlock tb)
+                tb.Text = new PapersTagContentChoose().Convert(item, null, "", "") as string ?? "";
+        }
     private void CancelMultiSelect_Click(object sender, RoutedEventArgs e)
     {
         IsMultiSelectMode = false;

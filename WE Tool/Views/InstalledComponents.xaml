@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:skia="using:WE_Tool.Controls"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:models="using:WE_Tool.Models"
     xmlns:converters="using:WE_Tool.Converters"
@@ -716,7 +717,6 @@
                                         <GridView.ItemTemplate>
 <DataTemplate x:DataType="models:ComponentInfo">
                                                     <Grid x:Name="ItemContainer">
-                                                        <ProgressRing IsActive="True" Background="Transparent"/>
                                                         <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
                                                         <Grid CornerRadius="8"
                                                               Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -735,12 +735,12 @@
                                                                 <Canvas Width="100" Height="100"/>
                                                             </Viewbox>
 
-                                                            <Image Stretch="UniformToFill">
+                                                            <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
                                                                 <Image.Source>
-                                                                    <BitmapImage UriSource="{x:Bind Preview}"
-                                                                         AutoPlay="{Binding DataContext.ViewModel.ComponentsDisplayVM.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
+                                                                    <BitmapImage UriSource="{x:Bind Preview}" AutoPlay="False"/>
                                                                 </Image.Source>
                                                             </Image>
+                                                            <skia:SkiaGifView x:Name="SkiaGifCanvas" Visibility="Collapsed"/>
 
                                                             <Grid VerticalAlignment="Bottom" Height="45" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
                                                                 <TextBlock Text="{x:Bind Title}"
@@ -760,9 +760,10 @@
                                                                     MinHeight="20"
                                                                     Padding="4"
                                                                     Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                                                    Visibility="{Binding DataContext.ViewModel.ComponentsDisplayVM.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
+                                                                    Visibility="Collapsed"
                                                                     x:Name="TagDisplayBorder">
-                                                                <TextBlock Text="{x:Bind Converter={StaticResource ComponentsTagContentChoose}}"
+                                                                <!-- 文本/可见性由 UpdateTagBadge 代码设置(替代 x:Bind OneTime+列表重建) -->
+                                                                <TextBlock Text=""
                                                                            HorizontalAlignment="Center"
                                                                            FontSize="12"
                                                                            VerticalAlignment="Center"/>
@@ -848,7 +849,6 @@
                                                                   VerticalContentAlignment="Center"/>
                                                         <!-- 缩略图 -->
                                                         <Grid Grid.Column="1" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                                            <ProgressRing IsActive="True" Background="Transparent" Width="20" Height="20"/>
                                                             <Image Stretch="UniformToFill" Width="80" Height="80">
                                                                 <Image.Source>
                                                                     <BitmapImage UriSource="{x:Bind Preview}"

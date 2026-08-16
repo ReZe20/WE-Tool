@@ -82,6 +82,7 @@ internal class WallpaperScanner
                 Type           TEXT,
                 Dependency     TEXT,
                 AcfSize        INTEGER,
+                IsDelisted     INTEGER,
                 CachedAt       TEXT
             );
             """;
@@ -93,6 +94,15 @@ internal class WallpaperScanner
             using var alterCmd = conn.CreateCommand();
             alterCmd.CommandText = "ALTER TABLE WallpaperCache ADD COLUMN AcfSize INTEGER;";
             alterCmd.ExecuteNonQuery();
+        }
+        catch { /* 列已存在，忽略 */ }
+
+        // 迁移：如果旧表缺少 IsDelisted 列则添加
+        try
+        {
+            using var alterCmd2 = conn.CreateCommand();
+            alterCmd2.CommandText = "ALTER TABLE WallpaperCache ADD COLUMN IsDelisted INTEGER;";
+            alterCmd2.ExecuteNonQuery();
         }
         catch { /* 列已存在，忽略 */ }
     }
@@ -148,7 +158,8 @@ internal class WallpaperScanner
             Type = reader.GetString("Type"),
             Source = reader.GetString("Source"),
             Dependency = reader.IsDBNull("Dependency") ? "" : reader.GetString("Dependency"),
-            AcfSize = reader.IsDBNull("AcfSize") ? null : reader.GetInt64("AcfSize")
+            AcfSize = reader.IsDBNull("AcfSize") ? null : reader.GetInt64("AcfSize"),
+            IsDelisted = !reader.IsDBNull("IsDelisted") && reader.GetBoolean("IsDelisted")
         };
 
         var cachedAt = DateTime.ParseExact(reader.GetString("CachedAt"), "o", CultureInfo.InvariantCulture);
@@ -169,10 +180,10 @@ internal class WallpaperScanner
                 INSERT OR REPLACE INTO WallpaperCache 
                 (FolderPath, Source, WorkshopID, Title, Description, FileSize,
                  CreationTime, UpdateTime, AcfUpdateTime, Preview, ContentRating, Tags,
-                 Type, Dependency, AcfSize, CachedAt)
+                 Type, Dependency, AcfSize, IsDelisted, CachedAt)
                 VALUES (@FolderPath, @Source, @WorkshopID, @Title, @Description, @FileSize,
                         @CreationTime, @UpdateTime, @AcfUpdateTime, @Preview, @ContentRating, @Tags,
-                        @Type, @Dependency, @AcfSize, @CachedAt)
+                        @Type, @Dependency, @AcfSize, @IsDelisted, @CachedAt)
                 """;
 
             foreach (var item in items)
@@ -200,6 +211,7 @@ internal class WallpaperScanner
                     item.AcfSize.HasValue
                         ? (object)item.AcfSize.Value
                         : DBNull.Value);
+                cmd.Parameters.AddWithValue("@IsDelisted", item.IsDelisted ? 1 : 0);
 
                 cmd.ExecuteNonQuery();
             }
@@ -311,12 +323,14 @@ internal class WallpaperScanner
                 SaveItemsToCache(effectiveCachePath!, parsedItems);
 
             // === 对 workshop 源：统一校准所有壁纸（含缓存命中）的 ShouldNotExist ===
+            // 订阅异常 = 不在有效订阅名单（取消订阅/本地停用）或已被下架（project.json visibility == "private"）
             if (source == "workshop" && activeSubscribedIDs != null)
             {
                 foreach (var item in resultsBag)
                 {
                     item.ShouldNotExist = string.IsNullOrEmpty(item.WorkshopID)
-                        || !activeSubscribedIDs.Contains(item.WorkshopID);
+                        || !activeSubscribedIDs.Contains(item.WorkshopID)
+                        || item.IsDelisted;
                 }
             }
 
@@ -497,6 +511,7 @@ internal class WallpaperScanner
         public string? Category { get; init; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public JsonElement? Preset { get; init; }
+        public string? Visibility { get; init; }
         public string? Dependency { get; init; }
         public string? File { get; init; }
         public string? Preview { get; init; }
@@ -593,6 +608,8 @@ internal class WallpaperScanner
                 Log.Warning(ex, $"获取壁纸大小时异常。{metadata.Title}");
             }
 
+            bool isDelisted = string.Equals(metadata.Visibility, "private", StringComparison.OrdinalIgnoreCase);
+
             return new WallpaperItem
             {
                 WorkshopID = matchedID,
@@ -614,8 +631,9 @@ internal class WallpaperScanner
                 Type = finalType,
                 Source = source,
                 Dependency = dependency,
+                IsDelisted = isDelisted,
                 ShouldNotExist = source == "workshop" && activeSubscribedIDs != null
-                    ? (string.IsNullOrEmpty(matchedID) || !activeSubscribedIDs.Contains(matchedID))
+                    ? (string.IsNullOrEmpty(matchedID) || !activeSubscribedIDs.Contains(matchedID) || isDelisted)
                     : false
             };
         }

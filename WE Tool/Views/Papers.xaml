@@ -770,6 +770,10 @@
                                                               Loaded="ShadowRect_Loaded"
                                                               ContextFlyout="{StaticResource WallpaperContextMenu}"
                                                               RightTapped="WallpaperItem_RightTapped">
+                                                            <Viewbox Stretch="Uniform" VerticalAlignment="Top">
+                                                                <Canvas Width="100" Height="100"/>
+                                                            </Viewbox>
+
                                                             <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
                                                                 <Image.Source>
                                                                     <BitmapImage UriSource="{x:Bind Preview}" AutoPlay="False"/>
@@ -794,7 +798,7 @@
                                                                            Margin="4,4,4,4" 
                                                                            TextTrimming="CharacterEllipsis"
                                                                            TextWrapping="WrapWholeWords"/>
-                                                                <!-- 未订阅角标(vdf 校验未通过 = ShouldNotExist):数据驱动,平时 Collapsed -->
+                                                                <!-- 异常角标(ShouldNotExist = 未订阅或已下架):数据驱动,平时 Collapsed -->
                                                                 <Border Grid.Column="1"
                                                                         CornerRadius="4"
                                                                         Padding="6,2"
@@ -809,20 +813,21 @@
                                                                 </Border>
                                                             </Grid>
                                                             <Border HorizontalAlignment="Right"
-                                                                    VerticalAlignment="Top"
-                                                                    BorderBrush="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                                    CornerRadius="0,0,0,10"
-                                                                    MinWidth="50"
-                                                                    MinHeight="20"
-                                                                    Padding="4"
-                                                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                                                    Visibility="{Binding DataContext.ViewModel.WallpaperDisplayVM.TagDisplayVisibility, ElementName=PageRoot, Mode=OneWay}"
-                                                                    x:Name="TagDisplayBorder">
-                                                                <TextBlock Text="{x:Bind Converter={StaticResource PapersTagContentChoose}}"
-                                                                           HorizontalAlignment="Center"
-                                                                           FontSize="12"
-                                                                           VerticalAlignment="Center"/>
-                                                            </Border>
+                                                                                                                                VerticalAlignment="Top"
+                                                                                                                                BorderBrush="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                                                                                                CornerRadius="0,0,0,10"
+                                                                                                                                MinWidth="50"
+                                                                                                                                MinHeight="20"
+                                                                                                                                Padding="4"
+                                                                                                                                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                                                                                                Visibility="Collapsed"
+                                                                                                                                x:Name="TagDisplayBorder">
+                                                                                                                            <!-- 文本/可见性由 UpdateTagBadge 代码设置(替代 x:Bind OneTime+列表重建) -->
+                                                                                                                            <TextBlock Text=""
+                                                                                                                                       HorizontalAlignment="Center"
+                                                                                                                                       FontSize="12"
+                                                                                                                                       VerticalAlignment="Center"/>
+                                                                                                                        </Border>
                                                             <CheckBox x:Name="SelectionCheckBox"
                                                                       IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
                                                                       Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
@@ -904,7 +909,6 @@
                                                                   VerticalContentAlignment="Center"/>
                                                         <!-- 缩略图 -->
                                                         <Grid Grid.Column="1" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                                            <ProgressRing IsActive="True" Background="Transparent" Width="20" Height="20"/>
                                                             <Image Stretch="UniformToFill" Width="80" Height="80">
                                                                 <Image.Source>
                                                                     <BitmapImage UriSource="{x:Bind Preview}" 
