@@ -9,8 +9,8 @@ using System.Linq;
 
 namespace WE_Tool.Controls;
 
-/// <summary>Skia 流式 GIF 播放控件(实验分支 feature/skia-gif):
-/// SKCodec(Skia 引擎,与 Flutter 同源)按帧延迟流式解码 + SKXamlCanvas GPU 绘制。
+/// <summary>Skia 流式 GIF 播放控件:
+/// SKCodec(Skia 引擎,与 Flutter 同源)按帧延迟流式解码 + SKXamlCanvas 绘制。
 /// 帧不驻留(仅当前帧 SKBitmap ~0.3MB),内存远小于批量解码;解码在共享时钟 Tick 内(UI 线程,小图 ~1ms/帧)。
 /// 共享 DispatcherQueueTimer 驱动所有实例(按各自帧延迟推进),避免每卡片一个定时器。</summary>
 public sealed class SkiaGifView : SKXamlCanvas
@@ -19,7 +19,11 @@ public sealed class SkiaGifView : SKXamlCanvas
     private SKBitmap? _frame;
     private int _frameIndex;
     private long _nextTickMs;
-    private bool _paintLogged;
+
+    /// <summary>是否正在播放(幂等 Start 判断用)</summary>
+    public bool IsPlaying { get; private set; }
+    /// <summary>当前播放的 GIF 路径(同 path 重绑跳过,避免重复打开)</summary>
+    public string? CurrentPath { get; private set; }
 
     private static readonly List<SkiaGifView> _instances = [];
     private static DispatcherQueueTimer? _timer;
@@ -29,11 +33,13 @@ public sealed class SkiaGifView : SKXamlCanvas
         PaintSurface += OnPaint;
         SizeChanged += (_, _) => Invalidate();
         Loaded += (_, _) => Invalidate(); // 挂载后强制首次重绘(渲染表面初始化)
+        Unloaded += (_, _) => Stop(); // 容器销毁/回收:自停,防共享时钟空转
     }
 
-    /// <summary>打开 GIF 并开始播放(替换 BitmapImage 直播路径)</summary>
+    /// <summary>打开 GIF 并开始播放(替换 BitmapImage 直播路径);同 path 正在播则忽略</summary>
     public void Start(string path)
     {
+        if (IsPlaying && CurrentPath == path) return;
         Stop();
         _codec = SKCodec.Create(path);
         if (_codec == null)
@@ -45,15 +51,15 @@ public sealed class SkiaGifView : SKXamlCanvas
             SKColorType.Bgra8888, SKAlphaType.Premul));
         _frameIndex = 0;
         _nextTickMs = 0;
-        Log.Debug("[Skia][Start] 打开成功 path={Path} 帧={Frames} 尺寸={W}x{H} 格式={Format}",
-            path, _codec.FrameCount, _codec.Info.Width, _codec.Info.Height, _codec.Info.ColorType);
+        IsPlaying = true;
+        CurrentPath = path;
         _instances.Add(this);
         EnsureTimer();
         DecodeFrame();
         Invalidate();
     }
 
-    /// <summary>停止并释放(滚出视口/换绑时调用)</summary>
+    /// <summary>停止并释放(滚出视口/换绑/软挂起时调用)</summary>
     public void Stop()
     {
         if (_instances.Remove(this) && _instances.Count == 0)
@@ -64,7 +70,15 @@ public sealed class SkiaGifView : SKXamlCanvas
         _codec?.Dispose();
         _codec = null;
         _frame = null;
+        IsPlaying = false;
+        CurrentPath = null;
         Invalidate();
+    }
+
+    /// <summary>全部停止(页面离开/AutoPlayGif 关闭/软挂起)</summary>
+    public static void StopAll()
+    {
+        foreach (var v in _instances.ToList()) v.Stop();
     }
 
     private static void EnsureTimer()
@@ -86,9 +100,9 @@ public sealed class SkiaGifView : SKXamlCanvas
     {
         if (_codec == null || _frame == null) return;
         if (now < _nextTickMs) return;
-        var infos = _codec.FrameInfo;
+        var info = _codec.FrameInfo;
         if (_frameIndex >= _codec.FrameCount) _frameIndex = 0;
-        int duration = _frameIndex < infos.Length ? Math.Max(1, infos[_frameIndex].Duration) : 100;
+        int duration = _frameIndex < info.Length ? Math.Max(1, info[_frameIndex].Duration) : 100;
         _nextTickMs = now + duration;
         DecodeFrame();
         _frameIndex++;
@@ -103,7 +117,7 @@ public sealed class SkiaGifView : SKXamlCanvas
         opts.PriorFrame = _frameIndex == 0 ? _codec.FrameCount - 1 : _frameIndex - 1;
         var result = _codec.GetPixels(_frame.Info, _frame.GetPixels(), opts);
         if (result != SKCodecResult.Success)
-            Log.Debug("[Skia][Decode] 失败 帧={Index} 结果={Result}", _frameIndex, result);
+            Log.Debug("[Skia][Decode] 失败 帧={Index} 结果={Result}", _frameIndex, result); // 失败诊断(保留)
     }
 
     private void OnPaint(object? sender, SKPaintSurfaceEventArgs e)

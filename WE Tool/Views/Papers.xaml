@@ -770,14 +770,9 @@
                                                               Loaded="ShadowRect_Loaded"
                                                               ContextFlyout="{StaticResource WallpaperContextMenu}"
                                                               RightTapped="WallpaperItem_RightTapped">
-                                                            <Viewbox Stretch="Uniform" VerticalAlignment="Top">
-                                                                <Canvas Width="100" Height="100"/>
-                                                            </Viewbox>
-
                                                             <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
                                                                 <Image.Source>
-                                                                    <BitmapImage UriSource="{x:Bind Preview}" 
-                                                                         AutoPlay="{Binding DataContext.ViewModel.WallpaperDisplayVM.AutoPlayGif, ElementName=PageRoot, Mode=OneWay}"/>
+                                                                    <BitmapImage UriSource="{x:Bind Preview}" AutoPlay="False"/>
                                                                 </Image.Source>
                                                             </Image>
                                                             <!-- 实验分支(feature/skia-gif):Skia 流式 GIF 播放,覆盖 BitmapImage 直播;GIF 时显示,其余隐藏 -->
