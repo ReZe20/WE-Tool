@@ -22,6 +22,9 @@
     <Copyright>Copyright © 2026 ReZe20</Copyright>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
     <WindowsPackageType>None</WindowsPackageType>
+    <!-- AOT/Trim 兼容:禁用 XAML 类型反射和绑定诊断(避免 0xC000027B stowed exception) -->
+    <EnableTypeInfoReflection>false</EnableTypeInfoReflection>
+    <EnableBindingDiagnostics>false</EnableBindingDiagnostics>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\noPreview.png" />
@@ -61,8 +64,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.3" />
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260209005" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260804001" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SkiaSharp" Version="4.151.1" />
@@ -251,6 +253,9 @@
     <DefaultLanguage>zh-CN</DefaultLanguage>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <TrimMode>partial</TrimMode>
+    <CsWinRTAotWarningLevel>2</CsWinRTAotWarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <PRIResource Update="Strings\zh-CN\Resources.resw">

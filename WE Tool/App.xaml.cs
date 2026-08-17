@@ -253,8 +253,8 @@ namespace WE_Tool
                 }
 
                 string json = File.ReadAllText(configPath);
-                var obj = Newtonsoft.Json.Linq.JObject.Parse(json);
-                string lang = obj["AppLanguage"]?.ToString() ?? "default";
+                var obj = System.Text.Json.Nodes.JsonNode.Parse(json)?.AsObject();
+                string lang = obj?["AppLanguage"]?.GetValue<string>() ?? "default";
 
                 // 跟随系统（空字符串或"default"）→ 不设置 PrimaryLanguageOverride
                 // 文档：空字符串不是合法的 BCP-47 标签，set 会抛 COMException

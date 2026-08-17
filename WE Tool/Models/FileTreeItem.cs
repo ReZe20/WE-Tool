@@ -27,7 +27,7 @@ namespace WE_Tool.Models
         }
     }
 
-    public class FileTreeTemplateSelector : DataTemplateSelector
+    public partial class FileTreeTemplateSelector : DataTemplateSelector
     {
         public DataTemplate? FolderTemplate { get; set; }
         public DataTemplate? ImageTemplate { get; set; }

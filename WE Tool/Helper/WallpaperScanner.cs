@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Models;
+using WE_Tool.Json;
 
 namespace WE_Tool.Helper;
 
@@ -41,13 +42,6 @@ internal class WallpaperScanner
     private static readonly Regex VdfEntryRegex = new(
         @"""publishedfileid""\s+""(\d+)""[^}]*""disabled_locally""\s+""(\d+)""",
         RegexOptions.Compiled);
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        AllowTrailingCommas = true,
-        ReadCommentHandling = JsonCommentHandling.Skip
-    };
 
     // ====================== SQLite 缓存相关 ======================
     private record CachedEntry(WallpaperItem Item, DateTime UpdateTime, DateTime CachedAt);
@@ -505,22 +499,53 @@ internal class WallpaperScanner
         }
     }
 
-    private record ProjectMetadata
+    /// <summary>
+    /// 源生成器不支持 AllowTrailingCommas/ReadCommentHandling,project.json 若含
+    /// 尾逗号或注释会导致解析失败——按字符状态机轻量清洗(跳过字符串内的逗号/注释形态)。
+    /// </summary>
+    private static string SanitizeProjectJson(string text)
     {
-        public string? Type { get; init; }
-        public string? Category { get; init; }
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public JsonElement? Preset { get; init; }
-        public string? Visibility { get; init; }
-        public string? Dependency { get; init; }
-        public string? File { get; init; }
-        public string? Preview { get; init; }
-        public string? Title { get; init; }
-        public string? Contentrating { get; init; }
-        public string? Description { get; init; }
-        public JsonElement? Tags { get; init; }
-        public string? Workshopid { get; init; }
+        if (string.IsNullOrEmpty(text)) return text;
+        var sb = new System.Text.StringBuilder(text.Length);
+        bool inString = false, inLineComment = false, inBlockComment = false;
+        char prev = '\0';
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+            char next = i + 1 < text.Length ? text[i + 1] : '\0';
+            if (inLineComment)
+            {
+                if (c == '\n') { inLineComment = false; sb.Append(c); }
+                continue;
+            }
+            if (inBlockComment)
+            {
+                if (c == '*' && next == '/') { inBlockComment = false; i++; }
+                continue;
+            }
+            if (inString)
+            {
+                sb.Append(c);
+                if (c == '\\' && next != '\0') { sb.Append(next); i++; }
+                else if (c == '"') inString = false;
+                continue;
+            }
+            if (c == '"') { inString = true; sb.Append(c); continue; }
+            if (c == '/' && next == '/') { inLineComment = true; i++; continue; }
+            if (c == '/' && next == '*') { inBlockComment = true; i++; continue; }
+            // 尾逗号:逗号后(跳过空白)紧跟 } 或 ],删除该逗号
+            if (c == ',')
+            {
+                int j = i + 1;
+                while (j < text.Length && (text[j] == ' ' || text[j] == '\t' || text[j] == '\r' || text[j] == '\n')) j++;
+                if (j < text.Length && (text[j] == '}' || text[j] == ']')) { prev = c; continue; }
+            }
+            sb.Append(c);
+            prev = c;
+        }
+        return sb.ToString();
     }
+
     private static async Task<WallpaperItem?> ParseWallpaperAsync(
         string current,
         FrozenSet<string> installedIDs,
@@ -536,8 +561,8 @@ internal class WallpaperScanner
             var matchedID = installedIDs.Contains(folderName) ? folderName : "";
 
             var jsonPath = Path.Combine(current, "project.json");
-            await using var fileStream = File.OpenRead(jsonPath);
-            var metadata = await JsonSerializer.DeserializeAsync<ProjectMetadata>(fileStream, JsonOptions, ct)
+            var jsonText = SanitizeProjectJson(await File.ReadAllTextAsync(jsonPath, ct));
+            var metadata = JsonSerializer.Deserialize(jsonText, JsonContext.Default.ProjectMetadata)
                            ?? throw new InvalidOperationException("JSON 反序列化失败");
 
             // 类型推断
@@ -705,8 +730,8 @@ internal class WallpaperScanner
         var jsonPath = Path.Combine(componentDir, "project.json");
         if (!File.Exists(jsonPath)) return null;
 
-        await using var fileStream = File.OpenRead(jsonPath);
-        var metadata = await JsonSerializer.DeserializeAsync<ProjectMetadata>(fileStream, JsonOptions, ct);
+        var jsonText = SanitizeProjectJson(await File.ReadAllTextAsync(jsonPath, ct));
+        var metadata = JsonSerializer.Deserialize(jsonText, JsonContext.Default.ProjectMetadata);
 
         if (metadata == null || metadata.Category != "Asset")
             return null;

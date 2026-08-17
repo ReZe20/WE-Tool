@@ -3,11 +3,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
@@ -432,31 +434,40 @@ public class RepkgCliService
     }
 
     /// <summary>ExtractSettings → batch manifest 文件(临时目录,用完即删)。</summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonNode DOM 手写构造零反射,AOT 安全")]
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050", Justification = "JsonNode DOM 节点创建不涉及运行时反射")]
     private static string WriteManifest(
         List<BatchItem> items, string outputRoot, ExtractSettings settings, int threads)
     {
-        var manifest = new
+        // JsonNode 手写构造(DOM 零反射,AOT 安全):键名须保持小写与 repkg CLI 协议一致
+        var wallpapersNode = new System.Text.Json.Nodes.JsonArray();
+        foreach (var x in items)
         {
-            threads,
-            wallpapers = items.Select(x => new
+            wallpapersNode.Add(new System.Text.Json.Nodes.JsonObject
             {
-                id = x.Id,
-                input = x.Wallpaper.FolderPath,
-                output = GetOutputPath(outputRoot, x.Wallpaper, settings)
-            }).ToList(),
-            options = BuildManifestOptions(settings)
+                ["id"] = x.Id,
+                ["input"] = x.Wallpaper.FolderPath,
+                ["output"] = GetOutputPath(outputRoot, x.Wallpaper, settings)
+            });
+        }
+
+        var manifest = new System.Text.Json.Nodes.JsonObject
+        {
+            ["threads"] = threads,
+            ["wallpapers"] = wallpapersNode,
+            ["options"] = BuildManifestOptions(settings)
         };
 
         var path = Path.Combine(Path.GetTempPath(),
             $"repkg_batch_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}.json");
-        File.WriteAllText(path, JsonSerializer.Serialize(manifest));
+        File.WriteAllText(path, manifest.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
         return path;
     }
 
-    /// <summary>manifest options:与旧 BuildArgs 的分支逻辑 1:1 对应。</summary>
-    private static object BuildManifestOptions(ExtractSettings settings)
+    /// <summary>manifest options:与旧 BuildArgs 的分支逻辑 1:1 对应。返回 JsonObject 使 WriteManifest 免于 Dictionary&lt;string,object?&gt; 的 AOT 多态开销。</summary>
+    private static System.Text.Json.Nodes.JsonObject BuildManifestOptions(ExtractSettings settings)
     {
-        var o = new Dictionary<string, object?>
+        var o = new System.Text.Json.Nodes.JsonObject
         {
             ["overwrite"] = settings.CoverAllFiles,
             ["keepSubfolderStructure"] = settings.KeepSubfolderStructure == 1,
@@ -470,13 +481,13 @@ public class RepkgCliService
         if (settings.OutputMode == 2)
         {
             if (settings.IgnoreExtension && !string.IsNullOrEmpty(settings.IgnoreExtensionList))
-                o["outputIgnoreExts"] = SplitCsv(settings.IgnoreExtensionList);
+                o["outputIgnoreExts"] = CsvToJsonArray(SplitCsv(settings.IgnoreExtensionList));
             if (settings.OnlyExtension && !string.IsNullOrEmpty(settings.OnlyExtensionList))
-                o["outputOnlyExts"] = SplitCsv(settings.OnlyExtensionList);
+                o["outputOnlyExts"] = CsvToJsonArray(SplitCsv(settings.OnlyExtensionList));
             if (settings.IgnorePaths && !string.IsNullOrEmpty(settings.IgnorePathsList))
-                o["ignorepaths"] = SplitCsv(settings.IgnorePathsList);
+                o["ignorepaths"] = CsvToJsonArray(SplitCsv(settings.IgnorePathsList));
             if (settings.OnlyPaths && !string.IsNullOrEmpty(settings.OnlyPathsList))
-                o["onlypaths"] = SplitCsv(settings.OnlyPathsList);
+                o["onlypaths"] = CsvToJsonArray(SplitCsv(settings.OnlyPathsList));
             if (settings.FilterEffectImagesEnabled && settings.FilterEffectImagesThreshold > 0)
                 o["filterEffectImages"] = settings.FilterEffectImagesThreshold;
         }
@@ -484,8 +495,8 @@ public class RepkgCliService
         // 媒体模式(OutputMode==1):媒体白名单 + materials/sounds 直接子文件
         if (settings.OutputMode == 1)
         {
-            o["outputOnlyExts"] = MediaOnlyExtensionsArg.Split(',');
-            o["onlypaths"] = new[] { "materials", "sounds" };
+            o["outputOnlyExts"] = CsvToJsonArray(MediaOnlyExtensionsArg.Split(','));
+            o["onlypaths"] = CsvToJsonArray(new[] { "materials", "sounds" });
             o["pathsDepth"] = 1;
         }
         else if (settings.TexExportMode == 0)
@@ -494,6 +505,17 @@ public class RepkgCliService
             o["onlyTexImages"] = true;
 
         return o;
+    }
+
+    /// <summary>string[] → JsonArray(JsonObject 的值必须是 JsonNode,string[] 不能直接赋值)。</summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "字符串 JsonValue 创建为原始类型,AOT 安全")]
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050", Justification = "字符串 JsonValue 创建为原始类型,AOT 安全")]
+    private static System.Text.Json.Nodes.JsonArray CsvToJsonArray(IEnumerable<string> values)
+    {
+        var arr = new System.Text.Json.Nodes.JsonArray();
+        foreach (var v in values)
+            arr.Add(v);
+        return arr;
     }
 
     /// <summary>非 pkg 壁纸(HTML 等):直接复制(与旧流程 CopyAllFiles 分支等价)。</summary>

@@ -4,7 +4,7 @@ using System;
 
 namespace WE_Tool.Converters
 {
-    class StringToVisibilityConverter : IValueConverter
+    partial class StringToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

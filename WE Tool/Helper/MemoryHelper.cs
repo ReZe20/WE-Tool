@@ -40,7 +40,7 @@ public static class MemoryHelper
     private static MEMORYSTATUSEX GetMemoryStatus()
     {
         var memStatus = new MEMORYSTATUSEX();
-        memStatus.dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+        memStatus.dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>();
 
         if (!GlobalMemoryStatusEx(ref memStatus))
             throw new InvalidOperationException("GlobalMemoryStatusEx failed.");

@@ -13,6 +13,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Serilog;
 using WE_Tool.Models;
+using WE_Tool.Json;
 using WE_Tool.Service;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -587,7 +588,7 @@ namespace WE_Tool
             {
                 string type = File.Exists(Path.Combine(item.OutputPath, "index.html")) ? "web" : "scene";
                 File.WriteAllText(jsonPath,
-                    JsonSerializer.Serialize(new { title = Path.GetFileName(item.OutputPath), type }));
+                    JsonSerializer.Serialize(new LoadPapersEntry(Path.GetFileName(item.OutputPath), type), JsonContext.Default.LoadPapersEntry));
             }
             catch (Exception ex)
             {

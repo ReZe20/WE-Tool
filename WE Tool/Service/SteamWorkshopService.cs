@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using WE_Tool.Json;
 using System.Threading.Tasks;
 
 namespace WE_Tool.Service;
@@ -108,7 +109,7 @@ public class SteamWorkshopService : IDisposable
         try
         {
             var response = await RequestAsync(
-                JsonSerializer.Serialize(new { op = "unsubscribe", workshopId = workshopId.ToString() }),
+                JsonSerializer.Serialize(new BridgeCommand("unsubscribe", workshopId.ToString()), JsonContext.Default.BridgeCommand),
                 TimeSpan.FromSeconds(20)).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(response);
             return doc.RootElement.GetProperty("ok").GetBoolean();
@@ -131,7 +132,7 @@ public class SteamWorkshopService : IDisposable
         try
         {
             var response = await RequestAsync(
-                JsonSerializer.Serialize(new { op = "status" }),
+                JsonSerializer.Serialize(new BridgeCommand("status"), JsonContext.Default.BridgeCommand),
                 TimeSpan.FromSeconds(2)).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(response);
             if (doc.RootElement.GetProperty("ok").GetBoolean())
@@ -231,7 +232,7 @@ public class SteamWorkshopService : IDisposable
         {
             if (!bridge.HasExited)
             {
-                bridge.StandardInput.WriteLine(JsonSerializer.Serialize(new { op = "exit" }));
+                bridge.StandardInput.WriteLine(JsonSerializer.Serialize(new BridgeCommand("exit"), JsonContext.Default.BridgeCommand));
                 bridge.StandardInput.Flush();
                 if (!bridge.WaitForExit(2000))
                     bridge.Kill();

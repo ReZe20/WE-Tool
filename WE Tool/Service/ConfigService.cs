@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using WE_Tool.Json;
 using System.Threading.Tasks;
 using WE_Tool.Models;
 using Windows.ApplicationModel;   // 新增：用于判断是否 Packaged
@@ -46,9 +47,7 @@ namespace WE_Tool.Service
                 }
 
                 string text = await File.ReadAllTextAsync(ConfigPath);
-                var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-                var settings = JsonSerializer.Deserialize<AppSettings>(text, opts) ?? new AppSettings();
+                var settings = JsonSerializer.Deserialize(text, JsonContext.Default.AppSettings) ?? new AppSettings();
 
                 if (settings.Version < CurrentVersion)
                 {
@@ -76,7 +75,7 @@ namespace WE_Tool.Service
                 if (!string.IsNullOrEmpty(dir))
                     Directory.CreateDirectory(dir);
 
-                string text = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+                string text = JsonSerializer.Serialize(settings, JsonContext.Default.AppSettings);
                 await File.WriteAllTextAsync(ConfigPath, text);
             }
             catch (Exception ex)
@@ -119,9 +118,8 @@ namespace WE_Tool.Service
 
             // 未来的 v2 → v3 迁移在此追加……
 
-            return JsonSerializer.Deserialize<AppSettings>(
-                node.ToJsonString(),
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? settings;
+            return JsonSerializer.Deserialize(
+                node.ToJsonString(), JsonContext.Default.AppSettings) ?? settings;
         }
     }
 }

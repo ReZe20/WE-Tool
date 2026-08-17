@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Serilog;
 using System.Text.Json;
+using WE_Tool.Json;
 using WE_Tool.Models;
 
 namespace WE_Tool.Helper
@@ -90,11 +91,11 @@ namespace WE_Tool.Helper
         {
             "bool" => prop.BoolValue ? "true" : "false",
             "slider" => FormatSlider(prop.SliderValue, prop.Precision),
-            "combo" => JsonSerializer.Serialize(prop.ComboValue),
+            "combo" => JsonSerializer.Serialize(prop.ComboValue, JsonContext.Default.String),
             "color" => FormatColor(prop.ColorValue),
-            "textinput" => JsonSerializer.Serialize(prop.TextValue),
-            "scenetexture" => JsonSerializer.Serialize(prop.TextValue),
-            _ => JsonSerializer.Serialize(prop.DisplayValue)   // IsEditable 过滤后理论不可达
+            "textinput" => JsonSerializer.Serialize(prop.TextValue, JsonContext.Default.String),
+            "scenetexture" => JsonSerializer.Serialize(prop.TextValue, JsonContext.Default.String),
+            _ => JsonSerializer.Serialize(prop.DisplayValue, JsonContext.Default.String)   // IsEditable 过滤后理论不可达
         };
 
         private static string FormatSlider(double value, int precision)
