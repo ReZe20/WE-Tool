@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Windowing;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
+using WE_Tool.Views;
 using Windows.Graphics;
 using Windows.UI;
 using WinUIEx;

@@ -1035,22 +1035,19 @@
     <value>WinUI 3 (Windows App SDK 1.8)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
-    <value>CommunityToolkit (MVVM 8.4 / WinUI Controls 8.2)</value>
+    <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
   </data>
   <data name="Info_CreditsLine4.Content" xml:space="preserve">
     <value>Facepunch.Steamworks 2.3</value>
   </data>
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
-    <value>Microsoft.Data.Sqlite 10.0</value>
+    <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
-  <data name="Info_CreditsLine6.Content" xml:space="preserve">
-    <value>Newtonsoft.Json 13.0</value>
-  </data>
-  <data name="Info_CreditsLine7.Content" xml:space="preserve">
-    <value>Serilog 4.3</value>
+<data name="Info_CreditsLine7.Content" xml:space="preserve">
+    <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
-    <value>WinUIEx 2.9</value>
+    <value>WinUIEx 2.9.3</value>
   </data>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (基於 notscuffed/repkg)</value>
@@ -1169,5 +1166,24 @@
   </data>
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
     <value />
+  </data>
+  <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
+    <value>SkiaSharp 4.151</value>
+  </data>
+
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>残留清除</value>
+  </data>
+  <data name="Cleanup_Title.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Cleanup_ScanButton.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Cleanup_DeleteButton.Text" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
+    <value></value>
   </data>
 </root>

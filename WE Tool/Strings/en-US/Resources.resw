@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1200,22 +1200,19 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
     <value>WinUI 3 (Windows App SDK 1.8)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
-    <value>CommunityToolkit (MVVM 8.4 / WinUI Controls 8.2)</value>
+    <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
   </data>
   <data name="Info_CreditsLine4.Content" xml:space="preserve">
     <value>Facepunch.Steamworks 2.3</value>
   </data>
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
-    <value>Microsoft.Data.Sqlite 10.0</value>
+    <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
-  <data name="Info_CreditsLine6.Content" xml:space="preserve">
-    <value>Newtonsoft.Json 13.0</value>
-  </data>
-  <data name="Info_CreditsLine7.Content" xml:space="preserve">
-    <value>Serilog 4.3</value>
+<data name="Info_CreditsLine7.Content" xml:space="preserve">
+    <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
-    <value>WinUIEx 2.9</value>
+    <value>WinUIEx 2.9.3</value>
   </data>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (based on notscuffed/repkg)</value>
@@ -1361,5 +1358,42 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
     <value>Comma-separated, e.g. effects,sounds (includes subfolders)</value>
+  </data>
+  <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
+    <value>SkiaSharp 4.151</value>
+  </data>
+
+  <data name="Cleanup_Title.Text" xml:space="preserve">
+    <value>残留清除</value>
+  </data>
+  <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
+    <value>点击下方按钮扫描壁纸残留文件</value>
+  </data>
+  <data name="Cleanup_ScanButton.Content" xml:space="preserve">
+    <value>开始扫描</value>
+  </data>
+  <data name="Cleanup_OpenFolder.Content" xml:space="preserve">
+    <value>打开目录</value>
+  </data>
+  <data name="Cleanup_Whitelist.Content" xml:space="preserve">
+    <value>白名单</value>
+  </data>
+  <data name="Cleanup_Delete.Content" xml:space="preserve">
+    <value>清理</value>
+  </data>
+  <data name="WhitelistWindow_Title.Text" xml:space="preserve">
+    <value>白名单管理</value>
+  </data>
+  <data name="WhitelistWindow_EmptyHint.Text" xml:space="preserve">
+    <value>白名单为空</value>
+  </data>
+  <data name="WhitelistWindow_EmptyDesc.Text" xml:space="preserve">
+    <value>在残留清除页面点击卡片上的"白名单"按钮将壁纸加入</value>
+  </data>
+  <data name="WhitelistWindow_OpenFolder.Content" xml:space="preserve">
+    <value>打开目录</value>
+  </data>
+  <data name="WhitelistWindow_Remove.Content" xml:space="preserve">
+    <value>移出白名单</value>
   </data>
 </root>
