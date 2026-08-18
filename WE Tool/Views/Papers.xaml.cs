@@ -2626,20 +2626,45 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             RefreshButton.IsEnabled = true;
         }
     }
+    private void Properties_Click(object sender, RoutedEventArgs e)
+    {
+        _ = PropertiesAsync();
+    }
     private void Property_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
-        Properties();
+        _ = PropertiesAsync();
         e.Handled = true;
     }
     private void Properties_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
-        Properties();
+        _ = PropertiesAsync();
     }
-    private void Properties()
+    private async Task PropertiesAsync()
     {
         HideWallpaperContextMenu();
-        if (ViewModel.SelectedWallpaper != null)
-            PropertiesWindow.Open(ViewModel.SelectedWallpaper);
+        // 多选模式:为每个选中壁纸打开独立属性窗口
+        var items = IsMultiSelectMode && SelectedWallpapers.Count > 0
+            ? SelectedWallpapers.ToList()
+            : ViewModel.SelectedWallpaper != null
+                ? new List<WallpaperItem> { ViewModel.SelectedWallpaper }
+                : [];
+        if (items.Count == 0) return;
+        // 超过5个弹窗确认(去重由 PropertiesWindow.Open 内部处理)
+        if (PropertiesWindow.OpenWindowCount + items.Count > 5)
+        {
+            var dlg = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = "打开多个属性窗口",
+                Content = $"将打开 {items.Count} 个属性窗口（当前已有 {PropertiesWindow.OpenWindowCount} 个），是否继续？",
+                PrimaryButtonText = "打开",
+                CloseButtonText = "取消",
+                DefaultButton = ContentDialogButton.Close
+            };
+            if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
+        }
+        foreach (var wp in items)
+            PropertiesWindow.Open(wp);
     }
     private async void OnIconSizeChanged(object sender, RoutedEventArgs e)
     {

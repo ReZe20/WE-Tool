@@ -1654,4 +1654,37 @@
   <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
     <value>Удалить выбранные ({0})</value>
   </data>
+  <data name="ScanCache.Description" xml:space="preserve">
+    <value>Кэш сканирования ускоряет сканирование программы</value>
+  </data>
+  <data name="WindowBehavior.Header" xml:space="preserve">
+    <value>Поведение окна</value>
+  </data>
+  <data name="WindowBehavior.Description" xml:space="preserve">
+    <value>Определяет, восстанавливать ли положение, размер и развёрнутое состояние окна при запуске</value>
+  </data>
+  <data name="WindowBehavior_Restore.Content" xml:space="preserve">
+    <value>Восстановить предыдущий размер и положение окна</value>
+  </data>
+  <data name="StartPage_Cleanup.Text" xml:space="preserve">
+    <value>Очистка</value>
+  </data>
+  <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
+    <value>напр. D:\Export\Wallpapers</value>
+  </data>
+  <data name="Settings_WorkshopPath.PlaceholderText" xml:space="preserve">
+    <value>напр. D:\SteamLibrary\steamapps\workshop\content\431960</value>
+  </data>
+  <data name="Settings_ProjectPath.PlaceholderText" xml:space="preserve">
+    <value>напр. D:\...\wallpaper_engine\projects\myprojects</value>
+  </data>
+  <data name="Settings_OfficialPath.PlaceholderText" xml:space="preserve">
+    <value>напр. D:\...\wallpaper_engine\projects\defaultprojects</value>
+  </data>
+  <data name="Settings_AcfPath.PlaceholderText" xml:space="preserve">
+    <value>напр. D:\SteamLibrary\steamapps\workshop\appworkshop_431960.acf</value>
+  </data>
+  <data name="Settings_VdfPath.PlaceholderText" xml:space="preserve">
+    <value>напр. D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
+  </data>
 </root>

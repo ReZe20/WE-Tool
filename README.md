@@ -12,6 +12,7 @@
 - **一键提取**:解包 `.pkg` + TEX 纹理自动转换,支持全量输出 / 仅媒体文件 / 自定义扩展名过滤三种模式,提取过程可暂停、继续、停止,实时进度
 - **组件管理**:已安装组件(图层/脚本/特效)独立页签,多选批量操作,支持快捷键(Ctrl+A 全选 / Ctrl+I 反选 / Ctrl+C 复制 / Delete 删除 / Alt+Enter 属性)
 - **Steamworks 集成**:壁纸页与组件页均可一键取消创意工坊订阅;Steam 会话由独立桥接子进程持有,Steam 客户端退出不会连带关闭本应用,恢复后可一键重连
+- **残留清理**:扫描并清理 Steam 取消订阅/下架后删除不彻底的遗留壁纸文件;支持白名单管理、批量清理,可设置为启动页
 - **信息面板**:实时日志(分级着色)、Steamworks 状态、提取后端版本自动校验、11 语言翻译进度一览
 - **多语言**:简体中文 / 繁体中文 / English / Deutsch / Español / Français / Italiano / 日本語 / 한국어 / Português (Brasil) / Русский
 - **设置**:主题、启动页、路径自动检测、扫描缓存开关,配置自动迁移,支持一键重置为默认值
@@ -119,7 +120,9 @@ WE Tool/
 │   │   ├── Settings.xaml(.cs)  # 设置页
 │   │   ├── Info.xaml(.cs)      # 关于页(WE Tool / RePKG_Re 双 expander)
 │   │   ├── InstalledComponents.xaml(.cs) # 组件管理
-│   │   └── LoadPapers.xaml(.cs) # 导入壁纸(开发中)
+│   │   ├── LoadPapers.xaml(.cs) # 导入解包
+│   │   ├── Cleanup.xaml(.cs)    # 残留清理
+│   │   └── WhitelistWindow.xaml(.cs) # 白名单管理窗口
 │   ├── Controls/
 │   │   └── ContributorCard.xaml(.cs) # 贡献者卡片(头像/名字/链接)
 │   ├── Converters/

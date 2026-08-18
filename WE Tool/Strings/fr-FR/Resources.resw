@@ -1654,4 +1654,37 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
     <value>Retirer la sélection ({0})</value>
   </data>
+  <data name="ScanCache.Description" xml:space="preserve">
+    <value>Le cache d'analyse accélère le扫描 du programme</value>
+  </data>
+  <data name="WindowBehavior.Header" xml:space="preserve">
+    <value>Comportement de la fenêtre</value>
+  </data>
+  <data name="WindowBehavior.Description" xml:space="preserve">
+    <value>Contrôle la restauration de la position, taille et état maximisé de la fenêtre au démarrage</value>
+  </data>
+  <data name="WindowBehavior_Restore.Content" xml:space="preserve">
+    <value>Restaurer la taille et position précédentes de la fenêtre</value>
+  </data>
+  <data name="StartPage_Cleanup.Text" xml:space="preserve">
+    <value>Nettoyage</value>
+  </data>
+  <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
+    <value>ex. D:\Export\Wallpapers</value>
+  </data>
+  <data name="Settings_WorkshopPath.PlaceholderText" xml:space="preserve">
+    <value>ex. D:\SteamLibrary\steamapps\workshop\content\431960</value>
+  </data>
+  <data name="Settings_ProjectPath.PlaceholderText" xml:space="preserve">
+    <value>ex. D:\...\wallpaper_engine\projects\myprojects</value>
+  </data>
+  <data name="Settings_OfficialPath.PlaceholderText" xml:space="preserve">
+    <value>ex. D:\...\wallpaper_engine\projects\defaultprojects</value>
+  </data>
+  <data name="Settings_AcfPath.PlaceholderText" xml:space="preserve">
+    <value>ex. D:\SteamLibrary\steamapps\workshop\appworkshop_431960.acf</value>
+  </data>
+  <data name="Settings_VdfPath.PlaceholderText" xml:space="preserve">
+    <value>ex. D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
+  </data>
 </root>

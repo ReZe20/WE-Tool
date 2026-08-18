@@ -1654,4 +1654,37 @@
   <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
     <value>移出選取 ({0})</value>
   </data>
+  <data name="ScanCache.Description" xml:space="preserve">
+    <value>掃描快取可用於程式加速掃描速度</value>
+  </data>
+  <data name="WindowBehavior.Header" xml:space="preserve">
+    <value>視窗行為</value>
+  </data>
+  <data name="WindowBehavior.Description" xml:space="preserve">
+    <value>控制程式啟動時是否還原視窗位置、大小和最大化狀態</value>
+  </data>
+  <data name="WindowBehavior_Restore.Content" xml:space="preserve">
+    <value>還原上次的視窗大小和位置</value>
+  </data>
+  <data name="StartPage_Cleanup.Text" xml:space="preserve">
+    <value>殘留清理</value>
+  </data>
+  <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
+    <value>例如 D:\Export\Wallpapers</value>
+  </data>
+  <data name="Settings_WorkshopPath.PlaceholderText" xml:space="preserve">
+    <value>例如 D:\SteamLibrary\steamapps\workshop\content\431960</value>
+  </data>
+  <data name="Settings_ProjectPath.PlaceholderText" xml:space="preserve">
+    <value>例如 D:\...\wallpaper_engine\projects\myprojects</value>
+  </data>
+  <data name="Settings_OfficialPath.PlaceholderText" xml:space="preserve">
+    <value>例如 D:\...\wallpaper_engine\projects\defaultprojects</value>
+  </data>
+  <data name="Settings_AcfPath.PlaceholderText" xml:space="preserve">
+    <value>例如 D:\SteamLibrary\steamapps\workshop\appworkshop_431960.acf</value>
+  </data>
+  <data name="Settings_VdfPath.PlaceholderText" xml:space="preserve">
+    <value>例如 D:\Steam\userdata\{帳戶ID}\ugc\431960_subscriptions.vdf</value>
+  </data>
 </root>

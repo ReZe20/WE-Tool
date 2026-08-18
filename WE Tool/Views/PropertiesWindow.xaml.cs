@@ -35,6 +35,9 @@ namespace WE_Tool
         /// <summary>保持所有已打开窗口的强引用——WinUI 3 中 Window 对象被 GC 回收会导致窗口消失</summary>
         private static readonly List<PropertiesWindow> _openWindows = new();
 
+        /// <summary>当前已打开的属性窗口数。</summary>
+        public static int OpenWindowCount => _openWindows.Count;
+
         public SettingsViewModel ViewModel { get; }
 
         public PropertiesWindow()
@@ -105,6 +108,14 @@ namespace WE_Tool
 
         public static void Open(WallpaperItem wallpaper, bool showPropsPage = true)
         {
+            // 去重:同一壁纸已有窗口则激活已有窗口,不重复创建
+            var existing = _openWindows.FirstOrDefault(w => w.Selected?.FolderPath == wallpaper.FolderPath);
+            if (existing != null)
+            {
+                existing.Activate();
+                return;
+            }
+
             // 推迟一帧创建窗口:窗口构造(XAML 解析/可视树构建/绑定首次求值)是同步重活,
             // 直接执行会短暂卡住主窗口;Low 优先级让本次点击先完成、UI 空闲后再建窗口。
             // 前提:Open 从主窗口 UI 线程调用(GetForCurrentThread 取到主窗口队列)

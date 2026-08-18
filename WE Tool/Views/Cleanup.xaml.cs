@@ -27,7 +27,8 @@ public sealed partial class Cleanup : Page
         return args.Length == 0 ? s : string.Format(s, args);
     }
 
-    private const string WorkshopPath = @"D:\SteamLibrary\steamapps\workshop\content\431960";
+    /// <summary>创意工坊壁纸根目录(从设置读取,不再硬编码)。</summary>
+    private string WorkshopPath => ((App)Application.Current).ViewModel.PathManagementVM.WorkshopPath;
     private static readonly string WhitelistFile = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "WE_Tool", "cleanup_whitelist.json");

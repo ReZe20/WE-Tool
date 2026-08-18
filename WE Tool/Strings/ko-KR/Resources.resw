@@ -1654,4 +1654,37 @@ project.json 및 미리보기 복사
   <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
     <value>선택 제거 ({0})</value>
   </data>
+  <data name="ScanCache.Description" xml:space="preserve">
+    <value>스캔 캐시는 프로그램 스캔 속도를 향상시킵니다</value>
+  </data>
+  <data name="WindowBehavior.Header" xml:space="preserve">
+    <value>창 동작</value>
+  </data>
+  <data name="WindowBehavior.Description" xml:space="preserve">
+    <value>시작 시 창 위치, 크기 및 최대화 상태를 복원할지 여부를 제어합니다</value>
+  </data>
+  <data name="WindowBehavior_Restore.Content" xml:space="preserve">
+    <value>이전 창 크기 및 위치 복원</value>
+  </data>
+  <data name="StartPage_Cleanup.Text" xml:space="preserve">
+    <value>잔여 정리</value>
+  </data>
+  <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\Export\Wallpapers</value>
+  </data>
+  <data name="Settings_WorkshopPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\SteamLibrary\steamapps\workshop\content\431960</value>
+  </data>
+  <data name="Settings_ProjectPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\...\wallpaper_engine\projects\myprojects</value>
+  </data>
+  <data name="Settings_OfficialPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\...\wallpaper_engine\projects\defaultprojects</value>
+  </data>
+  <data name="Settings_AcfPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\SteamLibrary\steamapps\workshop\appworkshop_431960.acf</value>
+  </data>
+  <data name="Settings_VdfPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
+  </data>
 </root>

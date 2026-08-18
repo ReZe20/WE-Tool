@@ -1144,12 +1144,36 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
     }
 
-    private void ComponentProperties_Click(object sender, RoutedEventArgs e)
+    private async Task ComponentPropertiesAsync()
     {
         HideComponentContextMenu();
-        if (SelectedComponent != null)
-            // 组件无 project.json 可配置属性,只显示文件属性页
-            PropertiesWindow.Open(ToWallpaperItem(SelectedComponent), showPropsPage: false);
+        // 多选模式:为每个选中组件打开独立属性窗口(组件无 project.json 可配置属性,只显示文件属性页)
+        var items = IsMultiSelectMode && SelectedComponents.Count > 0
+            ? SelectedComponents.ToList()
+            : SelectedComponent != null
+                ? new List<ComponentInfo> { SelectedComponent }
+                : [];
+        if (items.Count == 0) return;
+        // 超过5个弹窗确认(去重由 PropertiesWindow.Open 内部处理)
+        if (PropertiesWindow.OpenWindowCount + items.Count > 5)
+        {
+            var dlg = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = "打开多个属性窗口",
+                Content = $"将打开 {items.Count} 个属性窗口（当前已有 {PropertiesWindow.OpenWindowCount} 个），是否继续？",
+                PrimaryButtonText = "打开",
+                CloseButtonText = "取消",
+                DefaultButton = ContentDialogButton.Close
+            };
+            if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
+        }
+        foreach (var c in items)
+            PropertiesWindow.Open(ToWallpaperItem(c), showPropsPage: false);
+    }
+    private void ComponentProperties_Click(object sender, RoutedEventArgs e)
+    {
+        _ = ComponentPropertiesAsync();
     }
 
     /// <summary>ComponentInfo → WallpaperItem 映射(组件没有的字段置空,独立属性窗口文件页显示 "-")</summary>
@@ -1277,7 +1301,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         => DeleteComponent_Click(sender, null!);
 
     private void Properties_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-        => ComponentProperties_Click(sender, null!);
+    {
+        _ = ComponentPropertiesAsync();
+    }
 
     private void GoToSettings_Click(object sender, RoutedEventArgs e)
     {

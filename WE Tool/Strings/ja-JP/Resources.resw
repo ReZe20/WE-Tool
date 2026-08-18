@@ -1654,4 +1654,37 @@ project.json とプレビューをコピー
   <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
     <value>選択を除外 ({0})</value>
   </data>
+  <data name="ScanCache.Description" xml:space="preserve">
+    <value>スキャンキャッシュはプログラムのスキャン速度を向上させます</value>
+  </data>
+  <data name="WindowBehavior.Header" xml:space="preserve">
+    <value>ウィンドウの動作</value>
+  </data>
+  <data name="WindowBehavior.Description" xml:space="preserve">
+    <value>起動時にウィンドウの位置、サイズ、最大化状態を復元するかどうかを制御します</value>
+  </data>
+  <data name="WindowBehavior_Restore.Content" xml:space="preserve">
+    <value>前回のウィンドウサイズと位置を復元</value>
+  </data>
+  <data name="StartPage_Cleanup.Text" xml:space="preserve">
+    <value>残りクリーンアップ</value>
+  </data>
+  <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
+    <value>例: D:\Export\Wallpapers</value>
+  </data>
+  <data name="Settings_WorkshopPath.PlaceholderText" xml:space="preserve">
+    <value>例: D:\SteamLibrary\steamapps\workshop\content\431960</value>
+  </data>
+  <data name="Settings_ProjectPath.PlaceholderText" xml:space="preserve">
+    <value>例: D:\...\wallpaper_engine\projects\myprojects</value>
+  </data>
+  <data name="Settings_OfficialPath.PlaceholderText" xml:space="preserve">
+    <value>例: D:\...\wallpaper_engine\projects\defaultprojects</value>
+  </data>
+  <data name="Settings_AcfPath.PlaceholderText" xml:space="preserve">
+    <value>例: D:\SteamLibrary\steamapps\workshop\appworkshop_431960.acf</value>
+  </data>
+  <data name="Settings_VdfPath.PlaceholderText" xml:space="preserve">
+    <value>例: D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
+  </data>
 </root>
