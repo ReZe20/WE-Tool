@@ -121,7 +121,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <CheckBox x:Name="SelectCheckBox" MinWidth="0"
+                                <CheckBox MinWidth="0"
                                           VerticalAlignment="Center"
                                           IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
                                           Click="SelectCheckBox_Click"

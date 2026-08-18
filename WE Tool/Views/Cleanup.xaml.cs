@@ -28,6 +28,7 @@ public sealed partial class Cleanup : Page
     private WhitelistWindow? _whitelistWin;
     private bool _isResizing;
     private DispatcherTimer? _resizeEndTimer;
+    private bool _initialScanDone;
 
     public ObservableCollection<CleanupCardViewModel> Cards { get; } = new();
 
@@ -36,6 +37,16 @@ public sealed partial class Cleanup : Page
         InitializeComponent();
         ResultGridView.ItemsSource = Cards;
         LoadWhitelist();
+    }
+
+    protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        if (!_initialScanDone)
+        {
+            _initialScanDone = true;
+            ScanButton_Click(null, null);
+        }
     }
 
     // ---------- 白名单持久化 ----------
@@ -87,7 +98,7 @@ public sealed partial class Cleanup : Page
             EmptyState.Visibility = Visibility.Visible;
             ResultGridView.Visibility = Visibility.Collapsed;
             ActionBar.Visibility = Visibility.Collapsed;
-            ((TextBlock)EmptyState.Children[1]).Text = $"扫描失败: {ex.Message}";
+            EmptyStateText.Text = $"扫描失败: {ex.Message}";
         }
         finally
         {
@@ -97,7 +108,6 @@ public sealed partial class Cleanup : Page
 
     private void SetScanning(bool scanning)
     {
-        ScanButton_Empty.IsEnabled = !scanning;
         ScanProgress.IsActive = scanning;
         ResultGridView.IsEnabled = !scanning;
         ActionBar.IsEnabled = !scanning;
@@ -179,12 +189,15 @@ public sealed partial class Cleanup : Page
         return cards;
     }
 
-    /// <summary>生成单个壁纸文件夹的卡片;无残留返回 null。</summary>
+    /// <summary>生成单个壁纸文件夹的残留卡片;无残留返回 null。</summary>
     private CleanupCardViewModel? MakeCard(string dir, string id, bool installed)
     {
         if (installed)
         {
-            // 多余文件(对比 project.json 引用)
+            // 组件(project.json category=Asset)不做多余文件检测,已安装组件非残留
+            if (IsComponentFolder(dir)) return null;
+
+            // 壁纸:多余文件(对比 project.json 引用)
             var std = GetStdFiles(dir);
             var excess = new List<CleanupFileItem>();
             foreach (var f in Directory.GetFiles(dir, "*", SearchOption.AllDirectories))
@@ -242,6 +255,21 @@ public sealed partial class Cleanup : Page
                 Files = files
             };
         }
+    }
+
+    /// <summary>判断 workshop 文件夹是否为组件(project.json category=Asset)。</summary>
+    private bool IsComponentFolder(string dir)
+    {
+        try
+        {
+            var p = Path.Combine(dir, "project.json");
+            if (!File.Exists(p)) return false;
+            var o = JsonNode.Parse(File.ReadAllText(p)) as JsonObject;
+            var cat = o?["category"]?.GetValue<string>();
+            return !string.IsNullOrEmpty(cat)
+                && cat.Equals("Asset", StringComparison.OrdinalIgnoreCase);
+        }
+        catch { return false; }
     }
 
     /// <summary>白名单移除后把该文件夹加回列表(不用整个重扫)。</summary>
@@ -462,7 +490,7 @@ public sealed partial class Cleanup : Page
         bool has = Cards.Count > 0;
         ResultGridView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
         EmptyState.Visibility = Visibility.Visible;
-        ((TextBlock)EmptyState.Children[1]).Text = $"已清理 {ok} 个壁纸的残留";
+        EmptyStateText.Text = $"已清理 {ok} 个壁纸的残留";
         if (!has) ActionBar.Visibility = Visibility.Collapsed;
         UpdateSummary();
     }

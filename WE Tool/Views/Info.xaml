@@ -181,7 +181,6 @@
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine1" NavigateUri="https://dotnet.microsoft.com/en-us/download/dotnet-framework" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine2" NavigateUri="https://github.com/commandlineparser/commandline" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine3" NavigateUri="https://github.com/MiloszKrajewski/K4os.Compression.LZ4" FontSize="12"/>
-                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine4" NavigateUri="https://github.com/JamesNK/Newtonsoft.Json" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine5" NavigateUri="https://github.com/SixLabors/ImageSharp" FontSize="12"/>
                                     </controls:WrapPanel>
                                 </StackPanel>

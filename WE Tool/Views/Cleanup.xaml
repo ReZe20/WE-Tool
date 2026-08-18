@@ -20,15 +20,12 @@
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
         </StackPanel>
 
-        <!-- 空状态 -->
+        <!-- 空状态(自动扫描,失败/完成时显示提示) -->
         <StackPanel x:Name="EmptyState" Grid.Row="1"
                     VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
-            <FontIcon Glyph="&#xE9F9;" FontSize="64"
-                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-            <TextBlock x:Uid="Cleanup_EmptyHint" FontSize="16"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-            <Button x:Name="ScanButton_Empty" x:Uid="Cleanup_ScanButton"
-                    Style="{StaticResource AccentButtonStyle}" Click="ScanButton_Click"/>
+            <TextBlock x:Name="EmptyStateText" FontSize="16"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextAlignment="Center"/>
         </StackPanel>
 
         <!-- 扫描进度 -->
@@ -66,80 +63,78 @@
                     <Border CornerRadius="8"
                             Background="{ThemeResource ControlFillColorDefaultBrush}"
                             Padding="14">
-                        <Grid>
-                            <Grid x:Name="CardRootGrid" RowSpacing="8">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                        <Grid RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                                <!-- 标题行:壁纸ID + 类型标签 -->
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{x:Bind FolderId}" FontWeight="SemiBold"
+                            <!-- 标题行:壁纸ID + 类型标签 -->
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Bind FolderId}" FontWeight="SemiBold"
                                            TextTrimming="CharacterEllipsis"
                                            ToolTipService.ToolTip="{x:Bind FullPath}"/>
-                                    <Border Grid.Column="1" CornerRadius="4"
+                                <Border Grid.Column="1" CornerRadius="4"
                                         Background="{ThemeResource TextFillColorSecondaryBrush}">
-                                        <TextBlock Text="{x:Bind TypeLabel}" FontSize="11"
+                                    <TextBlock Text="{x:Bind TypeLabel}" FontSize="11"
                                                Foreground="Black" Margin="6,2"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </Grid>
+                                </Border>
+                            </Grid>
 
-                                <!-- 统计 -->
-                                <TextBlock Grid.Row="1" Text="{x:Bind StatsText}" FontSize="12"
+                            <!-- 统计 -->
+                            <TextBlock Grid.Row="1" Text="{x:Bind StatsText}" FontSize="12"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
 
-                                <!-- 文件列表(卡片内滚动显示全部) -->
-                                <ScrollView Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{x:Bind Files}" Margin="0,0,10,0">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="models:CleanupFileItem">
-                                                <Grid ColumnSpacing="8" Padding="0,3">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{x:Bind Name}" FontSize="12"
+                            <!-- 文件列表(卡片内滚动显示全部) -->
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{x:Bind Files}" Margin="0,0,10,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="models:CleanupFileItem">
+                                            <Grid ColumnSpacing="8" Padding="0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{x:Bind Name}" FontSize="12"
                                                            TextTrimming="CharacterEllipsis"
                                                            ToolTipService.ToolTip="{x:Bind Name}"/>
-                                                    <TextBlock Grid.Column="1" Text="{x:Bind SizeText}"
+                                                <TextBlock Grid.Column="1" Text="{x:Bind SizeText}"
                                                            FontSize="12"
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollView>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
 
-                                <!-- 底部行:左边 CheckBox + 右边操作按钮 -->
-                                <Grid Grid.Row="3">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <CheckBox x:Name="SelectCheckBox" MinWidth="0"
+                            <!-- 底部行:左边 CheckBox + 右边操作按钮 -->
+                            <Grid Grid.Row="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox MinWidth="0"
                                           VerticalAlignment="Center"
                                           IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
                                           Click="SelectCheckBox_Click"
                                           Tag="{x:Bind}"/>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                <StackPanel Grid.Column="1" Orientation="Horizontal"
                                             HorizontalAlignment="Right" Spacing="8">
-                                        <Button x:Uid="Cleanup_OpenFolder" Click="OpenFolder_Click"
+                                    <Button x:Uid="Cleanup_OpenFolder" Click="OpenFolder_Click"
                                             CommandParameter="{x:Bind}"/>
-                                        <Button x:Uid="Cleanup_Whitelist" Click="WhitelistCard_Click"
+                                    <Button x:Uid="Cleanup_Whitelist" Click="WhitelistCard_Click"
                                             CommandParameter="{x:Bind}"/>
-                                        <Button x:Uid="Cleanup_Delete" Click="CleanCard_Click"
+                                    <Button x:Uid="Cleanup_Delete" Click="CleanCard_Click"
                                             CommandParameter="{x:Bind}"
                                             Style="{StaticResource AccentButtonStyle}"/>
-                                    </StackPanel>
-                                </Grid>
+                                </StackPanel>
                             </Grid>
                         </Grid>
                     </Border>
@@ -159,18 +154,21 @@
                     <AppBarButton.Icon><FontIcon Glyph="&#xE72E;"/></AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="BatchDeleteButton" Label="删除选中" Click="BatchDelete_Click" IsEnabled="False" Foreground="Red">
-                    <AppBarButton.Icon><FontIcon Glyph="&#xE74D;"/></AppBarButton.Icon>
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE74D;"/>
+                    </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarSeparator/>
                 <!-- 常规操作 -->
                 <AppBarButton Label="白名单" Click="WhitelistButton_Click">
-                    <AppBarButton.Icon><FontIcon Glyph="&#xE72E;"/></AppBarButton.Icon>
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE72E;"/>
+                    </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarSeparator/>
                 <AppBarButton Label="重新扫描" Click="ScanButton_Click">
-                    <AppBarButton.Icon><FontIcon Glyph="&#xE72C;"/></AppBarButton.Icon>
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE72C;"/>
+                    </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarSeparator/>
                 <AppBarButton Label="清理全部" Click="DeleteAllButton_Click">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE74D;"/></AppBarButton.Icon>
                 </AppBarButton>

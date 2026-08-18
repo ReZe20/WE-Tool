@@ -1256,9 +1256,6 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
     <value>K4os.Compression.LZ4 1.3</value>
   </data>
-  <data name="Info_RepkgCreditsLine4.Content" xml:space="preserve">
-    <value>Newtonsoft.Json 13.0</value>
-  </data>
   <data name="Info_RepkgCreditsLine5.Content" xml:space="preserve">
     <value>SixLabors.ImageSharp 2.1</value>
   </data>
