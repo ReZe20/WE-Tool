@@ -118,19 +118,19 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MenuFlyoutSubItem_RightPanel.Text" xml:space="preserve">
-    <value />
+    <value>Panel derecho</value>
   </data>
   <data name="PropertiesWindow_FileInfo.Content" xml:space="preserve">
-    <value />
+    <value>Propiedades del archivo</value>
   </data>
   <data name="PropertiesWindow_WallpaperProps.Content" xml:space="preserve">
-    <value />
+    <value>Propiedades del fondo</value>
   </data>
   <data name="PropertyPanel_NoProperties.Text" xml:space="preserve">
-    <value />
+    <value>Este fondo no tiene propiedades configurables</value>
   </data>
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
-    <value />
+    <value>Guardar propiedades</value>
   </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>Todo público (G)</value>
@@ -142,10 +142,16 @@
     <value>Adultos (R-18)</value>
   </data>
   <data name="RightPanel_Detail.Text" xml:space="preserve">
-    <value />
+    <value>Panel de detalles</value>
   </data>
   <data name="RightPanel_Property.Text" xml:space="preserve">
-    <value />
+    <value>Panel de propiedades</value>
+  </data>
+  <data name="RightPanel_ExpandDescription.Text" xml:space="preserve">
+    <value>Mostrar todo</value>
+  </data>
+  <data name="RightPanel_CollapseDescription.Text" xml:space="preserve">
+    <value>Contraer</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
     <value>Fuente</value>
@@ -158,6 +164,21 @@
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
     <value>Taller</value>
+  </data>
+  <data name="Subscription.Header" xml:space="preserve">
+    <value>Estado de suscripción</value>
+  </data>
+  <data name="Subscription_Subscribed.Content" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
+    <value>Anomalía</value>
+  </data>
+  <data name="Unsubscribed_Badge.Text" xml:space="preserve">
+    <value>Anomalía</value>
+  </data>
+  <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
+    <value>El estado de suscripción de este fondo es anómalo: puede haber sido desuscrito, desactivado localmente en Steam, o eliminado (la visibilidad de project.json es privada); Steam puede no actualizar ni conservar sus archivos locales.</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>Etiquetas</value>
@@ -342,6 +363,9 @@
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
     <value>Introducir o seleccionar ruta</value>
   </data>
+  <data name="Cleanup_UnderConstruction.Text" xml:space="preserve">
+    <value>En construcción</value>
+  </data>
   <data name="Type_Preset.Content" xml:space="preserve">
     <value>Predefinido</value>
   </data>
@@ -417,6 +441,12 @@
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
     <value>Ruta del archivo ACF</value>
   </data>
+  <data name="VdfPath.Description" xml:space="preserve">
+    <value>Archivo que almacena la información de suscripción del Taller</value>
+  </data>
+  <data name="VdfPath_TextBlock.Text" xml:space="preserve">
+    <value>Ruta del archivo VDF</value>
+  </data>
   <data name="SettingPath.Description" xml:space="preserve">
     <value>Ruta del archivo de configuración del programa</value>
   </data>
@@ -428,6 +458,30 @@
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
     <value>Ruta del archivo de registro</value>
+  </data>
+  <data name="LogLevel_TextBlock.Text" xml:space="preserve">
+    <value>Nivel de registro</value>
+  </data>
+  <data name="LogLevel.Description" xml:space="preserve">
+    <value>Controla el nivel de detalle del registro; los cambios se aplican de inmediato</value>
+  </data>
+  <data name="LogLevel_Debug.Content" xml:space="preserve">
+    <value>Depuración</value>
+  </data>
+  <data name="LogLevel_Information.Content" xml:space="preserve">
+    <value>Información</value>
+  </data>
+  <data name="LogLevel_Warning.Content" xml:space="preserve">
+    <value>Advertencia</value>
+  </data>
+  <data name="LogLevel_Error.Content" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="CachePath.Description" xml:space="preserve">
+    <value>Ruta del archivo que almacena los datos de caché de escaneo</value>
+  </data>
+  <data name="CachePath_TextBlock.Text" xml:space="preserve">
+    <value>Ruta del archivo de caché</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>Extracción</value>
@@ -479,7 +533,8 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>Iconos grandes</value>
-  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>
+  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>Tamaño del icono del fondo</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
@@ -487,6 +542,18 @@
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>Ver</value>
+  </data>
+  <data name="MenuFlyoutSubItem_PreviewBlur.Text" xml:space="preserve">
+    <value>Desenfoque de vista previa</value>
+  </data>
+  <data name="Blur_Everyone.Text" xml:space="preserve">
+    <value>Todos los públicos</value>
+  </data>
+  <data name="Blur_Teen.Text" xml:space="preserve">
+    <value>Adolescentes</value>
+  </data>
+  <data name="Blur_Adult.Text" xml:space="preserve">
+    <value>Adultos</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
     <value>Ordenar</value>
@@ -551,8 +618,125 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>Oscuro</value>
   </data>
+  <data name="ScanCache.Header" xml:space="preserve">
+    <value>Caché de escaneo</value>
+  </data>
+  <data name="Enabled.Content" xml:space="preserve">
+    <value>Habilitado</value>
+  </data>
+  <data name="Disabled.Content" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>Animación al pasar el ratón</value>
+  </data>
+  <data name="ComponentsSetting.Header" xml:space="preserve">
+    <value>Configuración de la página de componentes instalados</value>
+  </data>
+  <data name="ComponentsSetting.Description" xml:space="preserve">
+    <value>Establecer el contenido específico de la página de componentes instalados</value>
+  </data>
+  <data name="ComponentsSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>Activar barra de ruta inferior</value>
+  </data>
+  <data name="ComponentsSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>Activar selección de texto en el panel de detalles</value>
+  </data>
+  <data name="ComponentsSetting_ComponentAutoPlay.Content" xml:space="preserve">
+    <value>Reproducir GIFs en la lista de componentes</value>
+  </data>
+  <data name="ComponentsSetting_IsComponentEnterAnimationEnabled.Content" xml:space="preserve">
+    <value>Animación al pasar el ratón sobre el icono del componente</value>
+  </data>
+  <data name="ComponentsSetting_FilterResultResponseDelay.Text" xml:space="preserve">
+    <value>Retardo de respuesta del filtro</value>
+  </data>
+  <data name="CompType_Layers.Content" xml:space="preserve">
+    <value>Capas</value>
+  </data>
+  <data name="CompType_Scripts.Content" xml:space="preserve">
+    <value>Scripts</value>
+  </data>
+  <data name="CompType_Effects.Content" xml:space="preserve">
+    <value>Efectos</value>
+  </data>
+  <data name="CompType_Unknown.Content" xml:space="preserve">
+    <value>Desconocido</value>
+  </data>
+  <data name="Tag_AudioVisualizer.Content" xml:space="preserve">
+    <value>Visualizador de audio</value>
+  </data>
+  <data name="Tag_Unspecifiedgenre.Content" xml:space="preserve">
+    <value>Género no especificado</value>
+  </data>
+  <data name="Tag_Background.Content" xml:space="preserve">
+    <value>Fondo</value>
+  </data>
+  <data name="Tag_Character.Content" xml:space="preserve">
+    <value>Personaje</value>
+  </data>
+  <data name="Tag_Clock.Content" xml:space="preserve">
+    <value>Reloj</value>
+  </data>
+  <data name="Tag_Fire.Content" xml:space="preserve">
+    <value>Fuego</value>
+  </data>
+  <data name="Tag_Interactive.Content" xml:space="preserve">
+    <value>Interactivo</value>
+  </data>
+  <data name="Tag_Magic.Content" xml:space="preserve">
+    <value>Magia</value>
+  </data>
+  <data name="Tag_PostProcessing.Content" xml:space="preserve">
+    <value>Posprocesamiento</value>
+  </data>
+  <data name="Tag_Smoke.Content" xml:space="preserve">
+    <value>Humo</value>
+  </data>
+  <data name="Tag_Space.Content" xml:space="preserve">
+    <value>Espacio</value>
+  </data>
+  <data name="CompTag_UnspecifiedGenre.Content" xml:space="preserve">
+    <value>Género no especificado</value>
+  </data>
+  <data name="CompTag_AudioVisualizer.Content" xml:space="preserve">
+    <value>Visualizador de audio</value>
+  </data>
+  <data name="CompTag_Background.Content" xml:space="preserve">
+    <value>Fondo</value>
+  </data>
+  <data name="CompTag_Character.Content" xml:space="preserve">
+    <value>Personaje</value>
+  </data>
+  <data name="CompTag_Clock.Content" xml:space="preserve">
+    <value>Reloj</value>
+  </data>
+  <data name="CompTag_Fire.Content" xml:space="preserve">
+    <value>Fuego</value>
+  </data>
+  <data name="CompTag_Interactive.Content" xml:space="preserve">
+    <value>Interactivo</value>
+  </data>
+  <data name="CompTag_Magic.Content" xml:space="preserve">
+    <value>Magia</value>
+  </data>
+  <data name="CompTag_PostProcessing.Content" xml:space="preserve">
+    <value>Posprocesamiento</value>
+  </data>
+  <data name="CompTag_Smoke.Content" xml:space="preserve">
+    <value>Humo</value>
+  </data>
+  <data name="CompTag_Space.Content" xml:space="preserve">
+    <value>Espacio</value>
+  </data>
+  <data name="DetailPanel.Text" xml:space="preserve">
+    <value>Panel de detalles</value>
+  </data>
+  <data name="InstallDate.Text" xml:space="preserve">
+    <value>Fecha de instalación</value>
+  </data>
+  <data name="File.Text" xml:space="preserve">
+    <value>Archivo</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
     <value>Actualizar</value>
@@ -803,6 +987,9 @@
   <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>Restaurar ruta predeterminada</value>
   </data>
+  <data name="AutoDetect_VdfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restaurar ruta predeterminada</value>
+  </data>
   <data name="Settings_FlatFileNaming.Text" xml:space="preserve">
     <value>Nombrar archivos</value>
   </data>
@@ -959,6 +1146,105 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 por página</value>
   </data>
+  <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
+    <value>Importar proyecto</value>
+  </data>
+  <data name="NoSelectionHint.Text" xml:space="preserve">
+    <value>Seleccione uno o varios fondos</value>
+  </data>
+  <data name="Detail_Extract.Text" xml:space="preserve">
+    <value>Extraer</value>
+  </data>
+  <data name="Detail_Copy.Text" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="Detail_Unsubscribe.Text" xml:space="preserve">
+    <value>Cancelar suscripción</value>
+  </data>
+  <data name="Detail_ImportToEditor.Text" xml:space="preserve">
+    <value>Importar al editor de fondos</value>
+  </data>
+  <data name="Detail_DeleteWallpaper.Text" xml:space="preserve">
+    <value>Eliminar fondo</value>
+  </data>
+  <data name="Detail_OpenDirectory.Text" xml:space="preserve">
+    <value>Abrir directorio</value>
+  </data>
+  <data name="Detail_Properties.Text" xml:space="preserve">
+    <value>Propiedades</value>
+  </data>
+  <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
+    <value>Seleccionar todo</value>
+  </data>
+  <data name="MultiSelect_InvertSelection.Content" xml:space="preserve">
+    <value>Invertir selección</value>
+  </data>
+  <data name="MultiSelect_Cancel.Content" xml:space="preserve">
+    <value>Cancelar selección múltiple</value>
+  </data>
+  <data name="NoScanResultTip.Text" xml:space="preserve">
+    <value>El programa no encontró ningún fondo. Vaya a la configuración para corregir la ruta de escaneo</value>
+  </data>
+  <data name="NoScanResultTip_Components.Text" xml:space="preserve">
+    <value>El programa no encontró ningún componente. Vaya a la configuración para corregir la ruta de escaneo</value>
+  </data>
+  <data name="GoToSettings.Content" xml:space="preserve">
+    <value>Ir a configuración</value>
+  </data>
+  <data name="ExtractPause.Text" xml:space="preserve">
+    <value>Pausar</value>
+  </data>
+  <data name="ExtractResume.Text" xml:space="preserve">
+    <value>Reanudar</value>
+  </data>
+  <data name="ExtractStop.Text" xml:space="preserve">
+    <value>Detener</value>
+  </data>
+  <data name="FileStructure.Text" xml:space="preserve">
+    <value>Estructura de archivos</value>
+  </data>
+  <data name="NoSelectionHint_Components.Text" xml:space="preserve">
+    <value>Seleccione un componente para ver los detalles</value>
+  </data>
+  <data name="Detail_DeleteComponent.Text" xml:space="preserve">
+    <value>Eliminar componente</value>
+  </data>
+  <data name="NoMatchTip1.Text" xml:space="preserve">
+    <value>No se encontraron componentes</value>
+  </data>
+  <data name="NoMatchTip2.Text" xml:space="preserve">
+    <value>Ajuste los criterios de filtrado</value>
+  </data>
+  <data name="ComponentDirectory.Text" xml:space="preserve">
+    <value>Directorio de componentes</value>
+  </data>
+  <data name="Toolbar_FilterToggle.Label" xml:space="preserve">
+    <value>Filtrar resultados</value>
+  </data>
+  <data name="Toolbar_ListView.Label" xml:space="preserve">
+    <value>Vista de lista</value>
+  </data>
+  <data name="Toolbar_Delete.Label" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="Toolbar_SelectAll.Label" xml:space="preserve">
+    <value>Seleccionar todo</value>
+  </data>
+  <data name="Toolbar_InvertSelection.Label" xml:space="preserve">
+    <value>Invertir selección</value>
+  </data>
+  <data name="Toolbar_Refresh.Label" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="Toolbar_View.Label" xml:space="preserve">
+    <value>Ver▾</value>
+  </data>
+  <data name="Toolbar_Sort.Label" xml:space="preserve">
+    <value>Ordenar▾</value>
+  </data>
+  <data name="Toolbar_SortDirection.Label" xml:space="preserve">
+    <value>Dirección de ordenación</value>
+  </data>
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>Restablecer ajustes</value>
   </data>
@@ -1043,7 +1329,7 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
     <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
-<data name="Info_CreditsLine7.Content" xml:space="preserve">
+  <data name="Info_CreditsLine7.Content" xml:space="preserve">
     <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
@@ -1051,6 +1337,9 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
   </data>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (basado en notscuffed/repkg)</value>
+  </data>
+  <data name="Info_CreditsLine11.Content" xml:space="preserve">
+    <value>Win2D 1.4</value>
   </data>
   <data name="Info_License.Header" xml:space="preserve">
     <value>Licencia de código abierto</value>
@@ -1114,100 +1403,255 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
 Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal y copia de seguridad. Los fondos de pantalla y sus recursos pertenecen a sus respectivos autores. Respete los derechos de los autores originales y no utilice el contenido extraído con fines comerciales ni lo redistribuya sin autorización.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value />
+    <value>WE Tool</value>
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value />
+    <value>RePKG_Re</value>
   </data>
   <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
-    <value />
+    <value>Registro de WE Tool</value>
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks en línea</value>
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value />
+    <value>Inicializado, las funciones del Taller están disponibles.</value>
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks no disponible</value>
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam no está en ejecución o falló la inicialización, las funciones del Taller no están disponibles. Asegúrese de que Steam esté en ejecución y haga clic en Reintentar.</value>
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value />
+    <value>Conexión con Steam perdida</value>
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam se ha cerrado, las funciones del Taller no están disponibles temporalmente. Haga clic en Reintentar para reconectar.</value>
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value />
+    <value>Reintentar</value>
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value />
+    <value>Reconectando</value>
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value />
+    <value>Reinicializando Steamworks, por favor espere…</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
+    <value>Versión de RePKG_Re correcta</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
+    <value>Versión actual: {0}</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
+    <value>Versión de RePKG_Re incompatible</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
+    <value>Versión actual: {0}, requerida: {1}. Actualice el backend de RePKG_Re</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
+    <value>RePKG_Re no encontrado</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
+    <value>repkg\RePKG_Re.exe no encontrado, la función de extracción no está disponible</value>
+  </data>
+  <data name="Info_TranslationTitle.Text" xml:space="preserve">
+    <value>Progreso de traducción</value>
   </data>
   <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
-    <value />
+    <value>Umbral de filtrado de píxeles transparentes y negros</value>
   </data>
   <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
-    <value />
+    <value>Solo analizar directorios</value>
   </data>
   <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Separar por comas, por ejemplo: materials,models (incluye subcarpetas)</value>
   </data>
   <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
-    <value />
+    <value>Ignorar directorios</value>
   </data>
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Separar por comas, por ejemplo: effects,sounds (incluye subcarpetas)</value>
+  </data>
+  <data name="Info_AboutHeader.Text" xml:space="preserve">
+    <value>Acerca de</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>Registro de RePKG_Re</value>
   </data>
   <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
     <value>SkiaSharp 4.151</value>
   </data>
-
-  <data name="CleanupPage.Content" xml:space="preserve">
-    <value>残留清除</value>
-  </data>
   <data name="Cleanup_Title.Text" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Cleanup_ScanButton.Text" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Cleanup_DeleteButton.Text" xml:space="preserve">
-    <value>删除</value>
+    <value>Limpieza de residuos</value>
   </data>
   <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
-    <value></value>
+    <value>Haga clic en el botón de abajo para escanear archivos residuales de fondos</value>
   </data>
   <data name="Cleanup_ScanButton.Content" xml:space="preserve">
-    <value></value>
+    <value>Iniciar escaneo</value>
   </data>
   <data name="Cleanup_OpenFolder.Content" xml:space="preserve">
-    <value></value>
+    <value>Abrir directorio</value>
   </data>
   <data name="Cleanup_Whitelist.Content" xml:space="preserve">
-    <value></value>
+    <value>Lista blanca</value>
   </data>
   <data name="Cleanup_Delete.Content" xml:space="preserve">
-    <value></value>
+    <value>Limpiar</value>
   </data>
   <data name="WhitelistWindow_Title.Text" xml:space="preserve">
-    <value></value>
+    <value>Gestión de lista blanca</value>
   </data>
   <data name="WhitelistWindow_EmptyHint.Text" xml:space="preserve">
-    <value></value>
+    <value>La lista blanca está vacía</value>
   </data>
   <data name="WhitelistWindow_EmptyDesc.Text" xml:space="preserve">
-    <value></value>
+    <value>En la página de limpieza de residuos, haga clic en el botón \"Lista blanca\" en la tarjeta para agregar un fondo</value>
   </data>
   <data name="WhitelistWindow_OpenFolder.Content" xml:space="preserve">
-    <value></value>
+    <value>Abrir directorio</value>
   </data>
   <data name="WhitelistWindow_Remove.Content" xml:space="preserve">
-    <value></value>
+    <value>Eliminar de la lista blanca</value>
+  </data>
+  <data name="LoadPapers_Title.Text" xml:space="preserve">
+    <value>Importar y extraer</value>
+  </data>
+  <data name="LoadPapers_DragHint.Text" xml:space="preserve">
+    <value>Arrastra paquetes de fondos de pantalla aquí</value>
+  </data>
+  <data name="LoadPapers_DragSubhint.Text" xml:space="preserve">
+    <value>Soporta archivos de paquete .pkg / .mpkg</value>
+  </data>
+  <data name="LoadPapers_SetExportDir.Label" xml:space="preserve">
+    <value>Establecer directorio de exportación</value>
+  </data>
+  <data name="LoadPapers_ExportDirPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Directorio de exportación (dejar vacío para usar el directorio de Papers)</value>
+  </data>
+  <data name="LoadPapers_SelectFile.Label" xml:space="preserve">
+    <value>Seleccionar archivos</value>
+  </data>
+  <data name="LoadPapers_ScanFolder.Label" xml:space="preserve">
+    <value>Escanear carpeta</value>
+  </data>
+  <data name="LoadPapers_Clear.Label" xml:space="preserve">
+    <value>Vaciar</value>
+  </data>
+  <data name="LoadPapers_StartExtract.Label" xml:space="preserve">
+    <value>Iniciar extracción</value>
+  </data>
+  <data name="LoadPapers_Pause.Label" xml:space="preserve">
+    <value>Pausa</value>
+  </data>
+  <data name="LoadPapers_Stop.Label" xml:space="preserve">
+    <value>Detener</value>
+  </data>
+  <data name="LoadPapers_ProjectDir.Content" xml:space="preserve">
+    <value>Directorio del proyecto</value>
+  </data>
+  <data name="LoadPapers_ExportDir.Content" xml:space="preserve">
+    <value>Directorio de exportación</value>
+  </data>
+  <data name="LoadPapers_BrowseFolder.Content" xml:space="preserve">
+    <value>Examinar carpeta</value>
+  </data>
+  <data name="LoadPapers_Resume.Label" xml:space="preserve">
+    <value>Reanudar</value>
+  </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>Limpieza</value>
+  </data>
+  <data name="Cleanup_BatchWhitelist.Label" xml:space="preserve">
+    <value>Añadir a lista blanca</value>
+  </data>
+  <data name="Cleanup_BatchDelete.Label" xml:space="preserve">
+    <value>Eliminar seleccionados</value>
+  </data>
+  <data name="Cleanup_WhitelistManage.Label" xml:space="preserve">
+    <value>Lista blanca</value>
+  </data>
+  <data name="Cleanup_Rescan.Label" xml:space="preserve">
+    <value>Volver a escanear</value>
+  </data>
+  <data name="Cleanup_DeleteAll.Label" xml:space="preserve">
+    <value>Limpiar todo</value>
+  </data>
+  <data name="Cleanup_TypeExcess" xml:space="preserve">
+    <value>Extra</value>
+  </data>
+  <data name="Cleanup_TypeUnloaded" xml:space="preserve">
+    <value>Desinstalado</value>
+  </data>
+  <data name="Cleanup_StatsExcess" xml:space="preserve">
+    <value>{0} archivos extra · {1}</value>
+  </data>
+  <data name="Cleanup_StatsUnloaded" xml:space="preserve">
+    <value>{0} archivos · {1}</value>
+  </data>
+  <data name="Cleanup_EmptyFolderName" xml:space="preserve">
+    <value>(carpeta vacía)</value>
+  </data>
+  <data name="Cleanup_ScanFailed" xml:space="preserve">
+    <value>Error al escanear: {0}</value>
+  </data>
+  <data name="Cleanup_CleanedComplete" xml:space="preserve">
+    <value>Residuos de {0} fondos limpiados</value>
+  </data>
+  <data name="Cleanup_Summary" xml:space="preserve">
+    <value>{0} elementos · {1}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
+    <value>Limpiar {0}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Content" xml:space="preserve">
+    <value>Se eliminarán {0} archivos residuales. Esta acción no se puede deshacer.</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Ok" xml:space="preserve">
+    <value>Limpiar</value>
+  </data>
+  <data name="Cleanup_CleanFail.Title" xml:space="preserve">
+    <value>Error de limpieza</value>
+  </data>
+  <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
+    <value>Eliminar seleccionados ({0})</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Title" xml:space="preserve">
+    <value>Limpiar todo</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Content" xml:space="preserve">
+    <value>Se eliminarán {1} archivos residuales de {0} fondos. Esta acción no se puede deshacer.</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Ok" xml:space="preserve">
+    <value>Limpiar todo</value>
+  </data>
+  <data name="Cleanup_BatchWhitelistCount" xml:space="preserve">
+    <value>Añadir a lista blanca ({0})</value>
+  </data>
+  <data name="Cleanup_BatchDeleteCount" xml:space="preserve">
+    <value>Eliminar seleccionados ({0})</value>
+  </data>
+  <data name="Cleanup_CommonDelete" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="Cleanup_CommonCancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="Cleanup_CommonOk" xml:space="preserve">
+    <value>Aceptar</value>
+  </data>
+  <data name="WhitelistWindowTitle.Title" xml:space="preserve">
+    <value>Gestión de lista blanca</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemove.Label" xml:space="preserve">
+    <value>Quitar seleccionados</value>
+  </data>
+  <data name="WhitelistWindow_Subtitle" xml:space="preserve">
+    <value>{0} elementos · {1}</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
+    <value>Quitar seleccionados ({0})</value>
   </data>
 </root>

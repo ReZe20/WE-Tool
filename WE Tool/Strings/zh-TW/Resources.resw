@@ -118,19 +118,19 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MenuFlyoutSubItem_RightPanel.Text" xml:space="preserve">
-    <value />
+    <value>右側面板</value>
   </data>
   <data name="PropertiesWindow_FileInfo.Content" xml:space="preserve">
-    <value />
+    <value>檔案屬性</value>
   </data>
   <data name="PropertiesWindow_WallpaperProps.Content" xml:space="preserve">
-    <value />
+    <value>桌布屬性</value>
   </data>
   <data name="PropertyPanel_NoProperties.Text" xml:space="preserve">
-    <value />
+    <value>該桌布沒有可設定屬性</value>
   </data>
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
-    <value />
+    <value>儲存屬性</value>
   </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>大眾級(G)</value>
@@ -142,10 +142,16 @@
     <value>限制級/成人級    (R-18)</value>
   </data>
   <data name="RightPanel_Detail.Text" xml:space="preserve">
-    <value />
+    <value>詳細面板</value>
   </data>
   <data name="RightPanel_Property.Text" xml:space="preserve">
-    <value />
+    <value>屬性面板</value>
+  </data>
+  <data name="RightPanel_ExpandDescription.Text" xml:space="preserve">
+    <value>展開全文</value>
+  </data>
+  <data name="RightPanel_CollapseDescription.Text" xml:space="preserve">
+    <value>收起</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
     <value>來源</value>
@@ -158,6 +164,21 @@
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
     <value>創意工坊</value>
+  </data>
+  <data name="Subscription.Header" xml:space="preserve">
+    <value>訂閱狀態</value>
+  </data>
+  <data name="Subscription_Subscribed.Content" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
+    <value>異常</value>
+  </data>
+  <data name="Unsubscribed_Badge.Text" xml:space="preserve">
+    <value>異常</value>
+  </data>
+  <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
+    <value>該桌布訂閱狀態異常：可能已取消訂閱、已在 Steam 中本地停用，或已被下架（project.json visibility 為 private）；Steam 可能不再更新或保留其本地檔案。</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>標籤</value>
@@ -259,10 +280,10 @@
     <value>年齡分級</value>
   </data>
   <data name="ResetFilters.Text" xml:space="preserve">
-    <value>重設篩選器</value>
+    <value>重置過濾器</value>
   </data>
   <data name="All.Content" xml:space="preserve">
-    <value>全部</value>
+    <value>所有</value>
   </data>
   <data name="None.Content" xml:space="preserve">
     <value>無</value>
@@ -271,22 +292,22 @@
     <value>篩選結果</value>
   </data>
   <data name="SortByName.Text" xml:space="preserve">
-    <value>依名稱排序</value>
+    <value>名稱</value>
   </data>
   <data name="SortByLastTime.Text" xml:space="preserve">
-    <value>依更新時間</value>
+    <value>更新時間</value>
   </data>
   <data name="SortByFileSize.Text" xml:space="preserve">
-    <value>依大小排序</value>
+    <value>大小</value>
   </data>
   <data name="SortByAcfUpdateTime.Text" xml:space="preserve">
-    <value>依修改時間</value>
+    <value>修改時間</value>
   </data>
   <data name="SortBySubTime.Text" xml:space="preserve">
-    <value>依訂閱時間</value>
+    <value>訂閱時間</value>
   </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
-    <value>詳細面板</value>
+    <value>詳情面板</value>
   </data>
   <data name="SearchBox.PlaceholderText" xml:space="preserve">
     <value>在這裡搜尋</value>
@@ -316,22 +337,22 @@
     <value>啟動頁面</value>
   </data>
   <data name="InstalledWallpapers.Content" xml:space="preserve">
-    <value>已安裝桌布</value>
+    <value>已安裝壁紙</value>
   </data>
   <data name="StartPage_Papers.Text" xml:space="preserve">
-    <value>已安裝桌布</value>
+    <value>已安裝壁紙</value>
   </data>
   <data name="ImportWallpapers.Content" xml:space="preserve">
-    <value>匯入與解壓</value>
+    <value>匯入解包</value>
   </data>
   <data name="StartPage_Import.Text" xml:space="preserve">
-    <value>匯入與解壓</value>
+    <value>匯入解包</value>
   </data>
   <data name="InstalledComponentsPage.Content" xml:space="preserve">
-    <value>已安裝組件</value>
+    <value>已安裝元件</value>
   </data>
   <data name="StartPage_Components.Text" xml:space="preserve">
-    <value>已安裝組件</value>
+    <value>已安裝元件</value>
   </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>關於</value>
@@ -342,23 +363,26 @@
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
     <value>輸入或選擇路徑</value>
   </data>
+  <data name="Cleanup_UnderConstruction.Text" xml:space="preserve">
+    <value>正在施工</value>
+  </data>
   <data name="Type_Preset.Content" xml:space="preserve">
     <value>預設</value>
   </data>
   <data name="NoResultTip1.Text" xml:space="preserve">
-    <value>未找到任何桌布</value>
+    <value>未找到任何壁紙</value>
   </data>
   <data name="NoResultTip3.Text" xml:space="preserve">
     <value>或是檢查設定中路徑是否正確</value>
   </data>
   <data name="NoResultTip2.Text" xml:space="preserve">
-    <value>請選擇篩選器中其他欄目，搜尋其他關鍵詞</value>
+    <value>請選擇篩選器中其它欄位，搜尋其它關鍵詞</value>
   </data>
   <data name="Programming_Language.Header" xml:space="preserve">
     <value>程式語言</value>
   </data>
   <data name="Programming_Language.Description" xml:space="preserve">
-    <value>選擇WE Tool的顯示語言，部分選項的語言需要在程式重啟後更新</value>
+    <value>選擇WE Tool的顯示語言，部分選項的語言需要在程式重新啟動後更新</value>
   </data>
   <data name="Language_Related.Content" xml:space="preserve">
     <value>跟隨系統</value>
@@ -370,28 +394,28 @@
     <value>頁面</value>
   </data>
   <data name="PapersSetting.Header" xml:space="preserve">
-    <value>現有桌布頁面設定</value>
+    <value>已有壁紙頁面設定</value>
   </data>
   <data name="PapersSetting.Description" xml:space="preserve">
-    <value>設定現有桌布頁面中的具體內容</value>
+    <value>設定已有壁紙頁面中的具體內容</value>
   </data>
   <data name="PapersSetting_BottomBarVisibility.Content" xml:space="preserve">
     <value>啟用底部路徑列</value>
   </data>
   <data name="PapersSetting_DetailTextSelectMode.Content" xml:space="preserve">
-    <value>為詳細面板啟用文字選取功能</value>
+    <value>為詳情面板啟用文字選擇功能</value>
   </data>
   <data name="PapersSetting_WallpaperAutoPlay.Content" xml:space="preserve">
-    <value>桌布清單播放動圖</value>
+    <value>壁紙列表播放動圖</value>
   </data>
   <data name="PapersSetting_MinimumPixelsForWallpaper.Text" xml:space="preserve">
-    <value>桌布最小像素</value>
+    <value>壁紙最小像素</value>
   </data>
   <data name="Path.Text" xml:space="preserve">
     <value>路徑</value>
   </data>
   <data name="ChooseWorkshopPath.Description" xml:space="preserve">
-    <value>選擇創意工坊桌布的位置</value>
+    <value>選擇創意工坊壁紙的位置</value>
   </data>
   <data name="WorkShopPath.Text" xml:space="preserve">
     <value>創意工坊桌布路徑</value>
@@ -417,6 +441,12 @@
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
     <value>ACF檔案路徑</value>
   </data>
+  <data name="VdfPath.Description" xml:space="preserve">
+    <value>儲存創意工坊訂閱資訊的檔案</value>
+  </data>
+  <data name="VdfPath_TextBlock.Text" xml:space="preserve">
+    <value>VDF檔案路徑</value>
+  </data>
   <data name="SettingPath.Description" xml:space="preserve">
     <value>儲存程式設定的檔案路徑</value>
   </data>
@@ -428,6 +458,30 @@
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
     <value>日誌檔案路徑</value>
+  </data>
+  <data name="LogLevel_TextBlock.Text" xml:space="preserve">
+    <value>日誌級別</value>
+  </data>
+  <data name="LogLevel.Description" xml:space="preserve">
+    <value>控制日誌記錄的詳細程度，修改後立即生效</value>
+  </data>
+  <data name="LogLevel_Debug.Content" xml:space="preserve">
+    <value>偵錯</value>
+  </data>
+  <data name="LogLevel_Information.Content" xml:space="preserve">
+    <value>資訊</value>
+  </data>
+  <data name="LogLevel_Warning.Content" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="LogLevel_Error.Content" xml:space="preserve">
+    <value>錯誤</value>
+  </data>
+  <data name="CachePath.Description" xml:space="preserve">
+    <value>儲存掃描快取資料的檔案路徑</value>
+  </data>
+  <data name="CachePath_TextBlock.Text" xml:space="preserve">
+    <value>快取檔案路徑</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>擷取</value>
@@ -479,7 +533,8 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>大圖示</value>
-  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>
+  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>桌布圖示大小</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
@@ -487,6 +542,18 @@
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>檢視</value>
+  </data>
+  <data name="MenuFlyoutSubItem_PreviewBlur.Text" xml:space="preserve">
+    <value>預覽模糊</value>
+  </data>
+  <data name="Blur_Everyone.Text" xml:space="preserve">
+    <value>全年齡</value>
+  </data>
+  <data name="Blur_Teen.Text" xml:space="preserve">
+    <value>青少年</value>
+  </data>
+  <data name="Blur_Adult.Text" xml:space="preserve">
+    <value>成人</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
     <value>排序</value>
@@ -551,8 +618,125 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>深色</value>
   </data>
+  <data name="ScanCache.Header" xml:space="preserve">
+    <value>掃描快取</value>
+  </data>
+  <data name="Enabled.Content" xml:space="preserve">
+    <value>啟用</value>
+  </data>
+  <data name="Disabled.Content" xml:space="preserve">
+    <value>關閉</value>
+  </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>滑鼠進入桌布圖示動畫</value>
+  </data>
+  <data name="ComponentsSetting.Header" xml:space="preserve">
+    <value>已安裝組件頁面設定</value>
+  </data>
+  <data name="ComponentsSetting.Description" xml:space="preserve">
+    <value>設定已安裝組件頁面中的具體內容</value>
+  </data>
+  <data name="ComponentsSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>啟用底部路徑列</value>
+  </data>
+  <data name="ComponentsSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>為詳細面板啟用文字選取功能</value>
+  </data>
+  <data name="ComponentsSetting_ComponentAutoPlay.Content" xml:space="preserve">
+    <value>組件清單播放動圖</value>
+  </data>
+  <data name="ComponentsSetting_IsComponentEnterAnimationEnabled.Content" xml:space="preserve">
+    <value>滑鼠進入組件圖示動畫</value>
+  </data>
+  <data name="ComponentsSetting_FilterResultResponseDelay.Text" xml:space="preserve">
+    <value>篩選結果回應延遲</value>
+  </data>
+  <data name="CompType_Layers.Content" xml:space="preserve">
+    <value>圖層</value>
+  </data>
+  <data name="CompType_Scripts.Content" xml:space="preserve">
+    <value>腳本</value>
+  </data>
+  <data name="CompType_Effects.Content" xml:space="preserve">
+    <value>特效</value>
+  </data>
+  <data name="CompType_Unknown.Content" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="Tag_AudioVisualizer.Content" xml:space="preserve">
+    <value>音訊視覺化</value>
+  </data>
+  <data name="Tag_Unspecifiedgenre.Content" xml:space="preserve">
+    <value>未指定類型</value>
+  </data>
+  <data name="Tag_Background.Content" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="Tag_Character.Content" xml:space="preserve">
+    <value>角色</value>
+  </data>
+  <data name="Tag_Clock.Content" xml:space="preserve">
+    <value>時鐘</value>
+  </data>
+  <data name="Tag_Fire.Content" xml:space="preserve">
+    <value>火焰</value>
+  </data>
+  <data name="Tag_Interactive.Content" xml:space="preserve">
+    <value>互動</value>
+  </data>
+  <data name="Tag_Magic.Content" xml:space="preserve">
+    <value>魔法</value>
+  </data>
+  <data name="Tag_PostProcessing.Content" xml:space="preserve">
+    <value>後期處理</value>
+  </data>
+  <data name="Tag_Smoke.Content" xml:space="preserve">
+    <value>煙霧</value>
+  </data>
+  <data name="Tag_Space.Content" xml:space="preserve">
+    <value>太空</value>
+  </data>
+  <data name="CompTag_UnspecifiedGenre.Content" xml:space="preserve">
+    <value>未指定類型</value>
+  </data>
+  <data name="CompTag_AudioVisualizer.Content" xml:space="preserve">
+    <value>音訊視覺化</value>
+  </data>
+  <data name="CompTag_Background.Content" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="CompTag_Character.Content" xml:space="preserve">
+    <value>角色</value>
+  </data>
+  <data name="CompTag_Clock.Content" xml:space="preserve">
+    <value>時鐘</value>
+  </data>
+  <data name="CompTag_Fire.Content" xml:space="preserve">
+    <value>火焰</value>
+  </data>
+  <data name="CompTag_Interactive.Content" xml:space="preserve">
+    <value>互動</value>
+  </data>
+  <data name="CompTag_Magic.Content" xml:space="preserve">
+    <value>魔法</value>
+  </data>
+  <data name="CompTag_PostProcessing.Content" xml:space="preserve">
+    <value>後期處理</value>
+  </data>
+  <data name="CompTag_Smoke.Content" xml:space="preserve">
+    <value>煙霧</value>
+  </data>
+  <data name="CompTag_Space.Content" xml:space="preserve">
+    <value>太空</value>
+  </data>
+  <data name="DetailPanel.Text" xml:space="preserve">
+    <value>詳細面板</value>
+  </data>
+  <data name="InstallDate.Text" xml:space="preserve">
+    <value>安裝日期</value>
+  </data>
+  <data name="File.Text" xml:space="preserve">
+    <value>檔案</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
     <value>重新整理</value>
@@ -803,6 +987,9 @@
   <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>恢復預設路徑</value>
   </data>
+  <data name="AutoDetect_VdfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>恢復預設路徑</value>
+  </data>
   <data name="Settings_FlatFileNaming.Text" xml:space="preserve">
     <value>檔案命名方式</value>
   </data>
@@ -959,6 +1146,105 @@
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>每頁 90 項</value>
   </data>
+  <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
+    <value>匯入專案</value>
+  </data>
+  <data name="NoSelectionHint.Text" xml:space="preserve">
+    <value>選擇一張或多張桌布</value>
+  </data>
+  <data name="Detail_Extract.Text" xml:space="preserve">
+    <value>擷取</value>
+  </data>
+  <data name="Detail_Copy.Text" xml:space="preserve">
+    <value>複製</value>
+  </data>
+  <data name="Detail_Unsubscribe.Text" xml:space="preserve">
+    <value>取消訂閱</value>
+  </data>
+  <data name="Detail_ImportToEditor.Text" xml:space="preserve">
+    <value>匯入桌布編輯器</value>
+  </data>
+  <data name="Detail_DeleteWallpaper.Text" xml:space="preserve">
+    <value>刪除桌布</value>
+  </data>
+  <data name="Detail_OpenDirectory.Text" xml:space="preserve">
+    <value>開啟目錄</value>
+  </data>
+  <data name="Detail_Properties.Text" xml:space="preserve">
+    <value>屬性</value>
+  </data>
+  <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
+    <value>全選</value>
+  </data>
+  <data name="MultiSelect_InvertSelection.Content" xml:space="preserve">
+    <value>反選</value>
+  </data>
+  <data name="MultiSelect_Cancel.Content" xml:space="preserve">
+    <value>取消多選</value>
+  </data>
+  <data name="NoScanResultTip.Text" xml:space="preserve">
+    <value>程式未掃描到任何桌布，請前往設定修正掃描路徑</value>
+  </data>
+  <data name="NoScanResultTip_Components.Text" xml:space="preserve">
+    <value>程式未掃描到任何組件，請前往設定修正掃描路徑</value>
+  </data>
+  <data name="GoToSettings.Content" xml:space="preserve">
+    <value>前往設定</value>
+  </data>
+  <data name="ExtractPause.Text" xml:space="preserve">
+    <value>暫停</value>
+  </data>
+  <data name="ExtractResume.Text" xml:space="preserve">
+    <value>繼續</value>
+  </data>
+  <data name="ExtractStop.Text" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="FileStructure.Text" xml:space="preserve">
+    <value>檔案結構</value>
+  </data>
+  <data name="NoSelectionHint_Components.Text" xml:space="preserve">
+    <value>選擇組件以檢視詳細資訊</value>
+  </data>
+  <data name="Detail_DeleteComponent.Text" xml:space="preserve">
+    <value>刪除組件</value>
+  </data>
+  <data name="NoMatchTip1.Text" xml:space="preserve">
+    <value>沒有符合的組件</value>
+  </data>
+  <data name="NoMatchTip2.Text" xml:space="preserve">
+    <value>請調整篩選條件</value>
+  </data>
+  <data name="ComponentDirectory.Text" xml:space="preserve">
+    <value>組件目錄</value>
+  </data>
+  <data name="Toolbar_FilterToggle.Label" xml:space="preserve">
+    <value>篩選結果</value>
+  </data>
+  <data name="Toolbar_ListView.Label" xml:space="preserve">
+    <value>列表檢視</value>
+  </data>
+  <data name="Toolbar_Delete.Label" xml:space="preserve">
+    <value>刪除</value>
+  </data>
+  <data name="Toolbar_SelectAll.Label" xml:space="preserve">
+    <value>全選</value>
+  </data>
+  <data name="Toolbar_InvertSelection.Label" xml:space="preserve">
+    <value>反選</value>
+  </data>
+  <data name="Toolbar_Refresh.Label" xml:space="preserve">
+    <value>重新整理</value>
+  </data>
+  <data name="Toolbar_View.Label" xml:space="preserve">
+    <value>檢視▾</value>
+  </data>
+  <data name="Toolbar_Sort.Label" xml:space="preserve">
+    <value>排序▾</value>
+  </data>
+  <data name="Toolbar_SortDirection.Label" xml:space="preserve">
+    <value>排序方向</value>
+  </data>
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>重設設定</value>
   </data>
@@ -1043,7 +1329,7 @@
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
     <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
-<data name="Info_CreditsLine7.Content" xml:space="preserve">
+  <data name="Info_CreditsLine7.Content" xml:space="preserve">
     <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
@@ -1051,6 +1337,9 @@
   </data>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (基於 notscuffed/repkg)</value>
+  </data>
+  <data name="Info_CreditsLine11.Content" xml:space="preserve">
+    <value>Win2D 1.4</value>
   </data>
   <data name="Info_License.Header" xml:space="preserve">
     <value>開源授權</value>
@@ -1114,100 +1403,255 @@
 免責聲明:本工具僅供個人學習與備份用途。桌布及其素材版權歸各自作者所有,請尊重原作者權益,請勿將擷取內容用於商業用途或未經授權的再散布。</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value />
+    <value>WE Tool</value>
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value />
+    <value>RePKG_Re</value>
   </data>
   <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
-    <value />
+    <value>WE Tool 日誌</value>
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks 線上</value>
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value />
+    <value>已初始化，創意工坊相關功能可用。</value>
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks 不可用</value>
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam 未執行或初始化失敗，創意工坊相關功能不可用。請確認 Steam 已啟動，然後點擊重試。</value>
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steam 連線已中斷</value>
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam 已退出，創意工坊相關功能暫時不可用。可點擊重試重新連線。</value>
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value />
+    <value>重試</value>
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value />
+    <value>正在重新連線</value>
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value />
+    <value>正在重新初始化 Steamworks，請稍候…</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
+    <value>RePKG_Re 版本正常</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
+    <value>目前版本 {0}</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
+    <value>RePKG_Re 版本不相符</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
+    <value>目前 {0}，需要 {1}，請更新 RePKG_Re 後端</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
+    <value>找不到 RePKG_Re</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
+    <value>repkg\RePKG_Re.exe 缺失，擷取功能不可用</value>
+  </data>
+  <data name="Info_TranslationTitle.Text" xml:space="preserve">
+    <value>翻譯進度</value>
   </data>
   <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
-    <value />
+    <value>透明與黑色像素過濾閾值</value>
   </data>
   <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
-    <value />
+    <value>僅解析目錄</value>
   </data>
   <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>英文逗號分隔，如 materials,models（含子資料夾）</value>
   </data>
   <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
-    <value />
+    <value>忽略解析目錄</value>
   </data>
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>英文逗號分隔，如 effects,sounds（含子資料夾）</value>
+  </data>
+  <data name="Info_AboutHeader.Text" xml:space="preserve">
+    <value>關於</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>RePKG_Re 日誌</value>
   </data>
   <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
     <value>SkiaSharp 4.151</value>
   </data>
-
-  <data name="CleanupPage.Content" xml:space="preserve">
-    <value>残留清除</value>
-  </data>
   <data name="Cleanup_Title.Text" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Cleanup_ScanButton.Text" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Cleanup_DeleteButton.Text" xml:space="preserve">
-    <value>删除</value>
+    <value>殘留清除</value>
   </data>
   <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
-    <value></value>
+    <value>點擊下方按鈕掃描桌布殘留檔案</value>
   </data>
   <data name="Cleanup_ScanButton.Content" xml:space="preserve">
-    <value></value>
+    <value>開始掃描</value>
   </data>
   <data name="Cleanup_OpenFolder.Content" xml:space="preserve">
-    <value></value>
+    <value>開啟目錄</value>
   </data>
   <data name="Cleanup_Whitelist.Content" xml:space="preserve">
-    <value></value>
+    <value>白名單</value>
   </data>
   <data name="Cleanup_Delete.Content" xml:space="preserve">
-    <value></value>
+    <value>清理</value>
   </data>
   <data name="WhitelistWindow_Title.Text" xml:space="preserve">
-    <value></value>
+    <value>白名單管理</value>
   </data>
   <data name="WhitelistWindow_EmptyHint.Text" xml:space="preserve">
-    <value></value>
+    <value>白名單為空</value>
   </data>
   <data name="WhitelistWindow_EmptyDesc.Text" xml:space="preserve">
-    <value></value>
+    <value>在殘留清除頁面點擊卡片上的「白名單」按鈕將桌布加入</value>
   </data>
   <data name="WhitelistWindow_OpenFolder.Content" xml:space="preserve">
-    <value></value>
+    <value>開啟目錄</value>
   </data>
   <data name="WhitelistWindow_Remove.Content" xml:space="preserve">
-    <value></value>
+    <value>移出白名單</value>
+  </data>
+  <data name="LoadPapers_Title.Text" xml:space="preserve">
+    <value>匯入解包</value>
+  </data>
+  <data name="LoadPapers_DragHint.Text" xml:space="preserve">
+    <value>拖曳壁紙套件到此處</value>
+  </data>
+  <data name="LoadPapers_DragSubhint.Text" xml:space="preserve">
+    <value>支援 .pkg / .mpkg 壁紙套件檔案</value>
+  </data>
+  <data name="LoadPapers_SetExportDir.Label" xml:space="preserve">
+    <value>設定匯出目錄</value>
+  </data>
+  <data name="LoadPapers_ExportDirPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>匯出目錄（留空用 Papers 匯出目錄）</value>
+  </data>
+  <data name="LoadPapers_SelectFile.Label" xml:space="preserve">
+    <value>選擇檔案</value>
+  </data>
+  <data name="LoadPapers_ScanFolder.Label" xml:space="preserve">
+    <value>掃描資料夾</value>
+  </data>
+  <data name="LoadPapers_Clear.Label" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="LoadPapers_StartExtract.Label" xml:space="preserve">
+    <value>開始解包</value>
+  </data>
+  <data name="LoadPapers_Pause.Label" xml:space="preserve">
+    <value>暫停</value>
+  </data>
+  <data name="LoadPapers_Stop.Label" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="LoadPapers_ProjectDir.Content" xml:space="preserve">
+    <value>專案目錄</value>
+  </data>
+  <data name="LoadPapers_ExportDir.Content" xml:space="preserve">
+    <value>匯出目錄</value>
+  </data>
+  <data name="LoadPapers_BrowseFolder.Content" xml:space="preserve">
+    <value>瀏覽資料夾</value>
+  </data>
+  <data name="LoadPapers_Resume.Label" xml:space="preserve">
+    <value>恢復</value>
+  </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>殘留清理</value>
+  </data>
+  <data name="Cleanup_BatchWhitelist.Label" xml:space="preserve">
+    <value>加入白名單</value>
+  </data>
+  <data name="Cleanup_BatchDelete.Label" xml:space="preserve">
+    <value>刪除選取</value>
+  </data>
+  <data name="Cleanup_WhitelistManage.Label" xml:space="preserve">
+    <value>白名單</value>
+  </data>
+  <data name="Cleanup_Rescan.Label" xml:space="preserve">
+    <value>重新掃描</value>
+  </data>
+  <data name="Cleanup_DeleteAll.Label" xml:space="preserve">
+    <value>全部清理</value>
+  </data>
+  <data name="Cleanup_TypeExcess" xml:space="preserve">
+    <value>多餘</value>
+  </data>
+  <data name="Cleanup_TypeUnloaded" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="Cleanup_StatsExcess" xml:space="preserve">
+    <value>{0} 個多餘檔案 · {1}</value>
+  </data>
+  <data name="Cleanup_StatsUnloaded" xml:space="preserve">
+    <value>{0} 個檔案 · {1}</value>
+  </data>
+  <data name="Cleanup_EmptyFolderName" xml:space="preserve">
+    <value>(空資料夾)</value>
+  </data>
+  <data name="Cleanup_ScanFailed" xml:space="preserve">
+    <value>掃描失敗：{0}</value>
+  </data>
+  <data name="Cleanup_CleanedComplete" xml:space="preserve">
+    <value>已清理 {0} 張壁紙的殘留</value>
+  </data>
+  <data name="Cleanup_Summary" xml:space="preserve">
+    <value>共 {0} 項殘留 · {1}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
+    <value>清理 {0}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Content" xml:space="preserve">
+    <value>將刪除 {0} 個殘留檔案，此操作不可撤銷。</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Ok" xml:space="preserve">
+    <value>清理</value>
+  </data>
+  <data name="Cleanup_CleanFail.Title" xml:space="preserve">
+    <value>清理失敗</value>
+  </data>
+  <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
+    <value>刪除選取 ({0} 項)</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Title" xml:space="preserve">
+    <value>全部清理</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Content" xml:space="preserve">
+    <value>將刪除 {0} 張壁紙的 {1} 個殘留檔案，此操作不可撤銷。</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Ok" xml:space="preserve">
+    <value>全部清理</value>
+  </data>
+  <data name="Cleanup_BatchWhitelistCount" xml:space="preserve">
+    <value>加入白名單 ({0})</value>
+  </data>
+  <data name="Cleanup_BatchDeleteCount" xml:space="preserve">
+    <value>刪除選取 ({0})</value>
+  </data>
+  <data name="Cleanup_CommonDelete" xml:space="preserve">
+    <value>刪除</value>
+  </data>
+  <data name="Cleanup_CommonCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="Cleanup_CommonOk" xml:space="preserve">
+    <value>確定</value>
+  </data>
+  <data name="WhitelistWindowTitle.Title" xml:space="preserve">
+    <value>白名單管理</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemove.Label" xml:space="preserve">
+    <value>移出選取</value>
+  </data>
+  <data name="WhitelistWindow_Subtitle" xml:space="preserve">
+    <value>共 {0} 項 · {1}</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
+    <value>移出選取 ({0})</value>
   </data>
 </root>

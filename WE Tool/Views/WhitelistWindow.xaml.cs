@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using WE_Tool.ViewModels;
+using WE_Tool.Helper;
 using WinUIEx;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Windowing;
@@ -17,6 +18,13 @@ namespace WE_Tool.Views;
 
 public sealed partial class WhitelistWindow : WindowEx
 {
+    /// <summary>本地化取值:无参数直接取,有参数则 string.Format。</summary>
+    private static string L(string key, params object[] args)
+    {
+        string s = LanguageHelper.GetResource(key);
+        return args.Length == 0 ? s : string.Format(s, args);
+    }
+
     private readonly HashSet<string> _whitelist;
     private readonly string _workshopPath;
     private ObservableCollection<CleanupCardViewModel> _cards = new();
@@ -33,6 +41,7 @@ public sealed partial class WhitelistWindow : WindowEx
         // 自定义标题栏:去系统标题栏,顶部 48px 留空当标题栏(Tall 高度)
         ExtendsContentIntoTitleBar = true;
         AppWindow.TitleBar.PreferredHeightOption = Microsoft.UI.Windowing.TitleBarHeightOption.Tall;
+        Title = LanguageHelper.GetResource("WhitelistWindowTitle.Title");
         CardGridView.ItemsSource = _cards;
         LoadWhitelistCards();
     }
@@ -84,7 +93,7 @@ public sealed partial class WhitelistWindow : WindowEx
         if (has)
         {
             long total = _cards.Sum(c => c.Files.Sum(f => f.Size));
-            SubtitleText.Text = $"共 {_cards.Count} 项 · {FormatSize(total)}";
+            SubtitleText.Text = L("WhitelistWindow_Subtitle", _cards.Count, FormatSize(total));
             UpdateItemWidth();
         }
         else
@@ -169,18 +178,18 @@ public sealed partial class WhitelistWindow : WindowEx
             if (excess.Count == 0) return null;
             return new CleanupCardViewModel
             {
-                FolderId = id, TypeLabel = "多余", FullPath = dir, IsUnloaded = false,
-                StatsText = $"{excess.Count} 个多余文件 · {FormatSize(excess.Sum(f => f.Size))}",
+                FolderId = id, TypeLabel = L("Cleanup_TypeExcess"), FullPath = dir, IsUnloaded = false,
+                StatsText = L("Cleanup_StatsExcess", excess.Count, FormatSize(excess.Sum(f => f.Size))),
                 Files = excess
             };
         }
         else
         {
-            var files = excess.Count > 0 ? excess : new List<CleanupFileItem> { new() { Name = "(空文件夹)", SizeText = "", FullPath = "" } };
+            var files = excess.Count > 0 ? excess : new List<CleanupFileItem> { new() { Name = L("Cleanup_EmptyFolderName"), SizeText = "", FullPath = "" } };
             return new CleanupCardViewModel
             {
-                FolderId = id, TypeLabel = "卸载", FullPath = dir, IsUnloaded = true,
-                StatsText = $"{files.Count} 个文件 · {FormatSize(DirSize(dir))}",
+                FolderId = id, TypeLabel = L("Cleanup_TypeUnloaded"), FullPath = dir, IsUnloaded = true,
+                StatsText = L("Cleanup_StatsUnloaded", files.Count, FormatSize(DirSize(dir))),
                 Files = files
             };
         }
@@ -216,7 +225,7 @@ public sealed partial class WhitelistWindow : WindowEx
     {
         int selected = _cards.Count(c => c.IsSelected);
         BatchRemoveButton.IsEnabled = selected > 0;
-        BatchRemoveButton.Label = selected > 0 ? $"移出选中({selected})" : "移出选中";
+        BatchRemoveButton.Label = selected > 0 ? L("WhitelistWindow_BatchRemoveCount", selected) : L("WhitelistWindow_BatchRemove.Label");
     }
 
     private void BatchRemove_Click(object sender, RoutedEventArgs e)

@@ -14,11 +14,19 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Controls;
 using WE_Tool.ViewModels;
+using WE_Tool.Helper;
 
 namespace WE_Tool.Views;
 
 public sealed partial class Cleanup : Page
 {
+    /// <summary>本地化取值:无参数直接取,有参数则 string.Format。</summary>
+    private static string L(string key, params object[] args)
+    {
+        string s = LanguageHelper.GetResource(key);
+        return args.Length == 0 ? s : string.Format(s, args);
+    }
+
     private const string WorkshopPath = @"D:\SteamLibrary\steamapps\workshop\content\431960";
     private static readonly string WhitelistFile = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -98,7 +106,7 @@ public sealed partial class Cleanup : Page
             EmptyState.Visibility = Visibility.Visible;
             ResultGridView.Visibility = Visibility.Collapsed;
             ActionBar.Visibility = Visibility.Collapsed;
-            EmptyStateText.Text = $"扫描失败: {ex.Message}";
+            EmptyStateText.Text = L("Cleanup_ScanFailed", ex.Message);
         }
         finally
         {
@@ -223,10 +231,10 @@ public sealed partial class Cleanup : Page
             return new CleanupCardViewModel
             {
                 FolderId = id,
-                TypeLabel = "多余",
+                TypeLabel = L("Cleanup_TypeExcess"),
                 FullPath = dir,
                 IsUnloaded = false,
-                StatsText = $"{excess.Count} 个多余文件 · {FormatSize(excess.Sum(f => f.Size))}",
+                StatsText = L("Cleanup_StatsExcess", excess.Count, FormatSize(excess.Sum(f => f.Size))),
                 Files = excess
             };
         }
@@ -243,15 +251,15 @@ public sealed partial class Cleanup : Page
                 }).ToList();
 
             if (files.Count == 0)
-                files.Add(new CleanupFileItem { Name = "(空文件夹)", SizeText = "", Size = 0, FullPath = "" });
+                files.Add(new CleanupFileItem { Name = L("Cleanup_EmptyFolderName"), SizeText = "", Size = 0, FullPath = "" });
 
             return new CleanupCardViewModel
             {
                 FolderId = id,
-                TypeLabel = "卸载",
+                TypeLabel = L("Cleanup_TypeUnloaded"),
                 FullPath = dir,
                 IsUnloaded = true,
-                StatsText = $"{files.Count} 个文件 · {FormatSize(DirSize(dir))}",
+                StatsText = L("Cleanup_StatsUnloaded", files.Count, FormatSize(DirSize(dir))),
                 Files = files
             };
         }
@@ -325,10 +333,10 @@ public sealed partial class Cleanup : Page
         var dlg = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"清理 {card.FolderId}",
-            Content = $"将删除 {card.Files.Count} 个残留文件，此操作不可撤销。",
-            PrimaryButtonText = "清理",
-            CloseButtonText = "取消",
+            Title = L("Cleanup_ConfirmClean.Title", card.FolderId),
+            Content = L("Cleanup_ConfirmClean.Content", card.Files.Count),
+            PrimaryButtonText = L("Cleanup_ConfirmClean.Ok"),
+            CloseButtonText = L("Cleanup_CommonCancel"),
             DefaultButton = ContentDialogButton.Close
         };
         if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
@@ -350,9 +358,9 @@ public sealed partial class Cleanup : Page
             var err = new ContentDialog
             {
                 XamlRoot = XamlRoot,
-                Title = "清理失败",
+                Title = L("Cleanup_CleanFail.Title"),
                 Content = ex.Message,
-                CloseButtonText = "确定"
+                CloseButtonText = L("Cleanup_CommonOk")
             };
             await err.ShowAsync();
         }
@@ -367,9 +375,9 @@ public sealed partial class Cleanup : Page
     {
         int selected = Cards.Count(c => c.IsSelected);
         BatchWhitelistButton.IsEnabled = selected > 0;
-        BatchWhitelistButton.Label = selected > 0 ? $"白名单选中({selected})" : "白名单选中";
+        BatchWhitelistButton.Label = selected > 0 ? L("Cleanup_BatchWhitelistCount", selected) : L("Cleanup_BatchWhitelist.Label");
         BatchDeleteButton.IsEnabled = selected > 0;
-        BatchDeleteButton.Label = selected > 0 ? $"删除选中({selected})" : "删除选中";
+        BatchDeleteButton.Label = selected > 0 ? L("Cleanup_BatchDeleteCount", selected) : L("Cleanup_BatchDelete.Label");
     }
 
     private void BatchWhitelist_Click(object sender, RoutedEventArgs e)
@@ -393,10 +401,10 @@ public sealed partial class Cleanup : Page
         var dlg = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"删除选中 ({selected.Count} 项)",
-            Content = $"将删除 {totalFiles} 个残留文件，此操作不可撤销。",
-            PrimaryButtonText = "删除",
-            CloseButtonText = "取消",
+            Title = L("Cleanup_ConfirmBatchDelete.Title", selected.Count),
+            Content = L("Cleanup_ConfirmClean.Content", totalFiles),
+            PrimaryButtonText = L("Cleanup_CommonDelete"),
+            CloseButtonText = L("Cleanup_CommonCancel"),
             DefaultButton = ContentDialogButton.Close
         };
         if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
@@ -461,10 +469,10 @@ public sealed partial class Cleanup : Page
         var dlg = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "清理全部",
-            Content = $"将删除 {Cards.Count} 个壁纸的 {totalFiles} 个残留文件，此操作不可撤销。",
-            PrimaryButtonText = "全部清理",
-            CloseButtonText = "取消",
+            Title = L("Cleanup_ConfirmDeleteAll.Title"),
+            Content = L("Cleanup_ConfirmDeleteAll.Content", Cards.Count, totalFiles),
+            PrimaryButtonText = L("Cleanup_ConfirmDeleteAll.Ok"),
+            CloseButtonText = L("Cleanup_CommonCancel"),
             DefaultButton = ContentDialogButton.Close
         };
         if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
@@ -490,7 +498,7 @@ public sealed partial class Cleanup : Page
         bool has = Cards.Count > 0;
         ResultGridView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
         EmptyState.Visibility = Visibility.Visible;
-        EmptyStateText.Text = $"已清理 {ok} 个壁纸的残留";
+        EmptyStateText.Text = L("Cleanup_CleanedComplete", ok);
         if (!has) ActionBar.Visibility = Visibility.Collapsed;
         UpdateSummary();
     }
@@ -505,7 +513,7 @@ public sealed partial class Cleanup : Page
         }
         int count = Cards.Sum(c => c.Files.Count);
         long total = Cards.Sum(c => c.Files.Sum(f => f.Size));
-        SummaryText.Text = $"共 {count} 项残留 · {FormatSize(total)}";
+        SummaryText.Text = L("Cleanup_Summary", count, FormatSize(total));
     }
 
     private void RemoveCard(CleanupCardViewModel card)

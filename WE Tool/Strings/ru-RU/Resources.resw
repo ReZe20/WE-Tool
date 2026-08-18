@@ -118,19 +118,19 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MenuFlyoutSubItem_RightPanel.Text" xml:space="preserve">
-    <value />
+    <value>Панель справа</value>
   </data>
   <data name="PropertiesWindow_FileInfo.Content" xml:space="preserve">
-    <value />
+    <value>Свойства файла</value>
   </data>
   <data name="PropertiesWindow_WallpaperProps.Content" xml:space="preserve">
-    <value />
+    <value>Свойства обоев</value>
   </data>
   <data name="PropertyPanel_NoProperties.Text" xml:space="preserve">
-    <value />
+    <value>Эти обои не имеют настраиваемых свойств</value>
   </data>
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
-    <value />
+    <value>Сохранить свойства</value>
   </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>Для всех (G)</value>
@@ -142,10 +142,16 @@
     <value>Для взрослых (R-18)</value>
   </data>
   <data name="RightPanel_Detail.Text" xml:space="preserve">
-    <value />
+    <value>Панель сведений</value>
   </data>
   <data name="RightPanel_Property.Text" xml:space="preserve">
-    <value />
+    <value>Панель свойств</value>
+  </data>
+  <data name="RightPanel_ExpandDescription.Text" xml:space="preserve">
+    <value>Развернуть</value>
+  </data>
+  <data name="RightPanel_CollapseDescription.Text" xml:space="preserve">
+    <value>Свернуть</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
     <value>Источник</value>
@@ -158,6 +164,21 @@
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
     <value>Мастерская</value>
+  </data>
+  <data name="Subscription.Header" xml:space="preserve">
+    <value>Статус подписки</value>
+  </data>
+  <data name="Subscription_Subscribed.Content" xml:space="preserve">
+    <value>Нормально</value>
+  </data>
+  <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
+    <value>Аномально</value>
+  </data>
+  <data name="Unsubscribed_Badge.Text" xml:space="preserve">
+    <value>Аномально</value>
+  </data>
+  <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
+    <value>Статус подписки на эти обои аномален: подписка могла быть отменена, обои отключены локально в Steam или сняты с публикации (visibility в project.json — private). Steam может не обновлять и не хранить локальные файлы.</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>Теги</value>
@@ -342,6 +363,9 @@
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
     <value>Введите или выберите путь</value>
   </data>
+  <data name="Cleanup_UnderConstruction.Text" xml:space="preserve">
+    <value>В разработке</value>
+  </data>
   <data name="Type_Preset.Content" xml:space="preserve">
     <value>Пресет</value>
   </data>
@@ -417,6 +441,12 @@
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
     <value>Путь к файлу ACF</value>
   </data>
+  <data name="VdfPath.Description" xml:space="preserve">
+    <value>Файл с информацией о подписках Мастерской</value>
+  </data>
+  <data name="VdfPath_TextBlock.Text" xml:space="preserve">
+    <value>Путь к файлу VDF</value>
+  </data>
   <data name="SettingPath.Description" xml:space="preserve">
     <value>Путь к файлу настроек программы</value>
   </data>
@@ -428,6 +458,30 @@
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
     <value>Путь к файлу журнала</value>
+  </data>
+  <data name="LogLevel_TextBlock.Text" xml:space="preserve">
+    <value>Уровень журнала</value>
+  </data>
+  <data name="LogLevel.Description" xml:space="preserve">
+    <value>Управляет детализацией журнала. Изменения вступают в силу немедленно.</value>
+  </data>
+  <data name="LogLevel_Debug.Content" xml:space="preserve">
+    <value>Отладка</value>
+  </data>
+  <data name="LogLevel_Information.Content" xml:space="preserve">
+    <value>Информация</value>
+  </data>
+  <data name="LogLevel_Warning.Content" xml:space="preserve">
+    <value>Предупреждение</value>
+  </data>
+  <data name="LogLevel_Error.Content" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="CachePath.Description" xml:space="preserve">
+    <value>Путь к файлу кэша сканирования</value>
+  </data>
+  <data name="CachePath_TextBlock.Text" xml:space="preserve">
+    <value>Путь к файлу кэша</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>Извлечение</value>
@@ -479,7 +533,8 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>Большие значки</value>
-  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>
+  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>Размер значка обоев</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
@@ -487,6 +542,18 @@
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>Вид</value>
+  </data>
+  <data name="MenuFlyoutSubItem_PreviewBlur.Text" xml:space="preserve">
+    <value>Размытие предпросмотра</value>
+  </data>
+  <data name="Blur_Everyone.Text" xml:space="preserve">
+    <value>Для всех</value>
+  </data>
+  <data name="Blur_Teen.Text" xml:space="preserve">
+    <value>Для подростков</value>
+  </data>
+  <data name="Blur_Adult.Text" xml:space="preserve">
+    <value>Для взрослых</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
     <value>Сортировка</value>
@@ -551,8 +618,125 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>Тёмная</value>
   </data>
+  <data name="ScanCache.Header" xml:space="preserve">
+    <value>Кэш сканирования</value>
+  </data>
+  <data name="Enabled.Content" xml:space="preserve">
+    <value>Включено</value>
+  </data>
+  <data name="Disabled.Content" xml:space="preserve">
+    <value>Выключено</value>
+  </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>Анимация при наведении мыши</value>
+  </data>
+  <data name="ComponentsSetting.Header" xml:space="preserve">
+    <value>Настройки страницы установленных компонентов</value>
+  </data>
+  <data name="ComponentsSetting.Description" xml:space="preserve">
+    <value>Настройка содержимого страницы установленных компонентов</value>
+  </data>
+  <data name="ComponentsSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>Включить нижнюю панель пути</value>
+  </data>
+  <data name="ComponentsSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>Включить выделение текста на панели сведений</value>
+  </data>
+  <data name="ComponentsSetting_ComponentAutoPlay.Content" xml:space="preserve">
+    <value>Воспроизводить GIF в списке компонентов</value>
+  </data>
+  <data name="ComponentsSetting_IsComponentEnterAnimationEnabled.Content" xml:space="preserve">
+    <value>Анимация при наведении мыши на значок компонента</value>
+  </data>
+  <data name="ComponentsSetting_FilterResultResponseDelay.Text" xml:space="preserve">
+    <value>Задержка ответа фильтра (мс)</value>
+  </data>
+  <data name="CompType_Layers.Content" xml:space="preserve">
+    <value>Слои</value>
+  </data>
+  <data name="CompType_Scripts.Content" xml:space="preserve">
+    <value>Скрипты</value>
+  </data>
+  <data name="CompType_Effects.Content" xml:space="preserve">
+    <value>Эффекты</value>
+  </data>
+  <data name="CompType_Unknown.Content" xml:space="preserve">
+    <value>Неизвестно</value>
+  </data>
+  <data name="Tag_AudioVisualizer.Content" xml:space="preserve">
+    <value>Аудиовизуализация</value>
+  </data>
+  <data name="Tag_Unspecifiedgenre.Content" xml:space="preserve">
+    <value>Не указан жанр</value>
+  </data>
+  <data name="Tag_Background.Content" xml:space="preserve">
+    <value>Фон</value>
+  </data>
+  <data name="Tag_Character.Content" xml:space="preserve">
+    <value>Персонаж</value>
+  </data>
+  <data name="Tag_Clock.Content" xml:space="preserve">
+    <value>Часы</value>
+  </data>
+  <data name="Tag_Fire.Content" xml:space="preserve">
+    <value>Огонь</value>
+  </data>
+  <data name="Tag_Interactive.Content" xml:space="preserve">
+    <value>Интерактив</value>
+  </data>
+  <data name="Tag_Magic.Content" xml:space="preserve">
+    <value>Магия</value>
+  </data>
+  <data name="Tag_PostProcessing.Content" xml:space="preserve">
+    <value>Постобработка</value>
+  </data>
+  <data name="Tag_Smoke.Content" xml:space="preserve">
+    <value>Дым</value>
+  </data>
+  <data name="Tag_Space.Content" xml:space="preserve">
+    <value>Космос</value>
+  </data>
+  <data name="CompTag_UnspecifiedGenre.Content" xml:space="preserve">
+    <value>Не указан жанр</value>
+  </data>
+  <data name="CompTag_AudioVisualizer.Content" xml:space="preserve">
+    <value>Аудиовизуализация</value>
+  </data>
+  <data name="CompTag_Background.Content" xml:space="preserve">
+    <value>Фон</value>
+  </data>
+  <data name="CompTag_Character.Content" xml:space="preserve">
+    <value>Персонаж</value>
+  </data>
+  <data name="CompTag_Clock.Content" xml:space="preserve">
+    <value>Часы</value>
+  </data>
+  <data name="CompTag_Fire.Content" xml:space="preserve">
+    <value>Огонь</value>
+  </data>
+  <data name="CompTag_Interactive.Content" xml:space="preserve">
+    <value>Интерактив</value>
+  </data>
+  <data name="CompTag_Magic.Content" xml:space="preserve">
+    <value>Магия</value>
+  </data>
+  <data name="CompTag_PostProcessing.Content" xml:space="preserve">
+    <value>Постобработка</value>
+  </data>
+  <data name="CompTag_Smoke.Content" xml:space="preserve">
+    <value>Дым</value>
+  </data>
+  <data name="CompTag_Space.Content" xml:space="preserve">
+    <value>Космос</value>
+  </data>
+  <data name="DetailPanel.Text" xml:space="preserve">
+    <value>Панель сведений</value>
+  </data>
+  <data name="InstallDate.Text" xml:space="preserve">
+    <value>Дата установки</value>
+  </data>
+  <data name="File.Text" xml:space="preserve">
+    <value>Файл</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
     <value>Обновить</value>
@@ -803,6 +987,9 @@
   <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>Восстановить путь по умолчанию</value>
   </data>
+  <data name="AutoDetect_VdfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Восстановить путь по умолчанию</value>
+  </data>
   <data name="Settings_FlatFileNaming.Text" xml:space="preserve">
     <value>Именование файлов</value>
   </data>
@@ -959,6 +1146,105 @@
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 на страницу</value>
   </data>
+  <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
+    <value>Импорт проекта</value>
+  </data>
+  <data name="NoSelectionHint.Text" xml:space="preserve">
+    <value>Выберите одну или несколько обоев</value>
+  </data>
+  <data name="Detail_Extract.Text" xml:space="preserve">
+    <value>Извлечь</value>
+  </data>
+  <data name="Detail_Copy.Text" xml:space="preserve">
+    <value>Копировать</value>
+  </data>
+  <data name="Detail_Unsubscribe.Text" xml:space="preserve">
+    <value>Отписаться</value>
+  </data>
+  <data name="Detail_ImportToEditor.Text" xml:space="preserve">
+    <value>Импортировать в редактор обоев</value>
+  </data>
+  <data name="Detail_DeleteWallpaper.Text" xml:space="preserve">
+    <value>Удалить обои</value>
+  </data>
+  <data name="Detail_OpenDirectory.Text" xml:space="preserve">
+    <value>Открыть каталог</value>
+  </data>
+  <data name="Detail_Properties.Text" xml:space="preserve">
+    <value>Свойства</value>
+  </data>
+  <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
+    <value>Выбрать все</value>
+  </data>
+  <data name="MultiSelect_InvertSelection.Content" xml:space="preserve">
+    <value>Инвертировать выбор</value>
+  </data>
+  <data name="MultiSelect_Cancel.Content" xml:space="preserve">
+    <value>Отменить множественный выбор</value>
+  </data>
+  <data name="NoScanResultTip.Text" xml:space="preserve">
+    <value>Программа не обнаружила обоев. Перейдите в настройки для исправления пути сканирования.</value>
+  </data>
+  <data name="NoScanResultTip_Components.Text" xml:space="preserve">
+    <value>Программа не обнаружила компонентов. Перейдите в настройки для исправления пути сканирования.</value>
+  </data>
+  <data name="GoToSettings.Content" xml:space="preserve">
+    <value>Перейти в настройки</value>
+  </data>
+  <data name="ExtractPause.Text" xml:space="preserve">
+    <value>Приостановить</value>
+  </data>
+  <data name="ExtractResume.Text" xml:space="preserve">
+    <value>Продолжить</value>
+  </data>
+  <data name="ExtractStop.Text" xml:space="preserve">
+    <value>Остановить</value>
+  </data>
+  <data name="FileStructure.Text" xml:space="preserve">
+    <value>Структура файлов</value>
+  </data>
+  <data name="NoSelectionHint_Components.Text" xml:space="preserve">
+    <value>Выберите компонент для просмотра сведений</value>
+  </data>
+  <data name="Detail_DeleteComponent.Text" xml:space="preserve">
+    <value>Удалить компонент</value>
+  </data>
+  <data name="NoMatchTip1.Text" xml:space="preserve">
+    <value>Нет совпадающих компонентов</value>
+  </data>
+  <data name="NoMatchTip2.Text" xml:space="preserve">
+    <value>Измените параметры фильтрации</value>
+  </data>
+  <data name="ComponentDirectory.Text" xml:space="preserve">
+    <value>Каталог компонентов</value>
+  </data>
+  <data name="Toolbar_FilterToggle.Label" xml:space="preserve">
+    <value>Результаты фильтра</value>
+  </data>
+  <data name="Toolbar_ListView.Label" xml:space="preserve">
+    <value>Вид списка</value>
+  </data>
+  <data name="Toolbar_Delete.Label" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Toolbar_SelectAll.Label" xml:space="preserve">
+    <value>Выбрать все</value>
+  </data>
+  <data name="Toolbar_InvertSelection.Label" xml:space="preserve">
+    <value>Инвертировать выбор</value>
+  </data>
+  <data name="Toolbar_Refresh.Label" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="Toolbar_View.Label" xml:space="preserve">
+    <value>Вид▾</value>
+  </data>
+  <data name="Toolbar_Sort.Label" xml:space="preserve">
+    <value>Сортировка▾</value>
+  </data>
+  <data name="Toolbar_SortDirection.Label" xml:space="preserve">
+    <value>Направление сортировки</value>
+  </data>
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>Сбросить настройки</value>
   </data>
@@ -1043,7 +1329,7 @@
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
     <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
-<data name="Info_CreditsLine7.Content" xml:space="preserve">
+  <data name="Info_CreditsLine7.Content" xml:space="preserve">
     <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
@@ -1051,6 +1337,9 @@
   </data>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (на основе notscuffed/repkg)</value>
+  </data>
+  <data name="Info_CreditsLine11.Content" xml:space="preserve">
+    <value>Win2D 1.4</value>
   </data>
   <data name="Info_License.Header" xml:space="preserve">
     <value>Лицензия с открытым исходным кодом</value>
@@ -1114,100 +1403,255 @@
 Отказ от ответственности: инструмент предназначен только для личного обучения и резервного копирования. Обои и их ресурсы принадлежат соответствующим авторам. Уважайте права оригинальных авторов и не используйте извлечённое содержимое в коммерческих целях или для несанкционированного распространения.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value />
+    <value>WE Tool</value>
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value />
+    <value>RePKG_Re</value>
   </data>
   <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
-    <value />
+    <value>Журнал WE Tool</value>
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks в сети</value>
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value />
+    <value>Инициализировано. Функции Мастерской доступны.</value>
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks недоступен</value>
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam не запущен или инициализация не удалась. Функции Мастерской недоступны. Убедитесь, что Steam запущен, и нажмите «Повторить».</value>
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value />
+    <value>Соединение с Steam прервано</value>
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam завершил работу. Функции Мастерской временно недоступны. Нажмите «Повторить» для переподключения.</value>
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value />
+    <value>Повторить</value>
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value />
+    <value>Переподключение</value>
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value />
+    <value>Повторная инициализация Steamworks. Пожалуйста, подождите…</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
+    <value>Версия RePKG_Re в норме</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
+    <value>Текущая версия: {0}</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
+    <value>Версия RePKG_Re не совпадает</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
+    <value>Текущая версия: {0}, необходимая: {1}. Обновите бэкенд RePKG_Re.</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
+    <value>RePKG_Re не найден</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
+    <value>repkg\RePKG_Re.exe отсутствует. Функция извлечения недоступна.</value>
+  </data>
+  <data name="Info_TranslationTitle.Text" xml:space="preserve">
+    <value>Прогресс перевода</value>
   </data>
   <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
-    <value />
+    <value>Порог фильтрации прозрачных и чёрных пикселей</value>
   </data>
   <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
-    <value />
+    <value>Извлекать только папки</value>
   </data>
   <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Разделяйте запятыми, например materials,models (включая подпапки)</value>
   </data>
   <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
-    <value />
+    <value>Игнорировать папки</value>
   </data>
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>Разделяйте запятыми, например effects,sounds (включая подпапки)</value>
+  </data>
+  <data name="Info_AboutHeader.Text" xml:space="preserve">
+    <value>О программе</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>Журнал RePKG_Re</value>
   </data>
   <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
     <value>SkiaSharp 4.151</value>
   </data>
-
-  <data name="CleanupPage.Content" xml:space="preserve">
-    <value>残留清除</value>
-  </data>
   <data name="Cleanup_Title.Text" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Cleanup_ScanButton.Text" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Cleanup_DeleteButton.Text" xml:space="preserve">
-    <value>删除</value>
+    <value>Очистка остатков</value>
   </data>
   <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
-    <value></value>
+    <value>Нажмите кнопку ниже для сканирования остаточных файлов обоев</value>
   </data>
   <data name="Cleanup_ScanButton.Content" xml:space="preserve">
-    <value></value>
+    <value>Начать сканирование</value>
   </data>
   <data name="Cleanup_OpenFolder.Content" xml:space="preserve">
-    <value></value>
+    <value>Открыть каталог</value>
   </data>
   <data name="Cleanup_Whitelist.Content" xml:space="preserve">
-    <value></value>
+    <value>Белый список</value>
   </data>
   <data name="Cleanup_Delete.Content" xml:space="preserve">
-    <value></value>
+    <value>Очистить</value>
   </data>
   <data name="WhitelistWindow_Title.Text" xml:space="preserve">
-    <value></value>
+    <value>Управление белым списком</value>
   </data>
   <data name="WhitelistWindow_EmptyHint.Text" xml:space="preserve">
-    <value></value>
+    <value>Белый список пуст</value>
   </data>
   <data name="WhitelistWindow_EmptyDesc.Text" xml:space="preserve">
-    <value></value>
+    <value>Нажмите кнопку «Белый список» на карточке на странице очистки остатков, чтобы добавить обои</value>
   </data>
   <data name="WhitelistWindow_OpenFolder.Content" xml:space="preserve">
-    <value></value>
+    <value>Открыть каталог</value>
   </data>
   <data name="WhitelistWindow_Remove.Content" xml:space="preserve">
-    <value></value>
+    <value>Удалить из белого списка</value>
+  </data>
+  <data name="LoadPapers_Title.Text" xml:space="preserve">
+    <value>Импорт и извлечение</value>
+  </data>
+  <data name="LoadPapers_DragHint.Text" xml:space="preserve">
+    <value>Перетащите пакеты обоев сюда</value>
+  </data>
+  <data name="LoadPapers_DragSubhint.Text" xml:space="preserve">
+    <value>Поддерживает файлы пакетов .pkg / .mpkg</value>
+  </data>
+  <data name="LoadPapers_SetExportDir.Label" xml:space="preserve">
+    <value>Задать каталог экспорта</value>
+  </data>
+  <data name="LoadPapers_ExportDirPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Каталог экспорта (оставьте пустым для использования каталога Papers)</value>
+  </data>
+  <data name="LoadPapers_SelectFile.Label" xml:space="preserve">
+    <value>Выбрать файлы</value>
+  </data>
+  <data name="LoadPapers_ScanFolder.Label" xml:space="preserve">
+    <value>Сканировать папку</value>
+  </data>
+  <data name="LoadPapers_Clear.Label" xml:space="preserve">
+    <value>Очистить</value>
+  </data>
+  <data name="LoadPapers_StartExtract.Label" xml:space="preserve">
+    <value>Начать извлечение</value>
+  </data>
+  <data name="LoadPapers_Pause.Label" xml:space="preserve">
+    <value>Пауза</value>
+  </data>
+  <data name="LoadPapers_Stop.Label" xml:space="preserve">
+    <value>Остановить</value>
+  </data>
+  <data name="LoadPapers_ProjectDir.Content" xml:space="preserve">
+    <value>Каталог проекта</value>
+  </data>
+  <data name="LoadPapers_ExportDir.Content" xml:space="preserve">
+    <value>Каталог экспорта</value>
+  </data>
+  <data name="LoadPapers_BrowseFolder.Content" xml:space="preserve">
+    <value>Обзор папки</value>
+  </data>
+  <data name="LoadPapers_Resume.Label" xml:space="preserve">
+    <value>Возобновить</value>
+  </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>Очистка</value>
+  </data>
+  <data name="Cleanup_BatchWhitelist.Label" xml:space="preserve">
+    <value>Добавить в белый список</value>
+  </data>
+  <data name="Cleanup_BatchDelete.Label" xml:space="preserve">
+    <value>Удалить выбранные</value>
+  </data>
+  <data name="Cleanup_WhitelistManage.Label" xml:space="preserve">
+    <value>Белый список</value>
+  </data>
+  <data name="Cleanup_Rescan.Label" xml:space="preserve">
+    <value>Повторное сканирование</value>
+  </data>
+  <data name="Cleanup_DeleteAll.Label" xml:space="preserve">
+    <value>Очистить всё</value>
+  </data>
+  <data name="Cleanup_TypeExcess" xml:space="preserve">
+    <value>Лишние</value>
+  </data>
+  <data name="Cleanup_TypeUnloaded" xml:space="preserve">
+    <value>Удалён</value>
+  </data>
+  <data name="Cleanup_StatsExcess" xml:space="preserve">
+    <value>{0} лишних файлов · {1}</value>
+  </data>
+  <data name="Cleanup_StatsUnloaded" xml:space="preserve">
+    <value>{0} файлов · {1}</value>
+  </data>
+  <data name="Cleanup_EmptyFolderName" xml:space="preserve">
+    <value>(пустая папка)</value>
+  </data>
+  <data name="Cleanup_ScanFailed" xml:space="preserve">
+    <value>Не удалось сканировать: {0}</value>
+  </data>
+  <data name="Cleanup_CleanedComplete" xml:space="preserve">
+    <value>Очищены остатки {0} обоев</value>
+  </data>
+  <data name="Cleanup_Summary" xml:space="preserve">
+    <value>Всего {0} · {1}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
+    <value>Очистить {0}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Content" xml:space="preserve">
+    <value>Будет удалено {0} файлов остатков. Это действие нельзя отменить.</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Ok" xml:space="preserve">
+    <value>Очистить</value>
+  </data>
+  <data name="Cleanup_CleanFail.Title" xml:space="preserve">
+    <value>Не удалось очистить</value>
+  </data>
+  <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
+    <value>Удалить выбранные ({0})</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Title" xml:space="preserve">
+    <value>Очистить всё</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Content" xml:space="preserve">
+    <value>Будет удалено {1} файлов остатков из {0} обоев. Это действие нельзя отменить.</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Ok" xml:space="preserve">
+    <value>Очистить всё</value>
+  </data>
+  <data name="Cleanup_BatchWhitelistCount" xml:space="preserve">
+    <value>Добавить в белый список ({0})</value>
+  </data>
+  <data name="Cleanup_BatchDeleteCount" xml:space="preserve">
+    <value>Удалить выбранные ({0})</value>
+  </data>
+  <data name="Cleanup_CommonDelete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Cleanup_CommonCancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Cleanup_CommonOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="WhitelistWindowTitle.Title" xml:space="preserve">
+    <value>Управление белым списком</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemove.Label" xml:space="preserve">
+    <value>Удалить выбранные</value>
+  </data>
+  <data name="WhitelistWindow_Subtitle" xml:space="preserve">
+    <value>Всего {0} · {1}</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
+    <value>Удалить выбранные ({0})</value>
   </data>
 </root>

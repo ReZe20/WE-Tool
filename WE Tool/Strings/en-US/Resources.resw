@@ -357,9 +357,6 @@
   <data name="AboutPage.Content" xml:space="preserve">
     <value>About</value>
   </data>
-  <data name="CleanupPage.Content" xml:space="preserve">
-    <value>Residual Cleanup</value>
-  </data>
   <data name="SettingsPage.Content" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -444,6 +441,12 @@
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
     <value>ACF file path</value>
   </data>
+  <data name="VdfPath.Description" xml:space="preserve">
+    <value>File for storing workshop subscription info</value>
+  </data>
+  <data name="VdfPath_TextBlock.Text" xml:space="preserve">
+    <value>VDF file path</value>
+  </data>
   <data name="SettingPath.Description" xml:space="preserve">
     <value>File Path for Storing Program Settings</value>
   </data>
@@ -473,6 +476,12 @@
   </data>
   <data name="LogLevel_Error.Content" xml:space="preserve">
     <value>Error</value>
+  </data>
+  <data name="CachePath.Description" xml:space="preserve">
+    <value>File path for storing scan cache data</value>
+  </data>
+  <data name="CachePath_TextBlock.Text" xml:space="preserve">
+    <value>Cache file path</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>Extract</value>
@@ -524,7 +533,8 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>Large Icons</value>
-  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>
+  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>Wallpaper Icon Size</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
@@ -607,6 +617,15 @@
   </data>
   <data name="Dark.Content" xml:space="preserve">
     <value>Dark</value>
+  </data>
+  <data name="ScanCache.Header" xml:space="preserve">
+    <value>Scan Cache</value>
+  </data>
+  <data name="Enabled.Content" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Disabled.Content" xml:space="preserve">
+    <value>Disabled</value>
   </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>Wallpaper Mouse Enter Animation</value>
@@ -968,6 +987,9 @@
   <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>Restore Default Path</value>
   </data>
+  <data name="AutoDetect_VdfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restore Default Path</value>
+  </data>
   <data name="Settings_FlatFileNaming.Text" xml:space="preserve">
     <value>File Naming</value>
   </data>
@@ -1124,6 +1146,105 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 per page</value>
   </data>
+  <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
+    <value>Import to Editor</value>
+  </data>
+  <data name="NoSelectionHint.Text" xml:space="preserve">
+    <value>Select one or more wallpapers</value>
+  </data>
+  <data name="Detail_Extract.Text" xml:space="preserve">
+    <value>Extract</value>
+  </data>
+  <data name="Detail_Copy.Text" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Detail_Unsubscribe.Text" xml:space="preserve">
+    <value>Unsubscribe</value>
+  </data>
+  <data name="Detail_ImportToEditor.Text" xml:space="preserve">
+    <value>Import to Wallpaper Editor</value>
+  </data>
+  <data name="Detail_DeleteWallpaper.Text" xml:space="preserve">
+    <value>Delete Wallpaper</value>
+  </data>
+  <data name="Detail_OpenDirectory.Text" xml:space="preserve">
+    <value>Open Directory</value>
+  </data>
+  <data name="Detail_Properties.Text" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="MultiSelect_InvertSelection.Content" xml:space="preserve">
+    <value>Invert Selection</value>
+  </data>
+  <data name="MultiSelect_Cancel.Content" xml:space="preserve">
+    <value>Cancel Multi-Select</value>
+  </data>
+  <data name="NoScanResultTip.Text" xml:space="preserve">
+    <value>No wallpapers found. Please check the scan path in settings.</value>
+  </data>
+  <data name="NoScanResultTip_Components.Text" xml:space="preserve">
+    <value>No components found. Please check the scan path in settings.</value>
+  </data>
+  <data name="GoToSettings.Content" xml:space="preserve">
+    <value>Go to Settings</value>
+  </data>
+  <data name="ExtractPause.Text" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="ExtractResume.Text" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="ExtractStop.Text" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="FileStructure.Text" xml:space="preserve">
+    <value>File Structure</value>
+  </data>
+  <data name="NoSelectionHint_Components.Text" xml:space="preserve">
+    <value>Select components to view details</value>
+  </data>
+  <data name="Detail_DeleteComponent.Text" xml:space="preserve">
+    <value>Delete Component</value>
+  </data>
+  <data name="NoMatchTip1.Text" xml:space="preserve">
+    <value>No matching components</value>
+  </data>
+  <data name="NoMatchTip2.Text" xml:space="preserve">
+    <value>Please adjust filter criteria</value>
+  </data>
+  <data name="ComponentDirectory.Text" xml:space="preserve">
+    <value>Component Directory</value>
+  </data>
+  <data name="Toolbar_FilterToggle.Label" xml:space="preserve">
+    <value>Filter Results</value>
+  </data>
+  <data name="Toolbar_ListView.Label" xml:space="preserve">
+    <value>List View</value>
+  </data>
+  <data name="Toolbar_Delete.Label" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Toolbar_SelectAll.Label" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="Toolbar_InvertSelection.Label" xml:space="preserve">
+    <value>Invert Selection</value>
+  </data>
+  <data name="Toolbar_Refresh.Label" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Toolbar_View.Label" xml:space="preserve">
+    <value>View▾</value>
+  </data>
+  <data name="Toolbar_Sort.Label" xml:space="preserve">
+    <value>Sort▾</value>
+  </data>
+  <data name="Toolbar_SortDirection.Label" xml:space="preserve">
+    <value>Sort Direction</value>
+  </data>
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>Reset Settings</value>
   </data>
@@ -1208,7 +1329,7 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
     <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
-<data name="Info_CreditsLine7.Content" xml:space="preserve">
+  <data name="Info_CreditsLine7.Content" xml:space="preserve">
     <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
@@ -1290,9 +1411,6 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
     <value>WE Tool log</value>
   </data>
-  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
-    <value>RePKG_Re log</value>
-  </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
     <value>Steamworks online</value>
   </data>
@@ -1356,41 +1474,184 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
     <value>Comma-separated, e.g. effects,sounds (includes subfolders)</value>
   </data>
+  <data name="Info_AboutHeader.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>RePKG_Re log</value>
+  </data>
   <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
     <value>SkiaSharp 4.151</value>
   </data>
-
   <data name="Cleanup_Title.Text" xml:space="preserve">
-    <value>残留清除</value>
+    <value>Residual Cleanup</value>
   </data>
   <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
-    <value>点击下方按钮扫描壁纸残留文件</value>
+    <value>Click the button below to scan for residual wallpaper files</value>
   </data>
   <data name="Cleanup_ScanButton.Content" xml:space="preserve">
-    <value>开始扫描</value>
+    <value>Start Scanning</value>
   </data>
   <data name="Cleanup_OpenFolder.Content" xml:space="preserve">
-    <value>打开目录</value>
+    <value>Open Folder</value>
   </data>
   <data name="Cleanup_Whitelist.Content" xml:space="preserve">
-    <value>白名单</value>
+    <value>Whitelist</value>
   </data>
   <data name="Cleanup_Delete.Content" xml:space="preserve">
-    <value>清理</value>
+    <value>Clean Up</value>
   </data>
   <data name="WhitelistWindow_Title.Text" xml:space="preserve">
-    <value>白名单管理</value>
+    <value>Whitelist Management</value>
   </data>
   <data name="WhitelistWindow_EmptyHint.Text" xml:space="preserve">
-    <value>白名单为空</value>
+    <value>Whitelist is empty</value>
   </data>
   <data name="WhitelistWindow_EmptyDesc.Text" xml:space="preserve">
-    <value>在残留清除页面点击卡片上的"白名单"按钮将壁纸加入</value>
+    <value>Click the "Whitelist" button on a card in the Residual Cleanup page to add wallpapers</value>
   </data>
   <data name="WhitelistWindow_OpenFolder.Content" xml:space="preserve">
-    <value>打开目录</value>
+    <value>Open Folder</value>
   </data>
   <data name="WhitelistWindow_Remove.Content" xml:space="preserve">
-    <value>移出白名单</value>
+    <value>Remove from Whitelist</value>
+  </data>
+  <data name="LoadPapers_Title.Text" xml:space="preserve">
+    <value>Import &amp; Extract</value>
+  </data>
+  <data name="LoadPapers_DragHint.Text" xml:space="preserve">
+    <value>Drag wallpaper packages here</value>
+  </data>
+  <data name="LoadPapers_DragSubhint.Text" xml:space="preserve">
+    <value>Supports .pkg / .mpkg wallpaper package files</value>
+  </data>
+  <data name="LoadPapers_SetExportDir.Label" xml:space="preserve">
+    <value>Set Export Directory</value>
+  </data>
+  <data name="LoadPapers_ExportDirPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Export directory (leave empty to use Papers export directory)</value>
+  </data>
+  <data name="LoadPapers_SelectFile.Label" xml:space="preserve">
+    <value>Select Files</value>
+  </data>
+  <data name="LoadPapers_ScanFolder.Label" xml:space="preserve">
+    <value>Scan Folder</value>
+  </data>
+  <data name="LoadPapers_Clear.Label" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="LoadPapers_StartExtract.Label" xml:space="preserve">
+    <value>Start Extracting</value>
+  </data>
+  <data name="LoadPapers_Pause.Label" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="LoadPapers_Stop.Label" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="LoadPapers_ProjectDir.Content" xml:space="preserve">
+    <value>Project Directory</value>
+  </data>
+  <data name="LoadPapers_ExportDir.Content" xml:space="preserve">
+    <value>Export Directory</value>
+  </data>
+  <data name="LoadPapers_BrowseFolder.Content" xml:space="preserve">
+    <value>Browse Folder</value>
+  </data>
+  <data name="LoadPapers_Resume.Label" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>Cleanup</value>
+  </data>
+  <data name="Cleanup_BatchWhitelist.Label" xml:space="preserve">
+    <value>Add to Whitelist</value>
+  </data>
+  <data name="Cleanup_BatchDelete.Label" xml:space="preserve">
+    <value>Delete Selected</value>
+  </data>
+  <data name="Cleanup_WhitelistManage.Label" xml:space="preserve">
+    <value>Whitelist</value>
+  </data>
+  <data name="Cleanup_Rescan.Label" xml:space="preserve">
+    <value>Rescan</value>
+  </data>
+  <data name="Cleanup_DeleteAll.Label" xml:space="preserve">
+    <value>Clean Up All</value>
+  </data>
+  <data name="Cleanup_TypeExcess" xml:space="preserve">
+    <value>Extra</value>
+  </data>
+  <data name="Cleanup_TypeUnloaded" xml:space="preserve">
+    <value>Unloaded</value>
+  </data>
+  <data name="Cleanup_StatsExcess" xml:space="preserve">
+    <value>{0} extra files · {1}</value>
+  </data>
+  <data name="Cleanup_StatsUnloaded" xml:space="preserve">
+    <value>{0} files · {1}</value>
+  </data>
+  <data name="Cleanup_EmptyFolderName" xml:space="preserve">
+    <value>(empty folder)</value>
+  </data>
+  <data name="Cleanup_ScanFailed" xml:space="preserve">
+    <value>Scan failed: {0}</value>
+  </data>
+  <data name="Cleanup_CleanedComplete" xml:space="preserve">
+    <value>Cleaned residue of {0} wallpapers</value>
+  </data>
+  <data name="Cleanup_Summary" xml:space="preserve">
+    <value>{0} items · {1}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
+    <value>Clean Up {0}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Content" xml:space="preserve">
+    <value>This will delete {0} residual files. This action cannot be undone.</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Ok" xml:space="preserve">
+    <value>Clean Up</value>
+  </data>
+  <data name="Cleanup_CleanFail.Title" xml:space="preserve">
+    <value>Cleanup Failed</value>
+  </data>
+  <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
+    <value>Delete Selected ({0})</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Title" xml:space="preserve">
+    <value>Clean Up All</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Content" xml:space="preserve">
+    <value>This will delete {1} residual files from {0} wallpapers. This action cannot be undone.</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Ok" xml:space="preserve">
+    <value>Clean Up All</value>
+  </data>
+  <data name="Cleanup_BatchWhitelistCount" xml:space="preserve">
+    <value>Add to Whitelist ({0})</value>
+  </data>
+  <data name="Cleanup_BatchDeleteCount" xml:space="preserve">
+    <value>Delete Selected ({0})</value>
+  </data>
+  <data name="Cleanup_CommonDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Cleanup_CommonCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Cleanup_CommonOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="WhitelistWindowTitle.Title" xml:space="preserve">
+    <value>Whitelist Management</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemove.Label" xml:space="preserve">
+    <value>Remove Selected</value>
+  </data>
+  <data name="WhitelistWindow_Subtitle" xml:space="preserve">
+    <value>{0} items · {1}</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
+    <value>Remove Selected ({0})</value>
   </data>
 </root>

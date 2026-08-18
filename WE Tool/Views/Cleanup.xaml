@@ -150,26 +150,26 @@
                     Visibility="Collapsed">
             <CommandBar.PrimaryCommands>
                 <!-- 多选操作(选中时显示) -->
-                <AppBarButton x:Name="BatchWhitelistButton" Label="白名单选中" Click="BatchWhitelist_Click" IsEnabled="False">
+                <AppBarButton x:Name="BatchWhitelistButton" x:Uid="Cleanup_BatchWhitelist" Click="BatchWhitelist_Click" IsEnabled="False">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE72E;"/></AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Name="BatchDeleteButton" Label="删除选中" Click="BatchDelete_Click" IsEnabled="False" Foreground="Red">
+                <AppBarButton x:Name="BatchDeleteButton" x:Uid="Cleanup_BatchDelete" Click="BatchDelete_Click" IsEnabled="False" Foreground="Red">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE74D;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <!-- 常规操作 -->
-                <AppBarButton Label="白名单" Click="WhitelistButton_Click">
+                <AppBarButton x:Uid="Cleanup_WhitelistManage" Click="WhitelistButton_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE72E;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Label="重新扫描" Click="ScanButton_Click">
+                <AppBarButton x:Uid="Cleanup_Rescan" Click="ScanButton_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE72C;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Label="清理全部" Click="DeleteAllButton_Click">
+                <AppBarButton x:Uid="Cleanup_DeleteAll" Click="DeleteAllButton_Click">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE74D;"/></AppBarButton.Icon>
                 </AppBarButton>
             </CommandBar.PrimaryCommands>

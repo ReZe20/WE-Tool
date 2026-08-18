@@ -118,19 +118,19 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MenuFlyoutSubItem_RightPanel.Text" xml:space="preserve">
-    <value />
+    <value>右パネル</value>
   </data>
   <data name="PropertiesWindow_FileInfo.Content" xml:space="preserve">
-    <value />
+    <value>ファイルプロパティ</value>
   </data>
   <data name="PropertiesWindow_WallpaperProps.Content" xml:space="preserve">
-    <value />
+    <value>壁紙プロパティ</value>
   </data>
   <data name="PropertyPanel_NoProperties.Text" xml:space="preserve">
-    <value />
+    <value>この壁紙には設定可能なプロパティがありません</value>
   </data>
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
-    <value />
+    <value>プロパティを保存</value>
   </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>全年齢(G)</value>
@@ -142,10 +142,16 @@
     <value>成人向け(R-18)</value>
   </data>
   <data name="RightPanel_Detail.Text" xml:space="preserve">
-    <value />
+    <value>詳細パネル</value>
   </data>
   <data name="RightPanel_Property.Text" xml:space="preserve">
-    <value />
+    <value>プロパティパネル</value>
+  </data>
+  <data name="RightPanel_ExpandDescription.Text" xml:space="preserve">
+    <value>全文を展開</value>
+  </data>
+  <data name="RightPanel_CollapseDescription.Text" xml:space="preserve">
+    <value>折りたたむ</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
     <value>ソース</value>
@@ -158,6 +164,21 @@
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
     <value>ワークショップ</value>
+  </data>
+  <data name="Subscription.Header" xml:space="preserve">
+    <value>サブスクリプション状態</value>
+  </data>
+  <data name="Subscription_Subscribed.Content" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
+    <value>異常</value>
+  </data>
+  <data name="Unsubscribed_Badge.Text" xml:space="preserve">
+    <value>異常</value>
+  </data>
+  <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
+    <value>この壁紙のサブスクリプション状態が異常です：サブスクリプションが解除されているか、Steam でローカルに無効化されているか、非公開（project.json の visibility が private）で取り下げられている可能性があります。Steam がローカルファイルの更新や保持を行わない場合があります。</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>タグ</value>
@@ -342,6 +363,9 @@
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
     <value>パスを入力または選択</value>
   </data>
+  <data name="Cleanup_UnderConstruction.Text" xml:space="preserve">
+    <value>工事中</value>
+  </data>
   <data name="Type_Preset.Content" xml:space="preserve">
     <value>プリセット</value>
   </data>
@@ -417,6 +441,12 @@
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
     <value>ACFファイルパス</value>
   </data>
+  <data name="VdfPath.Description" xml:space="preserve">
+    <value>ワークショップのサブスクリプション情報を保存するファイル</value>
+  </data>
+  <data name="VdfPath_TextBlock.Text" xml:space="preserve">
+    <value>VDF ファイルパス</value>
+  </data>
   <data name="SettingPath.Description" xml:space="preserve">
     <value>プログラム設定を保存するファイルパス</value>
   </data>
@@ -428,6 +458,30 @@
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
     <value>ログファイルパス</value>
+  </data>
+  <data name="LogLevel_TextBlock.Text" xml:space="preserve">
+    <value>ログレベル</value>
+  </data>
+  <data name="LogLevel.Description" xml:space="preserve">
+    <value>ログ記録の詳細度を制御します。変更後は即座に反映されます</value>
+  </data>
+  <data name="LogLevel_Debug.Content" xml:space="preserve">
+    <value>デバッグ</value>
+  </data>
+  <data name="LogLevel_Information.Content" xml:space="preserve">
+    <value>情報</value>
+  </data>
+  <data name="LogLevel_Warning.Content" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="LogLevel_Error.Content" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="CachePath.Description" xml:space="preserve">
+    <value>スキャンキャッシュデータを保存するファイルパス</value>
+  </data>
+  <data name="CachePath_TextBlock.Text" xml:space="preserve">
+    <value>キャッシュファイルパス</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>抽出</value>
@@ -479,7 +533,8 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>大アイコン</value>
-  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>
+  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>壁紙アイコンサイズ</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
@@ -487,6 +542,18 @@
   </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>表示</value>
+  </data>
+  <data name="MenuFlyoutSubItem_PreviewBlur.Text" xml:space="preserve">
+    <value>プレビューぼかし</value>
+  </data>
+  <data name="Blur_Everyone.Text" xml:space="preserve">
+    <value>全年齢</value>
+  </data>
+  <data name="Blur_Teen.Text" xml:space="preserve">
+    <value>青少年</value>
+  </data>
+  <data name="Blur_Adult.Text" xml:space="preserve">
+    <value>成人</value>
   </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
     <value>並び替え</value>
@@ -551,8 +618,125 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>ダーク</value>
   </data>
+  <data name="ScanCache.Header" xml:space="preserve">
+    <value>スキャンキャッシュ</value>
+  </data>
+  <data name="Enabled.Content" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="Disabled.Content" xml:space="preserve">
+    <value>無効</value>
+  </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>マウスオーバーアニメーション</value>
+  </data>
+  <data name="ComponentsSetting.Header" xml:space="preserve">
+    <value>インストール済みコンポーネントページ設定</value>
+  </data>
+  <data name="ComponentsSetting.Description" xml:space="preserve">
+    <value>インストール済みコンポーネントページの表示内容を設定します</value>
+  </data>
+  <data name="ComponentsSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>下部パスバーを有効化</value>
+  </data>
+  <data name="ComponentsSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>詳細パネルのテキスト選択を有効化</value>
+  </data>
+  <data name="ComponentsSetting_ComponentAutoPlay.Content" xml:space="preserve">
+    <value>コンポーネントリストでGIFを再生</value>
+  </data>
+  <data name="ComponentsSetting_IsComponentEnterAnimationEnabled.Content" xml:space="preserve">
+    <value>コンポーネントアイコンにマウスが乗った時のアニメーション</value>
+  </data>
+  <data name="ComponentsSetting_FilterResultResponseDelay.Text" xml:space="preserve">
+    <value>フィルタリング結果の応答遅延</value>
+  </data>
+  <data name="CompType_Layers.Content" xml:space="preserve">
+    <value>レイヤー</value>
+  </data>
+  <data name="CompType_Scripts.Content" xml:space="preserve">
+    <value>スクリプト</value>
+  </data>
+  <data name="CompType_Effects.Content" xml:space="preserve">
+    <value>エフェクト</value>
+  </data>
+  <data name="CompType_Unknown.Content" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="Tag_AudioVisualizer.Content" xml:space="preserve">
+    <value>オーディオビジュアライザー</value>
+  </data>
+  <data name="Tag_Unspecifiedgenre.Content" xml:space="preserve">
+    <value>未指定ジャンル</value>
+  </data>
+  <data name="Tag_Background.Content" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="Tag_Character.Content" xml:space="preserve">
+    <value>キャラクター</value>
+  </data>
+  <data name="Tag_Clock.Content" xml:space="preserve">
+    <value>時計</value>
+  </data>
+  <data name="Tag_Fire.Content" xml:space="preserve">
+    <value>炎</value>
+  </data>
+  <data name="Tag_Interactive.Content" xml:space="preserve">
+    <value>インタラクティブ</value>
+  </data>
+  <data name="Tag_Magic.Content" xml:space="preserve">
+    <value>魔法</value>
+  </data>
+  <data name="Tag_PostProcessing.Content" xml:space="preserve">
+    <value>ポストプロセス</value>
+  </data>
+  <data name="Tag_Smoke.Content" xml:space="preserve">
+    <value>煙</value>
+  </data>
+  <data name="Tag_Space.Content" xml:space="preserve">
+    <value>宇宙</value>
+  </data>
+  <data name="CompTag_UnspecifiedGenre.Content" xml:space="preserve">
+    <value>未指定ジャンル</value>
+  </data>
+  <data name="CompTag_AudioVisualizer.Content" xml:space="preserve">
+    <value>オーディオビジュアライザー</value>
+  </data>
+  <data name="CompTag_Background.Content" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="CompTag_Character.Content" xml:space="preserve">
+    <value>キャラクター</value>
+  </data>
+  <data name="CompTag_Clock.Content" xml:space="preserve">
+    <value>時計</value>
+  </data>
+  <data name="CompTag_Fire.Content" xml:space="preserve">
+    <value>炎</value>
+  </data>
+  <data name="CompTag_Interactive.Content" xml:space="preserve">
+    <value>インタラクティブ</value>
+  </data>
+  <data name="CompTag_Magic.Content" xml:space="preserve">
+    <value>魔法</value>
+  </data>
+  <data name="CompTag_PostProcessing.Content" xml:space="preserve">
+    <value>ポストプロセス</value>
+  </data>
+  <data name="CompTag_Smoke.Content" xml:space="preserve">
+    <value>煙</value>
+  </data>
+  <data name="CompTag_Space.Content" xml:space="preserve">
+    <value>宇宙</value>
+  </data>
+  <data name="DetailPanel.Text" xml:space="preserve">
+    <value>詳細パネル</value>
+  </data>
+  <data name="InstallDate.Text" xml:space="preserve">
+    <value>インストール日</value>
+  </data>
+  <data name="File.Text" xml:space="preserve">
+    <value>ファイル</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
     <value>更新</value>
@@ -803,6 +987,9 @@
   <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>既定のパスに戻す</value>
   </data>
+  <data name="AutoDetect_VdfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>デフォルトパスに戻す</value>
+  </data>
   <data name="Settings_FlatFileNaming.Text" xml:space="preserve">
     <value>ファイル命名方法</value>
   </data>
@@ -959,6 +1146,105 @@ project.json とプレビューをコピー
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>1ページあたり90件</value>
   </data>
+  <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
+    <value>プロジェクトをインポート</value>
+  </data>
+  <data name="NoSelectionHint.Text" xml:space="preserve">
+    <value>壁紙を1枚以上選択してください</value>
+  </data>
+  <data name="Detail_Extract.Text" xml:space="preserve">
+    <value>抽出</value>
+  </data>
+  <data name="Detail_Copy.Text" xml:space="preserve">
+    <value>コピー</value>
+  </data>
+  <data name="Detail_Unsubscribe.Text" xml:space="preserve">
+    <value>サブスクリプションを解除</value>
+  </data>
+  <data name="Detail_ImportToEditor.Text" xml:space="preserve">
+    <value>壁紙エディタにインポート</value>
+  </data>
+  <data name="Detail_DeleteWallpaper.Text" xml:space="preserve">
+    <value>壁紙を削除</value>
+  </data>
+  <data name="Detail_OpenDirectory.Text" xml:space="preserve">
+    <value>ディレクトリを開く</value>
+  </data>
+  <data name="Detail_Properties.Text" xml:space="preserve">
+    <value>プロパティ</value>
+  </data>
+  <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
+    <value>すべて選択</value>
+  </data>
+  <data name="MultiSelect_InvertSelection.Content" xml:space="preserve">
+    <value>選択を反転</value>
+  </data>
+  <data name="MultiSelect_Cancel.Content" xml:space="preserve">
+    <value>複数選択をキャンセル</value>
+  </data>
+  <data name="NoScanResultTip.Text" xml:space="preserve">
+    <value>壁紙が見つかりません。設定に移動してスキャンパスを確認してください</value>
+  </data>
+  <data name="NoScanResultTip_Components.Text" xml:space="preserve">
+    <value>コンポーネントが見つかりません。設定に移動してスキャンパスを確認してください</value>
+  </data>
+  <data name="GoToSettings.Content" xml:space="preserve">
+    <value>設定へ</value>
+  </data>
+  <data name="ExtractPause.Text" xml:space="preserve">
+    <value>一時停止</value>
+  </data>
+  <data name="ExtractResume.Text" xml:space="preserve">
+    <value>再開</value>
+  </data>
+  <data name="ExtractStop.Text" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="FileStructure.Text" xml:space="preserve">
+    <value>ファイル構造</value>
+  </data>
+  <data name="NoSelectionHint_Components.Text" xml:space="preserve">
+    <value>コンポーネントを選択して詳細を表示</value>
+  </data>
+  <data name="Detail_DeleteComponent.Text" xml:space="preserve">
+    <value>コンポーネントを削除</value>
+  </data>
+  <data name="NoMatchTip1.Text" xml:space="preserve">
+    <value>一致するコンポーネントがありません</value>
+  </data>
+  <data name="NoMatchTip2.Text" xml:space="preserve">
+    <value>フィルタリング条件を調整してください</value>
+  </data>
+  <data name="ComponentDirectory.Text" xml:space="preserve">
+    <value>コンポーネントディレクトリ</value>
+  </data>
+  <data name="Toolbar_FilterToggle.Label" xml:space="preserve">
+    <value>フィルタリング結果</value>
+  </data>
+  <data name="Toolbar_ListView.Label" xml:space="preserve">
+    <value>リスト表示</value>
+  </data>
+  <data name="Toolbar_Delete.Label" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Toolbar_SelectAll.Label" xml:space="preserve">
+    <value>すべて選択</value>
+  </data>
+  <data name="Toolbar_InvertSelection.Label" xml:space="preserve">
+    <value>選択を反転</value>
+  </data>
+  <data name="Toolbar_Refresh.Label" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Toolbar_View.Label" xml:space="preserve">
+    <value>表示▾</value>
+  </data>
+  <data name="Toolbar_Sort.Label" xml:space="preserve">
+    <value>並び替え▾</value>
+  </data>
+  <data name="Toolbar_SortDirection.Label" xml:space="preserve">
+    <value>並び替え方向</value>
+  </data>
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>設定をリセット</value>
   </data>
@@ -1043,7 +1329,7 @@ project.json とプレビューをコピー
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
     <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
-<data name="Info_CreditsLine7.Content" xml:space="preserve">
+  <data name="Info_CreditsLine7.Content" xml:space="preserve">
     <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
@@ -1051,6 +1337,9 @@ project.json とプレビューをコピー
   </data>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (notscuffed/repkg ベース)</value>
+  </data>
+  <data name="Info_CreditsLine11.Content" xml:space="preserve">
+    <value>Win2D 1.4</value>
   </data>
   <data name="Info_License.Header" xml:space="preserve">
     <value>オープンソースライセンス</value>
@@ -1114,100 +1403,255 @@ project.json とプレビューをコピー
 免責事項:本ツールは個人の学習・バックアップ用途のみを目的としています。壁紙およびその素材の著作権は各作者に帰属します。原作者の権利を尊重し、抽出したコンテンツを商用目的や無断再配布に使用しないでください。</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value />
+    <value>WE Tool</value>
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value />
+    <value>RePKG_Re</value>
   </data>
   <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
-    <value />
+    <value>WE Tool ログ</value>
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks オンライン</value>
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value />
+    <value>初期化済み。ワークショップ関連機能を使用できます。</value>
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks を使用できません</value>
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam が実行されていないか、初期化に失敗しました。ワークショップ関連機能は使用できません。Steam が起動していることを確認して、再試行をクリックしてください。</value>
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steam 接続が切断されました</value>
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam が終了しました。ワークショップ関連機能は一時的に使用できません。再試行をクリックして再接続してください。</value>
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value />
+    <value>再試行</value>
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value />
+    <value>再接続中</value>
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks を再初期化しています。しばらくお待ちください…</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
+    <value>RePKG_Re バージョン正常</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
+    <value>現在のバージョン: {0}</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
+    <value>RePKG_Re バージョン不一致</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
+    <value>現在: {0}、必要: {1}。RePKG_Re バックエンドを更新してください</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
+    <value>RePKG_Re が見つかりません</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
+    <value>repkg\RePKG_Re.exe が見つかりません。抽出機能は使用できません</value>
+  </data>
+  <data name="Info_TranslationTitle.Text" xml:space="preserve">
+    <value>翻訳進捗</value>
   </data>
   <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
-    <value />
+    <value>透過画素と黒画素のフィルタリングしきい値</value>
   </data>
   <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
-    <value />
+    <value>解析対象ディレクトリのみ</value>
   </data>
   <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>英語カンマ区切り。例: materials,models（サブフォルダ含む）</value>
   </data>
   <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
-    <value />
+    <value>解析を無視するディレクトリ</value>
   </data>
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>英語カンマ区切り。例: effects,sounds（サブフォルダ含む）</value>
+  </data>
+  <data name="Info_AboutHeader.Text" xml:space="preserve">
+    <value>このアプリについて</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>RePKG_Re ログ</value>
   </data>
   <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
     <value>SkiaSharp 4.151</value>
   </data>
-
-  <data name="CleanupPage.Content" xml:space="preserve">
-    <value>残留清除</value>
-  </data>
   <data name="Cleanup_Title.Text" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Cleanup_ScanButton.Text" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Cleanup_DeleteButton.Text" xml:space="preserve">
-    <value>删除</value>
+    <value>残留ファイル削除</value>
   </data>
   <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
-    <value></value>
+    <value>以下のボタンをクリックして壁紙の残留ファイルをスキャン</value>
   </data>
   <data name="Cleanup_ScanButton.Content" xml:space="preserve">
-    <value></value>
+    <value>スキャン開始</value>
   </data>
   <data name="Cleanup_OpenFolder.Content" xml:space="preserve">
-    <value></value>
+    <value>ディレクトリを開く</value>
   </data>
   <data name="Cleanup_Whitelist.Content" xml:space="preserve">
-    <value></value>
+    <value>ホワイトリスト</value>
   </data>
   <data name="Cleanup_Delete.Content" xml:space="preserve">
-    <value></value>
+    <value>削除</value>
   </data>
   <data name="WhitelistWindow_Title.Text" xml:space="preserve">
-    <value></value>
+    <value>ホワイトリスト管理</value>
   </data>
   <data name="WhitelistWindow_EmptyHint.Text" xml:space="preserve">
-    <value></value>
+    <value>ホワイトリストは空です</value>
   </data>
   <data name="WhitelistWindow_EmptyDesc.Text" xml:space="preserve">
-    <value></value>
+    <value>残留ファイル削除ページでカード上の「ホワイトリスト」ボタンをクリックして壁紙を追加</value>
   </data>
   <data name="WhitelistWindow_OpenFolder.Content" xml:space="preserve">
-    <value></value>
+    <value>ディレクトリを開く</value>
   </data>
   <data name="WhitelistWindow_Remove.Content" xml:space="preserve">
-    <value></value>
+    <value>ホワイトリストから削除</value>
+  </data>
+  <data name="LoadPapers_Title.Text" xml:space="preserve">
+    <value>インポート＆展開</value>
+  </data>
+  <data name="LoadPapers_DragHint.Text" xml:space="preserve">
+    <value>壁紙パッケージをここにドラッグ</value>
+  </data>
+  <data name="LoadPapers_DragSubhint.Text" xml:space="preserve">
+    <value>.pkg / .mpkg 壁紙パッケージ対応</value>
+  </data>
+  <data name="LoadPapers_SetExportDir.Label" xml:space="preserve">
+    <value>エクスポートディレクトリを設定</value>
+  </data>
+  <data name="LoadPapers_ExportDirPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>エクスポートディレクトリ（空にするとPapersのエクスポートディレクトリを使用）</value>
+  </data>
+  <data name="LoadPapers_SelectFile.Label" xml:space="preserve">
+    <value>ファイルを選択</value>
+  </data>
+  <data name="LoadPapers_ScanFolder.Label" xml:space="preserve">
+    <value>フォルダをスキャン</value>
+  </data>
+  <data name="LoadPapers_Clear.Label" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="LoadPapers_StartExtract.Label" xml:space="preserve">
+    <value>展開を開始</value>
+  </data>
+  <data name="LoadPapers_Pause.Label" xml:space="preserve">
+    <value>一時停止</value>
+  </data>
+  <data name="LoadPapers_Stop.Label" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="LoadPapers_ProjectDir.Content" xml:space="preserve">
+    <value>プロジェクトディレクトリ</value>
+  </data>
+  <data name="LoadPapers_ExportDir.Content" xml:space="preserve">
+    <value>エクスポートディレクトリ</value>
+  </data>
+  <data name="LoadPapers_BrowseFolder.Content" xml:space="preserve">
+    <value>フォルダを参照</value>
+  </data>
+  <data name="LoadPapers_Resume.Label" xml:space="preserve">
+    <value>再開</value>
+  </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>残りクリーンアップ</value>
+  </data>
+  <data name="Cleanup_BatchWhitelist.Label" xml:space="preserve">
+    <value>ホワイトリストに追加</value>
+  </data>
+  <data name="Cleanup_BatchDelete.Label" xml:space="preserve">
+    <value>選択を削除</value>
+  </data>
+  <data name="Cleanup_WhitelistManage.Label" xml:space="preserve">
+    <value>ホワイトリスト</value>
+  </data>
+  <data name="Cleanup_Rescan.Label" xml:space="preserve">
+    <value>再スキャン</value>
+  </data>
+  <data name="Cleanup_DeleteAll.Label" xml:space="preserve">
+    <value>すべてクリーンアップ</value>
+  </data>
+  <data name="Cleanup_TypeExcess" xml:space="preserve">
+    <value>余分</value>
+  </data>
+  <data name="Cleanup_TypeUnloaded" xml:space="preserve">
+    <value>アンインストール済み</value>
+  </data>
+  <data name="Cleanup_StatsExcess" xml:space="preserve">
+    <value>{0} 個の余分なファイル · {1}</value>
+  </data>
+  <data name="Cleanup_StatsUnloaded" xml:space="preserve">
+    <value>{0} 個のファイル · {1}</value>
+  </data>
+  <data name="Cleanup_EmptyFolderName" xml:space="preserve">
+    <value>(空フォルダー)</value>
+  </data>
+  <data name="Cleanup_ScanFailed" xml:space="preserve">
+    <value>スキャン失敗: {0}</value>
+  </data>
+  <data name="Cleanup_CleanedComplete" xml:space="preserve">
+    <value>{0} 個の壁紙の残存をクリーンアップしました</value>
+  </data>
+  <data name="Cleanup_Summary" xml:space="preserve">
+    <value>合計 {0} 項目 · {1}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
+    <value>{0} をクリーンアップ</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Content" xml:space="preserve">
+    <value>{0} 個の残存ファイルを削除します。この操作は元に戻せません。</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Ok" xml:space="preserve">
+    <value>クリーンアップ</value>
+  </data>
+  <data name="Cleanup_CleanFail.Title" xml:space="preserve">
+    <value>クリーンアップ失敗</value>
+  </data>
+  <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
+    <value>選択した項目を削除 ({0})</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Title" xml:space="preserve">
+    <value>すべてクリーンアップ</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Content" xml:space="preserve">
+    <value>{0} 個の壁紙の {1} 個の残存ファイルを削除します。この操作は元に戻せません。</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Ok" xml:space="preserve">
+    <value>すべてクリーンアップ</value>
+  </data>
+  <data name="Cleanup_BatchWhitelistCount" xml:space="preserve">
+    <value>ホワイトリストに追加 ({0})</value>
+  </data>
+  <data name="Cleanup_BatchDeleteCount" xml:space="preserve">
+    <value>選択を削除 ({0})</value>
+  </data>
+  <data name="Cleanup_CommonDelete" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Cleanup_CommonCancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="Cleanup_CommonOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="WhitelistWindowTitle.Title" xml:space="preserve">
+    <value>ホワイトリスト管理</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemove.Label" xml:space="preserve">
+    <value>選択を除外</value>
+  </data>
+  <data name="WhitelistWindow_Subtitle" xml:space="preserve">
+    <value>合計 {0} 項目 · {1}</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
+    <value>選択を除外 ({0})</value>
   </data>
 </root>
