@@ -94,6 +94,26 @@
     <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
   </Target>
+  <!-- AutoBackupService 部署:应用对服务无编译期引用(仅进程调用),不能 ProjectReference。
+       始终 publish NativeAOT 单文件 exe(不依赖 .NET runtime,Run 键/Start() 直接可运行)。
+       Debug 也 AOT:避免 framework-dependent 产物被 Run 键指向后缺 runtime 起不来 -->
+  <Target Name="CopyAutoBackupService" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher" Condition="Exists('$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj')">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
+    <Exec Condition="'$(Configuration)' == 'Debug'" Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj&quot; -c Debug -r win-x64 --nologo -v q" />
+    <Exec Condition="'$(Configuration)' == 'Release'" Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj&quot; -c Release -r win-x64 --nologo -v q" />
+    <ItemGroup>
+      <!-- 统一取 AOT publish 产物 -->
+      <AbsAot Include="$(MSBuildThisFileDirectory)..\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\**\*" Exclude="$(MSBuildThisFileDirectory)..\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\*.pdb" />
+    </ItemGroup>
+    <Error Condition="'@(AbsAot)' == ''" Text="CopyAutoBackupService 未找到服务 AOT 输出(...\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\)" />
+    <!-- 先清空目标目录,避免残留 framework-dependent 旧文件(dll/deps/runtimeconfig)与 AOT exe 混放 -->
+    <RemoveDir Directories="$(TargetDir)AutoBackupService\" />
+    <MakeDir Directories="$(TargetDir)AutoBackupService\" />
+    <Copy SourceFiles="@(AbsAot)" DestinationFolder="$(TargetDir)AutoBackupService\" SkipUnchangedFiles="true" />
+    <RemoveDir Directories="$(PublishDir)AutoBackupService\" Condition="'$(PublishDir)' != ''" />
+    <MakeDir Directories="$(PublishDir)AutoBackupService\" Condition="'$(PublishDir)' != ''" />
+    <Copy SourceFiles="@(AbsAot)" DestinationFolder="$(PublishDir)AutoBackupService\" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
+  </Target>
   <!-- 从 external/repkg_Re 仓库 csproj 读取目标后端版本,构建时生成 RepkgVersion.g.cs 常量供运行时校验。
        不依赖 SDK 的 AssemblyMetadata 管线(其特性转换发生在 CreateGeneratedAssemblyInfoInputsCacheFile,
        顺序敏感且增量缓存易跳过);直接生成源码文件最稳 -->

@@ -82,6 +82,13 @@
                         <FontIcon Glyph="&#xE74D;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
+                <AppBarButton x:Name="BackupWallpaperButton"
+                              x:Uid="AppBarButton_Backup"
+                              Click="BackupWallpaper_Click_ByCommandBarFlyout">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE7B8;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_ImportToEditor"
                               Click="ImportToEditor_Click"

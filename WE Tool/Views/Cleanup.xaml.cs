@@ -190,6 +190,7 @@ public sealed partial class Cleanup : Page
         foreach (var dir in Directory.GetDirectories(WorkshopPath))
         {
             var id = Path.GetFileName(dir);
+            if (id == ".we_backup") continue; // 备份目录不进入清理扫描
             if (_whitelist.Contains(id)) continue;
             var installed = File.Exists(Path.Combine(dir, "project.json"));
             var card = MakeCard(dir, id, installed);

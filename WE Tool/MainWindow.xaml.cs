@@ -164,6 +164,7 @@ namespace WE_Tool
                 "LoadPapers" => typeof(LoadPapers),
                 "InstalledComponents" => typeof(InstalledComponents),
                 "Cleanup" => typeof(Cleanup),
+                "WallpaperBackup" => typeof(WallpaperBackup),
                 "Info" => typeof(Info),
                 "Settings" => typeof(Settings),
                 _ => typeof(Papers)
@@ -182,6 +183,7 @@ namespace WE_Tool
                 "LoadPapers" => contentFrame.Navigate(typeof(LoadPapers), null),
                 "InstalledComponents" => contentFrame.Navigate(typeof(InstalledComponents), null),
                 "Cleanup" => contentFrame.Navigate(typeof(Cleanup), null),
+                "WallpaperBackup" => contentFrame.Navigate(typeof(WallpaperBackup), null),
                 "Info" => contentFrame.Navigate(typeof(Info), null),
                 "Settings" => contentFrame.Navigate(typeof(Settings), null),
                 _ => contentFrame.Navigate(typeof(Papers), null)

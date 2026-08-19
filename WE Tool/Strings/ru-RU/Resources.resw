@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -493,7 +493,7 @@
     <value>Открыть каталог</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value>Удалить</value>
+    <value />
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
     <value>Выбрать все</value>
@@ -560,9 +560,6 @@
   </data>
   <data name="AppBarButton_Sort.Label" xml:space="preserve">
     <value>Сортировка</value>
-  </data>
-  <data name="AppBarButton_DeleteForever.Label" xml:space="preserve">
-    <value>Удалить навсегда</value>
   </data>
   <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
     <value>Множественный выбор</value>
@@ -1686,5 +1683,107 @@
   </data>
   <data name="Settings_VdfPath.PlaceholderText" xml:space="preserve">
     <value>напр. D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
+  </data>
+  <data name="AppBarButton_BackupDone.Label" xml:space="preserve">
+    <value />
+  </data>
+  <data name="BackupPage.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="BackupPage_Title.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="BackupPage_Empty.Text" xml:space="preserve">
+    <value>Нет резервных копий</value>
+  </data>
+  <data name="BackupPage_Refresh.Label" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="BackupPage_DeleteAll.Label" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_SettingsHeader.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_ModeLabel.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_ModeOff.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_ModeService.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_ServiceStatusLabel.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_ServiceNotInstalled.Text" xml:space="preserve">
+    <value>Не установлено. Нажмите «Установить службу» для включения автоматической резервной копии в фоне.</value>
+  </data>
+  <data name="AutoBackup_ServiceRunning.Text" xml:space="preserve">
+    <value>Служба запущена</value>
+  </data>
+  <data name="AutoBackup_ServiceInstalled.Text" xml:space="preserve">
+    <value>Служба установлена (автозапуск при входе)</value>
+  </data>
+  <data name="AutoBackup_Install.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_Uninstall.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_Start.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_Stop.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_TypeLabel.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_TypeScene.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_TypeVideo.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_TypeWeb.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_TypeApp.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_TypePreset.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_TypeUnknown.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_RatingG.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_RatingR.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="AutoBackup_Done.Content" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
+    <value>Журнал службы автоматического резервного копирования</value>
   </data>
 </root>

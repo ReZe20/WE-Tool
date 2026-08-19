@@ -48,6 +48,20 @@
                     <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
                             Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
                 </uc:LogResizeHandle>
+                <TextBlock x:Uid="Info_AutoBackupLogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
+                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
+                    <ScrollViewer x:Name="AutoBackupLogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="AutoBackupLogScrollViewer_ViewChanged">
+                        <TextBlock x:Name="AutoBackupLogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
+                    </ScrollViewer>
+                </Border>
+                <!-- 拖拽手柄:按住上下拖动调整日志面板高度(默认 220,60~800) -->
+                <uc:LogResizeHandle x:Name="AutoBackupLogResizeHandle" Height="12" Margin="0,4,0,0" Background="Transparent"
+                        AutomationProperties.AccessibilityView="Raw"
+                        PointerPressed="AutoBackupLogResizeHandle_PointerPressed" PointerMoved="AutoBackupLogResizeHandle_PointerMoved"
+                        PointerReleased="AutoBackupLogResizeHandle_PointerReleased" PointerCaptureLost="AutoBackupLogResizeHandle_PointerCaptureLost">
+                    <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+                </uc:LogResizeHandle>
                 <Grid Margin="0,8,0,0">
                     <InfoBar x:Name="SteamStatusBar" IsOpen="False" IsClosable="False">
                         <InfoBar.ActionButton>

@@ -487,6 +487,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 if (item is AppBarButton btn)
                     btn.RequestedTheme = theme;
             }
+            UpdateBackupButtonState();
         };
 
         ViewModel.PropertyChanged += (s, e) =>
@@ -3095,6 +3096,93 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             await DeleteItemAsync(item, skipConfirm: true);
         }
+    }
+
+    /// <summary>当前选中项中可用于备份的创意工坊壁纸。</summary>
+    private List<WallpaperItem> GetBackupableItems()
+        => SelectedWallpapers.Count > 0
+            ? SelectedWallpapers.Where(w => w.Source == "workshop").ToList()
+            : ViewModel.SelectedWallpaper is WallpaperItem wp && wp.Source == "workshop"
+                ? [wp]
+                : [];
+
+    /// <summary>右键菜单打开时刷新「备份」按钮状态（已备份→禁用+文案切换）。</summary>
+    private void UpdateBackupButtonState()
+    {
+        if (BackupWallpaperButton is not AppBarButton btn) return;
+
+        var items = GetBackupableItems();
+        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+
+        if (items.Count == 0 || string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
+        {
+            btn.IsEnabled = false;
+            btn.Label = LanguageHelper.GetResource("AppBarButton_Backup.Label");
+            return;
+        }
+
+        bool allBackedUp = items.All(i => !string.IsNullOrEmpty(i.WorkshopID)
+            && BackupService.IsBackedUp(workshopPath, i.WorkshopID!));
+        btn.IsEnabled = !allBackedUp;
+        btn.Label = allBackedUp
+            ? LanguageHelper.GetResource("AppBarButton_BackupDone.Label")
+            : LanguageHelper.GetResource("AppBarButton_Backup.Label");
+    }
+
+    private async void BackupWallpaper_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    {
+        HideWallpaperContextMenu();
+
+        var items = GetBackupableItems();
+        if (items.Count == 0) return;
+
+        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+        if (string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
+        {
+            await DialogHelper.ShowMessageAsync("备份失败",
+                "无法确定创意工坊目录，请先在设置中检查路径是否有效。");
+            return;
+        }
+
+        var toBackup = items.Where(i => !string.IsNullOrEmpty(i.WorkshopID)
+            && !BackupService.IsBackedUp(workshopPath, i.WorkshopID!)).ToList();
+        if (toBackup.Count == 0)
+        {
+            await DialogHelper.ShowMessageAsync("备份",
+                "所选壁纸已经全部完成备份。");
+            return;
+        }
+
+        bool confirmed = await DialogHelper.ShowConfirmDialogAsync("备份到工坊目录",
+            $"确定要备份选中的 {toBackup.Count} 个创意工坊壁纸吗？\n\n将在创意工坊目录内创建隐藏的 .we_backup 文件夹，" +
+            "以硬链接方式保留一份文件——不额外占用磁盘空间；Steam 删除原始文件后备份仍完整保留。",
+            "开始备份",
+            "取消");
+        if (!confirmed) return;
+
+        int success = 0, skippedAll = 0;
+        var failures = new List<string>();
+        foreach (var item in toBackup)
+        {
+            if (string.IsNullOrEmpty(item.WorkshopID) || string.IsNullOrEmpty(item.FolderPath)) continue;
+            var result = BackupService.BackupWallpaperFolder(item.FolderPath, workshopPath, item.WorkshopID);
+            skippedAll += result.Skipped;
+            if (result.Error is null)
+            {
+                success++;
+            }
+            else
+            {
+                failures.Add($"{item.Title ?? item.WorkshopID}: {result.Error}");
+            }
+        }
+
+        var msg = $"备份完成：成功 {success} / {toBackup.Count} 个壁纸";
+        if (skippedAll > 0)
+            msg += $"\n（其中 {skippedAll} 个文件此前已是链接，自动跳过）";
+        if (failures.Count > 0)
+            msg += "\n\n失败项：\n" + string.Join("\n", failures);
+        await DialogHelper.ShowMessageAsync("备份完成", msg);
     }
     private void WallpaperScrollView_ContextRequested(FrameworkElement sender, ContextRequestedEventArgs args)
     {

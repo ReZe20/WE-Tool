@@ -94,8 +94,8 @@
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
 
                             <!-- 文件列表 -->
-                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{x:Bind Files}">
+                            <ScrollView Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{x:Bind Files}" Margin="0,0,8,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="models:CleanupFileItem">
                                             <Grid ColumnSpacing="8" Padding="0,3">
@@ -113,7 +113,7 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                            </ScrollViewer>
+                            </ScrollView>
 
                             <!-- 底部行:左边 CheckBox + 右边操作按钮 -->
                             <Grid Grid.Row="3">

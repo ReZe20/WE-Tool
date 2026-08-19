@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>AutoBackupService</AssemblyName>
+    <RootNamespace>AutoBackupService</RootNamespace>
+    <Version>1.0.0</Version>
+    <!-- NativeAOT:编译为原生单文件,常驻内存 2-5MB -->
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StripSymbols>true</StripSymbols>
+    <!-- WinExe:Windows 子系统,启动不弹控制台窗口(常驻服务隐蔽运行) -->
+    <!-- 固定输出路径:主项目以 Platform=x64 等全局属性构建时,SDK 默认输出路径会带平台段;
+         (同 SteamworksBridge 模式) -->
+    <OutputPath>bin\$(Configuration)\$(TargetFramework)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+</Project>
+
