@@ -1786,4 +1786,10 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Automatisches Sicherungsprotokoll</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>Sicherung beim WE Tool-Start</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>Quelle entfernt</value>
+  </data>
 </root>

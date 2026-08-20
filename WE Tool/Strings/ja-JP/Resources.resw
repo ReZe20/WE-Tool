@@ -1786,4 +1786,10 @@ project.json とプレビューをコピー
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>自動バックアップサービスのログ</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>WE Tool起動時にバックアップ</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>元ファイル削除済み</value>
+  </data>
 </root>

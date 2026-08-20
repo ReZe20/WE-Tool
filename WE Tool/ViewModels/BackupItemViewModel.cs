@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -7,11 +8,30 @@ public sealed class BackupItemViewModel : INotifyPropertyChanged
 {
     public string WorkshopId { get; set; } = "";
     public string Title { get; set; } = "";
-    public string PreviewPath { get; set; } = "";   // 预览图路径(相对或绝对)
+    /// <summary>预览图路径;无预览图为占位图 ms-appx:///Assets/NoPreview.png(与 Papers 一致,避免 Uri 转换异常)。</summary>
+    public string PreviewPath { get; set; } = "";
     public string SizeText { get; set; } = "";       // "128 MB"
     public string BackupTimeText { get; set; } = ""; // "2026-08-18 22:30"
     public string FullPath { get; set; } = "";       // .we_backup/<id> 完整路径
-    public double ParentWidth { get; set; } = 240;   // 卡片宽度(由 GridView ItemWidth 驱动)
+    /// <summary>源文件已删除(取消订阅/下架,content/<id> 目录不存在),仅剩备份。</summary>
+    public bool IsSourceMissing { get; set; }
+    /// <summary>角标可见性(与 Papers 的 Visibility 计算属性模式一致,免转换器)。</summary>
+    public Microsoft.UI.Xaml.Visibility SourceMissingVisibility =>
+        IsSourceMissing ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+    private double _parentWidth = 240;
+    /// <summary>卡片宽度(由 GridView SizeChanged 按列数计算并通知刷新)。</summary>
+    public double ParentWidth
+    {
+        get => _parentWidth;
+        set
+        {
+            if (_parentWidth != value)
+            {
+                _parentWidth = value;
+                RaisePropertyChanged();
+            }
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public void RaisePropertyChanged([CallerMemberName] string propertyName = "")

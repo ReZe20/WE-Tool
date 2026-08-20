@@ -1786,4 +1786,10 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Registro del servizio di backup automatico</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>Backup all'avvio di WE Tool</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>Origine rimossa</value>
+  </data>
 </root>

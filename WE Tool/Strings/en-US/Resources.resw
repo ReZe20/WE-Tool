@@ -1786,4 +1786,10 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Auto Backup Service Log</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>Back up on WE Tool startup</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>Source removed</value>
+  </data>
 </root>

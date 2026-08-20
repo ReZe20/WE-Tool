@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:WE_Tool.ViewModels"
+    xmlns:skia="using:WE_Tool.Controls"
     x:Name="PageRoot"
     NavigationCacheMode="Enabled">
 
@@ -22,11 +23,13 @@
                 <!-- 方式选择 -->
                 <StackPanel Spacing="6" Padding="0,0,0,12">
                     <TextBlock x:Uid="AutoBackup_ModeLabel" Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                    <StackPanel Orientation="Horizontal" Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="16">
                         <RadioButton x:Name="ModeOffRadio" GroupName="AutoBackupMode"
                                      x:Uid="AutoBackup_ModeOff" Checked="Mode_Checked"/>
                         <RadioButton x:Name="ModeServiceRadio" GroupName="AutoBackupMode"
                                      x:Uid="AutoBackup_ModeService" Checked="Mode_Checked"/>
+                        <RadioButton x:Name="ModeOnStartupRadio" GroupName="AutoBackupMode"
+                                     x:Uid="AutoBackup_ModeOnStartup" Checked="Mode_Checked"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -124,7 +127,14 @@
 
         <!-- 备份卡片网格 -->
         <GridView x:Name="BackupGridView" Grid.Row="1" Visibility="Collapsed"
-                  SelectionMode="None" SizeChanged="BackupGridView_SizeChanged">
+                  SelectionMode="None" SizeChanged="BackupGridView_SizeChanged"
+                  ContainerContentChanging="BackupGridView_ContainerContentChanging">
+            <GridView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid x:Name="BackupWrapGrid" Orientation="Horizontal"
+                                   CacheLength="0"/>
+                </ItemsPanelTemplate>
+            </GridView.ItemsPanel>
             <GridView.ItemContainerStyle>
                 <Style TargetType="GridViewItem">
                     <Setter Property="Margin" Value="5"/>
@@ -133,17 +143,37 @@
             </GridView.ItemContainerStyle>
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="models:BackupItemViewModel">
-                    <Grid Width="{x:Bind ParentWidth}" Height="140" Padding="12" CornerRadius="8"
+                    <Grid Height="140" Padding="12" CornerRadius="8"
+                          HorizontalAlignment="Stretch"
                           Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Image Grid.Column="0" Width="100" Height="100"
-                               Source="{x:Bind PreviewPath, Mode=OneWay}"
-                               Stretch="UniformToFill"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <!-- 源已删除角标:取消订阅/下架后仅剩备份时显示(跨全列,右上角) -->
+                        <Border x:Name="SourceMissingBadge"
+                                Grid.ColumnSpan="3"
+                                Background="#E8A33D" CornerRadius="8" Padding="8,3"
+                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Margin="0,-2,-2,0"
+                                Visibility="{x:Bind SourceMissingVisibility, Mode=OneWay}">
+                            <TextBlock x:Uid="BackupPage_SourceMissing" FontSize="11"
+                                       Foreground="Black" FontWeight="SemiBold"/>
+                        </Border>
+                        <Grid Grid.Column="0" Width="100" Height="100">
+                            <!-- 与 Papers 一致:BitmapImage.UriSource 驱动;无预览图时用占位图(非 null/空串) -->
+                            <Image x:Name="PreviewImage" Stretch="UniformToFill"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Image.Source>
+                                    <BitmapImage UriSource="{x:Bind PreviewPath, Mode=OneWay}"/>
+                                </Image.Source>
+                            </Image>
+                            <!-- GIF 动图用 Skia 流式播放(与 Papers 一致),隐藏静态 Image -->
+                            <skia:SkiaGifView x:Name="PreviewSkiaGif" Visibility="Collapsed"
+                                              Width="100" Height="100"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
                         <StackPanel Grid.Column="1" Margin="12,0,0,0"
                                     VerticalAlignment="Center" Spacing="4">
                             <TextBlock Text="{x:Bind Title, Mode=OneWay}"

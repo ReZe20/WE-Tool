@@ -1786,4 +1786,10 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Log do serviço de backup automático</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>Backup ao iniciar o WE Tool</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>Origem removida</value>
+  </data>
 </root>

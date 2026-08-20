@@ -1786,4 +1786,10 @@
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Журнал службы автоматического резервного копирования</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>Резервное копирование при запуске WE Tool</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>Источник удалён</value>
+  </data>
 </root>

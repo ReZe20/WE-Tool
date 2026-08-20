@@ -1789,4 +1789,10 @@
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>自动备份服务日志</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>WE Tool 启动时备份</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>源已删除</value>
+  </data>
 </root>

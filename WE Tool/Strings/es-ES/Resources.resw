@@ -1786,4 +1786,10 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Registro del servicio de copia de seguridad automática</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>Copia de seguridad al iniciar WE Tool</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>Origen eliminado</value>
+  </data>
 </root>

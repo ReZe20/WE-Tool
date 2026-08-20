@@ -14,6 +14,8 @@ public sealed class BackupRunner : IDisposable
     private FileSystemWatcher? _vdfWatcher;
     private FileSystemWatcher? _downloadsWatcher;
     private HashSet<string> _knownIds = [];
+    /// <summary>待处理队列:只含新增订阅 ID(存量订阅启动时已补齐,不轮询)。</summary>
+    private readonly HashSet<string> _pendingIds = [];
     private Task? _loop;
 
     public BackupRunner(ServiceConfig config)
@@ -80,9 +82,7 @@ public sealed class BackupRunner : IDisposable
             _downloadsWatcher.EnableRaisingEvents = true;
         }
 
-        // 有订阅 ID 但尚未备份完的需要轮询
-        _needsProcessing = _knownIds.Count > 0;
-        if (_needsProcessing) _hasPending.Release();
+        // 启动时无待处理项(补齐已在 BackupAllMissing 完成);只有新增订阅才进队列
         _loop = Task.Run(() => RunPendingLoop(_cts.Token));
     }
 
@@ -99,7 +99,7 @@ public sealed class BackupRunner : IDisposable
         Log.Write($"downloads 缓存出现新目录: {id}(下载中,等待移入 content)");
     }
 
-    /// <summary>重读 VDF,与新快照对比,把新增 ID 加入处理队列。</summary>
+    /// <summary>重读 VDF,与新快照对比,把新增 ID 加入处理队列(只轮询新增,不轮询存量)。</summary>
     private void RefreshKnownIds()
     {
         var fresh = VdfWatcher.ParseSubscribedIds(_vdfPath);
@@ -110,7 +110,8 @@ public sealed class BackupRunner : IDisposable
             if (added.Count > 0)
             {
                 Log.Write($"发现新增订阅 {added.Count} 个: {string.Join(",", added)}");
-                _needsProcessing = true;
+                // 新 ID 加入待处理队列(只处理这些,避免存量幽灵订阅导致持续轮询)
+                foreach (var id in added) _pendingIds.Add(id);
                 // 唤醒轮询线程处理新订阅
                 try { _hasPending.Release(); } catch { /* 已满(1)或已释放 */ }
             }
@@ -124,9 +125,9 @@ public sealed class BackupRunner : IDisposable
         {
             while (!ct.IsCancellationRequested)
             {
-                if (_needsProcessing)
+                if (GetPendingCount() > 0)
                 {
-                    await Task.Delay(5000, ct);
+                    await Task.Delay(5000, ct); // 给 Steam 下载留时间
                     ProcessPending();
                 }
                 else
@@ -139,40 +140,33 @@ public sealed class BackupRunner : IDisposable
         catch (OperationCanceledException) { /* 正常退出 */ }
     }
 
-    private readonly SemaphoreSlim _hasPending = new(0, 1);
-    /// <summary>是否有待处理项:由 RefreshKnownIds 从 false→true, ProcessPending 消费后重置。</summary>
-    private volatile bool _needsProcessing;
-
     private int GetPendingCount()
     {
-        lock (this) return _knownIds.Count;
+        lock (this) return _pendingIds.Count;
     }
+
+    private readonly SemaphoreSlim _hasPending = new(0, 1);
 
     private void ProcessPending()
     {
-        HashSet<string> current;
-        lock (this) current = new HashSet<string>(_knownIds);
+        List<string> toProcess;
+        lock (this) toProcess = _pendingIds.ToList();
 
-        bool hasUnfinished = false;
-        foreach (var id in current)
+        foreach (var id in toProcess)
         {
-            if (HardLinkBackup.IsBackedUp(_workshopPath, id)) continue;
-            // 还有未备份的:要么还在下载(project.json不存在),要么待备份
+            if (HardLinkBackup.IsBackedUp(_workshopPath, id))
+            {
+                lock (this) _pendingIds.Remove(id); // 已备份,出队
+                continue;
+            }
             var projPath = Path.Combine(_workshopPath, id, "project.json");
-            if (!File.Exists(projPath))
-            {
-                hasUnfinished = true; // 还在下载,需要继续轮询
-                continue;
-            }
-            if (!AutoBackupFilter.Matches(_config.AutoBackup, VdfWatcher.ReadProjectMeta(projPath)))
-            {
-                hasUnfinished = true; // 命中筛选但类型不符(已跳过),不需要再轮询此项
-                continue;
-            }
-            TryBackup(id);
+            if (!File.Exists(projPath)) continue; // 还在下载,下轮再查(仅新增订阅,量极小)
+
+            // 已下载:命中筛选则备份;无论命中与否都出队(筛选不符永久跳过)
+            if (AutoBackupFilter.Matches(_config.AutoBackup, VdfWatcher.ReadProjectMeta(projPath)))
+                TryBackup(id);
+            lock (this) _pendingIds.Remove(id);
         }
-        // 全部 ID 都已备份(无需再轮询 project.json 出现)时暂停
-        if (!hasUnfinished) _needsProcessing = false;
     }
 
     private bool TryBackup(string id)

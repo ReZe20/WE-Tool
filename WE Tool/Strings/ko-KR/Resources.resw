@@ -1786,4 +1786,10 @@ project.json 및 미리보기 복사
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>자동 백업 서비스 로그</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>WE Tool 시작 시 백업</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>원본 삭제됨</value>
+  </data>
 </root>

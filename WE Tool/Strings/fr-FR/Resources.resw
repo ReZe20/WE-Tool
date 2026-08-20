@@ -1786,4 +1786,10 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Journal du service de sauvegarde automatique</value>
   </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>Sauvegarde au démarrage de WE Tool</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>Source supprimée</value>
+  </data>
 </root>

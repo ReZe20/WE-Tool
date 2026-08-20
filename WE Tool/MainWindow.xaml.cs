@@ -5,9 +5,12 @@ using Microsoft.UI.Xaml.Media;
 using Serilog;
 using System;
 using System.Collections;
+using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
+using WE_Tool.Json;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using WE_Tool.Views;
@@ -91,6 +94,11 @@ namespace WE_Tool
                     if (MapTagToPageType(tag) is { } pageType)
                         contentFrame.Navigate(pageType);
                 }
+
+                // 自动备份-启动时备份模式:Enabled 且非服务模式 → 后台异步补齐一次
+                var auto = settings?.AutoBackup;
+                if (auto is { Enabled: true, ServiceEnabled: false })
+                    _ = Task.Run(() => RunStartupBackupAsync(auto));
 
                 // 恢复窗口位置和大小（在导航之后执行，确保窗口布局已完成）
                 bool hasPosition = settings is { RestoreWindowGeometry: true, WindowX: >= 0, WindowY: >= 0 };
@@ -255,6 +263,76 @@ namespace WE_Tool
             {
                 Log.Error(ex, "保存窗口位置/大小/状态失败");
             }
+        }
+
+        /// <summary>启动时备份模式:遍历 content 目录,对未备份+命中筛选的壁纸做硬链接备份(后台,不阻塞窗口)。</summary>
+        private static void RunStartupBackupAsync(Models.AutoBackupConfig cfg)
+        {
+            try
+            {
+                var app = Application.Current as App;
+                var workshopPath = app?.ViewModel.PathManagementVM.WorkshopPath;
+                if (string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
+                {
+                    Log.Warning("启动时备份跳过:工坊目录不存在 {Path}", workshopPath);
+                    return;
+                }
+
+                int backed = 0;
+                foreach (var dir in Directory.EnumerateDirectories(workshopPath))
+                {
+                    var id = Path.GetFileName(dir);
+                    if (id == ".we_backup") continue;
+                    if (BackupService.IsBackedUp(workshopPath, id)) continue;
+
+                    var projPath = Path.Combine(dir, "project.json");
+                    if (!File.Exists(projPath)) continue;
+
+                    // 筛选:类型 + 分级
+                    var meta = JsonSerializer.Deserialize(File.ReadAllBytes(projPath), JsonContext.Default.ProjectMetadata);
+                    if (!MatchesFilter(cfg, meta)) continue;
+
+                    var result = BackupService.BackupWallpaperFolder(dir, workshopPath, id);
+                    if (result.Error is null)
+                        backed++;
+                    else
+                        Log.Warning("启动时备份失败 {Id}: {Err}", id, result.Error);
+                }
+                if (backed > 0)
+                    Log.Information("启动时备份完成: 新增备份 {Count} 个", backed);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "启动时备份异常");
+            }
+        }
+
+        /// <summary>project.json 元数据命中自动备份筛选(类型+分级)。</summary>
+        private static bool MatchesFilter(Models.AutoBackupConfig cfg, Models.ProjectMetadata? meta)
+        {
+            if (meta == null) return false;
+            var type = meta.Type?.ToLowerInvariant() ?? "";
+            var rating = meta.Contentrating?.ToLowerInvariant() ?? "";
+
+            bool typeOk = type switch
+            {
+                "scene" => cfg.TypeScene,
+                "video" => cfg.TypeVideo,
+                "web" => cfg.TypeWeb,
+                "application" => cfg.TypeApplication,
+                "preset" => cfg.TypePreset,
+                _ => cfg.TypeUnknown,
+            };
+            if (!typeOk) return false;
+
+            bool ratingOk = rating switch
+            {
+                "g" => cfg.RatingG,
+                "pg" => cfg.RatingPg,
+                "r" => cfg.RatingR,
+                _ => true, // 未知分级默认放行(与服务端 AutoBackupFilter 一致)
+            };
+            return ratingOk;
         }
     }
 }
