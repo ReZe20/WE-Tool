@@ -215,11 +215,20 @@ public sealed partial class Info : Page
         return version == null ? string.Empty : $"{version.Major}.{version.Minor}.{version.Build}";
     }
 
-    /// <summary>重试:重启 Steamworks 桥接子进程(初始化在子进程内完成,主进程不卡);
-    /// 期间显示黄条 + 顶部加载条</summary>
-    private async void SteamRetryButton_Click(object sender, RoutedEventArgs e)
+    /// <summary>InfoBar 动作按钮:正常态=关闭 Steamworks,异常/已关闭态=重试。按当前状态分发。</summary>
+    private async void SteamActionButton_Click(object sender, RoutedEventArgs e)
     {
-        SteamRetryButton.Visibility = Visibility.Collapsed;
+        if (_lastSteamState == 0)
+        {
+            // 正常态:关闭 Steamworks
+            SteamWorkshopService.GetInstance().Shutdown();
+            _lastSteamState = -1; // 强制刷新:立即反映"已关闭"状态
+            UpdateSteamStatus();
+            return;
+        }
+
+        // 异常/已关闭态:重试
+        SteamActionButton.Visibility = Visibility.Collapsed;
         RetryProgressBar.Visibility = Visibility.Visible;
         SteamStatusBar.Severity = InfoBarSeverity.Warning;
         SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamRetrying.Title.Text");
@@ -259,12 +268,23 @@ public sealed partial class Info : Page
             {
                 SteamworksStatus.Running => 0,
                 SteamworksStatus.Disconnected => 2,
+                SteamworksStatus.Stopped => 3,
                 _ => 1,
             };
             if (state == _lastSteamState) return;
             _lastSteamState = state;
 
-            SteamRetryButton.Visibility = state == 0 ? Visibility.Collapsed : Visibility.Visible;
+            // 正常态显示"关闭 Steamworks"按钮,异常/已关闭态显示"重试"按钮(单按钮双角色)
+            if (state == 0)
+            {
+                SteamActionButton.Content = LanguageHelper.GetResource("Info_SteamShutdown.Content");
+                SteamActionButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                SteamActionButton.Content = LanguageHelper.GetResource("Info_SteamRetry.Content");
+                SteamActionButton.Visibility = Visibility.Visible;
+            }
             switch (state)
             {
                 case 0:
@@ -277,10 +297,15 @@ public sealed partial class Info : Page
                     SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusFail.Title.Text");
                     SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusFail.Message.Text");
                     break;
-                default:
+                case 2:
                     SteamStatusBar.Severity = InfoBarSeverity.Warning;
                     SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusLost.Title.Text");
                     SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusLost.Message.Text");
+                    break;
+                case 3:
+                    SteamStatusBar.Severity = InfoBarSeverity.Warning;
+                    SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusStopped.Title.Text");
+                    SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusStopped.Message.Text");
                     break;
             }
             SteamStatusBar.IsOpen = true;

@@ -1429,6 +1429,16 @@ project.json 및 미리보기 복사
   <data name="Info_SteamRetry.Content" xml:space="preserve">
     <value>다시 시도</value>
   </data>
+  <data name="Info_SteamShutdown.Content" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
+    <value />
+  </data>
+
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
     <value>다시 연결 중</value>
   </data>

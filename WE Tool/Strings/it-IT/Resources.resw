@@ -1429,6 +1429,16 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   <data name="Info_SteamRetry.Content" xml:space="preserve">
     <value>Riprova</value>
   </data>
+  <data name="Info_SteamShutdown.Content" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
+    <value />
+  </data>
+
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
     <value>Riconnessione in corso</value>
   </data>

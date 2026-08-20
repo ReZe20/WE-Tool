@@ -1429,6 +1429,16 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   <data name="Info_SteamRetry.Content" xml:space="preserve">
     <value>Erneut verbinden</value>
   </data>
+  <data name="Info_SteamShutdown.Content" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
+    <value />
+  </data>
+
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
     <value>Verbindung wird hergestellt</value>
   </data>

@@ -1429,6 +1429,15 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Info_SteamRetry.Content" xml:space="preserve">
     <value>Retry</value>
   </data>
+  <data name="Info_SteamShutdown.Content" xml:space="preserve">
+    <value>Shut down Steamworks</value>
+  </data>
+  <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
+    <value>Steamworks shut down</value>
+  </data>
+  <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
+    <value>Steamworks bridge process stopped; workshop features are unavailable. Click Retry to reconnect.</value>
+  </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
     <value>Reconnecting</value>
   </data>

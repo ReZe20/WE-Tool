@@ -819,22 +819,22 @@
                                                                     </StackPanel>
                                                                 </Border>
                                                             </Grid>
-                                                            <Border HorizontalAlignment="Right"
-                                                                                                                                VerticalAlignment="Top"
-                                                                                                                                BorderBrush="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                                                                                                CornerRadius="0,0,0,10"
-                                                                                                                                MinWidth="50"
-                                                                                                                                MinHeight="20"
-                                                                                                                                Padding="4"
-                                                                                                                                Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                                                                                                                Visibility="Collapsed"
-                                                                                                                                x:Name="TagDisplayBorder">
-                                                                                                                            <!-- 文本/可见性由 UpdateTagBadge 代码设置(替代 x:Bind OneTime+列表重建) -->
-                                                                                                                            <TextBlock Text=""
-                                                                                                                                       HorizontalAlignment="Center"
-                                                                                                                                       FontSize="12"
-                                                                                                                                       VerticalAlignment="Center"/>
-                                                                                                                        </Border>
+                                                        <Border HorizontalAlignment="Right"
+                                                                    VerticalAlignment="Top"
+                                                                    BorderBrush="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                                    CornerRadius="0,0,0,10"
+                                                                    MinWidth="50"
+                                                                    MinHeight="20"
+                                                                    Padding="4"
+                                                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                                    Visibility="Collapsed"
+                                                                    x:Name="TagDisplayBorder">
+                                                            <!-- 文本/可见性由 UpdateTagBadge 代码设置(替代 x:Bind OneTime+列表重建) -->
+                                                            <TextBlock Text=""
+                                                                           HorizontalAlignment="Center"
+                                                                           FontSize="12"
+                                                                           VerticalAlignment="Center"/>
+                                                        </Border>
                                                             <CheckBox x:Name="SelectionCheckBox"
                                                                       IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
                                                                       Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"

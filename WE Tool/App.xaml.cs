@@ -58,7 +58,9 @@ namespace WE_Tool
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(LogLevelSwitch) // 级别由设置页控制,运行时即时生效
-                .WriteTo.File(logPath) // 统一写入单个 log.txt,不做按天滚动
+                // 统一写入单个 log.txt,不做按天滚动;超过 5MB 滚动到时间戳文件,最多保留 1 个旧文件
+                .WriteTo.File(logPath, fileSizeLimitBytes: 5 * 1024 * 1024,
+                    rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
                 .CreateLogger();
 
             // 全局异常日志:任何线程的未处理异常都记录到 log.txt;

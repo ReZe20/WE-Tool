@@ -21,6 +21,9 @@ internal static class Program
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "WE_Tool", "logs", "steamworks-bridge.log");
 
+    /// <summary>日志大小上限(字节):超过后从头截断重写,防止日志无限增长</summary>
+    private const long MaxLogSize = 5 * 1024 * 1024;
+
     private static int Main()
     {
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
@@ -134,6 +137,9 @@ internal static class Program
             lock (LogLock)
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
+                // 超过上限截断重写,防止日志无限增长
+                if (new FileInfo(LogPath).Length > MaxLogSize)
+                    File.WriteAllText(LogPath, string.Empty);
                 File.AppendAllText(LogPath,
                     $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} [{message.Split(' ')[0]}] {message}{Environment.NewLine}");
             }

@@ -1429,6 +1429,15 @@
   <data name="Info_SteamRetry.Content" xml:space="preserve">
     <value>重试</value>
   </data>
+  <data name="Info_SteamShutdown.Content" xml:space="preserve">
+    <value>关闭 Steamworks</value>
+  </data>
+  <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
+    <value>Steamworks 已关闭</value>
+  </data>
+  <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
+    <value>已停止 Steamworks 桥接进程,创意工坊相关功能不可用。可点击重试重新连接。</value>
+  </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
     <value>正在重新连接</value>
   </data>

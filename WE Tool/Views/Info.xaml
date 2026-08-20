@@ -65,7 +65,7 @@
                 <Grid Margin="0,8,0,0">
                     <InfoBar x:Name="SteamStatusBar" IsOpen="False" IsClosable="False">
                         <InfoBar.ActionButton>
-                            <Button x:Name="SteamRetryButton" x:Uid="Info_SteamRetry" Click="SteamRetryButton_Click" Visibility="Collapsed"/>
+                            <Button x:Name="SteamActionButton" Click="SteamActionButton_Click" Visibility="Collapsed"/>
                         </InfoBar.ActionButton>
                     </InfoBar>
                     <!-- 重试期间覆盖在 InfoBar 顶部的加载条 -->
