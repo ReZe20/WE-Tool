@@ -493,7 +493,7 @@
     <value>Открыть каталог</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value />
+    <value>Удалить</value>
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
     <value>Выбрать все</value>
@@ -1312,7 +1312,7 @@
     <value>Технологический стек</value>
   </data>
   <data name="Info_CreditsLine1.Content" xml:space="preserve">
-    <value>.NET 8</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
     <value>WinUI 3 (Windows App SDK 1.8)</value>
@@ -1430,13 +1430,13 @@
     <value>Повторить</value>
   </data>
   <data name="Info_SteamShutdown.Content" xml:space="preserve">
-    <value />
+    <value>Завершить Steamworks</value>
   </data>
   <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks остановлен</value>
   </data>
   <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
-    <value />
+    <value>Процесс моста Steamworks остановлен; функции мастерской недоступны. Нажмите «Повторить», чтобы переподключиться.</value>
   </data>
 
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
@@ -1610,6 +1610,9 @@
   <data name="Cleanup_Summary" xml:space="preserve">
     <value>Всего {0} · {1}</value>
   </data>
+  <data name="Cleanup_SortByType.Text" xml:space="preserve">
+    <value>Тип</value>
+  </data>
   <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
     <value>Очистить {0}</value>
   </data>
@@ -1676,6 +1679,9 @@
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>Очистка</value>
   </data>
+  <data name="StartPage_WallpaperBackup.Text" xml:space="preserve">
+    <value>Резервные копии обоев</value>
+  </data>
   <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
     <value>напр. D:\Export\Wallpapers</value>
   </data>
@@ -1695,37 +1701,40 @@
     <value>напр. D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
   </data>
   <data name="AppBarButton_BackupDone.Label" xml:space="preserve">
-    <value />
+    <value>Сохранено</value>
+  </data>
+  <data name="AppBarButton_Backup.Label" xml:space="preserve">
+    <value>Сохранено</value>
   </data>
   <data name="BackupPage.Content" xml:space="preserve">
-    <value></value>
+    <value>Резервные копии</value>
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
-    <value></value>
+    <value>Резервные копии обоев</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>Нет резервных копий</value>
   </data>
   <data name="BackupPage_Refresh.Label" xml:space="preserve">
-    <value></value>
+    <value>Обновить</value>
   </data>
   <data name="BackupPage_DeleteAll.Label" xml:space="preserve">
-    <value></value>
+    <value>Удалить все</value>
   </data>
   <data name="AutoBackup_SettingsHeader.Text" xml:space="preserve">
-    <value></value>
+    <value>Авторезервирование</value>
   </data>
   <data name="AutoBackup_ModeLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Режим авторезервирования</value>
   </data>
   <data name="AutoBackup_ModeOff.Content" xml:space="preserve">
-    <value></value>
+    <value>Выкл.</value>
   </data>
   <data name="AutoBackup_ModeService.Content" xml:space="preserve">
-    <value></value>
+    <value>Фоновая служба</value>
   </data>
   <data name="AutoBackup_ServiceStatusLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Статус службы</value>
   </data>
   <data name="AutoBackup_ServiceNotInstalled.Text" xml:space="preserve">
     <value>Не установлено. Нажмите «Установить службу» для включения автоматической резервной копии в фоне.</value>
@@ -1737,67 +1746,77 @@
     <value>Служба установлена (автозапуск при входе)</value>
   </data>
   <data name="AutoBackup_Install.Content" xml:space="preserve">
-    <value></value>
+    <value>Установить службу</value>
   </data>
   <data name="AutoBackup_Uninstall.Content" xml:space="preserve">
-    <value></value>
+    <value>Удалить службу</value>
   </data>
   <data name="AutoBackup_Start.Content" xml:space="preserve">
-    <value></value>
+    <value>Запустить службу</value>
   </data>
   <data name="AutoBackup_Stop.Content" xml:space="preserve">
-    <value></value>
+    <value>Остановить службу</value>
   </data>
   <data name="AutoBackup_TypeLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Типы обоев</value>
   </data>
   <data name="AutoBackup_TypeScene.Content" xml:space="preserve">
-    <value></value>
+    <value>Сцена</value>
   </data>
   <data name="AutoBackup_TypeVideo.Content" xml:space="preserve">
-    <value></value>
+    <value>Видео</value>
   </data>
   <data name="AutoBackup_TypeWeb.Content" xml:space="preserve">
-    <value></value>
+    <value>Веб</value>
   </data>
   <data name="AutoBackup_TypeApp.Content" xml:space="preserve">
-    <value></value>
+    <value>Приложение</value>
   </data>
   <data name="AutoBackup_TypePreset.Content" xml:space="preserve">
-    <value></value>
+    <value>Пресет</value>
   </data>
   <data name="AutoBackup_TypeUnknown.Content" xml:space="preserve">
-    <value></value>
+    <value>Неизвестно</value>
   </data>
   <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Возрастной рейтинг</value>
   </data>
   <data name="AutoBackup_RatingG.Content" xml:space="preserve">
-    <value></value>
+    <value>Для всех</value>
   </data>
   <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
-    <value></value>
+    <value>Подростки</value>
   </data>
   <data name="AutoBackup_RatingR.Content" xml:space="preserve">
-    <value></value>
+    <value>Для взрослых</value>
   </data>
   <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
-    <value></value>
+    <value>Сбой операции</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value></value>
+    <value>Авторезервирование</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
-    <value></value>
+    <value>Выберите режим авторезервирования и укажите типы и рейтинги обоев для резервирования</value>
   </data>
   <data name="AutoBackup_Done.Content" xml:space="preserve">
-    <value></value>
+    <value>Готово</value>
   </data>
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Журнал службы автоматического резервного копирования</value>
   </data>
   <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
     <value>Резервное копирование при запуске WE Tool</value>
+  </data>
+  
+  <data name="BackupPage_SortByTime.Text" xml:space="preserve">
+    <value>Время резервирования</value>
+  </data>
+  <data name="BackupPage_FilterEmpty.Text" xml:space="preserve">
+    <value>Нет резервных копий, соответствующих фильтру</value>
+  </data>
+  <data name="BackupPage_SortByMissing.Text" xml:space="preserve">
+    <value>Источник удалён</value>
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Источник удалён</value>

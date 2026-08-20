@@ -46,6 +46,7 @@ public sealed partial class Cleanup : Page
         InitializeComponent();
         ResultGridView.ItemsSource = Cards;
         LoadWhitelist();
+        UpdateSortLabel();
     }
 
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
@@ -95,6 +96,9 @@ public sealed partial class Cleanup : Page
             var list = await Task.Run(() => Scan());
             foreach (var card in list)
                 Cards.Add(card);
+
+            // 应用当前排序
+            ApplySort();
 
             bool has = Cards.Count > 0;
             ResultGridView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
@@ -236,6 +240,7 @@ public sealed partial class Cleanup : Page
                 TypeLabel = L("Cleanup_TypeExcess"),
                 FullPath = dir,
                 IsUnloaded = false,
+                TotalSize = excess.Sum(f => f.Size),
                 StatsText = L("Cleanup_StatsExcess", excess.Count, FormatSize(excess.Sum(f => f.Size))),
                 Files = excess
             };
@@ -261,6 +266,7 @@ public sealed partial class Cleanup : Page
                 TypeLabel = L("Cleanup_TypeUnloaded"),
                 FullPath = dir,
                 IsUnloaded = true,
+                TotalSize = DirSize(dir),
                 StatsText = L("Cleanup_StatsUnloaded", files.Count, FormatSize(DirSize(dir))),
                 Files = files
             };
@@ -291,6 +297,7 @@ public sealed partial class Cleanup : Page
         if (card == null) return;
 
         Cards.Add(card);
+        ApplySort();
         ResultGridView.Visibility = Visibility.Visible;
         EmptyState.Visibility = Visibility.Collapsed;
         ActionBar.Visibility = Visibility.Visible;
@@ -454,6 +461,7 @@ public sealed partial class Cleanup : Page
                 Cards.Clear();
                 foreach (var card in Scan())
                     Cards.Add(card);
+                ApplySort();
                 UpdateSummary();
             });
         };
@@ -526,6 +534,79 @@ public sealed partial class Cleanup : Page
         EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
         if (!has) ActionBar.Visibility = Visibility.Collapsed;
         UpdateSummary();
+    }
+
+    // ---------- 排序 ----------
+
+    /// <summary>排序方式:0名称 1类型 2大小。</summary>
+    private int _sortOrder = 0; // 默认按名称
+    /// <summary>true=降序(大小默认最大在前;名称默认 A→Z 升序)。</summary>
+    private bool _sortDescending;
+
+    /// <summary>按当前排序方式重排集合。</summary>
+    private void ApplySort()
+    {
+        if (Cards.Count == 0) return;
+
+        List<CleanupCardViewModel> sorted = _sortOrder switch
+        {
+            0 => _sortDescending
+                ? Cards.OrderByDescending(c => c.FolderId, StringComparer.CurrentCultureIgnoreCase).ToList()
+                : Cards.OrderBy(c => c.FolderId, StringComparer.CurrentCultureIgnoreCase).ToList(),
+            1 => _sortDescending
+                ? Cards.OrderByDescending(c => c.IsUnloaded).ThenBy(c => c.FolderId, StringComparer.CurrentCultureIgnoreCase).ToList()
+                : Cards.OrderBy(c => c.IsUnloaded).ThenBy(c => c.FolderId, StringComparer.CurrentCultureIgnoreCase).ToList(),
+            2 => _sortDescending
+                ? Cards.OrderByDescending(c => c.TotalSize).ToList()
+                : Cards.OrderBy(c => c.TotalSize).ToList(),
+            _ => Cards.ToList(),
+        };
+
+        Cards.Clear();
+        foreach (var card in sorted) Cards.Add(card);
+    }
+
+    private void SortMenu_ItemClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioMenuFlyoutItem item || item.Tag is not string tag) return;
+        _sortOrder = tag switch
+        {
+            "name" => 0,
+            "type" => 1,
+            "size" => 2,
+            _ => _sortOrder,
+        };
+        UpdateSortLabel();
+        ApplySort();
+    }
+
+    private void SortDescendingItem_Click(object sender, RoutedEventArgs e)
+    {
+        _sortDescending = SortDescendingItem.IsChecked;
+        UpdateSortLabel();
+        ApplySort();
+    }
+
+    /// <summary>打开菜单前同步各控件状态。</summary>
+    private void SortButton_Click(object sender, RoutedEventArgs e)
+    {
+        SortByNameItem.IsChecked = _sortOrder == 0;
+        SortByTypeItem.IsChecked = _sortOrder == 1;
+        SortBySizeItem.IsChecked = _sortOrder == 2;
+        SortDescendingItem.IsChecked = _sortDescending;
+    }
+
+    /// <summary>按钮文字显示当前排序方式(如"排序:名称")。</summary>
+    private void UpdateSortLabel()
+    {
+        string name = _sortOrder switch
+        {
+            0 => L("SortByName.Text"),
+            1 => L("Cleanup_SortByType.Text"),
+            2 => L("SortByFileSize.Text"),
+            _ => "",
+        };
+        SortLabelText.Text = $"{L("Toolbar_Sort.ToolTipService.ToolTip")}: {name}";
     }
 
     // ---------- 工具 ----------

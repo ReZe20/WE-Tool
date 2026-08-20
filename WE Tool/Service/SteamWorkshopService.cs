@@ -203,8 +203,8 @@ public class SteamWorkshopService : IDisposable
                 },
                 EnableRaisingEvents = true,
             };
-            // 自包含发布(无 .NET 8 的机器)时,桥接为框架依赖进程,须指向应用自带的运行时;
-            // 框架依赖安装(本机有 .NET 8)则不用设置
+            // 自包含发布(无对应 .NET 运行时的机器)时,桥接为框架依赖进程,须指向应用自带的运行时;
+            // 框架依赖安装(本机装有对应 .NET)则不用设置
             if (File.Exists(Path.Combine(AppContext.BaseDirectory, "hostfxr.dll")))
                 bridge.StartInfo.Environment["DOTNET_ROOT"] = AppContext.BaseDirectory;
             bridge.Exited += (_, _) =>

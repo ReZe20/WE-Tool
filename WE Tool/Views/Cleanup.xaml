@@ -13,12 +13,44 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 标题 -->
-        <StackPanel Grid.Row="0" Spacing="2">
-            <TextBlock x:Uid="Cleanup_Title" Style="{StaticResource TitleTextBlockStyle}"/>
-            <TextBlock x:Name="SummaryText" FontSize="14"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-        </StackPanel>
+        <!-- 标题 + 右上角排序 -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="2">
+                <TextBlock x:Uid="Cleanup_Title" Style="{StaticResource TitleTextBlockStyle}"/>
+                <TextBlock x:Name="SummaryText" FontSize="14"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </StackPanel>
+
+            <!-- 排序按钮 -->
+            <DropDownButton x:Name="SortButton" Grid.Column="1"
+                            VerticalAlignment="Center"
+                            ToolTipService.ToolTip="排序"
+                            Click="SortButton_Click">
+                <DropDownButton.Content>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8CB;" FontSize="14"/>
+                        <TextBlock x:Name="SortLabelText" Text="排序"/>
+                    </StackPanel>
+                </DropDownButton.Content>
+                <DropDownButton.Flyout>
+                    <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedRight">
+                        <RadioMenuFlyoutItem x:Name="SortByNameItem" GroupName="CleanupSortGroup"
+                                             Text="名称" Click="SortMenu_ItemClick" Tag="name"/>
+                        <RadioMenuFlyoutItem x:Name="SortByTypeItem" GroupName="CleanupSortGroup"
+                                             Text="类型" Click="SortMenu_ItemClick" Tag="type"/>
+                        <RadioMenuFlyoutItem x:Name="SortBySizeItem" GroupName="CleanupSortGroup"
+                                             Text="大小" Click="SortMenu_ItemClick" Tag="size"/>
+                        <MenuFlyoutSeparator/>
+                        <ToggleMenuFlyoutItem x:Name="SortDescendingItem" Text="降序"
+                                              Click="SortDescendingItem_Click"/>
+                    </MenuFlyout>
+                </DropDownButton.Flyout>
+            </DropDownButton>
+        </Grid>
 
         <!-- 空状态(自动扫描,失败/完成时显示提示) -->
         <StackPanel x:Name="EmptyState" Grid.Row="1"

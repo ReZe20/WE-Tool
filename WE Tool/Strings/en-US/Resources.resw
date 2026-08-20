@@ -1312,7 +1312,7 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
     <value>Tech stack</value>
   </data>
   <data name="Info_CreditsLine1.Content" xml:space="preserve">
-    <value>.NET 8</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
     <value>WinUI 3 (Windows App SDK 1.8)</value>
@@ -1609,6 +1609,9 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Cleanup_Summary" xml:space="preserve">
     <value>{0} items · {1}</value>
   </data>
+  <data name="Cleanup_SortByType.Text" xml:space="preserve">
+    <value>Type</value>
+  </data>
   <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
     <value>Clean Up {0}</value>
   </data>
@@ -1675,6 +1678,9 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>Cleanup</value>
   </data>
+  <data name="StartPage_WallpaperBackup.Text" xml:space="preserve">
+    <value>Wallpaper Backup</value>
+  </data>
   <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
     <value>e.g. D:\Export\Wallpapers</value>
   </data>
@@ -1695,6 +1701,9 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="AppBarButton_BackupDone.Label" xml:space="preserve">
     <value>Backed Up</value>
+  </data>
+  <data name="AppBarButton_Backup.Label" xml:space="preserve">
+    <value>Backup</value>
   </data>
   <data name="BackupPage.Content" xml:space="preserve">
     <value>Backup</value>
@@ -1797,6 +1806,16 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
     <value>Back up on WE Tool startup</value>
+  </data>
+  
+  <data name="BackupPage_SortByTime.Text" xml:space="preserve">
+    <value>Backup Time</value>
+  </data>
+  <data name="BackupPage_FilterEmpty.Text" xml:space="preserve">
+    <value>No backups match the filter</value>
+  </data>
+  <data name="BackupPage_SortByMissing.Text" xml:space="preserve">
+    <value>Source Removed</value>
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Source removed</value>

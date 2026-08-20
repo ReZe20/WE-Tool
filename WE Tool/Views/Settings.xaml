@@ -154,6 +154,12 @@
                                 <TextBlock x:Uid="StartPage_Cleanup" VerticalAlignment="Center"/>
                             </StackPanel>
                         </ComboBoxItem>
+                        <ComboBoxItem Tag="WallpaperBackup">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xF738;" FontSize="14"/>
+                                <TextBlock x:Uid="StartPage_WallpaperBackup" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
                     </ComboBox>
                 </controls:SettingsCard>
                 <controls:SettingsCard x:Uid="Theme" Margin="0,0,0,10">

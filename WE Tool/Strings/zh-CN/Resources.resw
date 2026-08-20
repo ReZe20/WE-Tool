@@ -1312,7 +1312,7 @@
     <value>技术栈</value>
   </data>
   <data name="Info_CreditsLine1.Content" xml:space="preserve">
-    <value>.NET 8</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
     <value>WinUI 3 (Windows App SDK 1.8)</value>
@@ -1609,6 +1609,9 @@
   <data name="Cleanup_Summary" xml:space="preserve">
     <value>共 {0} 项残留 · {1}</value>
   </data>
+  <data name="Cleanup_SortByType.Text" xml:space="preserve">
+    <value>类型</value>
+  </data>
   <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
     <value>清理 {0}</value>
   </data>
@@ -1674,6 +1677,9 @@
   </data>
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>残留清除</value>
+  </data>
+  <data name="StartPage_WallpaperBackup.Text" xml:space="preserve">
+    <value>壁纸备份</value>
   </data>
   <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
     <value>例如 D:\Export\Wallpapers</value>
@@ -1800,6 +1806,16 @@
   </data>
   <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
     <value>WE Tool 启动时备份</value>
+  </data>
+  
+  <data name="BackupPage_SortByTime.Text" xml:space="preserve">
+    <value>备份时间</value>
+  </data>
+  <data name="BackupPage_FilterEmpty.Text" xml:space="preserve">
+    <value>没有符合筛选条件的备份</value>
+  </data>
+  <data name="BackupPage_SortByMissing.Text" xml:space="preserve">
+    <value>源已删除</value>
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>源已删除</value>

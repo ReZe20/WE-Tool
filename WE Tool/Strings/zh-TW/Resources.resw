@@ -493,7 +493,7 @@
     <value>開啟目錄</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value />
+    <value>刪除</value>
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
     <value>全選</value>
@@ -1312,7 +1312,7 @@
     <value>技術棧</value>
   </data>
   <data name="Info_CreditsLine1.Content" xml:space="preserve">
-    <value>.NET 8</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
     <value>WinUI 3 (Windows App SDK 1.8)</value>
@@ -1430,13 +1430,13 @@
     <value>重試</value>
   </data>
   <data name="Info_SteamShutdown.Content" xml:space="preserve">
-    <value />
+    <value>關閉 Steamworks</value>
   </data>
   <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks 已關閉</value>
   </data>
   <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
-    <value />
+    <value>已停止 Steamworks 橋接處理程序，創意工坊相關功能無法使用。可點擊「重試」重新連線。</value>
   </data>
 
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
@@ -1610,6 +1610,9 @@
   <data name="Cleanup_Summary" xml:space="preserve">
     <value>共 {0} 項殘留 · {1}</value>
   </data>
+  <data name="Cleanup_SortByType.Text" xml:space="preserve">
+    <value>類型</value>
+  </data>
   <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
     <value>清理 {0}</value>
   </data>
@@ -1676,6 +1679,9 @@
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>殘留清理</value>
   </data>
+  <data name="StartPage_WallpaperBackup.Text" xml:space="preserve">
+    <value>桌布備份</value>
+  </data>
   <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
     <value>例如 D:\Export\Wallpapers</value>
   </data>
@@ -1695,37 +1701,40 @@
     <value>例如 D:\Steam\userdata\{帳戶ID}\ugc\431960_subscriptions.vdf</value>
   </data>
   <data name="AppBarButton_BackupDone.Label" xml:space="preserve">
-    <value />
+    <value>已備份</value>
+  </data>
+  <data name="AppBarButton_Backup.Label" xml:space="preserve">
+    <value>已備份</value>
   </data>
   <data name="BackupPage.Content" xml:space="preserve">
-    <value></value>
+    <value>桌布備份</value>
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
-    <value></value>
+    <value>桌布備份</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>暫無備份</value>
   </data>
   <data name="BackupPage_Refresh.Label" xml:space="preserve">
-    <value></value>
+    <value>重新整理</value>
   </data>
   <data name="BackupPage_DeleteAll.Label" xml:space="preserve">
-    <value></value>
+    <value>刪除全部</value>
   </data>
   <data name="AutoBackup_SettingsHeader.Text" xml:space="preserve">
-    <value></value>
+    <value>自動備份</value>
   </data>
   <data name="AutoBackup_ModeLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>自動備份方式</value>
   </data>
   <data name="AutoBackup_ModeOff.Content" xml:space="preserve">
-    <value></value>
+    <value>關閉</value>
   </data>
   <data name="AutoBackup_ModeService.Content" xml:space="preserve">
-    <value></value>
+    <value>背景服務</value>
   </data>
   <data name="AutoBackup_ServiceStatusLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>服務狀態</value>
   </data>
   <data name="AutoBackup_ServiceNotInstalled.Text" xml:space="preserve">
     <value>未安裝，點擊「安裝服務」開啟背景自動備份</value>
@@ -1737,67 +1746,77 @@
     <value>服務已安裝（開機登入時自動啟動）</value>
   </data>
   <data name="AutoBackup_Install.Content" xml:space="preserve">
-    <value></value>
+    <value>安裝服務</value>
   </data>
   <data name="AutoBackup_Uninstall.Content" xml:space="preserve">
-    <value></value>
+    <value>解除安裝服務</value>
   </data>
   <data name="AutoBackup_Start.Content" xml:space="preserve">
-    <value></value>
+    <value>啟動服務</value>
   </data>
   <data name="AutoBackup_Stop.Content" xml:space="preserve">
-    <value></value>
+    <value>停止服務</value>
   </data>
   <data name="AutoBackup_TypeLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>類型</value>
   </data>
   <data name="AutoBackup_TypeScene.Content" xml:space="preserve">
-    <value></value>
+    <value>場景</value>
   </data>
   <data name="AutoBackup_TypeVideo.Content" xml:space="preserve">
-    <value></value>
+    <value>影片</value>
   </data>
   <data name="AutoBackup_TypeWeb.Content" xml:space="preserve">
-    <value></value>
+    <value>網頁</value>
   </data>
   <data name="AutoBackup_TypeApp.Content" xml:space="preserve">
-    <value></value>
+    <value>應用程式</value>
   </data>
   <data name="AutoBackup_TypePreset.Content" xml:space="preserve">
-    <value></value>
+    <value>預設</value>
   </data>
   <data name="AutoBackup_TypeUnknown.Content" xml:space="preserve">
-    <value></value>
+    <value>未知</value>
   </data>
   <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>年齡分級</value>
   </data>
   <data name="AutoBackup_RatingG.Content" xml:space="preserve">
-    <value></value>
+    <value>全年齡</value>
   </data>
   <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
-    <value></value>
+    <value>青少年</value>
   </data>
   <data name="AutoBackup_RatingR.Content" xml:space="preserve">
-    <value></value>
+    <value>成人</value>
   </data>
   <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
-    <value></value>
+    <value>操作失敗</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value></value>
+    <value>自動備份</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
-    <value></value>
+    <value>選擇自動備份方式，並指定要自動備份的桌布類型與分級</value>
   </data>
   <data name="AutoBackup_Done.Content" xml:space="preserve">
-    <value></value>
+    <value>完成</value>
   </data>
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>自動備份服務日誌</value>
   </data>
   <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
     <value>WE Tool 啟動時備份</value>
+  </data>
+  
+  <data name="BackupPage_SortByTime.Text" xml:space="preserve">
+    <value>備份時間</value>
+  </data>
+  <data name="BackupPage_FilterEmpty.Text" xml:space="preserve">
+    <value>沒有符合篩選條件的備份</value>
+  </data>
+  <data name="BackupPage_SortByMissing.Text" xml:space="preserve">
+    <value>來源已刪除</value>
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>源已刪除</value>

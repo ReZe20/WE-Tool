@@ -36,6 +36,7 @@ public sealed partial class WallpaperBackup : Page
         InitializeComponent();
         BackupGridView.ItemsSource = BackupItems;
         Loaded += (s, e) => InitializeAutoBackupSettingsAsync();
+        UpdateSortLabel();
     }
 
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
@@ -81,81 +82,95 @@ public sealed partial class WallpaperBackup : Page
 
         await Task.Run(() =>
         {
-            DispatcherQueue.TryEnqueue(() =>
+            var collected = new List<BackupItemViewModel>();
+            long totalBytes = 0;
+            if (!Directory.Exists(BackupRoot)) { ShowEmpty(); return; }
+
+            foreach (var dir in Directory.GetDirectories(BackupRoot))
             {
-                BackupItems.Clear();
-                long totalBytes = 0;
-                if (!Directory.Exists(BackupRoot)) { ShowEmpty(); return; }
+                var id = Path.GetFileName(dir);
+                var marker = Path.Combine(dir, BackupService.MarkerFileName);
+                if (!File.Exists(marker)) continue; // 未完成备份
 
-                foreach (var dir in Directory.GetDirectories(BackupRoot))
+                // 读取标题：优先从 project.json，否则用 ID
+                string title = id;
+                string projectPath = Path.Combine(dir, "project.json");
+                if (File.Exists(projectPath))
                 {
-                    var id = Path.GetFileName(dir);
-                    var marker = Path.Combine(dir, BackupService.MarkerFileName);
-                    if (!File.Exists(marker)) continue; // 未完成备份
-
-                    // 读取标题：优先从 project.json，否则用 ID
-                    string title = id;
-                    string projectPath = Path.Combine(dir, "project.json");
-                    if (File.Exists(projectPath))
-                    {
-                        try
-                        {
-                            var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(projectPath));
-                            if (json.RootElement.TryGetProperty("title", out var titleProp))
-                                title = titleProp.GetString() ?? id;
-                        }
-                        catch { /* 忽略解析失败 */ }
-                    }
-
-                    // 读取预览图路径;找不到用占位图(避免 UriSource 绑定 null/空串抛 Uri 转换异常,与 Papers 一致)
-                    string? previewPath = null;
-                    foreach (var ext in new[] { "preview.png", "preview.jpg", "preview.gif" })
-                    {
-                        var p = Path.Combine(dir, ext);
-                        if (File.Exists(p)) { previewPath = p; break; }
-                    }
-                    if (string.IsNullOrEmpty(previewPath))
-                        previewPath = "ms-appx:///Assets/NoPreview.png";
-
-                    // 计算总大小
-                    long totalSize = 0;
-                    foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
-                        totalSize += new FileInfo(f).Length;
-                    totalBytes += totalSize;
-
-                    // 读取备份时间
-                    string backupTimeText = "";
                     try
                     {
-                        var lines = File.ReadAllLines(marker);
-                        var createdLine = lines.FirstOrDefault(l => l.StartsWith("created="));
-                        if (createdLine != null)
-                            backupTimeText = createdLine.Substring("created=".Length).Trim();
+                        var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(projectPath));
+                        if (json.RootElement.TryGetProperty("title", out var titleProp))
+                            title = titleProp.GetString() ?? id;
                     }
-                    catch { }
-
-                    // 源文件是否已删除:content/431960/<id> 目录不存在 = 取消订阅/下架,仅剩备份
-                    bool sourceMissing = !Directory.Exists(Path.Combine(WorkshopPath, id));
-
-                    BackupItems.Add(new BackupItemViewModel
-                    {
-                        WorkshopId = id,
-                        Title = title,
-                        PreviewPath = previewPath,
-                        SizeText = FormatSize(totalSize),
-                        BackupTimeText = backupTimeText,
-                        FullPath = dir,
-                        IsSourceMissing = sourceMissing,
-                    });
+                    catch { /* 忽略解析失败 */ }
                 }
 
-                int missingCount = BackupItems.Count(it => it.IsSourceMissing);
-                SummaryText.Text = BackupItems.Count > 0
+                // 读取预览图路径;找不到用占位图(避免 UriSource 绑定 null/空串抛 Uri 转换异常,与 Papers 一致)
+                string? previewPath = null;
+                foreach (var ext in new[] { "preview.png", "preview.jpg", "preview.gif" })
+                {
+                    var p = Path.Combine(dir, ext);
+                    if (File.Exists(p)) { previewPath = p; break; }
+                }
+                if (string.IsNullOrEmpty(previewPath))
+                    previewPath = "ms-appx:///Assets/NoPreview.png";
+
+                // 计算总大小
+                long totalSize = 0;
+                foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
+                    totalSize += new FileInfo(f).Length;
+                totalBytes += totalSize;
+
+                // 读取备份时间
+                string backupTimeText = "";
+                DateTime? backupTime = null;
+                try
+                {
+                    var lines = File.ReadAllLines(marker);
+                    var createdLine = lines.FirstOrDefault(l => l.StartsWith("created="));
+                    if (createdLine != null)
+                    {
+                        backupTimeText = createdLine.Substring("created=".Length).Trim();
+                        if (DateTime.TryParse(backupTimeText, out var parsed))
+                            backupTime = parsed;
+                    }
+                }
+                catch { }
+
+                // 源文件是否已删除:content/431960/<id> 目录不存在 = 取消订阅/下架,仅剩备份
+                bool sourceMissing = !Directory.Exists(Path.Combine(WorkshopPath, id));
+
+                collected.Add(new BackupItemViewModel
+                {
+                    WorkshopId = id,
+                    Title = title,
+                    PreviewPath = previewPath,
+                    SizeText = FormatSize(totalSize),
+                    SizeBytes = totalSize,
+                    BackupTimeText = backupTimeText,
+                    BackupTime = backupTime,
+                    FullPath = dir,
+                    IsSourceMissing = sourceMissing,
+                });
+            }
+
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                _allItems.Clear();
+                _allItems.AddRange(collected);
+
+                int missingCount = _allItems.Count(it => it.IsSourceMissing);
+                SummaryText.Text = _allItems.Count > 0
                     ? missingCount > 0
-                        ? $"共 {BackupItems.Count} 个备份 · {FormatSize(totalBytes)} · {missingCount} 个源已删除"
-                        : $"共 {BackupItems.Count} 个备份 · {FormatSize(totalBytes)}"
+                        ? $"共 {_allItems.Count} 个备份 · {FormatSize(totalBytes)} · {missingCount} 个源已删除"
+                        : $"共 {_allItems.Count} 个备份 · {FormatSize(totalBytes)}"
                     : "";
-                if (BackupItems.Count == 0) ShowEmpty();
+                if (_allItems.Count == 0) ShowEmpty();
+
+                // 应用筛选+排序后刷新可见集合
+                ApplyFilterAndSort();
+
                 ScanProgress.IsActive = false;
                 BackupGridView.Visibility = BackupItems.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
                 // 强制刷新一次卡片宽度(Visibility 变化触发的 SizeChanged 时序不可靠)
@@ -185,18 +200,20 @@ public sealed partial class WallpaperBackup : Page
         try
         {
             Directory.Delete(item.FullPath, true);
-            BackupItems.Remove(item);
+            _allItems.Remove(item);
+            ApplyFilterAndSort();
+
             long remaining = 0;
-            foreach (var it in BackupItems)
+            foreach (var it in _allItems)
             {
                 if (Directory.Exists(it.FullPath))
                     foreach (var f in Directory.EnumerateFiles(it.FullPath, "*", SearchOption.AllDirectories))
                         remaining += new FileInfo(f).Length;
             }
-            SummaryText.Text = BackupItems.Count > 0
-                ? $"共 {BackupItems.Count} 个备份 · {FormatSize(remaining)}"
+            SummaryText.Text = _allItems.Count > 0
+                ? $"共 {_allItems.Count} 个备份 · {FormatSize(remaining)}"
                 : "";
-            if (BackupItems.Count == 0) ShowEmpty();
+            if (_allItems.Count == 0) ShowEmpty();
         }
         catch (Exception ex)
         {
@@ -206,15 +223,15 @@ public sealed partial class WallpaperBackup : Page
 
     private async void DeleteAll_Click(object sender, RoutedEventArgs e)
     {
-        if (BackupItems.Count == 0) return;
+        if (_allItems.Count == 0) return;
 
         bool confirmed = await DialogHelper.ShowConfirmDialogAsync("删除全部备份",
-            $"确定要删除全部 {BackupItems.Count} 个备份吗？\n\n删除后无法恢复。",
+            $"确定要删除全部 {_allItems.Count} 个备份吗？\n\n删除后无法恢复。",
             "全部删除", "取消");
         if (!confirmed) return;
 
         int success = 0;
-        foreach (var item in BackupItems.ToList())
+        foreach (var item in _allItems.ToList())
         {
             try
             {
@@ -227,7 +244,8 @@ public sealed partial class WallpaperBackup : Page
             catch { /* 跳过删除失败项 */ }
         }
 
-        BackupItems.Clear();
+        _allItems.Clear();
+        ApplyFilterAndSort();
         SummaryText.Text = "";
         ShowEmpty();
         await DialogHelper.ShowMessageAsync("删除完成", $"成功删除 {success} 个备份。");
@@ -288,6 +306,126 @@ public sealed partial class WallpaperBackup : Page
     }
 
     private double _lastCardWidth;
+
+    // ====================== 排序与筛选 ======================
+
+    /// <summary>排序方式:0名称 1备份时间 2大小。</summary>
+    private int _sortOrder = 1; // 默认按备份时间
+    /// <summary>true=降序(时间/大小默认最新/最大在前;名称默认 A→Z 升序)。</summary>
+    private bool _sortDescending;
+
+    /// <summary>源状态筛选:null=不过滤(两框同态);true=仅源已删除;false=仅源未删除。</summary>
+    private bool? _missingFilter;
+
+    /// <summary>全部备份(筛选前的完整数据)。</summary>
+    private readonly List<BackupItemViewModel> _allItems = new();
+
+    /// <summary>应用筛选+排序并刷新可见集合。</summary>
+    private void ApplyFilterAndSort()
+    {
+        if (_allItems.Count == 0)
+        {
+            BackupItems.Clear();
+            return;
+        }
+
+        IEnumerable<BackupItemViewModel> visible = _allItems;
+        if (_missingFilter is bool f)
+            visible = visible.Where(it => it.IsSourceMissing == f);
+
+        List<BackupItemViewModel> sorted = _sortOrder switch
+        {
+            0 => _sortDescending
+                ? visible.OrderByDescending(it => it.Title, StringComparer.CurrentCultureIgnoreCase).ToList()
+                : visible.OrderBy(it => it.Title, StringComparer.CurrentCultureIgnoreCase).ToList(),
+            1 => _sortDescending
+                ? visible.OrderByDescending(it => it.BackupTime ?? DateTime.MinValue).ToList()
+                : visible.OrderBy(it => it.BackupTime ?? DateTime.MinValue).ToList(),
+            2 => _sortDescending
+                ? visible.OrderByDescending(it => it.SizeBytes).ToList()
+                : visible.OrderBy(it => it.SizeBytes).ToList(),
+            _ => visible.ToList(),
+        };
+
+        BackupItems.Clear();
+        foreach (var it in sorted) BackupItems.Add(it);
+
+        // 可见集合为空时:全量非空→筛选无结果提示;全量空→空状态
+        if (BackupItems.Count == 0)
+        {
+            if (_allItems.Count > 0)
+            {
+                BackupGridView.Visibility = Visibility.Collapsed;
+                EmptyState.Visibility = Visibility.Visible;
+                EmptyStateText.Text = L("BackupPage_FilterEmpty.Text");
+            }
+            else
+            {
+                ShowEmpty();
+            }
+        }
+        else
+        {
+            BackupGridView.Visibility = Visibility.Visible;
+            EmptyState.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>排序单选变化。</summary>
+    private void SortMenu_ItemClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioMenuFlyoutItem item || item.Tag is not string tag) return;
+        _sortOrder = tag switch
+        {
+            "name" => 0,
+            "time" => 1,
+            "size" => 2,
+            _ => _sortOrder,
+        };
+        UpdateSortLabel();
+        ApplyFilterAndSort();
+    }
+
+    /// <summary>源状态筛选复选项:两框同态→不过滤;只勾一个→按该状态过滤。</summary>
+    private void FilterMenu_ItemClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ToggleMenuFlyoutItem) return;
+        bool m = FilterMissingItem.IsChecked;
+        bool x = FilterExistItem.IsChecked;
+        _missingFilter = m == x ? null : m;
+        ApplyFilterAndSort();
+    }
+
+    private void SortDescendingItem_Click(object sender, RoutedEventArgs e)
+    {
+        _sortDescending = SortDescendingItem.IsChecked;
+        UpdateSortLabel();
+        ApplyFilterAndSort();
+    }
+
+    /// <summary>打开菜单前同步各控件状态。</summary>
+    private void SortButton_Click(object sender, RoutedEventArgs e)
+    {
+        SortByNameItem.IsChecked = _sortOrder == 0;
+        SortByTimeItem.IsChecked = _sortOrder == 1;
+        SortBySizeItem.IsChecked = _sortOrder == 2;
+        SortDescendingItem.IsChecked = _sortDescending;
+        FilterMissingItem.IsChecked = _missingFilter == true;
+        FilterExistItem.IsChecked = _missingFilter == false;
+    }
+
+    /// <summary>按钮文字显示当前排序方式(如"排序:备份时间")。</summary>
+    private void UpdateSortLabel()
+    {
+        string name = _sortOrder switch
+        {
+            0 => L("SortByName.Text"),
+            1 => L("BackupPage_SortByTime.Text"),
+            2 => L("SortByFileSize.Text"),
+            _ => "",
+        };
+        SortLabelText.Text = $"{L("Toolbar_Sort.ToolTipService.ToolTip")}: {name}";
+    }
 
     private static string L(string key, params object[] args)
     {

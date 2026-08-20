@@ -11,7 +11,11 @@ public sealed class BackupItemViewModel : INotifyPropertyChanged
     /// <summary>预览图路径;无预览图为占位图 ms-appx:///Assets/NoPreview.png(与 Papers 一致,避免 Uri 转换异常)。</summary>
     public string PreviewPath { get; set; } = "";
     public string SizeText { get; set; } = "";       // "128 MB"
+    /// <summary>原始字节数(排序用,不绑定 UI)。</summary>
+    public long SizeBytes { get; set; }
     public string BackupTimeText { get; set; } = ""; // "2026-08-18 22:30"
+    /// <summary>备份时间(排序用,不绑定 UI);解析失败为 null。</summary>
+    public DateTime? BackupTime { get; set; }
     public string FullPath { get; set; } = "";       // .we_backup/<id> 完整路径
     /// <summary>源文件已删除(取消订阅/下架,content/<id> 目录不存在),仅剩备份。</summary>
     public bool IsSourceMissing { get; set; }

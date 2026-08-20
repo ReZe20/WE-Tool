@@ -56,11 +56,24 @@ namespace WE_Tool
             string appDataRoot = GetAppDataRoot();
             string logPath = System.IO.Path.Combine(appDataRoot, "logs", "log.txt");
 
+            // 日志文件规范化:固定单文件 logs/log.txt,不做滚动(滚动会把活跃文件改成 log_001.txt,
+            // 导致 Info 页日志面板读不到)。超 5MB 在启动时截断重写,防止无限增长。
+            try
+            {
+                var logDir = System.IO.Path.GetDirectoryName(logPath) ?? appDataRoot;
+                Directory.CreateDirectory(logDir);
+                // 清理历史遗留的滚动序号文件(旧版本 rollOnFileSizeLimit 产生),保持目录只有 log.txt
+                foreach (var f in Directory.GetFiles(logDir, "log_*.txt"))
+                    try { File.Delete(f); } catch { }
+                if (new FileInfo(logPath).Length > 5 * 1024 * 1024)
+                    File.WriteAllText(logPath, string.Empty);
+            }
+            catch { /* 日志初始化失败不阻塞启动 */ }
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(LogLevelSwitch) // 级别由设置页控制,运行时即时生效
-                // 统一写入单个 log.txt,不做按天滚动;超过 5MB 滚动到时间戳文件,最多保留 1 个旧文件
                 .WriteTo.File(logPath, fileSizeLimitBytes: 5 * 1024 * 1024,
-                    rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
+                    rollOnFileSizeLimit: false)
                 .CreateLogger();
 
             // 全局异常日志:任何线程的未处理异常都记录到 log.txt;

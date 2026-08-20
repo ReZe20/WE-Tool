@@ -493,7 +493,7 @@
     <value>Abrir directorio</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value />
+    <value>Eliminar</value>
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
     <value>Seleccionar todo</value>
@@ -1312,7 +1312,7 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
     <value>Pila tecnológica</value>
   </data>
   <data name="Info_CreditsLine1.Content" xml:space="preserve">
-    <value>.NET 8</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
     <value>WinUI 3 (Windows App SDK 1.8)</value>
@@ -1430,13 +1430,13 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
     <value>Reintentar</value>
   </data>
   <data name="Info_SteamShutdown.Content" xml:space="preserve">
-    <value />
+    <value>Apagar Steamworks</value>
   </data>
   <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks apagado</value>
   </data>
   <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
-    <value />
+    <value>El proceso puente de Steamworks se ha detenido; las funciones del Taller no están disponibles. Haga clic en Reintentar para volver a conectar.</value>
   </data>
 
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
@@ -1610,6 +1610,9 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   <data name="Cleanup_Summary" xml:space="preserve">
     <value>{0} elementos · {1}</value>
   </data>
+  <data name="Cleanup_SortByType.Text" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
   <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
     <value>Limpiar {0}</value>
   </data>
@@ -1676,6 +1679,9 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>Limpieza</value>
   </data>
+  <data name="StartPage_WallpaperBackup.Text" xml:space="preserve">
+    <value>Copia de seguridad de fondos</value>
+  </data>
   <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
     <value>ej. D:\Export\Wallpapers</value>
   </data>
@@ -1695,37 +1701,40 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
     <value>ej. D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
   </data>
   <data name="AppBarButton_BackupDone.Label" xml:space="preserve">
-    <value />
+    <value>Copia de seguridad completada</value>
+  </data>
+  <data name="AppBarButton_Backup.Label" xml:space="preserve">
+    <value>Copia de seguridad</value>
   </data>
   <data name="BackupPage.Content" xml:space="preserve">
-    <value></value>
+    <value>Copia de seguridad de fondos</value>
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
-    <value></value>
+    <value>Copia de seguridad de fondos</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>No hay copias de seguridad</value>
   </data>
   <data name="BackupPage_Refresh.Label" xml:space="preserve">
-    <value></value>
+    <value>Actualizar</value>
   </data>
   <data name="BackupPage_DeleteAll.Label" xml:space="preserve">
-    <value></value>
+    <value>Eliminar todo</value>
   </data>
   <data name="AutoBackup_SettingsHeader.Text" xml:space="preserve">
-    <value></value>
+    <value>Copia de seguridad automática</value>
   </data>
   <data name="AutoBackup_ModeLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Modo de copia de seguridad automática</value>
   </data>
   <data name="AutoBackup_ModeOff.Content" xml:space="preserve">
-    <value></value>
+    <value>Desactivado</value>
   </data>
   <data name="AutoBackup_ModeService.Content" xml:space="preserve">
-    <value></value>
+    <value>Servicio en segundo plano</value>
   </data>
   <data name="AutoBackup_ServiceStatusLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Estado del servicio</value>
   </data>
   <data name="AutoBackup_ServiceNotInstalled.Text" xml:space="preserve">
     <value>No instalado. Haga clic en "Instalar servicio" para activar la copia de seguridad automática en segundo plano.</value>
@@ -1737,67 +1746,77 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
     <value>Servicio instalado (se inicia automáticamente al iniciar sesión)</value>
   </data>
   <data name="AutoBackup_Install.Content" xml:space="preserve">
-    <value></value>
+    <value>Instalar servicio</value>
   </data>
   <data name="AutoBackup_Uninstall.Content" xml:space="preserve">
-    <value></value>
+    <value>Desinstalar servicio</value>
   </data>
   <data name="AutoBackup_Start.Content" xml:space="preserve">
-    <value></value>
+    <value>Iniciar servicio</value>
   </data>
   <data name="AutoBackup_Stop.Content" xml:space="preserve">
-    <value></value>
+    <value>Detener servicio</value>
   </data>
   <data name="AutoBackup_TypeLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Tipos de fondos para copia de seguridad automática</value>
   </data>
   <data name="AutoBackup_TypeScene.Content" xml:space="preserve">
-    <value></value>
+    <value>Escena</value>
   </data>
   <data name="AutoBackup_TypeVideo.Content" xml:space="preserve">
-    <value></value>
+    <value>Video</value>
   </data>
   <data name="AutoBackup_TypeWeb.Content" xml:space="preserve">
-    <value></value>
+    <value>Web</value>
   </data>
   <data name="AutoBackup_TypeApp.Content" xml:space="preserve">
-    <value></value>
+    <value>Aplicación</value>
   </data>
   <data name="AutoBackup_TypePreset.Content" xml:space="preserve">
-    <value></value>
+    <value>Predefinido</value>
   </data>
   <data name="AutoBackup_TypeUnknown.Content" xml:space="preserve">
-    <value></value>
+    <value>Desconocido</value>
   </data>
   <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Clasificación por edad para copia de seguridad automática</value>
   </data>
   <data name="AutoBackup_RatingG.Content" xml:space="preserve">
-    <value></value>
+    <value>Todos</value>
   </data>
   <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
-    <value></value>
+    <value>Adolescentes</value>
   </data>
   <data name="AutoBackup_RatingR.Content" xml:space="preserve">
-    <value></value>
+    <value>Adultos</value>
   </data>
   <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
-    <value></value>
+    <value>La operación falló</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value></value>
+    <value>Copia de seguridad automática</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
-    <value></value>
+    <value>Elija el modo de copia de seguridad automática y los tipos y clasificaciones de fondos que desea respaldar.</value>
   </data>
   <data name="AutoBackup_Done.Content" xml:space="preserve">
-    <value></value>
+    <value>Listo</value>
   </data>
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Registro del servicio de copia de seguridad automática</value>
   </data>
   <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
     <value>Copia de seguridad al iniciar WE Tool</value>
+  </data>
+  
+  <data name="BackupPage_SortByTime.Text" xml:space="preserve">
+    <value>Fecha de copia de seguridad</value>
+  </data>
+  <data name="BackupPage_FilterEmpty.Text" xml:space="preserve">
+    <value>Ninguna copia de seguridad coincide con el filtro</value>
+  </data>
+  <data name="BackupPage_SortByMissing.Text" xml:space="preserve">
+    <value>Origen eliminado</value>
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Origen eliminado</value>

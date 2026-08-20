@@ -493,7 +493,7 @@
     <value>Verzeichnis öffnen</value>
   </data>
   <data name="AppBarButton_Delete.Label" xml:space="preserve">
-    <value />
+    <value>Löschen</value>
   </data>
   <data name="AppBarButton_SelectAll.Label" xml:space="preserve">
     <value>Alle auswählen</value>
@@ -1312,7 +1312,7 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
     <value>Technologie-Stack</value>
   </data>
   <data name="Info_CreditsLine1.Content" xml:space="preserve">
-    <value>.NET 8</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
     <value>WinUI 3 (Windows App SDK 1.8)</value>
@@ -1430,13 +1430,13 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
     <value>Erneut verbinden</value>
   </data>
   <data name="Info_SteamShutdown.Content" xml:space="preserve">
-    <value />
+    <value>Steamworks beenden</value>
   </data>
   <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks beendet</value>
   </data>
   <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
-    <value />
+    <value>Der Steamworks-Brückenprozess wurde beendet; Workshop-Funktionen sind nicht verfügbar. Klicken Sie auf „Erneut verbinden“, um die Verbindung wiederherzustellen.</value>
   </data>
 
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
@@ -1610,6 +1610,9 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   <data name="Cleanup_Summary" xml:space="preserve">
     <value>{0} Einträge · {1}</value>
   </data>
+  <data name="Cleanup_SortByType.Text" xml:space="preserve">
+    <value>Typ</value>
+  </data>
   <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
     <value>{0} bereinigen</value>
   </data>
@@ -1676,6 +1679,9 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>Bereinigung</value>
   </data>
+  <data name="StartPage_WallpaperBackup.Text" xml:space="preserve">
+    <value>Hintergrundbild-Sicherung</value>
+  </data>
   <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
     <value>z.B. D:\Export\Wallpapers</value>
   </data>
@@ -1695,37 +1701,40 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
     <value>z.B. D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
   </data>
   <data name="AppBarButton_BackupDone.Label" xml:space="preserve">
-    <value />
+    <value>Gesichert</value>
+  </data>
+  <data name="AppBarButton_Backup.Label" xml:space="preserve">
+    <value>Sicherung</value>
   </data>
   <data name="BackupPage.Content" xml:space="preserve">
-    <value></value>
+    <value>Sicherung</value>
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
-    <value></value>
+    <value>Hintergrundbild-Sicherung</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>Keine Sicherungen vorhanden</value>
   </data>
   <data name="BackupPage_Refresh.Label" xml:space="preserve">
-    <value></value>
+    <value>Aktualisieren</value>
   </data>
   <data name="BackupPage_DeleteAll.Label" xml:space="preserve">
-    <value></value>
+    <value>Alle löschen</value>
   </data>
   <data name="AutoBackup_SettingsHeader.Text" xml:space="preserve">
-    <value></value>
+    <value>Automatische Sicherung</value>
   </data>
   <data name="AutoBackup_ModeLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Modus der automatischen Sicherung</value>
   </data>
   <data name="AutoBackup_ModeOff.Content" xml:space="preserve">
-    <value></value>
+    <value>Aus</value>
   </data>
   <data name="AutoBackup_ModeService.Content" xml:space="preserve">
-    <value></value>
+    <value>Hintergrund-Service</value>
   </data>
   <data name="AutoBackup_ServiceStatusLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Servicestatus</value>
   </data>
   <data name="AutoBackup_ServiceNotInstalled.Text" xml:space="preserve">
     <value>Nicht installiert. Klicken Sie auf "Service installieren", um die automatische Hintergrund-Sicherung zu aktivieren.</value>
@@ -1737,67 +1746,77 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
     <value>Service installiert (startet automatisch bei der Anmeldung)</value>
   </data>
   <data name="AutoBackup_Install.Content" xml:space="preserve">
-    <value></value>
+    <value>Service installieren</value>
   </data>
   <data name="AutoBackup_Uninstall.Content" xml:space="preserve">
-    <value></value>
+    <value>Service deinstallieren</value>
   </data>
   <data name="AutoBackup_Start.Content" xml:space="preserve">
-    <value></value>
+    <value>Service starten</value>
   </data>
   <data name="AutoBackup_Stop.Content" xml:space="preserve">
-    <value></value>
+    <value>Service beenden</value>
   </data>
   <data name="AutoBackup_TypeLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Hintergrundbildtypen für die automatische Sicherung</value>
   </data>
   <data name="AutoBackup_TypeScene.Content" xml:space="preserve">
-    <value></value>
+    <value>Szene</value>
   </data>
   <data name="AutoBackup_TypeVideo.Content" xml:space="preserve">
-    <value></value>
+    <value>Video</value>
   </data>
   <data name="AutoBackup_TypeWeb.Content" xml:space="preserve">
-    <value></value>
+    <value>Web</value>
   </data>
   <data name="AutoBackup_TypeApp.Content" xml:space="preserve">
-    <value></value>
+    <value>Anwendung</value>
   </data>
   <data name="AutoBackup_TypePreset.Content" xml:space="preserve">
-    <value></value>
+    <value>Voreinstellung</value>
   </data>
   <data name="AutoBackup_TypeUnknown.Content" xml:space="preserve">
-    <value></value>
+    <value>Unbekannt</value>
   </data>
   <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
-    <value></value>
+    <value>Altersfreigabe für die automatische Sicherung</value>
   </data>
   <data name="AutoBackup_RatingG.Content" xml:space="preserve">
-    <value></value>
+    <value>Alle</value>
   </data>
   <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
-    <value></value>
+    <value>Jugendliche</value>
   </data>
   <data name="AutoBackup_RatingR.Content" xml:space="preserve">
-    <value></value>
+    <value>Erwachsene</value>
   </data>
   <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
-    <value></value>
+    <value>Vorgang fehlgeschlagen</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value></value>
+    <value>Automatische Sicherung</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
-    <value></value>
+    <value>Modus der automatischen Sicherung wählen und festlegen, welche Hintergrundbildtypen und Altersfreigaben gesichert werden sollen</value>
   </data>
   <data name="AutoBackup_Done.Content" xml:space="preserve">
-    <value></value>
+    <value>Fertig</value>
   </data>
   <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
     <value>Automatisches Sicherungsprotokoll</value>
   </data>
   <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
     <value>Sicherung beim WE Tool-Start</value>
+  </data>
+  
+  <data name="BackupPage_SortByTime.Text" xml:space="preserve">
+    <value>Sicherungszeit</value>
+  </data>
+  <data name="BackupPage_FilterEmpty.Text" xml:space="preserve">
+    <value>Keine Sicherungen entsprechen dem Filter</value>
+  </data>
+  <data name="BackupPage_SortByMissing.Text" xml:space="preserve">
+    <value>Quelle entfernt</value>
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Quelle entfernt</value>

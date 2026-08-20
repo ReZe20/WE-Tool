@@ -18,6 +18,8 @@ public sealed class CleanupCardViewModel : INotifyPropertyChanged
     public string TypeLabel { get; set; } = "多余";   // 卸载 / 多余
     public string FullPath { get; set; } = "";      // 文件夹完整路径
     public string StatsText { get; set; } = "";     // "N 个残留 · 1.2 GB"
+    /// <summary>残留总字节数(排序用,不绑定 UI)。</summary>
+    public long TotalSize { get; set; }
     public bool IsUnloaded { get; set; }            // 已卸载类型(删整个文件夹)
     public bool IsSelected { get; set; }             // 多选状态
     public List<CleanupFileItem> Files { get; set; } = new();
