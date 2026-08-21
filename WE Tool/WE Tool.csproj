@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <!-- AOT:TFM 平台版本对齐到本机已装 Windows SDK 10.0.26100.0(缺 19041.0 的 UAP Platform.xml);
+         去掉独立覆盖,避免与 TFM 冲突 -->
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>WE_Tool</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -12,6 +14,10 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <WinUISDKReferences>false</WinUISDKReferences>
+    <!-- AOT 修复:WinUI 拆分包(2.x)与 BuildTools.MSIX 都抢 CustomBeforeMicrosoftCommonTargets,
+         互相覆盖导致 "_Is...ChainValid" 校验失败(MSIX 依赖冲突)。手动标记两个链均有效 -->
+    <_IsWinUICustomBeforeMicrosoftCommonTargetsChainValid>true</_IsWinUICustomBeforeMicrosoftCommonTargetsChainValid>
+    <_IsMsixCustomBeforeMicrosoftCommonTargetsChainValid>true</_IsMsixCustomBeforeMicrosoftCommonTargetsChainValid>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
@@ -22,8 +28,9 @@
     <Copyright>Copyright © 2026 ReZe20</Copyright>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
     <WindowsPackageType>None</WindowsPackageType>
-    <!-- AOT/Trim 兼容:禁用 XAML 类型反射和绑定诊断(避免 0xC000027B stowed exception) -->
-    <EnableTypeInfoReflection>false</EnableTypeInfoReflection>
+    <!-- AOT 兼容:保留 XAML 类型反射(EnableTypeInfoReflection=false 会导致 XamlParseException,
+         因为 XAML 类型解析依赖反射;与 PublishTrimmed=false 配套,避免裁剪+禁反射双杀) -->
+    <EnableTypeInfoReflection>true</EnableTypeInfoReflection>
     <EnableBindingDiagnostics>false</EnableBindingDiagnostics>
   </PropertyGroup>
   <ItemGroup>
@@ -71,6 +78,14 @@
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.3.6" />
     <!-- AOT:CsWinRT source generator (matches WinUI 2.3.6) -->
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
+    <!-- AOT Debug 修复:CsWinRT 的 WinRT.Runtime 是开发依赖,不进 deps.json;
+         显式引用使其进入运行时依赖清单(runtime pack 缺失时不再 FileNotFoundException) -->
+    <Reference Include="WinRT.Runtime">
+      <HintPath>$(NuGetPackageRoot)microsoft.windows.cswinrt\2.3.1\lib\net9.0\WinRT.Runtime.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <!-- AOT:压制 BuildTools 传递引入的旧一体包(1.6),避免其 targets 与拆分包 2.x 重复导入 XAML Page -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250108002" ExcludeAssets="all" />
     <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SkiaSharp" Version="4.151.1" />
@@ -270,8 +285,9 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- AOT 修复:WinRT.Runtime 2.3.1 的 ComWrappersSupport 依赖 IDynamicInterfaceCastable,
+         PublishTrimmed 裁剪会删掉该类型导致 TypeInitializationException,故关闭裁剪 -->
+    <PublishTrimmed>False</PublishTrimmed>
     <AssemblyName>WE_Tool</AssemblyName>
     <AssemblyTitle>WE_Tool</AssemblyTitle>
     <StartupObject>WE_Tool.Program</StartupObject>
@@ -371,6 +387,15 @@
   </Target>
 
   <!-- Post-publish: restructure with .NET Framework launcher -->
+  <!-- AOT 诊断辅助(Debug 专用):SDK.NET.Ref 26100.57 会把 WinRT.Runtime 2.2.0 复制进输出,
+       覆盖 CsWinRT 2.3.1 的 2.3.1.0,导致 Debug 启动 FileNotFoundException。
+       仅 Debug 构建完成后从 CsWinRT 包覆盖回 2.3.1(Release 由 PackageWithLauncher 内覆盖) -->
+  <Target Name="FixDebugWinRTRuntime" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.windows.cswinrt\2.3.1\lib\net9.0\WinRT.Runtime.dll"
+          DestinationFiles="$(TargetDir)WinRT.Runtime.dll" SkipUnchangedFiles="false" />
+    <Message Importance="high" Text="[AOT诊断] Debug WinRT.Runtime 已覆盖为 CsWinRT 2.3.1 版本" />
+  </Target>
+
   <Target Name="PackageWithLauncher" AfterTargets="Publish">
     <PropertyGroup>
       <LauncherProj>$(ProjectDir)..\WE_Tool.Launcher\WE_Tool.Launcher.csproj</LauncherProj>
@@ -382,6 +407,10 @@
     <Exec Command="powershell -NoProfile -Command &quot;$p='$(PublishDir)'; $a=Join-Path $p 'app'; if (Test-Path $a) { Remove-Item $a -Recurse -Force }; New-Item -ItemType Directory -Force -Path $a | Out-Null; Get-ChildItem $p -Exclude app | Move-Item -Destination $a -Force&quot;" />
     <!-- Copy launcher EXE to root -->
     <Copy SourceFiles="$(LauncherExe)" DestinationFiles="$(PublishDir)WE_Tool.exe" />
+    <!-- AOT 修复:SDK 引用程序集(SDK.NET.Ref 26100.57)自带的 WinRT.Runtime 2.2.0 会混入发布输出,
+         与 CsWinRT 2.3.1 要求的 2.3.1.0 冲突(运行时 FileNotFoundException)。从 CsWinRT 包强制覆盖回正确版本 -->
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.windows.cswinrt\2.3.1\lib\net9.0\WinRT.Runtime.dll"
+          DestinationFiles="$(PublishDir)app\WinRT.Runtime.dll" SkipUnchangedFiles="false" />
     <!-- 剔除调试符号:SkiaSharp 等原生包自带 .pdb(仅调试用),发布产物不携带,避免体积虚增 -->
     <!-- 剔除 ANGLE 原生库:SkiaGifView 纯 CPU 光栅绘制(SKCodec+SKBitmap+SKXamlCanvas),不创建 GL 上下文;
          libEGL/libGLESv2 系 SkiaSharp.Views.WinUI 的 OpenGL 后端,实测删除后应用显示正常(2026-08-18) -->

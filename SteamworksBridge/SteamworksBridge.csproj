@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>SteamworksBridge</AssemblyName>
@@ -14,6 +14,9 @@
     <OutputPath>bin\$(Configuration)\$(TargetFramework)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- 与主项目统一 Windows SDK 版本:否则 SDK 默认给 .57,其输出被 CopySteamworksBridge 拷入主项目后,
+         覆盖主项目正确的 .87 SDK.NET.dll,导致运行时 FileNotFoundException(XamlParseException) -->
+    <WindowsSdkPackageVersion>10.0.26100.87</WindowsSdkPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
