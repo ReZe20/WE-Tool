@@ -21,5 +21,6 @@ namespace WE_Tool.Json
     [JsonSerializable(typeof(BridgeCommand))]
     [JsonSerializable(typeof(LoadPapersEntry))]
     [JsonSerializable(typeof(string))]
+    [JsonSerializable(typeof(WallpaperScanner.CacheFile))]
     internal partial class JsonContext : JsonSerializerContext { }
 }

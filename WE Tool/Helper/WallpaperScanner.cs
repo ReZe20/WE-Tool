@@ -1,10 +1,8 @@
-﻿using Microsoft.Data.Sqlite;
-using Serilog;
+﻿using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -43,178 +41,98 @@ internal class WallpaperScanner
         @"""publishedfileid""\s+""(\d+)""[^}]*""disabled_locally""\s+""(\d+)""",
         RegexOptions.Compiled);
 
-    // ====================== SQLite 缓存相关 ======================
-    private record CachedEntry(WallpaperItem Item, DateTime UpdateTime, DateTime CachedAt);
+    // ====================== 扫描缓存(JSON 单文件,原子写) ======================
+    // 旧实现用 Microsoft.Data.Sqlite 存 SQLite 数据库;实际用法只有"整表读进内存 + 整批重写",
+    // 没用到 SQLite 的查询/索引/并发能力,却背上原生库依赖(e_sqlite3.dll)与 AOT 裁剪风险。
+    // 自实现:单个 JSON 文件(源生成器序列化,零反射、AOT 安全),写时先落临时文件再原子替换,
+    // 读失败/损坏一律回退全量扫描。
+    // 注:CacheFile/CachedEntry 须为 internal(源生成器要求类型可达,private 嵌套类无法注册)。
+    internal sealed class CacheFile
+    {
+        public DateTime SavedAtUtc { get; set; }
+        public List<CachedEntry> Entries { get; set; } = [];
+    }
+
+    internal sealed class CachedEntry
+    {
+        public WallpaperItem Item { get; set; } = null!;
+        public DateTime UpdateTime { get; set; }
+        public DateTime CachedAt { get; set; }
+    }
+
+    private static readonly object CacheWriteLock = new();
 
     private static string GetDefaultCachePath() =>
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "WE_Tool", "wallpaper_cache.db");
+            "WE_Tool", "wallpaper_cache.json");
 
-    private static void EnsureDatabaseInitialized(string dbPath)
+    /// <summary>读取缓存文件(损坏/缺失 → 空字典,由调用方回退全量扫描)。</summary>
+    private static Dictionary<string, CachedEntry> LoadCacheDictionary(string cachePath)
     {
-        var dir = Path.GetDirectoryName(dbPath);
-        if (dir != null) Directory.CreateDirectory(dir);
-
-        using var conn = new SqliteConnection($"Data Source={dbPath}");
-        conn.Open();
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = """
-            CREATE TABLE IF NOT EXISTS WallpaperCache (
-                FolderPath     TEXT PRIMARY KEY,
-                Source         TEXT NOT NULL,
-                WorkshopID     TEXT,
-                Title          TEXT,
-                Description    TEXT,
-                FileSize       INTEGER,
-                CreationTime   TEXT,
-                UpdateTime     TEXT,
-                AcfUpdateTime  TEXT,
-                Preview        TEXT,
-                ContentRating  TEXT,
-                Tags           TEXT,
-                Type           TEXT,
-                Dependency     TEXT,
-                AcfSize        INTEGER,
-                IsDelisted     INTEGER,
-                CachedAt       TEXT
-            );
-            """;
-        cmd.ExecuteNonQuery();
-
-        // 迁移：如果旧表缺少 AcfSize 列则添加
-        try
-        {
-            using var alterCmd = conn.CreateCommand();
-            alterCmd.CommandText = "ALTER TABLE WallpaperCache ADD COLUMN AcfSize INTEGER;";
-            alterCmd.ExecuteNonQuery();
-        }
-        catch { /* 列已存在，忽略 */ }
-
-        // 迁移：如果旧表缺少 IsDelisted 列则添加
-        try
-        {
-            using var alterCmd2 = conn.CreateCommand();
-            alterCmd2.CommandText = "ALTER TABLE WallpaperCache ADD COLUMN IsDelisted INTEGER;";
-            alterCmd2.ExecuteNonQuery();
-        }
-        catch { /* 列已存在，忽略 */ }
-    }
-
-    private static Dictionary<string, CachedEntry> LoadCacheDictionary(string dbPath)
-    {
-        var dict = new Dictionary<string, CachedEntry>(StringComparer.Ordinal);
-        if (!File.Exists(dbPath)) return dict;
+        if (!File.Exists(cachePath)) return [];
 
         try
         {
-            using var conn = new SqliteConnection($"Data Source={dbPath}");
-            conn.Open();
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT * FROM WallpaperCache";
-            using var reader = cmd.ExecuteReader();
+            var json = File.ReadAllText(cachePath);
+            var cacheFile = JsonSerializer.Deserialize(json, JsonContext.Default.CacheFile);
+            if (cacheFile?.Entries == null) return [];
 
-            while (reader.Read())
+            var dict = new Dictionary<string, CachedEntry>(StringComparer.Ordinal);
+            foreach (var entry in cacheFile.Entries)
             {
-                var entry = LoadCachedEntry(reader);
                 if (entry.Item.FolderPath != null)
-                {
                     dict[entry.Item.FolderPath] = entry;
-                }
             }
+            return dict;
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "加载 SQLite 缓存失败，将进行全量扫描。");
+            Log.Warning(ex, "加载扫描缓存失败(文件可能损坏)，将进行全量扫描。");
+            return [];
         }
-        return dict;
     }
 
-    private static CachedEntry LoadCachedEntry(SqliteDataReader reader)
+    /// <summary>原子写缓存:先写临时文件再替换,避免写一半崩溃留下半截文件。</summary>
+    private static void SaveItemsToCache(string cachePath, IEnumerable<WallpaperItem> items)
     {
-        var tagsString = reader.IsDBNull(reader.GetOrdinal("Tags")) ? "Unspecified" : reader.GetString("Tags");
+        var list = items.ToList();
+        if (list.Count == 0) return;
 
-        var item = new WallpaperItem
+        // 三个扫描源(workshop/official/mine)并行,共用同一缓存文件,写必须串行化
+        lock (CacheWriteLock)
         {
-            WorkshopID = reader.IsDBNull("WorkshopID") ? "" : reader.GetString("WorkshopID"),
-            FolderPath = reader.GetString("FolderPath"),
-            Title = reader.IsDBNull("Title") ? "无标题" : reader.GetString("Title"),
-            Description = reader.IsDBNull("Description") ? "" : reader.GetString("Description"),
-            FileSize = reader.IsDBNull("FileSize") ? 0L : reader.GetInt64("FileSize"),
-            CreationTime = DateTime.ParseExact(reader.GetString("CreationTime"), "o", CultureInfo.InvariantCulture),
-            UpdateTime = DateTime.ParseExact(reader.GetString("UpdateTime"), "o", CultureInfo.InvariantCulture),
-            AcfUpdateTime = reader.IsDBNull("AcfUpdateTime")
-                ? null
-                : DateTime.ParseExact(reader.GetString("AcfUpdateTime"), "o", CultureInfo.InvariantCulture),
-            Preview = reader.GetString("Preview"),
-            ContentRating = reader.IsDBNull("ContentRating") ? "Everyone" : reader.GetString("ContentRating"),
-            Tags = tagsString,
-            Type = reader.GetString("Type"),
-            Source = reader.GetString("Source"),
-            Dependency = reader.IsDBNull("Dependency") ? "" : reader.GetString("Dependency"),
-            AcfSize = reader.IsDBNull("AcfSize") ? null : reader.GetInt64("AcfSize"),
-            IsDelisted = !reader.IsDBNull("IsDelisted") && reader.GetBoolean("IsDelisted")
-        };
-
-        var cachedAt = DateTime.ParseExact(reader.GetString("CachedAt"), "o", CultureInfo.InvariantCulture);
-        return new CachedEntry(item, item.UpdateTime, cachedAt);
-    }
-
-    private static void SaveItemsToCache(string dbPath, IEnumerable<WallpaperItem> items)
-    {
-        if (!items.Any()) return;
-
-        try
-        {
-            using var conn = new SqliteConnection($"Data Source={dbPath}");
-            conn.Open();
-            using var tx = conn.BeginTransaction();
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = """
-                INSERT OR REPLACE INTO WallpaperCache 
-                (FolderPath, Source, WorkshopID, Title, Description, FileSize,
-                 CreationTime, UpdateTime, AcfUpdateTime, Preview, ContentRating, Tags,
-                 Type, Dependency, AcfSize, IsDelisted, CachedAt)
-                VALUES (@FolderPath, @Source, @WorkshopID, @Title, @Description, @FileSize,
-                        @CreationTime, @UpdateTime, @AcfUpdateTime, @Preview, @ContentRating, @Tags,
-                        @Type, @Dependency, @AcfSize, @IsDelisted, @CachedAt)
-                """;
-
-            foreach (var item in items)
+            try
             {
-                cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@FolderPath", item.FolderPath);
-                cmd.Parameters.AddWithValue("@Source", item.Source);
-                cmd.Parameters.AddWithValue("@WorkshopID", item.WorkshopID ?? "");
-                cmd.Parameters.AddWithValue("@Title", item.Title);
-                cmd.Parameters.AddWithValue("@Description", item.Description ?? "");
-                cmd.Parameters.AddWithValue("@FileSize", item.FileSize);
-                cmd.Parameters.AddWithValue("@CreationTime", item.CreationTime.ToString("o"));
-                cmd.Parameters.AddWithValue("@UpdateTime", item.UpdateTime.ToString("o"));
-                cmd.Parameters.AddWithValue("@AcfUpdateTime",
-                    item.AcfUpdateTime.HasValue
-                        ? (object)item.AcfUpdateTime.Value.ToString("o")
-                        : DBNull.Value);
-                cmd.Parameters.AddWithValue("@Preview", item.Preview);
-                cmd.Parameters.AddWithValue("@ContentRating", item.ContentRating);
-                cmd.Parameters.AddWithValue("@Tags", item.Tags ?? "Unspecified");
-                cmd.Parameters.AddWithValue("@Type", item.Type);
-                cmd.Parameters.AddWithValue("@Dependency", item.Dependency ?? "");
-                cmd.Parameters.AddWithValue("@CachedAt", DateTime.UtcNow.ToString("o"));
-                cmd.Parameters.AddWithValue("@AcfSize",
-                    item.AcfSize.HasValue
-                        ? (object)item.AcfSize.Value
-                        : DBNull.Value);
-                cmd.Parameters.AddWithValue("@IsDelisted", item.IsDelisted ? 1 : 0);
+                var cacheFile = new CacheFile
+                {
+                    SavedAtUtc = DateTime.UtcNow,
+                    Entries = list
+                        .Where(i => i.FolderPath != null)
+                        .Select(i => new CachedEntry
+                        {
+                            Item = i,
+                            UpdateTime = i.UpdateTime,
+                            CachedAt = DateTime.UtcNow
+                        })
+                        .ToList()
+                };
 
-                cmd.ExecuteNonQuery();
+                var json = JsonSerializer.Serialize(cacheFile, JsonContext.Default.CacheFile);
+                var dir = Path.GetDirectoryName(cachePath);
+                if (dir != null) Directory.CreateDirectory(dir);
+
+                var tempPath = cachePath + ".tmp";
+                File.WriteAllText(tempPath, json);
+                File.Move(tempPath, cachePath, overwrite: true);
+                Log.Information($"已缓存 {cacheFile.Entries.Count} 个壁纸到 JSON 缓存");
             }
-            tx.Commit();
-            Log.Information($"已缓存 {items.Count()} 个壁纸到 SQLite");
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "保存 SQLite 缓存失败（不影响扫描结果）");
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "保存扫描缓存失败（不影响扫描结果）");
+                try { if (File.Exists(cachePath + ".tmp")) File.Delete(cachePath + ".tmp"); }
+                catch { /* 忽略清理失败 */ }
+            }
         }
     }
 
@@ -264,7 +182,6 @@ internal class WallpaperScanner
 
             if (useCache)
             {
-                EnsureDatabaseInitialized(effectiveCachePath!);
                 var cacheDict = LoadCacheDictionary(effectiveCachePath!);
 
                 // 缓存命中判断（基于文件修改时间）

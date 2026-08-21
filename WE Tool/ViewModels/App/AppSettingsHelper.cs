@@ -20,7 +20,7 @@ namespace WE_Tool.ViewModels
             }
         }
 
-        /// <summary>缓存文件所在目录（wallpaper_cache.db）</summary>
+        /// <summary>缓存文件所在目录（wallpaper_cache.json）</summary>
         public static string CachePath
         {
             get

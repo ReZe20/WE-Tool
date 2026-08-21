@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1322,9 +1322,6 @@ project.json 및 미리보기 복사
   </data>
   <data name="Info_CreditsLine4.Content" xml:space="preserve">
     <value>Facepunch.Steamworks 2.3</value>
-  </data>
-  <data name="Info_CreditsLine5.Content" xml:space="preserve">
-    <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
   <data name="Info_CreditsLine7.Content" xml:space="preserve">
     <value>Serilog 4.4</value>

@@ -104,7 +104,6 @@
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine2" NavigateUri="https://github.com/microsoft/WindowsAppSDK" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine3" NavigateUri="https://github.com/CommunityToolkit/Windows" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine4" NavigateUri="https://github.com/Facepunch/Facepunch.Steamworks" FontSize="12"/>
-                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine5" NavigateUri="https://github.com/dotnet/efcore" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine7" NavigateUri="https://github.com/serilog/serilog" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine8" NavigateUri="https://github.com/dotMorten/WinUIEx" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLineSkia" NavigateUri="https://github.com/mono/SkiaSharp" FontSize="12"/>
