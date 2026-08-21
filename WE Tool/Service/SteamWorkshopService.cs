@@ -30,7 +30,7 @@ public enum SteamworksStatus
 /// 通过 stdin/stdout 行 JSON 协议通信。原因:Steam 客户端退出时会强制关闭以游戏 AppID
 /// 连接的进程(连 Wallpaper Engine 本体都会被关),子进程方案让被杀的是桥接进程,主应用存活。
 /// </summary>
-public class SteamWorkshopService : IDisposable
+public partial class SteamWorkshopService : IDisposable
 {
     private const string BridgeExeName = "SteamworksBridge.exe";
 

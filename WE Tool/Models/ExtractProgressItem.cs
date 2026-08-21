@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace WE_Tool.Models;
 
-public class ExtractProgressItem : INotifyPropertyChanged
+public partial class ExtractProgressItem : INotifyPropertyChanged
 {
     private string _name = "";
     private string _action = "";

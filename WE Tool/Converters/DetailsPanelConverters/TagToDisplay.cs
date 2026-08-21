@@ -8,7 +8,7 @@ using WE_Tool.Helper;
 
 namespace WE_Tool.Converters
 {
-    internal class TagToDisplay : IValueConverter
+    internal partial class TagToDisplay : IValueConverter
     {
         public object Convert(object value, Type? targetType, object parameter, string language)
         {

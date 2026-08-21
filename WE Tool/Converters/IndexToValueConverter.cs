@@ -10,7 +10,7 @@ namespace WE_Tool.Converters
     /// ConverterParameter format: "v0,v1,v2,..." — index i maps to value vi and vice versa.
     /// Example: ConverterParameter="-1,4,2,1" means index 0→-1, 1→4, 2→2, 3→1.
     /// </summary>
-    public class IndexToValueConverter : IValueConverter
+    public partial class IndexToValueConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

@@ -7,7 +7,7 @@ namespace WE_Tool.Converters;
 /// 将 bool 值转换为 SelectedIndex：true→0, false→1。
 /// 用于 RadioButtons.SelectedIndex 绑定到 bool 属性。
 /// </summary>
-public class BoolToIndexConverter : IValueConverter
+public partial class BoolToIndexConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {

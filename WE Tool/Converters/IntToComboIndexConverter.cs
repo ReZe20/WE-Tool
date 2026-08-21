@@ -8,7 +8,7 @@ namespace WE_Tool.Converters
     /// ConverterParameter format: "defaultVal,option2Val,option3Val,..."
     /// Maps: selected index → the value at that index; value → index via linear search.
     /// </summary>
-    public class IntToComboIndexConverter : IValueConverter
+    public partial class IntToComboIndexConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

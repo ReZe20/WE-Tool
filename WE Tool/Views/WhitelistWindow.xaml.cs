@@ -10,6 +10,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using WE_Tool.ViewModels;
 using WE_Tool.Helper;
+using WE_Tool.Json;
 using WinUIEx;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Windowing;
@@ -248,7 +249,7 @@ public sealed partial class WhitelistWindow : WindowEx
             var file = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "WE_Tool", "cleanup_whitelist.json");
-            File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(_whitelist.ToList()));
+            File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(_whitelist.ToList(), JsonContext.Default.ListString));
         }
         catch { }
     }

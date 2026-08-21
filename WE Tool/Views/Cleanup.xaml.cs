@@ -15,6 +15,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Controls;
 using WE_Tool.ViewModels;
 using WE_Tool.Helper;
+using WE_Tool.Json;
 
 namespace WE_Tool.Views;
 
@@ -66,7 +67,7 @@ public sealed partial class Cleanup : Page
         try
         {
             if (!File.Exists(WhitelistFile)) return;
-            var list = JsonSerializer.Deserialize<List<string>>(File.ReadAllText(WhitelistFile));
+            var list = JsonSerializer.Deserialize(File.ReadAllText(WhitelistFile), JsonContext.Default.ListString);
             if (list != null)
                 foreach (var id in list)
                     _whitelist.Add(id);
@@ -79,7 +80,7 @@ public sealed partial class Cleanup : Page
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(WhitelistFile)!);
-            File.WriteAllText(WhitelistFile, JsonSerializer.Serialize(_whitelist.ToList()));
+            File.WriteAllText(WhitelistFile, JsonSerializer.Serialize(_whitelist.ToList(), JsonContext.Default.ListString));
         }
         catch { }
     }

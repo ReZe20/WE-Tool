@@ -22,7 +22,7 @@ namespace WE_Tool.Models
     /// 纯文本组件（text/group）可能带超链接与样式；group 类型渲染为可折叠 Expander 并吞并后续属性；
     /// condition 字段控制行可见性（由 ViewModel 建立属性间监听）。
     /// </summary>
-    public class WallpaperProperty : INotifyPropertyChanged
+    public partial class WallpaperProperty : INotifyPropertyChanged
     {
         // === 元数据（解析时固定） ===
         public string Key { get; set; } = "";

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace WE_Tool.ViewModels;
 
-public sealed class BackupItemViewModel : INotifyPropertyChanged
+public sealed partial class BackupItemViewModel : INotifyPropertyChanged
 {
     public string WorkshopId { get; set; } = "";
     public string Title { get; set; } = "";
