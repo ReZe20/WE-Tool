@@ -21,6 +21,8 @@ public enum SteamworksStatus
     Failed,
     /// <summary>曾正常运行但桥接进程已退出(如 Steam 客户端关闭时被杀)</summary>
     Disconnected,
+    /// <summary>用户手动关闭(Info 页"关闭 Steamworks"按钮),桥接进程已停止</summary>
+    Stopped,
 }
 
 /// <summary>
@@ -41,6 +43,7 @@ public class SteamWorkshopService : IDisposable
     private bool _disposed;
     private bool _hadGoodStatus; // 桥接进程是否曾成功响应过状态查询
     private bool _startAttempted; // 已尝试过启动(失败后需手动重试,避免每秒自动重启刷屏)
+    private bool _userStopped; // 用户手动关闭(Shutdown 置位;Status 优先返回 Stopped)
 
     /// <summary>状态发生切换时触发(桥接启动成功/失败、桥接退出;UI 据此更新导航徽标等)</summary>
     public static event Action? StatusChanged;
@@ -76,6 +79,8 @@ public class SteamWorkshopService : IDisposable
     {
         get
         {
+            if (_userStopped)
+                return SteamworksStatus.Stopped;
             if (_bridge == null || _bridge.HasExited)
                 return _hadGoodStatus ? SteamworksStatus.Disconnected : SteamworksStatus.Failed;
             return SteamworksStatus.Running;
@@ -97,9 +102,21 @@ public class SteamWorkshopService : IDisposable
     {
         lock (Lock)
         {
+            _userStopped = false;
             StopBridge();
             _startAttempted = true;
             return StartBridge();
+        }
+    }
+
+    /// <summary>用户手动关闭:停止桥接进程,状态置 Stopped(Info 页"关闭 Steamworks"按钮调用)。关闭后需 Reinitialize 恢复。</summary>
+    public void Shutdown()
+    {
+        lock (Lock)
+        {
+            _userStopped = true;
+            StopBridge();
+            StatusChanged?.Invoke();
         }
     }
 
@@ -109,7 +126,7 @@ public class SteamWorkshopService : IDisposable
         try
         {
             var response = await RequestAsync(
-                JsonSerializer.Serialize(new BridgeCommand("unsubscribe", workshopId.ToString()), JsonContext.Default.BridgeCommand),
+                JsonSerializer.Serialize(new BridgeCommand("unsubscribe", workshopId.ToString()), BridgeJsonContext.Default.BridgeCommand),
                 TimeSpan.FromSeconds(20)).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(response);
             return doc.RootElement.GetProperty("ok").GetBoolean();
@@ -132,7 +149,7 @@ public class SteamWorkshopService : IDisposable
         try
         {
             var response = await RequestAsync(
-                JsonSerializer.Serialize(new BridgeCommand("status"), JsonContext.Default.BridgeCommand),
+                JsonSerializer.Serialize(new BridgeCommand("status"), BridgeJsonContext.Default.BridgeCommand),
                 TimeSpan.FromSeconds(2)).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(response);
             if (doc.RootElement.GetProperty("ok").GetBoolean())
@@ -186,8 +203,8 @@ public class SteamWorkshopService : IDisposable
                 },
                 EnableRaisingEvents = true,
             };
-            // 自包含发布(无 .NET 8 的机器)时,桥接为框架依赖进程,须指向应用自带的运行时;
-            // 框架依赖安装(本机有 .NET 8)则不用设置
+            // 自包含发布(无对应 .NET 运行时的机器)时,桥接为框架依赖进程,须指向应用自带的运行时;
+            // 框架依赖安装(本机装有对应 .NET)则不用设置
             if (File.Exists(Path.Combine(AppContext.BaseDirectory, "hostfxr.dll")))
                 bridge.StartInfo.Environment["DOTNET_ROOT"] = AppContext.BaseDirectory;
             bridge.Exited += (_, _) =>
@@ -232,7 +249,7 @@ public class SteamWorkshopService : IDisposable
         {
             if (!bridge.HasExited)
             {
-                bridge.StandardInput.WriteLine(JsonSerializer.Serialize(new BridgeCommand("exit"), JsonContext.Default.BridgeCommand));
+                bridge.StandardInput.WriteLine(JsonSerializer.Serialize(new BridgeCommand("exit"), BridgeJsonContext.Default.BridgeCommand));
                 bridge.StandardInput.Flush();
                 if (!bridge.WaitForExit(2000))
                     bridge.Kill();

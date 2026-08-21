@@ -148,6 +148,18 @@
                                 <TextBlock x:Uid="StartPage_Import" VerticalAlignment="Center"/>
                             </StackPanel>
                         </ComboBoxItem>
+                        <ComboBoxItem Tag="Cleanup">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE74D;" FontSize="14"/>
+                                <TextBlock x:Uid="StartPage_Cleanup" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="WallpaperBackup">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xF738;" FontSize="14"/>
+                                <TextBlock x:Uid="StartPage_WallpaperBackup" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
                     </ComboBox>
                 </controls:SettingsCard>
                 <controls:SettingsCard x:Uid="Theme" Margin="0,0,0,10">
@@ -161,7 +173,7 @@
                     </ComboBox>
                 </controls:SettingsCard>
 
-                <controls:SettingsCard x:Uid="ScanCache" Margin="0,0,0,10" Description="扫描缓存可用于程序加速扫描速度">
+                <controls:SettingsCard x:Uid="ScanCache" Margin="0,0,0,10">
                     <controls:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xEE94;"/>
                     </controls:SettingsCard.HeaderIcon>
@@ -190,14 +202,14 @@
                     </ComboBox>
                 </controls:SettingsCard>
 
-                <controls:SettingsExpander Header="窗口行为" Description="控制程序启动时是否恢复窗口位置、大小和最大化状态" Margin="0,0,0,10">
+                <controls:SettingsExpander x:Uid="WindowBehavior" Margin="0,0,0,10">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE73F;"/>
                     </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
-                                <CheckBox Content="恢复上一次的窗口大小和位置"
+                                <CheckBox x:Uid="WindowBehavior_Restore"
                                               IsChecked="{x:Bind ViewModel.AppSettingsVM.RestoreWindowGeometry, Mode=TwoWay}"/>
                             </controls:SettingsCard.Header>
                         </controls:SettingsCard>
@@ -552,7 +564,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <TextBox x:Uid="Settings_DownloadPath" Text="{x:Bind ViewModel.PathManagementVM.DownloadPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="DownloadPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                     </Grid>
                 </controls:SettingsCard>
@@ -576,7 +588,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.WorkshopPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                        <TextBox x:Uid="Settings_WorkshopPath" Text="{x:Bind ViewModel.PathManagementVM.WorkshopPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="WorkshopPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                     </Grid>
                 </controls:SettingsCard>
@@ -600,7 +612,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.ProjectPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                        <TextBox x:Uid="Settings_ProjectPath" Text="{x:Bind ViewModel.PathManagementVM.ProjectPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="ProjectPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                     </Grid>
                 </controls:SettingsCard>
@@ -624,7 +636,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.OfficialPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
+                        <TextBox x:Uid="Settings_OfficialPath" Text="{x:Bind ViewModel.PathManagementVM.OfficialPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="WallpapersPath_TextChanged" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFolderCommand}" CommandParameter="OfficialPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                     </Grid>
                 </controls:SettingsCard>
@@ -648,7 +660,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.AcfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <TextBox x:Uid="Settings_AcfPath" Text="{x:Bind ViewModel.PathManagementVM.AcfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="AcfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                     </Grid>
                 </controls:SettingsCard>
@@ -672,7 +684,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Uid="PapersBottomTextBox" Text="{x:Bind ViewModel.PathManagementVM.VdfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        <TextBox x:Uid="Settings_VdfPath" Text="{x:Bind ViewModel.PathManagementVM.VdfPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" x:Uid="SelectFolder" Command="{x:Bind ViewModel.PathManagementVM.BrowseFileCommand}" CommandParameter="VdfPath" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"/>
                     </Grid>
                 </controls:SettingsCard>

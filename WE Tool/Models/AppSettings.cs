@@ -19,6 +19,7 @@ namespace WE_Tool.Models
         public ComponentsConfig Components { get; set; } = new ComponentsConfig();
         public PathConfig Path { get; set; } = new PathConfig();
         public ExtractSettings Extract { get; set; } = new ExtractSettings();
+        public AutoBackupConfig AutoBackup { get; set; } = new AutoBackupConfig();
         public string ScanCacheEnabled { get; set; } = "1";
         public bool RestoreWindowGeometry { get; set; } = true;
         public bool WindowMaximized { get; set; } = false;
@@ -215,5 +216,25 @@ namespace WE_Tool.Models
         public bool Sports { get; set; } = true;
         public bool Technology { get; set; } = true;
         public bool Vehicle { get; set; } = true;
+    }
+
+    /// <summary>自动备份配置(壁纸备份页设置区,服务 AutoBackupService.exe 读取同一份 config.json)。</summary>
+    public class AutoBackupConfig
+    {
+        /// <summary>自动备份总开关。</summary>
+        public bool Enabled { get; set; } = false;
+        /// <summary>服务已安装/启用标记(与服务 schtasks 状态同步)。</summary>
+        public bool ServiceEnabled { get; set; } = false;
+        /// <summary>筛选:类型(与 Papers 的 Type* 语义一致)。</summary>
+        public bool TypeScene { get; set; } = true;
+        public bool TypeVideo { get; set; } = true;
+        public bool TypeWeb { get; set; } = true;
+        public bool TypeApplication { get; set; } = true;
+        public bool TypePreset { get; set; } = true;
+        public bool TypeUnknown { get; set; } = true;
+        /// <summary>筛选:分级。</summary>
+        public bool RatingG { get; set; } = true;
+        public bool RatingPg { get; set; } = true;
+        public bool RatingR { get; set; } = true;
     }
 }

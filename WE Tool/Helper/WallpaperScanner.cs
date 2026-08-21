@@ -256,7 +256,8 @@ internal class WallpaperScanner
             };
 
             var wallpaperDirs = Directory.EnumerateDirectories(rootPath, "*", enumOptions)
-                .Where(dir => File.Exists(Path.Combine(dir, "project.json")))
+                .Where(dir => File.Exists(Path.Combine(dir, "project.json"))
+                           && !dir.Contains(Path.DirectorySeparatorChar + ".we_backup")) // 排除备份目录
                 .ToList();
 
             List<string> toParse;
@@ -689,7 +690,7 @@ internal class WallpaperScanner
             {
                 RecurseSubdirectories = false,
                 IgnoreInaccessible = true
-            });
+            }).Where(dir => !Path.GetFileName(dir).Equals(".we_backup", StringComparison.OrdinalIgnoreCase));
 
             foreach (var wallpaperDir in wallpaperDirs)
             {

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,19 +118,19 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MenuFlyoutSubItem_RightPanel.Text" xml:space="preserve">
-    <value />
+    <value>오른쪽 패널</value>
   </data>
   <data name="PropertiesWindow_FileInfo.Content" xml:space="preserve">
-    <value />
+    <value>파일 속성</value>
   </data>
   <data name="PropertiesWindow_WallpaperProps.Content" xml:space="preserve">
-    <value />
+    <value>배경화면 속성</value>
   </data>
   <data name="PropertyPanel_NoProperties.Text" xml:space="preserve">
-    <value />
+    <value>이 배경화면에는 설정 가능한 속성이 없습니다</value>
   </data>
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
-    <value />
+    <value>속성 저장</value>
   </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>전체 이용가(G)</value>
@@ -142,10 +142,16 @@
     <value>성인용(R-18)</value>
   </data>
   <data name="RightPanel_Detail.Text" xml:space="preserve">
-    <value />
+    <value>세부 정보 패널</value>
   </data>
   <data name="RightPanel_Property.Text" xml:space="preserve">
-    <value />
+    <value>속성 패널</value>
+  </data>
+  <data name="RightPanel_ExpandDescription.Text" xml:space="preserve">
+    <value>전문 펼치기</value>
+  </data>
+  <data name="RightPanel_CollapseDescription.Text" xml:space="preserve">
+    <value>접기</value>
   </data>
   <data name="Source.Header" xml:space="preserve">
     <value>출처</value>
@@ -158,6 +164,21 @@
   </data>
   <data name="Source_Workshop.Content" xml:space="preserve">
     <value>워크샵</value>
+  </data>
+  <data name="Subscription.Header" xml:space="preserve">
+    <value>구독 상태</value>
+  </data>
+  <data name="Subscription_Subscribed.Content" xml:space="preserve">
+    <value>정상</value>
+  </data>
+  <data name="Subscription_Unsubscribed.Content" xml:space="preserve">
+    <value>비정상</value>
+  </data>
+  <data name="Unsubscribed_Badge.Text" xml:space="preserve">
+    <value>비정상</value>
+  </data>
+  <data name="Unsubscribed_Badge_ToolTip.Text" xml:space="preserve">
+    <value>이 배경화면의 구독 상태가 비정상입니다: 구독이 취소되었거나, Steam에서 로컬로 비활성화되었거나, 삭제(project.json visibility가 private)되었을 수 있습니다. Steam이 더 이상 업데이트하거나 로컬 파일을 유지하지 않을 수 있습니다.</value>
   </data>
   <data name="Tag.Header" xml:space="preserve">
     <value>태그</value>
@@ -342,6 +363,9 @@
   <data name="PapersBottomTextBox.PlaceholderText" xml:space="preserve">
     <value>경로 입력 또는 선택</value>
   </data>
+  <data name="Cleanup_UnderConstruction.Text" xml:space="preserve">
+    <value>준비 중</value>
+  </data>
   <data name="Type_Preset.Content" xml:space="preserve">
     <value>프리셋</value>
   </data>
@@ -417,6 +441,12 @@
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
     <value>ACF 파일 경로</value>
   </data>
+  <data name="VdfPath.Description" xml:space="preserve">
+    <value>워크샵 구독 정보를 저장하는 파일</value>
+  </data>
+  <data name="VdfPath_TextBlock.Text" xml:space="preserve">
+    <value>VDF 파일 경로</value>
+  </data>
   <data name="SettingPath.Description" xml:space="preserve">
     <value>프로그램 설정을 저장하는 파일 경로</value>
   </data>
@@ -428,6 +458,30 @@
   </data>
   <data name="LogPath_TextBlock.Text" xml:space="preserve">
     <value>로그 파일 경로</value>
+  </data>
+  <data name="LogLevel_TextBlock.Text" xml:space="preserve">
+    <value>로그 레벨</value>
+  </data>
+  <data name="LogLevel.Description" xml:space="preserve">
+    <value>로그 기록의 상세 수준을 제어합니다. 변경 후 즉시 적용됩니다.</value>
+  </data>
+  <data name="LogLevel_Debug.Content" xml:space="preserve">
+    <value>디버그</value>
+  </data>
+  <data name="LogLevel_Information.Content" xml:space="preserve">
+    <value>정보</value>
+  </data>
+  <data name="LogLevel_Warning.Content" xml:space="preserve">
+    <value>경고</value>
+  </data>
+  <data name="LogLevel_Error.Content" xml:space="preserve">
+    <value>오류</value>
+  </data>
+  <data name="CachePath.Description" xml:space="preserve">
+    <value>스캔 캐시 데이터를 저장하는 파일 경로</value>
+  </data>
+  <data name="CachePath_TextBlock.Text" xml:space="preserve">
+    <value>캐시 파일 경로</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>추출</value>
@@ -479,7 +533,8 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>큰 아이콘</value>
-  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>
+  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>배경화면 아이콘 크기</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
@@ -488,14 +543,23 @@
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>보기</value>
   </data>
+  <data name="MenuFlyoutSubItem_PreviewBlur.Text" xml:space="preserve">
+    <value>미리보기 블러</value>
+  </data>
+  <data name="Blur_Everyone.Text" xml:space="preserve">
+    <value>전체 이용가</value>
+  </data>
+  <data name="Blur_Teen.Text" xml:space="preserve">
+    <value>청소년</value>
+  </data>
+  <data name="Blur_Adult.Text" xml:space="preserve">
+    <value>성인</value>
+  </data>
   <data name="MenuFlyoutSubItem_Sort.Text" xml:space="preserve">
     <value>정렬</value>
   </data>
   <data name="AppBarButton_Sort.Label" xml:space="preserve">
     <value>정렬</value>
-  </data>
-  <data name="AppBarButton_DeleteForever.Label" xml:space="preserve">
-    <value>영구 삭제</value>
   </data>
   <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
     <value>다중 선택</value>
@@ -551,8 +615,125 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>다크</value>
   </data>
+  <data name="ScanCache.Header" xml:space="preserve">
+    <value>스캔 캐시</value>
+  </data>
+  <data name="Enabled.Content" xml:space="preserve">
+    <value>활성화</value>
+  </data>
+  <data name="Disabled.Content" xml:space="preserve">
+    <value>비활성화</value>
+  </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>마우스 오버 애니메이션</value>
+  </data>
+  <data name="ComponentsSetting.Header" xml:space="preserve">
+    <value>설치된 구성 요소 페이지 설정</value>
+  </data>
+  <data name="ComponentsSetting.Description" xml:space="preserve">
+    <value>설치된 구성 요소 페이지의 세부 내용을 설정합니다</value>
+  </data>
+  <data name="ComponentsSetting_BottomBarVisibility.Content" xml:space="preserve">
+    <value>하단 경로 표시줄 사용</value>
+  </data>
+  <data name="ComponentsSetting_DetailTextSelectMode.Content" xml:space="preserve">
+    <value>세부 정보 패널에서 텍스트 선택 활성화</value>
+  </data>
+  <data name="ComponentsSetting_ComponentAutoPlay.Content" xml:space="preserve">
+    <value>구성 요소 목록에서 GIF 재생</value>
+  </data>
+  <data name="ComponentsSetting_IsComponentEnterAnimationEnabled.Content" xml:space="preserve">
+    <value>마우스 오버 구성 요소 아이콘 애니메이션</value>
+  </data>
+  <data name="ComponentsSetting_FilterResultResponseDelay.Text" xml:space="preserve">
+    <value>필터 응답 지연(ms)</value>
+  </data>
+  <data name="CompType_Layers.Content" xml:space="preserve">
+    <value>레이어</value>
+  </data>
+  <data name="CompType_Scripts.Content" xml:space="preserve">
+    <value>스크립트</value>
+  </data>
+  <data name="CompType_Effects.Content" xml:space="preserve">
+    <value>효과</value>
+  </data>
+  <data name="CompType_Unknown.Content" xml:space="preserve">
+    <value>알 수 없음</value>
+  </data>
+  <data name="Tag_AudioVisualizer.Content" xml:space="preserve">
+    <value>오디오 시각화</value>
+  </data>
+  <data name="Tag_Unspecifiedgenre.Content" xml:space="preserve">
+    <value>미지정 장르</value>
+  </data>
+  <data name="Tag_Background.Content" xml:space="preserve">
+    <value>배경</value>
+  </data>
+  <data name="Tag_Character.Content" xml:space="preserve">
+    <value>캐릭터</value>
+  </data>
+  <data name="Tag_Clock.Content" xml:space="preserve">
+    <value>시계</value>
+  </data>
+  <data name="Tag_Fire.Content" xml:space="preserve">
+    <value>불꽃</value>
+  </data>
+  <data name="Tag_Interactive.Content" xml:space="preserve">
+    <value>인터랙티브</value>
+  </data>
+  <data name="Tag_Magic.Content" xml:space="preserve">
+    <value>마법</value>
+  </data>
+  <data name="Tag_PostProcessing.Content" xml:space="preserve">
+    <value>후처리</value>
+  </data>
+  <data name="Tag_Smoke.Content" xml:space="preserve">
+    <value>연기</value>
+  </data>
+  <data name="Tag_Space.Content" xml:space="preserve">
+    <value>우주</value>
+  </data>
+  <data name="CompTag_UnspecifiedGenre.Content" xml:space="preserve">
+    <value>미지정 장르</value>
+  </data>
+  <data name="CompTag_AudioVisualizer.Content" xml:space="preserve">
+    <value>오디오 시각화</value>
+  </data>
+  <data name="CompTag_Background.Content" xml:space="preserve">
+    <value>배경</value>
+  </data>
+  <data name="CompTag_Character.Content" xml:space="preserve">
+    <value>캐릭터</value>
+  </data>
+  <data name="CompTag_Clock.Content" xml:space="preserve">
+    <value>시계</value>
+  </data>
+  <data name="CompTag_Fire.Content" xml:space="preserve">
+    <value>불꽃</value>
+  </data>
+  <data name="CompTag_Interactive.Content" xml:space="preserve">
+    <value>인터랙티브</value>
+  </data>
+  <data name="CompTag_Magic.Content" xml:space="preserve">
+    <value>마법</value>
+  </data>
+  <data name="CompTag_PostProcessing.Content" xml:space="preserve">
+    <value>후처리</value>
+  </data>
+  <data name="CompTag_Smoke.Content" xml:space="preserve">
+    <value>연기</value>
+  </data>
+  <data name="CompTag_Space.Content" xml:space="preserve">
+    <value>우주</value>
+  </data>
+  <data name="DetailPanel.Text" xml:space="preserve">
+    <value>세부 정보 패널</value>
+  </data>
+  <data name="InstallDate.Text" xml:space="preserve">
+    <value>설치 날짜</value>
+  </data>
+  <data name="File.Text" xml:space="preserve">
+    <value>파일</value>
   </data>
   <data name="MenuFlyoutItem_Refresh.Text" xml:space="preserve">
     <value>새로고침</value>
@@ -803,6 +984,9 @@
   <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>기본 경로 복원</value>
   </data>
+  <data name="AutoDetect_VdfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>기본 경로 복원</value>
+  </data>
   <data name="Settings_FlatFileNaming.Text" xml:space="preserve">
     <value>파일 이름 지정</value>
   </data>
@@ -959,6 +1143,105 @@ project.json 및 미리보기 복사
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>페이지당 90개</value>
   </data>
+  <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
+    <value>프로젝트 가져오기</value>
+  </data>
+  <data name="NoSelectionHint.Text" xml:space="preserve">
+    <value>하나 이상의 배경화면을 선택하세요</value>
+  </data>
+  <data name="Detail_Extract.Text" xml:space="preserve">
+    <value>추출</value>
+  </data>
+  <data name="Detail_Copy.Text" xml:space="preserve">
+    <value>복사</value>
+  </data>
+  <data name="Detail_Unsubscribe.Text" xml:space="preserve">
+    <value>구독 취소</value>
+  </data>
+  <data name="Detail_ImportToEditor.Text" xml:space="preserve">
+    <value>배경화면 편집기로 가져오기</value>
+  </data>
+  <data name="Detail_DeleteWallpaper.Text" xml:space="preserve">
+    <value>배경화면 삭제</value>
+  </data>
+  <data name="Detail_OpenDirectory.Text" xml:space="preserve">
+    <value>디렉터리 열기</value>
+  </data>
+  <data name="Detail_Properties.Text" xml:space="preserve">
+    <value>속성</value>
+  </data>
+  <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
+    <value>모두 선택</value>
+  </data>
+  <data name="MultiSelect_InvertSelection.Content" xml:space="preserve">
+    <value>선택 반전</value>
+  </data>
+  <data name="MultiSelect_Cancel.Content" xml:space="preserve">
+    <value>다중 선택 취소</value>
+  </data>
+  <data name="NoScanResultTip.Text" xml:space="preserve">
+    <value>배경화면이 스캔되지 않았습니다. 설정에서 스캔 경로를 확인하세요</value>
+  </data>
+  <data name="NoScanResultTip_Components.Text" xml:space="preserve">
+    <value>구성 요소가 스캔되지 않았습니다. 설정에서 스캔 경로를 확인하세요</value>
+  </data>
+  <data name="GoToSettings.Content" xml:space="preserve">
+    <value>설정으로 이동</value>
+  </data>
+  <data name="ExtractPause.Text" xml:space="preserve">
+    <value>일시정지</value>
+  </data>
+  <data name="ExtractResume.Text" xml:space="preserve">
+    <value>계속</value>
+  </data>
+  <data name="ExtractStop.Text" xml:space="preserve">
+    <value>중지</value>
+  </data>
+  <data name="FileStructure.Text" xml:space="preserve">
+    <value>파일 구조</value>
+  </data>
+  <data name="NoSelectionHint_Components.Text" xml:space="preserve">
+    <value>구성 요소를 선택하여 세부 정보를 확인하세요</value>
+  </data>
+  <data name="Detail_DeleteComponent.Text" xml:space="preserve">
+    <value>구성 요소 삭제</value>
+  </data>
+  <data name="NoMatchTip1.Text" xml:space="preserve">
+    <value>일치하는 구성 요소가 없습니다</value>
+  </data>
+  <data name="NoMatchTip2.Text" xml:space="preserve">
+    <value>필터 조건을 조정하세요</value>
+  </data>
+  <data name="ComponentDirectory.Text" xml:space="preserve">
+    <value>구성 요소 디렉터리</value>
+  </data>
+  <data name="Toolbar_FilterToggle.Label" xml:space="preserve">
+    <value>필터 결과</value>
+  </data>
+  <data name="Toolbar_ListView.Label" xml:space="preserve">
+    <value>목록 보기</value>
+  </data>
+  <data name="Toolbar_Delete.Label" xml:space="preserve">
+    <value>삭제</value>
+  </data>
+  <data name="Toolbar_SelectAll.Label" xml:space="preserve">
+    <value>모두 선택</value>
+  </data>
+  <data name="Toolbar_InvertSelection.Label" xml:space="preserve">
+    <value>선택 반전</value>
+  </data>
+  <data name="Toolbar_Refresh.Label" xml:space="preserve">
+    <value>새로고침</value>
+  </data>
+  <data name="Toolbar_View.Label" xml:space="preserve">
+    <value>보기▾</value>
+  </data>
+  <data name="Toolbar_Sort.Label" xml:space="preserve">
+    <value>정렬▾</value>
+  </data>
+  <data name="Toolbar_SortDirection.Label" xml:space="preserve">
+    <value>정렬 방향</value>
+  </data>
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>설정 초기화</value>
   </data>
@@ -1029,31 +1312,31 @@ project.json 및 미리보기 복사
     <value>기술 스택</value>
   </data>
   <data name="Info_CreditsLine1.Content" xml:space="preserve">
-    <value>.NET 8</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
     <value>WinUI 3 (Windows App SDK 1.8)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
-    <value>CommunityToolkit (MVVM 8.4 / WinUI Controls 8.2)</value>
+    <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
   </data>
   <data name="Info_CreditsLine4.Content" xml:space="preserve">
     <value>Facepunch.Steamworks 2.3</value>
   </data>
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
-    <value>Microsoft.Data.Sqlite 10.0</value>
-  </data>
-  <data name="Info_CreditsLine6.Content" xml:space="preserve">
-    <value>Newtonsoft.Json 13.0</value>
+    <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
   <data name="Info_CreditsLine7.Content" xml:space="preserve">
-    <value>Serilog 4.3</value>
+    <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
-    <value>WinUIEx 2.9</value>
+    <value>WinUIEx 2.9.3</value>
   </data>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (notscuffed/repkg 기반)</value>
+  </data>
+  <data name="Info_CreditsLine11.Content" xml:space="preserve">
+    <value>Win2D 1.4</value>
   </data>
   <data name="Info_License.Header" xml:space="preserve">
     <value>오픈소스 라이선스</value>
@@ -1091,9 +1374,6 @@ project.json 및 미리보기 복사
   <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
     <value>K4os.Compression.LZ4 1.3</value>
   </data>
-  <data name="Info_RepkgCreditsLine4.Content" xml:space="preserve">
-    <value>Newtonsoft.Json 13.0</value>
-  </data>
   <data name="Info_RepkgCreditsLine5.Content" xml:space="preserve">
     <value>SixLabors.ImageSharp 2.1</value>
   </data>
@@ -1120,54 +1400,425 @@ project.json 및 미리보기 복사
 면책 조항: 이 도구는 개인 학습 및 백업 용도로만 사용됩니다. 배경화면 및 해당 자산의 저작권은 각 저작자에게 있습니다. 원저작자의 권리를 존중하고 추출된 콘텐츠를 상업적 용도나 무단 재배포에 사용하지 마십시오.</value>
   </data>
   <data name="Info_AboutTitle.Text" xml:space="preserve">
-    <value />
+    <value>WE Tool</value>
   </data>
   <data name="Info_RepkgTitle.Text" xml:space="preserve">
-    <value />
+    <value>RePKG_Re</value>
   </data>
   <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
-    <value />
+    <value>WE Tool 로그</value>
   </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks 온라인</value>
   </data>
   <data name="Info_SteamStatusOk.Message.Text" xml:space="preserve">
-    <value />
+    <value>초기화 완료, 워크샵 관련 기능을 사용할 수 있습니다.</value>
   </data>
   <data name="Info_SteamStatusFail.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks 사용 불가</value>
   </data>
   <data name="Info_SteamStatusFail.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam이 실행 중이지 않거나 초기화에 실패하여 워크샵 관련 기능을 사용할 수 없습니다. Steam이 시작된 후 다시 시도를 클릭하세요.</value>
   </data>
   <data name="Info_SteamStatusLost.Title.Text" xml:space="preserve">
-    <value />
+    <value>Steam 연결 끊김</value>
   </data>
   <data name="Info_SteamStatusLost.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steam이 종료되어 워크샵 관련 기능을 일시적으로 사용할 수 없습니다. 다시 시도를 클릭하여 다시 연결하세요.</value>
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
-    <value />
+    <value>다시 시도</value>
   </data>
+  <data name="Info_SteamShutdown.Content" xml:space="preserve">
+    <value>Steamworks 종료</value>
+  </data>
+  <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
+    <value>Steamworks 종료됨</value>
+  </data>
+  <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
+    <value>Steamworks 브리지 프로세스가 중지되어 워크샵 관련 기능을 사용할 수 없습니다. 다시 시도를 클릭하면 다시 연결됩니다.</value>
+  </data>
+
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
-    <value />
+    <value>다시 연결 중</value>
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
-    <value />
+    <value>Steamworks를 다시 초기화하는 중입니다. 잠시만 기다려 주세요…</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
+    <value>RePKG_Re 버전 정상</value>
+  </data>
+  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
+    <value>현재 버전 {0}</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
+    <value>RePKG_Re 버전 불일치</value>
+  </data>
+  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
+    <value>현재 {0}, 필요: {1}. RePKG_Re 백엔드를 업데이트하세요</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
+    <value>RePKG_Re를 찾을 수 없음</value>
+  </data>
+  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
+    <value>repkg\RePKG_Re.exe가 없어 추출 기능을 사용할 수 없습니다</value>
+  </data>
+  <data name="Info_TranslationTitle.Text" xml:space="preserve">
+    <value>번역 진행률</value>
   </data>
   <data name="Settings_Output_EffectImagesText.Text" xml:space="preserve">
-    <value />
+    <value>투명 및 검은색 픽셀 필터링 임계값</value>
   </data>
   <data name="Settings_Output_OnlyPathsText.Text" xml:space="preserve">
-    <value />
+    <value>파싱할 디렉터리만</value>
   </data>
   <data name="Settings_OnlyPathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>영문 쉼표로 구분, 예: materials,models(하위 폴더 포함)</value>
   </data>
   <data name="Settings_Output_IgnorePathsText.Text" xml:space="preserve">
-    <value />
+    <value>무시할 파싱 디렉터리</value>
   </data>
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
-    <value />
+    <value>영문 쉼표로 구분, 예: effects,sounds(하위 폴더 포함)</value>
+  </data>
+  <data name="Info_AboutHeader.Text" xml:space="preserve">
+    <value>정보</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>RePKG_Re 로그</value>
+  </data>
+  <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
+    <value>SkiaSharp 4.151</value>
+  </data>
+  <data name="Cleanup_Title.Text" xml:space="preserve">
+    <value>남은 파일 정리</value>
+  </data>
+  <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
+    <value>아래 버튼을 클릭하여 배경화면 잔여 파일을 스캔하세요</value>
+  </data>
+  <data name="Cleanup_ScanButton.Content" xml:space="preserve">
+    <value>스캔 시작</value>
+  </data>
+  <data name="Cleanup_OpenFolder.Content" xml:space="preserve">
+    <value>디렉터리 열기</value>
+  </data>
+  <data name="Cleanup_Whitelist.Content" xml:space="preserve">
+    <value>화이트리스트</value>
+  </data>
+  <data name="Cleanup_Delete.Content" xml:space="preserve">
+    <value>정리</value>
+  </data>
+  <data name="WhitelistWindow_Title.Text" xml:space="preserve">
+    <value>화이트리스트 관리</value>
+  </data>
+  <data name="WhitelistWindow_EmptyHint.Text" xml:space="preserve">
+    <value>화이트리스트가 비어 있습니다</value>
+  </data>
+  <data name="WhitelistWindow_EmptyDesc.Text" xml:space="preserve">
+    <value>남은 파일 정리 페이지에서 카드의 "화이트리스트" 버튼을 클릭하여 배경화면을 추가하세요</value>
+  </data>
+  <data name="WhitelistWindow_OpenFolder.Content" xml:space="preserve">
+    <value>디렉터리 열기</value>
+  </data>
+  <data name="WhitelistWindow_Remove.Content" xml:space="preserve">
+    <value>화이트리스트에서 제거</value>
+  </data>
+  <data name="LoadPapers_Title.Text" xml:space="preserve">
+    <value>가져오기 및 압축 해제</value>
+  </data>
+  <data name="LoadPapers_DragHint.Text" xml:space="preserve">
+    <value>배경화면 패키지를 여기에 드래그하세요</value>
+  </data>
+  <data name="LoadPapers_DragSubhint.Text" xml:space="preserve">
+    <value>.pkg / .mpkg 배경화면 패키지 파일 지원</value>
+  </data>
+  <data name="LoadPapers_SetExportDir.Label" xml:space="preserve">
+    <value>내보내기 디렉토리 설정</value>
+  </data>
+  <data name="LoadPapers_ExportDirPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>내보내기 디렉토리 (비워두면 Papers 내보내기 디렉토리 사용)</value>
+  </data>
+  <data name="LoadPapers_SelectFile.Label" xml:space="preserve">
+    <value>파일 선택</value>
+  </data>
+  <data name="LoadPapers_ScanFolder.Label" xml:space="preserve">
+    <value>폴더 스캔</value>
+  </data>
+  <data name="LoadPapers_Clear.Label" xml:space="preserve">
+    <value>비우기</value>
+  </data>
+  <data name="LoadPapers_StartExtract.Label" xml:space="preserve">
+    <value>압축 해제 시작</value>
+  </data>
+  <data name="LoadPapers_Pause.Label" xml:space="preserve">
+    <value>일시 정지</value>
+  </data>
+  <data name="LoadPapers_Stop.Label" xml:space="preserve">
+    <value>중지</value>
+  </data>
+  <data name="LoadPapers_ProjectDir.Content" xml:space="preserve">
+    <value>프로젝트 디렉토리</value>
+  </data>
+  <data name="LoadPapers_ExportDir.Content" xml:space="preserve">
+    <value>내보내기 디렉토리</value>
+  </data>
+  <data name="LoadPapers_BrowseFolder.Content" xml:space="preserve">
+    <value>폴더 찾아보기</value>
+  </data>
+  <data name="LoadPapers_Resume.Label" xml:space="preserve">
+    <value>재개</value>
+  </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>잔여 정리</value>
+  </data>
+  <data name="Cleanup_BatchWhitelist.Label" xml:space="preserve">
+    <value>화이트리스트에 추가</value>
+  </data>
+  <data name="Cleanup_BatchDelete.Label" xml:space="preserve">
+    <value>선택 삭제</value>
+  </data>
+  <data name="Cleanup_WhitelistManage.Label" xml:space="preserve">
+    <value>화이트리스트</value>
+  </data>
+  <data name="Cleanup_Rescan.Label" xml:space="preserve">
+    <value>다시 스캔</value>
+  </data>
+  <data name="Cleanup_DeleteAll.Label" xml:space="preserve">
+    <value>모두 정리</value>
+  </data>
+  <data name="Cleanup_TypeExcess" xml:space="preserve">
+    <value>여분</value>
+  </data>
+  <data name="Cleanup_TypeUnloaded" xml:space="preserve">
+    <value>제거됨</value>
+  </data>
+  <data name="Cleanup_StatsExcess" xml:space="preserve">
+    <value>{0}개의 여분 파일 · {1}</value>
+  </data>
+  <data name="Cleanup_StatsUnloaded" xml:space="preserve">
+    <value>{0}개의 파일 · {1}</value>
+  </data>
+  <data name="Cleanup_EmptyFolderName" xml:space="preserve">
+    <value>(빈 폴더)</value>
+  </data>
+  <data name="Cleanup_ScanFailed" xml:space="preserve">
+    <value>스캔 실패: {0}</value>
+  </data>
+  <data name="Cleanup_CleanedComplete" xml:space="preserve">
+    <value>{0}개 배경화면의 잔여 정리 완료</value>
+  </data>
+  <data name="Cleanup_Summary" xml:space="preserve">
+    <value>총 {0}개 · {1}</value>
+  </data>
+  <data name="Cleanup_SortByType.Text" xml:space="preserve">
+    <value>유형</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
+    <value>{0} 정리</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Content" xml:space="preserve">
+    <value>{0}개의 잔여 파일이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Ok" xml:space="preserve">
+    <value>정리</value>
+  </data>
+  <data name="Cleanup_CleanFail.Title" xml:space="preserve">
+    <value>정리 실패</value>
+  </data>
+  <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
+    <value>선택 삭제 ({0})</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Title" xml:space="preserve">
+    <value>모두 정리</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Content" xml:space="preserve">
+    <value>{0}개 배경화면의 {1}개 잔여 파일이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Ok" xml:space="preserve">
+    <value>모두 정리</value>
+  </data>
+  <data name="Cleanup_BatchWhitelistCount" xml:space="preserve">
+    <value>화이트리스트에 추가 ({0})</value>
+  </data>
+  <data name="Cleanup_BatchDeleteCount" xml:space="preserve">
+    <value>선택 삭제 ({0})</value>
+  </data>
+  <data name="Cleanup_CommonDelete" xml:space="preserve">
+    <value>삭제</value>
+  </data>
+  <data name="Cleanup_CommonCancel" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="Cleanup_CommonOk" xml:space="preserve">
+    <value>확인</value>
+  </data>
+  <data name="WhitelistWindowTitle.Title" xml:space="preserve">
+    <value>화이트리스트 관리</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemove.Label" xml:space="preserve">
+    <value>선택 제거</value>
+  </data>
+  <data name="WhitelistWindow_Subtitle" xml:space="preserve">
+    <value>총 {0}개 · {1}</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
+    <value>선택 제거 ({0})</value>
+  </data>
+  <data name="ScanCache.Description" xml:space="preserve">
+    <value>스캔 캐시는 프로그램 스캔 속도를 향상시킵니다</value>
+  </data>
+  <data name="WindowBehavior.Header" xml:space="preserve">
+    <value>창 동작</value>
+  </data>
+  <data name="WindowBehavior.Description" xml:space="preserve">
+    <value>시작 시 창 위치, 크기 및 최대화 상태를 복원할지 여부를 제어합니다</value>
+  </data>
+  <data name="WindowBehavior_Restore.Content" xml:space="preserve">
+    <value>이전 창 크기 및 위치 복원</value>
+  </data>
+  <data name="StartPage_Cleanup.Text" xml:space="preserve">
+    <value>잔여 정리</value>
+  </data>
+  <data name="StartPage_WallpaperBackup.Text" xml:space="preserve">
+    <value>배경화면 백업</value>
+  </data>
+  <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\Export\Wallpapers</value>
+  </data>
+  <data name="Settings_WorkshopPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\SteamLibrary\steamapps\workshop\content\431960</value>
+  </data>
+  <data name="Settings_ProjectPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\...\wallpaper_engine\projects\myprojects</value>
+  </data>
+  <data name="Settings_OfficialPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\...\wallpaper_engine\projects\defaultprojects</value>
+  </data>
+  <data name="Settings_AcfPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\SteamLibrary\steamapps\workshop\appworkshop_431960.acf</value>
+  </data>
+  <data name="Settings_VdfPath.PlaceholderText" xml:space="preserve">
+    <value>예: D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
+  </data>
+  <data name="AppBarButton_BackupDone.Label" xml:space="preserve">
+    <value>백업 완료</value>
+  </data>
+  <data name="AppBarButton_Backup.Label" xml:space="preserve">
+    <value>백업</value>
+  </data>
+  <data name="BackupPage.Content" xml:space="preserve">
+    <value>백업</value>
+  </data>
+  <data name="BackupPage_Title.Text" xml:space="preserve">
+    <value>배경화면 백업</value>
+  </data>
+  <data name="BackupPage_Empty.Text" xml:space="preserve">
+    <value>백업 없음</value>
+  </data>
+  <data name="BackupPage_Refresh.Label" xml:space="preserve">
+    <value>새로 고침</value>
+  </data>
+  <data name="BackupPage_DeleteAll.Label" xml:space="preserve">
+    <value>모두 삭제</value>
+  </data>
+  <data name="AutoBackup_SettingsHeader.Text" xml:space="preserve">
+    <value>자동 백업</value>
+  </data>
+  <data name="AutoBackup_ModeLabel.Text" xml:space="preserve">
+    <value>자동 백업 방식</value>
+  </data>
+  <data name="AutoBackup_ModeOff.Content" xml:space="preserve">
+    <value>끄기</value>
+  </data>
+  <data name="AutoBackup_ModeService.Content" xml:space="preserve">
+    <value>백그라운드 서비스</value>
+  </data>
+  <data name="AutoBackup_ServiceStatusLabel.Text" xml:space="preserve">
+    <value>서비스 상태</value>
+  </data>
+  <data name="AutoBackup_ServiceNotInstalled.Text" xml:space="preserve">
+    <value>설치되지 않음. "서비스 설치"를 클릭하여 백그라운드 자동 백업을 활성화하세요.</value>
+  </data>
+  <data name="AutoBackup_ServiceRunning.Text" xml:space="preserve">
+    <value>서비스 실행 중</value>
+  </data>
+  <data name="AutoBackup_ServiceInstalled.Text" xml:space="preserve">
+    <value>서비스 설치됨 (로그인 시 자동 시작)</value>
+  </data>
+  <data name="AutoBackup_Install.Content" xml:space="preserve">
+    <value>서비스 설치</value>
+  </data>
+  <data name="AutoBackup_Uninstall.Content" xml:space="preserve">
+    <value>서비스 제거</value>
+  </data>
+  <data name="AutoBackup_Start.Content" xml:space="preserve">
+    <value>서비스 시작</value>
+  </data>
+  <data name="AutoBackup_Stop.Content" xml:space="preserve">
+    <value>서비스 중지</value>
+  </data>
+  <data name="AutoBackup_TypeLabel.Text" xml:space="preserve">
+    <value>자동 백업할 배경화면 유형</value>
+  </data>
+  <data name="AutoBackup_TypeScene.Content" xml:space="preserve">
+    <value>씬</value>
+  </data>
+  <data name="AutoBackup_TypeVideo.Content" xml:space="preserve">
+    <value>비디오</value>
+  </data>
+  <data name="AutoBackup_TypeWeb.Content" xml:space="preserve">
+    <value>웹</value>
+  </data>
+  <data name="AutoBackup_TypeApp.Content" xml:space="preserve">
+    <value>애플리케이션</value>
+  </data>
+  <data name="AutoBackup_TypePreset.Content" xml:space="preserve">
+    <value>프리셋</value>
+  </data>
+  <data name="AutoBackup_TypeUnknown.Content" xml:space="preserve">
+    <value>알 수 없음</value>
+  </data>
+  <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
+    <value>자동 백업할 연령 등급</value>
+  </data>
+  <data name="AutoBackup_RatingG.Content" xml:space="preserve">
+    <value>전체 이용가</value>
+  </data>
+  <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
+    <value>청소년</value>
+  </data>
+  <data name="AutoBackup_RatingR.Content" xml:space="preserve">
+    <value>성인</value>
+  </data>
+  <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
+    <value>작업 실패</value>
+  </data>
+  <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
+    <value>자동 백업</value>
+  </data>
+  <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
+    <value>자동 백업 방식을 선택하고 백업할 배경화면 유형과 등급을 지정하세요</value>
+  </data>
+  <data name="AutoBackup_Done.Content" xml:space="preserve">
+    <value>완료</value>
+  </data>
+  <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
+    <value>자동 백업 서비스 로그</value>
+  </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>WE Tool 시작 시 백업</value>
+  </data>
+  
+  <data name="BackupPage_SortByTime.Text" xml:space="preserve">
+    <value>백업 시간</value>
+  </data>
+  <data name="BackupPage_FilterEmpty.Text" xml:space="preserve">
+    <value>필터 조건에 맞는 백업이 없습니다</value>
+  </data>
+  <data name="BackupPage_SortByMissing.Text" xml:space="preserve">
+    <value>소스 삭제됨</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>원본 삭제됨</value>
   </data>
 </root>

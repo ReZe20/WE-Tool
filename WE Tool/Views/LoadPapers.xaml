@@ -40,7 +40,7 @@
 
         <!-- 页面标题 -->
         <TextBlock Grid.Row="0"
-                   Text="导入解包"
+                   x:Uid="LoadPapers_Title"
                    FontSize="25"/>
 
         <!-- 完成/提示反馈 -->
@@ -58,10 +58,10 @@
             <FontIcon Glyph="&#xE8B5;" FontSize="48"
                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                       HorizontalAlignment="Center"/>
-            <TextBlock Text="拖拽壁纸包到此处"
+            <TextBlock x:Uid="LoadPapers_DragHint"
                        Style="{StaticResource SubtitleTextBlockStyle}"
                        HorizontalAlignment="Center"/>
-            <TextBlock Text="支持 .pkg / .mpkg 壁纸包文件"
+            <TextBlock x:Uid="LoadPapers_DragSubhint"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                        HorizontalAlignment="Center"/>
         </StackPanel>
@@ -145,7 +145,7 @@
                     DefaultLabelPosition="Right">
             <CommandBar.PrimaryCommands>
                 <!-- 导出目录:按钮弹出 Flyout,内含文本框 + 选择文件夹 -->
-                <AppBarButton x:Name="ExportDirButton" Label="设置导出目录">
+                <AppBarButton x:Name="ExportDirButton" x:Uid="LoadPapers_SetExportDir">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE74E;"/>
                     </AppBarButton.Icon>
@@ -154,40 +154,40 @@
                             <StackPanel Spacing="8" Width="360">
                                 <TextBox x:Name="ExportPathBox"
                                          Text="{x:Bind ExportDirPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         PlaceholderText="导出目录(留空用 Papers 导出目录)"
+                                         x:Uid="LoadPapers_ExportDirPlaceholder"
                                          TextWrapping="NoWrap"
                                          Width="360"/>
                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                                    <Button Content="项目目录"
+                                    <Button x:Uid="LoadPapers_ProjectDir"
                                             Click="UseProjectPath_Click"/>
-                                    <Button Content="导出目录"
+                                    <Button x:Uid="LoadPapers_ExportDir"
                                             Click="UseDownloadPath_Click"/>
-                                    <Button Content="选择文件夹"
+                                    <Button x:Uid="LoadPapers_BrowseFolder"
                                             Click="BrowseExportPath_Click"/>
                                 </StackPanel>
                             </StackPanel>
                         </Flyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarButton x:Name="SelectFileButton" Label="选择文件" Click="SelectFiles_Click">
+                <AppBarButton x:Name="SelectFileButton" x:Uid="LoadPapers_SelectFile" Click="SelectFiles_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8E5;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Name="ScanFolderButton" Label="扫描文件夹" Click="ScanFolder_Click">
+                <AppBarButton x:Name="ScanFolderButton" x:Uid="LoadPapers_ScanFolder" Click="ScanFolder_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8B7;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="ClearButton"
-                              Label="清空"
+                              x:Uid="LoadPapers_Clear"
                               Click="ClearQueue_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE74D;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="StartExtractButton"
-                              Label="开始提取"
+                              x:Uid="LoadPapers_StartExtract"
                               Click="StartExtractButton_Click"
                               IsEnabled="False">
                     <AppBarButton.Icon>
@@ -195,7 +195,7 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="PauseButton"
-                              Label="暂停"
+                              x:Uid="LoadPapers_Pause"
                               Click="PauseButton_Click"
                               IsEnabled="False">
                     <AppBarButton.Icon>
@@ -203,7 +203,7 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="StopButton"
-                              Label="停止"
+                              x:Uid="LoadPapers_Stop"
                               Click="StopButton_Click"
                               IsEnabled="False">
                     <AppBarButton.Icon>

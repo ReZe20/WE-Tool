@@ -15,7 +15,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>0.5.3</Version>
+    <Version>0.7.0</Version>
     <!-- Release 下 WinUI 默认禁用反射序列化,导致 config.json 读写失败(实测:设置全部丢失);显式开启 -->
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <Authors>ReZe20</Authors>
@@ -56,12 +56,12 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
     <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
     <PackageReference Include="Microsoft.WindowsAppSDK.Base" Version="2.0.4" />
@@ -71,11 +71,11 @@
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.3.6" />
     <!-- AOT:CsWinRT source generator (matches WinUI 2.3.6) -->
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
-    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SkiaSharp" Version="4.151.1" />
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="4.151.1" />
-    <PackageReference Include="WinUIEx" Version="2.9.0" />
+    <PackageReference Include="WinUIEx" Version="2.9.3" />
   </ItemGroup>
   <ItemGroup>
     <!-- 复制 Steamworks 的 steam_api64.dll 到输出目录 -->
@@ -89,10 +89,36 @@
   <Target Name="CopySteamworksBridge" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher" Condition="Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj')">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
     <ItemGroup>
-      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\net8.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\net8.0\*.pdb" />
+      <!-- 指向桥接当前 TFM 输出目录(桥接固定 OutputPath=bin\$(Configuration)\$(TargetFramework)\)。
+           曾硬编码 net8.0 导致双缺陷:本地匹配到历史残留发布夹,把整套 .NET8 运行时拷进发布产物;
+           CI 全新检出则失配,桥接被静默遗漏(正式包无 SteamworksBridge.exe,Steam 功能不可用)。改用
+           $(TargetFramework) 跟随主项目 TFM,若两 TFM 未来不一致由下方 Error 失配保护兜底 -->
+      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\*.pdb" />
     </ItemGroup>
+    <!-- 失配保护:桥接必须产出文件,空则直接报错,杜绝发布包静默缺失 -->
+    <Error Condition="'@(BridgeOutput)' == ''" Text="CopySteamworksBridge 未找到任何桥接输出(...\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\),请检查 SteamworksBridge 的 TFM 是否与主项目一致" />
     <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
+  </Target>
+  <!-- AutoBackupService 部署:应用对服务无编译期引用(仅进程调用),不能 ProjectReference。
+       始终 publish NativeAOT 单文件 exe(不依赖 .NET runtime,Run 键/Start() 直接可运行)。
+       Debug 也 AOT:避免 framework-dependent 产物被 Run 键指向后缺 runtime 起不来 -->
+  <Target Name="CopyAutoBackupService" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher" Condition="Exists('$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj')">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
+    <Exec Condition="'$(Configuration)' == 'Debug'" Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj&quot; -c Debug -r win-x64 --nologo -v q" />
+    <Exec Condition="'$(Configuration)' == 'Release'" Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj&quot; -c Release -r win-x64 --nologo -v q" />
+    <ItemGroup>
+      <!-- 统一取 AOT publish 产物 -->
+      <AbsAot Include="$(MSBuildThisFileDirectory)..\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\**\*" Exclude="$(MSBuildThisFileDirectory)..\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\*.pdb" />
+    </ItemGroup>
+    <Error Condition="'@(AbsAot)' == ''" Text="CopyAutoBackupService 未找到服务 AOT 输出(...\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\)" />
+    <!-- 先清空目标目录,避免残留 framework-dependent 旧文件(dll/deps/runtimeconfig)与 AOT exe 混放 -->
+    <RemoveDir Directories="$(TargetDir)AutoBackupService\" />
+    <MakeDir Directories="$(TargetDir)AutoBackupService\" />
+    <Copy SourceFiles="@(AbsAot)" DestinationFolder="$(TargetDir)AutoBackupService\" SkipUnchangedFiles="true" />
+    <RemoveDir Directories="$(PublishDir)AutoBackupService\" Condition="'$(PublishDir)' != ''" />
+    <MakeDir Directories="$(PublishDir)AutoBackupService\" Condition="'$(PublishDir)' != ''" />
+    <Copy SourceFiles="@(AbsAot)" DestinationFolder="$(PublishDir)AutoBackupService\" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
   </Target>
   <!-- 从 external/repkg_Re 仓库 csproj 读取目标后端版本,构建时生成 RepkgVersion.g.cs 常量供运行时校验。
        不依赖 SDK 的 AssemblyMetadata 管线(其特性转换发生在 CreateGeneratedAssemblyInfoInputsCacheFile,
@@ -356,7 +382,16 @@
     <Exec Command="powershell -NoProfile -Command &quot;$p='$(PublishDir)'; $a=Join-Path $p 'app'; if (Test-Path $a) { Remove-Item $a -Recurse -Force }; New-Item -ItemType Directory -Force -Path $a | Out-Null; Get-ChildItem $p -Exclude app | Move-Item -Destination $a -Force&quot;" />
     <!-- Copy launcher EXE to root -->
     <Copy SourceFiles="$(LauncherExe)" DestinationFiles="$(PublishDir)WE_Tool.exe" />
-    <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (launcher) + app/" />
+    <!-- 剔除调试符号:SkiaSharp 等原生包自带 .pdb(仅调试用),发布产物不携带,避免体积虚增 -->
+    <!-- 剔除 ANGLE 原生库:SkiaGifView 纯 CPU 光栅绘制(SKCodec+SKBitmap+SKXamlCanvas),不创建 GL 上下文;
+         libEGL/libGLESv2 系 SkiaSharp.Views.WinUI 的 OpenGL 后端,实测删除后应用显示正常(2026-08-18) -->
+    <ItemGroup>
+      <_PublishUnneeded Include="$(PublishDir)**\*.pdb" />
+      <_PublishUnneeded Include="$(PublishDir)**\libEGL.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\libGLESv2.dll" />
+    </ItemGroup>
+    <Delete Files="@(_PublishUnneeded)" />
+    <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (launcher) + app/ (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE)" />
   </Target>
 
 </Project>

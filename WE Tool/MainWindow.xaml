@@ -47,6 +47,11 @@
                         <FontIcon Glyph="&#xE74D;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Uid="BackupPage" Tag="WallpaperBackup">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xF738;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
                 <NavigationViewItem x:Uid="AboutPage" Tag="Info">

@@ -48,10 +48,24 @@
                     <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
                             Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
                 </uc:LogResizeHandle>
+                <TextBlock x:Uid="Info_AutoBackupLogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
+                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
+                    <ScrollViewer x:Name="AutoBackupLogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="AutoBackupLogScrollViewer_ViewChanged">
+                        <TextBlock x:Name="AutoBackupLogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
+                    </ScrollViewer>
+                </Border>
+                <!-- 拖拽手柄:按住上下拖动调整日志面板高度(默认 220,60~800) -->
+                <uc:LogResizeHandle x:Name="AutoBackupLogResizeHandle" Height="12" Margin="0,4,0,0" Background="Transparent"
+                        AutomationProperties.AccessibilityView="Raw"
+                        PointerPressed="AutoBackupLogResizeHandle_PointerPressed" PointerMoved="AutoBackupLogResizeHandle_PointerMoved"
+                        PointerReleased="AutoBackupLogResizeHandle_PointerReleased" PointerCaptureLost="AutoBackupLogResizeHandle_PointerCaptureLost">
+                    <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+                </uc:LogResizeHandle>
                 <Grid Margin="0,8,0,0">
                     <InfoBar x:Name="SteamStatusBar" IsOpen="False" IsClosable="False">
                         <InfoBar.ActionButton>
-                            <Button x:Name="SteamRetryButton" x:Uid="Info_SteamRetry" Click="SteamRetryButton_Click" Visibility="Collapsed"/>
+                            <Button x:Name="SteamActionButton" Click="SteamActionButton_Click" Visibility="Collapsed"/>
                         </InfoBar.ActionButton>
                     </InfoBar>
                     <!-- 重试期间覆盖在 InfoBar 顶部的加载条 -->
@@ -91,9 +105,9 @@
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine3" NavigateUri="https://github.com/CommunityToolkit/Windows" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine4" NavigateUri="https://github.com/Facepunch/Facepunch.Steamworks" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine5" NavigateUri="https://github.com/dotnet/efcore" FontSize="12"/>
-                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine6" NavigateUri="https://github.com/JamesNK/Newtonsoft.Json" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine7" NavigateUri="https://github.com/serilog/serilog" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine8" NavigateUri="https://github.com/dotMorten/WinUIEx" FontSize="12"/>
+                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLineSkia" NavigateUri="https://github.com/mono/SkiaSharp" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine9" NavigateUri="https://github.com/ReZe20/repkg-Re" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_CreditsLine11" NavigateUri="https://github.com/microsoft/Win2D" FontSize="12"/>
                                     </controls:WrapPanel>
@@ -181,7 +195,6 @@
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine1" NavigateUri="https://dotnet.microsoft.com/en-us/download/dotnet-framework" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine2" NavigateUri="https://github.com/commandlineparser/commandline" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine3" NavigateUri="https://github.com/MiloszKrajewski/K4os.Compression.LZ4" FontSize="12"/>
-                                        <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine4" NavigateUri="https://github.com/JamesNK/Newtonsoft.Json" FontSize="12"/>
                                         <HyperlinkButton Style="{StaticResource ExternalLinkButtonStyle}" x:Uid="Info_RepkgCreditsLine5" NavigateUri="https://github.com/SixLabors/ImageSharp" FontSize="12"/>
                                     </controls:WrapPanel>
                                 </StackPanel>

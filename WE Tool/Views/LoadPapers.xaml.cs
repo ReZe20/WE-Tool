@@ -15,6 +15,7 @@ using Serilog;
 using WE_Tool.Models;
 using WE_Tool.Json;
 using WE_Tool.Service;
+using WE_Tool.Helper;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 
@@ -120,7 +121,8 @@ namespace WE_Tool
             PauseButton.IsEnabled = _isExtracting;
             StopButton.IsEnabled = _isExtracting;
 
-            PauseButton.Label = _isPaused ? "恢复" : "暂停";
+            PauseButton.Label = LanguageHelper.GetResource(
+                _isPaused ? "LoadPapers_Resume.Label" : "LoadPapers_Pause.Label");
             PauseButton.Icon = new FontIcon { Glyph = _isPaused ? "\uE768" : "\uE769" };
         }
 

@@ -357,9 +357,6 @@
   <data name="AboutPage.Content" xml:space="preserve">
     <value>About</value>
   </data>
-  <data name="CleanupPage.Content" xml:space="preserve">
-    <value>Residual Cleanup</value>
-  </data>
   <data name="SettingsPage.Content" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -444,6 +441,12 @@
   <data name="AcfPath_TextBlock.Text" xml:space="preserve">
     <value>ACF file path</value>
   </data>
+  <data name="VdfPath.Description" xml:space="preserve">
+    <value>File for storing workshop subscription info</value>
+  </data>
+  <data name="VdfPath_TextBlock.Text" xml:space="preserve">
+    <value>VDF file path</value>
+  </data>
   <data name="SettingPath.Description" xml:space="preserve">
     <value>File Path for Storing Program Settings</value>
   </data>
@@ -473,6 +476,12 @@
   </data>
   <data name="LogLevel_Error.Content" xml:space="preserve">
     <value>Error</value>
+  </data>
+  <data name="CachePath.Description" xml:space="preserve">
+    <value>File path for storing scan cache data</value>
+  </data>
+  <data name="CachePath_TextBlock.Text" xml:space="preserve">
+    <value>Cache file path</value>
   </data>
   <data name="Extract.Text" xml:space="preserve">
     <value>Extract</value>
@@ -524,7 +533,8 @@
   </data>
   <data name="AppBarButton_LargeIcon.Text" xml:space="preserve">
     <value>Large Icons</value>
-  </data>  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
+  </data>
+  <data name="PapersSetting_WallpaperIconSize.Text" xml:space="preserve">
     <value>Wallpaper Icon Size</value>
   </data>
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
@@ -550,9 +560,6 @@
   </data>
   <data name="AppBarButton_Sort.Label" xml:space="preserve">
     <value>Sort</value>
-  </data>
-  <data name="AppBarButton_DeleteForever.Label" xml:space="preserve">
-    <value>Delete Forever</value>
   </data>
   <data name="MenuFlyoutItem_MultiSelect.Text" xml:space="preserve">
     <value>Multi-Select</value>
@@ -607,6 +614,15 @@
   </data>
   <data name="Dark.Content" xml:space="preserve">
     <value>Dark</value>
+  </data>
+  <data name="ScanCache.Header" xml:space="preserve">
+    <value>Scan Cache</value>
+  </data>
+  <data name="Enabled.Content" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Disabled.Content" xml:space="preserve">
+    <value>Disabled</value>
   </data>
   <data name="PapersSetting_IsWallpaperEnterAnimationEnabled.Content" xml:space="preserve">
     <value>Wallpaper Mouse Enter Animation</value>
@@ -968,6 +984,9 @@
   <data name="AutoDetect_AcfPath.ToolTipService.ToolTip" xml:space="preserve">
     <value>Restore Default Path</value>
   </data>
+  <data name="AutoDetect_VdfPath.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Restore Default Path</value>
+  </data>
   <data name="Settings_FlatFileNaming.Text" xml:space="preserve">
     <value>File Naming</value>
   </data>
@@ -1124,6 +1143,105 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Pagination_90.Text" xml:space="preserve">
     <value>90 per page</value>
   </data>
+  <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
+    <value>Import to Editor</value>
+  </data>
+  <data name="NoSelectionHint.Text" xml:space="preserve">
+    <value>Select one or more wallpapers</value>
+  </data>
+  <data name="Detail_Extract.Text" xml:space="preserve">
+    <value>Extract</value>
+  </data>
+  <data name="Detail_Copy.Text" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Detail_Unsubscribe.Text" xml:space="preserve">
+    <value>Unsubscribe</value>
+  </data>
+  <data name="Detail_ImportToEditor.Text" xml:space="preserve">
+    <value>Import to Wallpaper Editor</value>
+  </data>
+  <data name="Detail_DeleteWallpaper.Text" xml:space="preserve">
+    <value>Delete Wallpaper</value>
+  </data>
+  <data name="Detail_OpenDirectory.Text" xml:space="preserve">
+    <value>Open Directory</value>
+  </data>
+  <data name="Detail_Properties.Text" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="MultiSelect_InvertSelection.Content" xml:space="preserve">
+    <value>Invert Selection</value>
+  </data>
+  <data name="MultiSelect_Cancel.Content" xml:space="preserve">
+    <value>Cancel Multi-Select</value>
+  </data>
+  <data name="NoScanResultTip.Text" xml:space="preserve">
+    <value>No wallpapers found. Please check the scan path in settings.</value>
+  </data>
+  <data name="NoScanResultTip_Components.Text" xml:space="preserve">
+    <value>No components found. Please check the scan path in settings.</value>
+  </data>
+  <data name="GoToSettings.Content" xml:space="preserve">
+    <value>Go to Settings</value>
+  </data>
+  <data name="ExtractPause.Text" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="ExtractResume.Text" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="ExtractStop.Text" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="FileStructure.Text" xml:space="preserve">
+    <value>File Structure</value>
+  </data>
+  <data name="NoSelectionHint_Components.Text" xml:space="preserve">
+    <value>Select components to view details</value>
+  </data>
+  <data name="Detail_DeleteComponent.Text" xml:space="preserve">
+    <value>Delete Component</value>
+  </data>
+  <data name="NoMatchTip1.Text" xml:space="preserve">
+    <value>No matching components</value>
+  </data>
+  <data name="NoMatchTip2.Text" xml:space="preserve">
+    <value>Please adjust filter criteria</value>
+  </data>
+  <data name="ComponentDirectory.Text" xml:space="preserve">
+    <value>Component Directory</value>
+  </data>
+  <data name="Toolbar_FilterToggle.Label" xml:space="preserve">
+    <value>Filter Results</value>
+  </data>
+  <data name="Toolbar_ListView.Label" xml:space="preserve">
+    <value>List View</value>
+  </data>
+  <data name="Toolbar_Delete.Label" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Toolbar_SelectAll.Label" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="Toolbar_InvertSelection.Label" xml:space="preserve">
+    <value>Invert Selection</value>
+  </data>
+  <data name="Toolbar_Refresh.Label" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Toolbar_View.Label" xml:space="preserve">
+    <value>View▾</value>
+  </data>
+  <data name="Toolbar_Sort.Label" xml:space="preserve">
+    <value>Sort▾</value>
+  </data>
+  <data name="Toolbar_SortDirection.Label" xml:space="preserve">
+    <value>Sort Direction</value>
+  </data>
   <data name="Settings_ResetHeader.Text" xml:space="preserve">
     <value>Reset Settings</value>
   </data>
@@ -1194,28 +1312,25 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
     <value>Tech stack</value>
   </data>
   <data name="Info_CreditsLine1.Content" xml:space="preserve">
-    <value>.NET 8</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
     <value>WinUI 3 (Windows App SDK 1.8)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
-    <value>CommunityToolkit (MVVM 8.4 / WinUI Controls 8.2)</value>
+    <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
   </data>
   <data name="Info_CreditsLine4.Content" xml:space="preserve">
     <value>Facepunch.Steamworks 2.3</value>
   </data>
   <data name="Info_CreditsLine5.Content" xml:space="preserve">
-    <value>Microsoft.Data.Sqlite 10.0</value>
-  </data>
-  <data name="Info_CreditsLine6.Content" xml:space="preserve">
-    <value>Newtonsoft.Json 13.0</value>
+    <value>Microsoft.Data.Sqlite 10.0.11</value>
   </data>
   <data name="Info_CreditsLine7.Content" xml:space="preserve">
-    <value>Serilog 4.3</value>
+    <value>Serilog 4.4</value>
   </data>
   <data name="Info_CreditsLine8.Content" xml:space="preserve">
-    <value>WinUIEx 2.9</value>
+    <value>WinUIEx 2.9.3</value>
   </data>
   <data name="Info_CreditsLine9.Content" xml:space="preserve">
     <value>RePKG_Re (based on notscuffed/repkg)</value>
@@ -1259,9 +1374,6 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
     <value>K4os.Compression.LZ4 1.3</value>
   </data>
-  <data name="Info_RepkgCreditsLine4.Content" xml:space="preserve">
-    <value>Newtonsoft.Json 13.0</value>
-  </data>
   <data name="Info_RepkgCreditsLine5.Content" xml:space="preserve">
     <value>SixLabors.ImageSharp 2.1</value>
   </data>
@@ -1296,9 +1408,6 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Info_WEToolLogTitle.Text" xml:space="preserve">
     <value>WE Tool log</value>
   </data>
-  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
-    <value>RePKG_Re log</value>
-  </data>
   <data name="Info_SteamStatusOk.Title.Text" xml:space="preserve">
     <value>Steamworks online</value>
   </data>
@@ -1319,6 +1428,15 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="Info_SteamRetry.Content" xml:space="preserve">
     <value>Retry</value>
+  </data>
+  <data name="Info_SteamShutdown.Content" xml:space="preserve">
+    <value>Shut down Steamworks</value>
+  </data>
+  <data name="Info_SteamStatusStopped.Title.Text" xml:space="preserve">
+    <value>Steamworks shut down</value>
+  </data>
+  <data name="Info_SteamStatusStopped.Message.Text" xml:space="preserve">
+    <value>Steamworks bridge process stopped; workshop features are unavailable. Click Retry to reconnect.</value>
   </data>
   <data name="Info_SteamRetrying.Title.Text" xml:space="preserve">
     <value>Reconnecting</value>
@@ -1361,5 +1479,345 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="Settings_IgnorePathsList.ToolTipService.ToolTip" xml:space="preserve">
     <value>Comma-separated, e.g. effects,sounds (includes subfolders)</value>
+  </data>
+  <data name="Info_AboutHeader.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Info_repkgLogTitle.Text" xml:space="preserve">
+    <value>RePKG_Re log</value>
+  </data>
+  <data name="Info_CreditsLineSkia.Content" xml:space="preserve">
+    <value>SkiaSharp 4.151</value>
+  </data>
+  <data name="Cleanup_Title.Text" xml:space="preserve">
+    <value>Residual Cleanup</value>
+  </data>
+  <data name="Cleanup_EmptyHint.Text" xml:space="preserve">
+    <value>Click the button below to scan for residual wallpaper files</value>
+  </data>
+  <data name="Cleanup_ScanButton.Content" xml:space="preserve">
+    <value>Start Scanning</value>
+  </data>
+  <data name="Cleanup_OpenFolder.Content" xml:space="preserve">
+    <value>Open Folder</value>
+  </data>
+  <data name="Cleanup_Whitelist.Content" xml:space="preserve">
+    <value>Whitelist</value>
+  </data>
+  <data name="Cleanup_Delete.Content" xml:space="preserve">
+    <value>Clean Up</value>
+  </data>
+  <data name="WhitelistWindow_Title.Text" xml:space="preserve">
+    <value>Whitelist Management</value>
+  </data>
+  <data name="WhitelistWindow_EmptyHint.Text" xml:space="preserve">
+    <value>Whitelist is empty</value>
+  </data>
+  <data name="WhitelistWindow_EmptyDesc.Text" xml:space="preserve">
+    <value>Click the "Whitelist" button on a card in the Residual Cleanup page to add wallpapers</value>
+  </data>
+  <data name="WhitelistWindow_OpenFolder.Content" xml:space="preserve">
+    <value>Open Folder</value>
+  </data>
+  <data name="WhitelistWindow_Remove.Content" xml:space="preserve">
+    <value>Remove from Whitelist</value>
+  </data>
+  <data name="LoadPapers_Title.Text" xml:space="preserve">
+    <value>Import &amp; Extract</value>
+  </data>
+  <data name="LoadPapers_DragHint.Text" xml:space="preserve">
+    <value>Drag wallpaper packages here</value>
+  </data>
+  <data name="LoadPapers_DragSubhint.Text" xml:space="preserve">
+    <value>Supports .pkg / .mpkg wallpaper package files</value>
+  </data>
+  <data name="LoadPapers_SetExportDir.Label" xml:space="preserve">
+    <value>Set Export Directory</value>
+  </data>
+  <data name="LoadPapers_ExportDirPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Export directory (leave empty to use Papers export directory)</value>
+  </data>
+  <data name="LoadPapers_SelectFile.Label" xml:space="preserve">
+    <value>Select Files</value>
+  </data>
+  <data name="LoadPapers_ScanFolder.Label" xml:space="preserve">
+    <value>Scan Folder</value>
+  </data>
+  <data name="LoadPapers_Clear.Label" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="LoadPapers_StartExtract.Label" xml:space="preserve">
+    <value>Start Extracting</value>
+  </data>
+  <data name="LoadPapers_Pause.Label" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="LoadPapers_Stop.Label" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="LoadPapers_ProjectDir.Content" xml:space="preserve">
+    <value>Project Directory</value>
+  </data>
+  <data name="LoadPapers_ExportDir.Content" xml:space="preserve">
+    <value>Export Directory</value>
+  </data>
+  <data name="LoadPapers_BrowseFolder.Content" xml:space="preserve">
+    <value>Browse Folder</value>
+  </data>
+  <data name="LoadPapers_Resume.Label" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="CleanupPage.Content" xml:space="preserve">
+    <value>Cleanup</value>
+  </data>
+  <data name="Cleanup_BatchWhitelist.Label" xml:space="preserve">
+    <value>Add to Whitelist</value>
+  </data>
+  <data name="Cleanup_BatchDelete.Label" xml:space="preserve">
+    <value>Delete Selected</value>
+  </data>
+  <data name="Cleanup_WhitelistManage.Label" xml:space="preserve">
+    <value>Whitelist</value>
+  </data>
+  <data name="Cleanup_Rescan.Label" xml:space="preserve">
+    <value>Rescan</value>
+  </data>
+  <data name="Cleanup_DeleteAll.Label" xml:space="preserve">
+    <value>Clean Up All</value>
+  </data>
+  <data name="Cleanup_TypeExcess" xml:space="preserve">
+    <value>Extra</value>
+  </data>
+  <data name="Cleanup_TypeUnloaded" xml:space="preserve">
+    <value>Unloaded</value>
+  </data>
+  <data name="Cleanup_StatsExcess" xml:space="preserve">
+    <value>{0} extra files · {1}</value>
+  </data>
+  <data name="Cleanup_StatsUnloaded" xml:space="preserve">
+    <value>{0} files · {1}</value>
+  </data>
+  <data name="Cleanup_EmptyFolderName" xml:space="preserve">
+    <value>(empty folder)</value>
+  </data>
+  <data name="Cleanup_ScanFailed" xml:space="preserve">
+    <value>Scan failed: {0}</value>
+  </data>
+  <data name="Cleanup_CleanedComplete" xml:space="preserve">
+    <value>Cleaned residue of {0} wallpapers</value>
+  </data>
+  <data name="Cleanup_Summary" xml:space="preserve">
+    <value>{0} items · {1}</value>
+  </data>
+  <data name="Cleanup_SortByType.Text" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Title" xml:space="preserve">
+    <value>Clean Up {0}</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Content" xml:space="preserve">
+    <value>This will delete {0} residual files. This action cannot be undone.</value>
+  </data>
+  <data name="Cleanup_ConfirmClean.Ok" xml:space="preserve">
+    <value>Clean Up</value>
+  </data>
+  <data name="Cleanup_CleanFail.Title" xml:space="preserve">
+    <value>Cleanup Failed</value>
+  </data>
+  <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
+    <value>Delete Selected ({0})</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Title" xml:space="preserve">
+    <value>Clean Up All</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Content" xml:space="preserve">
+    <value>This will delete {1} residual files from {0} wallpapers. This action cannot be undone.</value>
+  </data>
+  <data name="Cleanup_ConfirmDeleteAll.Ok" xml:space="preserve">
+    <value>Clean Up All</value>
+  </data>
+  <data name="Cleanup_BatchWhitelistCount" xml:space="preserve">
+    <value>Add to Whitelist ({0})</value>
+  </data>
+  <data name="Cleanup_BatchDeleteCount" xml:space="preserve">
+    <value>Delete Selected ({0})</value>
+  </data>
+  <data name="Cleanup_CommonDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Cleanup_CommonCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Cleanup_CommonOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="WhitelistWindowTitle.Title" xml:space="preserve">
+    <value>Whitelist Management</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemove.Label" xml:space="preserve">
+    <value>Remove Selected</value>
+  </data>
+  <data name="WhitelistWindow_Subtitle" xml:space="preserve">
+    <value>{0} items · {1}</value>
+  </data>
+  <data name="WhitelistWindow_BatchRemoveCount" xml:space="preserve">
+    <value>Remove Selected ({0})</value>
+  </data>
+  <data name="ScanCache.Description" xml:space="preserve">
+    <value>Scan cache helps speed up program scanning</value>
+  </data>
+  <data name="WindowBehavior.Header" xml:space="preserve">
+    <value>Window Behavior</value>
+  </data>
+  <data name="WindowBehavior.Description" xml:space="preserve">
+    <value>Control whether to restore window position, size, and maximized state on startup</value>
+  </data>
+  <data name="WindowBehavior_Restore.Content" xml:space="preserve">
+    <value>Restore previous window size and position</value>
+  </data>
+  <data name="StartPage_Cleanup.Text" xml:space="preserve">
+    <value>Cleanup</value>
+  </data>
+  <data name="StartPage_WallpaperBackup.Text" xml:space="preserve">
+    <value>Wallpaper Backup</value>
+  </data>
+  <data name="Settings_DownloadPath.PlaceholderText" xml:space="preserve">
+    <value>e.g. D:\Export\Wallpapers</value>
+  </data>
+  <data name="Settings_WorkshopPath.PlaceholderText" xml:space="preserve">
+    <value>e.g. D:\SteamLibrary\steamapps\workshop\content\431960</value>
+  </data>
+  <data name="Settings_ProjectPath.PlaceholderText" xml:space="preserve">
+    <value>e.g. D:\...\wallpaper_engine\projects\myprojects</value>
+  </data>
+  <data name="Settings_OfficialPath.PlaceholderText" xml:space="preserve">
+    <value>e.g. D:\...\wallpaper_engine\projects\defaultprojects</value>
+  </data>
+  <data name="Settings_AcfPath.PlaceholderText" xml:space="preserve">
+    <value>e.g. D:\SteamLibrary\steamapps\workshop\appworkshop_431960.acf</value>
+  </data>
+  <data name="Settings_VdfPath.PlaceholderText" xml:space="preserve">
+    <value>e.g. D:\Steam\userdata\{AccountId}\ugc\431960_subscriptions.vdf</value>
+  </data>
+  <data name="AppBarButton_BackupDone.Label" xml:space="preserve">
+    <value>Backed Up</value>
+  </data>
+  <data name="AppBarButton_Backup.Label" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="BackupPage.Content" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="BackupPage_Title.Text" xml:space="preserve">
+    <value>Wallpaper Backup</value>
+  </data>
+  <data name="BackupPage_Empty.Text" xml:space="preserve">
+    <value>No backups</value>
+  </data>
+  <data name="BackupPage_Refresh.Label" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="BackupPage_DeleteAll.Label" xml:space="preserve">
+    <value>Delete All</value>
+  </data>
+  <data name="AutoBackup_SettingsHeader.Text" xml:space="preserve">
+    <value>Auto Backup</value>
+  </data>
+  <data name="AutoBackup_ModeLabel.Text" xml:space="preserve">
+    <value>Auto Backup Mode</value>
+  </data>
+  <data name="AutoBackup_ModeOff.Content" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="AutoBackup_ModeService.Content" xml:space="preserve">
+    <value>Background Service</value>
+  </data>
+  <data name="AutoBackup_ServiceStatusLabel.Text" xml:space="preserve">
+    <value>Service Status</value>
+  </data>
+  <data name="AutoBackup_ServiceNotInstalled.Text" xml:space="preserve">
+    <value>Not installed. Click "Install Service" to enable background auto-backup.</value>
+  </data>
+  <data name="AutoBackup_ServiceRunning.Text" xml:space="preserve">
+    <value>Service is running</value>
+  </data>
+  <data name="AutoBackup_ServiceInstalled.Text" xml:space="preserve">
+    <value>Service installed (auto-starts on login)</value>
+  </data>
+  <data name="AutoBackup_Install.Content" xml:space="preserve">
+    <value>Install Service</value>
+  </data>
+  <data name="AutoBackup_Uninstall.Content" xml:space="preserve">
+    <value>Uninstall Service</value>
+  </data>
+  <data name="AutoBackup_Start.Content" xml:space="preserve">
+    <value>Start Service</value>
+  </data>
+  <data name="AutoBackup_Stop.Content" xml:space="preserve">
+    <value>Stop Service</value>
+  </data>
+  <data name="AutoBackup_TypeLabel.Text" xml:space="preserve">
+    <value>Wallpaper types to auto-backup</value>
+  </data>
+  <data name="AutoBackup_TypeScene.Content" xml:space="preserve">
+    <value>Scene</value>
+  </data>
+  <data name="AutoBackup_TypeVideo.Content" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="AutoBackup_TypeWeb.Content" xml:space="preserve">
+    <value>Web</value>
+  </data>
+  <data name="AutoBackup_TypeApp.Content" xml:space="preserve">
+    <value>Application</value>
+  </data>
+  <data name="AutoBackup_TypePreset.Content" xml:space="preserve">
+    <value>Preset</value>
+  </data>
+  <data name="AutoBackup_TypeUnknown.Content" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
+    <value>Age rating to auto-backup</value>
+  </data>
+  <data name="AutoBackup_RatingG.Content" xml:space="preserve">
+    <value>Everyone</value>
+  </data>
+  <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
+    <value>Teen</value>
+  </data>
+  <data name="AutoBackup_RatingR.Content" xml:space="preserve">
+    <value>Mature</value>
+  </data>
+  <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
+    <value>Operation Failed</value>
+  </data>
+  <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
+    <value>Auto Backup</value>
+  </data>
+  <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
+    <value>Choose the auto-backup mode and which wallpaper types/ratings to back up</value>
+  </data>
+  <data name="AutoBackup_Done.Content" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Info_AutoBackupLogTitle.Text" xml:space="preserve">
+    <value>Auto Backup Service Log</value>
+  </data>
+  <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
+    <value>Back up on WE Tool startup</value>
+  </data>
+  
+  <data name="BackupPage_SortByTime.Text" xml:space="preserve">
+    <value>Backup Time</value>
+  </data>
+  <data name="BackupPage_FilterEmpty.Text" xml:space="preserve">
+    <value>No backups match the filter</value>
+  </data>
+  <data name="BackupPage_SortByMissing.Text" xml:space="preserve">
+    <value>Source Removed</value>
+  </data>
+  <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
+    <value>Source removed</value>
   </data>
 </root>

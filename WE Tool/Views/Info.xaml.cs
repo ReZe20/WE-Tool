@@ -62,6 +62,13 @@ public sealed partial class Info : Page
     private bool _repkgLogResizing;
     private double _repkgLogResizeStartY;
     private double _repkgLogResizeStartHeight;
+    // 自动备份服务日志面板(独立文件 AutoBackupService.log,服务进程写入)
+    private readonly string? _autoBackupLogPath;
+    private long _autoBackupLogPosition;
+    private bool _autoBackupLogAtBottom = true;
+    private bool _autoBackupLogResizing;
+    private double _autoBackupLogResizeStartY;
+    private double _autoBackupLogResizeStartHeight;
     private int _lastSteamState = -1; // -1=未检查 0=正常 1=初始化失败 2=中途断开
     private Task? _steamInitTask;
 
@@ -182,10 +189,15 @@ public sealed partial class Info : Page
         _ = LoadContributorsAsync(Contributors, Path.Combine(AppContext.BaseDirectory, "Assets", "Contributors.csv"));
         _ = LoadContributorsAsync(RepkgContributors, Path.Combine(AppContext.BaseDirectory, "Assets", "ContributorsRepkg.csv"));
 
-        // 当前日志文件固定为 logs/log.txt(Serilog 统一单文件,不做按天滚动)
-        _logPath = Path.Combine(ViewModel.AppSettingsVM.LogPath, "log.txt");
+        // 当前日志文件固定为 logs/log.txt(Serilog 统一单文件,不做滚动;启动时清理历史序号文件)。
+        // 兜底:若目录里只有历史滚动文件(log_001.txt 等),读最新的那个,避免面板空白
+        _logPath = ResolveMainLogPath(ViewModel.AppSettingsVM.LogPath);
         // RePKG_Re 日志:RepkgCliService 写入 logs/repkg.log(每次提取开始清空)
         _repkgLogPath = Path.Combine(ViewModel.AppSettingsVM.LogPath, "repkg.log");
+        // 自动备份服务日志:AutoBackupService 写入 %LOCALAPPDATA%/WE_Tool/AutoBackupService.log
+        _autoBackupLogPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "WE_Tool", "AutoBackupService.log");
         _logTimer.Tick += OnLogTimerTick;
         _logTimer.Start();
         // Steamworks 首次初始化放后台线程,避免页面加载卡顿;完成后立即反映状态
@@ -198,17 +210,42 @@ public sealed partial class Info : Page
             TranslationStatus.Add(item);
     }
 
+    /// <summary>解析主日志路径:优先 logs/log.txt;若不存在(旧版本滚动遗留),取最新的 log_*.txt。</summary>
+    private static string ResolveMainLogPath(string logDir)
+    {
+        var primary = Path.Combine(logDir, "log.txt");
+        if (File.Exists(primary)) return primary;
+        try
+        {
+            var latest = Directory.GetFiles(logDir, "log_*.txt")
+                .OrderByDescending(f => new FileInfo(f).LastWriteTime)
+                .FirstOrDefault();
+            if (latest != null) return latest;
+        }
+        catch { }
+        return primary; // 目录不存在/无文件时仍指向 log.txt(Serilog 启动时会创建)
+    }
+
     private static string GetVersionText()
     {
         var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         return version == null ? string.Empty : $"{version.Major}.{version.Minor}.{version.Build}";
     }
 
-    /// <summary>重试:重启 Steamworks 桥接子进程(初始化在子进程内完成,主进程不卡);
-    /// 期间显示黄条 + 顶部加载条</summary>
-    private async void SteamRetryButton_Click(object sender, RoutedEventArgs e)
+    /// <summary>InfoBar 动作按钮:正常态=关闭 Steamworks,异常/已关闭态=重试。按当前状态分发。</summary>
+    private async void SteamActionButton_Click(object sender, RoutedEventArgs e)
     {
-        SteamRetryButton.Visibility = Visibility.Collapsed;
+        if (_lastSteamState == 0)
+        {
+            // 正常态:关闭 Steamworks
+            SteamWorkshopService.GetInstance().Shutdown();
+            _lastSteamState = -1; // 强制刷新:立即反映"已关闭"状态
+            UpdateSteamStatus();
+            return;
+        }
+
+        // 异常/已关闭态:重试
+        SteamActionButton.Visibility = Visibility.Collapsed;
         RetryProgressBar.Visibility = Visibility.Visible;
         SteamStatusBar.Severity = InfoBarSeverity.Warning;
         SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamRetrying.Title.Text");
@@ -248,12 +285,23 @@ public sealed partial class Info : Page
             {
                 SteamworksStatus.Running => 0,
                 SteamworksStatus.Disconnected => 2,
+                SteamworksStatus.Stopped => 3,
                 _ => 1,
             };
             if (state == _lastSteamState) return;
             _lastSteamState = state;
 
-            SteamRetryButton.Visibility = state == 0 ? Visibility.Collapsed : Visibility.Visible;
+            // 正常态显示"关闭 Steamworks"按钮,异常/已关闭态显示"重试"按钮(单按钮双角色)
+            if (state == 0)
+            {
+                SteamActionButton.Content = LanguageHelper.GetResource("Info_SteamShutdown.Content");
+                SteamActionButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                SteamActionButton.Content = LanguageHelper.GetResource("Info_SteamRetry.Content");
+                SteamActionButton.Visibility = Visibility.Visible;
+            }
             switch (state)
             {
                 case 0:
@@ -266,10 +314,15 @@ public sealed partial class Info : Page
                     SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusFail.Title.Text");
                     SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusFail.Message.Text");
                     break;
-                default:
+                case 2:
                     SteamStatusBar.Severity = InfoBarSeverity.Warning;
                     SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusLost.Title.Text");
                     SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusLost.Message.Text");
+                    break;
+                case 3:
+                    SteamStatusBar.Severity = InfoBarSeverity.Warning;
+                    SteamStatusBar.Title = LanguageHelper.GetResource("Info_SteamStatusStopped.Title.Text");
+                    SteamStatusBar.Message = LanguageHelper.GetResource("Info_SteamStatusStopped.Message.Text");
                     break;
             }
             SteamStatusBar.IsOpen = true;
@@ -280,14 +333,17 @@ public sealed partial class Info : Page
         }
     }
 
-    /// <summary>每秒轮询 log.txt 尾部,追加新内容;文件被截断/重建时从头重读</summary>
+    /// <summary>每秒轮询 log.txt 尾部,追加新内容;文件被截断/重建时从头重读。
+    /// 主日志文件不存在时仅跳过自身轮询,repkg/自动备份面板照常更新(否则一个文件缺失三个面板全空白)。</summary>
     private void OnLogTimerTick(object? sender, object e)
     {
+        _ = RefreshSteamStatusAsync();
+        PollRepkgLog();
+        PollAutoBackupLog();
+
         if (_logPath == null || !File.Exists(_logPath)) return;
         try
         {
-            _ = RefreshSteamStatusAsync();
-            PollRepkgLog();
             // 首次加载只读尾部 64KB,避免刷出整屏历史
             if (_logPosition == 0 && LogTextBlock.Inlines.Count == 0)
                 _logPosition = Math.Max(0, new FileInfo(_logPath).Length - 64 * 1024);
@@ -387,6 +443,71 @@ public sealed partial class Info : Page
 
     /// <summary>按行追加日志,按级别着色([ERR]/[FTL] 红、[WRN] 黄、[DBG]/[VRB] 灰、其余亮灰);
     /// 文件尾部的半行(未写完)不加换行,等下一个 tick 续接</summary>
+    /// <summary>轮询自动备份服务日志(AutoBackupService.log,增量追加 + 自动滚动)。</summary>
+    private void PollAutoBackupLog()
+    {
+        if (_autoBackupLogPath == null || !File.Exists(_autoBackupLogPath)) return;
+        try
+        {
+            if (_autoBackupLogPosition == 0 && AutoBackupLogTextBlock.Inlines.Count == 0)
+                _autoBackupLogPosition = Math.Max(0, new FileInfo(_autoBackupLogPath).Length - 64 * 1024);
+
+            using var fs = new FileStream(_autoBackupLogPath, FileMode.Open, FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            if (fs.Length < _autoBackupLogPosition)
+            {
+                _autoBackupLogPosition = 0;
+                AutoBackupLogTextBlock.Inlines.Clear();
+            }
+            if (fs.Length == _autoBackupLogPosition) return;
+
+            fs.Seek(_autoBackupLogPosition, SeekOrigin.Begin);
+            using var reader = new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
+            var chunk = reader.ReadToEnd();
+            _autoBackupLogPosition = fs.Position;
+            if (chunk.Length == 0) return;
+
+            AppendLogChunk(chunk, AutoBackupLogTextBlock);
+            if (_autoBackupLogAtBottom)
+            {
+                AutoBackupLogScrollViewer.UpdateLayout();
+                AutoBackupLogScrollViewer.ChangeView(null, double.MaxValue, null, true);
+            }
+        }
+        catch
+        {
+            // 文件暂时被占用,跳过本次轮询
+        }
+    }
+
+    private void AutoBackupLogScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
+        => _autoBackupLogAtBottom = AutoBackupLogScrollViewer.VerticalOffset >= AutoBackupLogScrollViewer.ScrollableHeight - 4;
+
+    private void AutoBackupLogResizeHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _autoBackupLogResizing = true;
+        _autoBackupLogResizeStartY = e.GetCurrentPoint(null).Position.Y;
+        _autoBackupLogResizeStartHeight = AutoBackupLogScrollViewer.Height;
+        AutoBackupLogResizeHandle.CapturePointer(e.Pointer);
+    }
+
+    private void AutoBackupLogResizeHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_autoBackupLogResizing) return;
+        double delta = e.GetCurrentPoint(null).Position.Y - _autoBackupLogResizeStartY;
+        double h = Math.Clamp(_autoBackupLogResizeStartHeight + delta, MinLogHeight, MaxLogHeight);
+        AutoBackupLogScrollViewer.Height = h;
+    }
+
+    private void AutoBackupLogResizeHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _autoBackupLogResizing = false;
+        AutoBackupLogResizeHandle.ReleasePointerCapture(e.Pointer);
+    }
+
+    private void AutoBackupLogResizeHandle_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        => _autoBackupLogResizing = false;
+
     private void AppendLogChunk(string chunk, TextBlock target)
     {
         var lines = chunk.Split('\n');
