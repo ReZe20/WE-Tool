@@ -7,7 +7,6 @@ WE Tool 使用的第三方组件及其许可证声明
 - CommunityToolkit.Mvvm 8.4.0 — MIT License
 - CommunityToolkit.WinUI.Controls.Primitives 8.2.251219 — MIT License
 - CommunityToolkit.WinUI.Controls.SettingsControls 8.2.251219 — MIT License
-- Facepunch.Steamworks 2.3.3 — MIT License
 - Microsoft.Windows.SDK.BuildTools 10.0.26100.7705 — MIT License
 - Microsoft.WindowsAppSDK 1.8.260209005 — MIT License
 - Newtonsoft.Json 13.0.4 — MIT License

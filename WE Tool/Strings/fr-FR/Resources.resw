@@ -1320,9 +1320,6 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
     <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
   </data>
-  <data name="Info_CreditsLine4.Content" xml:space="preserve">
-    <value>Facepunch.Steamworks 2.3</value>
-  </data>
   <data name="Info_CreditsLine7.Content" xml:space="preserve">
     <value>Serilog 4.4</value>
   </data>

@@ -60,7 +60,6 @@
     <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
-    <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260804001" />
@@ -69,13 +68,6 @@
     <PackageReference Include="SkiaSharp" Version="4.151.1" />
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="4.151.1" />
     <PackageReference Include="WinUIEx" Version="2.9.3" />
-  </ItemGroup>
-  <ItemGroup>
-    <!-- 复制 Steamworks 的 steam_api64.dll 到输出目录 -->
-    <Content Include="$(NuGetPackageRoot)facepunch.steamworks\2.3.3\content\steam_api64.dll">
-      <Link>steam_api64.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <!-- SteamworksBridge 部署:应用对桥接无编译期引用(仅进程调用),不能 ProjectReference
        (自包含发布会报 NETSDK1150);构建/发布时构建桥接并把输出拷进目标目录 -->
