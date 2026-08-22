@@ -8,7 +8,7 @@ namespace WE_Tool.Converters
     /// based on the target element's ActualWidth.
     /// Parameter: the margin to subtract from each side (default "12").
     /// </summary>
-    public class PercentToFillWidthConverter : IValueConverter
+    public partial class PercentToFillWidthConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

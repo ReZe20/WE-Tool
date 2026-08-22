@@ -10,6 +10,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using WE_Tool.ViewModels;
 using WE_Tool.Helper;
+using WE_Tool.Json;
 using WinUIEx;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Windowing;
@@ -143,13 +144,12 @@ public sealed partial class WhitelistWindow : WindowEx
 
     private void UpdateItemWidth()
     {
-        if (CardGridView.ItemsPanelRoot is ItemsWrapGrid wrap)
-        {
-            double available = CardGridView.ActualWidth;
-            if (available <= 0) return;
-            int cols = Math.Max(1, (int)(available / 350));
-            wrap.ItemWidth = available / cols - 2;
-        }
+        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid,用 DP SetValue 直接灌值,不走 C# 类型匹配
+        if (CardGridView.ItemsPanelRoot is not { } panelRoot) return;
+        double available = CardGridView.ActualWidth;
+        if (available <= 0) return;
+        int cols = Math.Max(1, (int)(available / 350));
+        panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available / cols - 2);
     }
 
     private CleanupCardViewModel? MakeCard(string dir, string id)
@@ -248,7 +248,7 @@ public sealed partial class WhitelistWindow : WindowEx
             var file = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "WE_Tool", "cleanup_whitelist.json");
-            File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(_whitelist.ToList()));
+            File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(_whitelist.ToList(), JsonContext.Default.ListString));
         }
         catch { }
     }

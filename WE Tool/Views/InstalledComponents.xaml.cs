@@ -208,20 +208,23 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     /// <param name="itemMarginTotal">容器左右 Margin 总和(判断列数用)</param>
     private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
     {
-        if (gridView == null || gridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
-        wrap.CacheLength = 0; // 不预渲染(仅实化可见项;滚动时即时实化,Skia 流式打开快)
+        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid。
+        // AOT 裁剪下 is/强转都可能失败(类型元数据缺失/类型被投影),用 DP SetValue 直接灌值,
+        // 走 WinUI 原生 DP 系统,不经过 C# 类型匹配,最稳。
+        if (gridView?.ItemsPanelRoot is not { } panelRoot) return;
+        panelRoot.SetValue(ItemsWrapGrid.CacheLengthProperty, 0); // 不预渲染(仅实化可见项;滚动时即时实化,Skia 流式打开快)
         double available = gridView.ActualWidth;
         if (available <= 0) return;
         if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10
         {
-            wrap.ItemWidth = available;
+            panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available);
             return;
         }
         int cols = Math.Max(1, (int)(available / (minItemWidth + itemMarginTotal)));
         // ItemsWrapGrid 语义(已实测):ItemWidth = 槽位步长(含容器 Margin),容器实际宽 = ItemWidth - 10;
         // 换行判断为严格比较,ItemWidth = available/cols 会因浮点误差恰好放不下最后一列(空一列),
         // 故留 2px/列余量;卡片 = available/cols - 12,行尾余量 cols×2px 不可见
-        wrap.ItemWidth = available / cols - 2;
+        panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available / cols - 2);
     }
 
     /// <summary>当前可见的 GridView(滚动回顶用)</summary>
@@ -426,8 +429,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         /// <summary>遍历可见容器重启 GIF 播放(页面缓存切回时;容器未就绪/无项时无害)</summary>
         private void RestartVisibleGifPlayback()
         {
-            if (ComponentsGridView.ItemsPanelRoot is not ItemsWrapGrid panel) return;
-            foreach (var child in panel.Children)
+            // 非反射(AOT 兼容):ItemsPanelRoot 返回类型是 Panel(基类),Children 是 Panel 属性,直接访问即可,不强转 ItemsWrapGrid
+            if (ComponentsGridView.ItemsPanelRoot is not { } panelRoot) return;
+            foreach (var child in panelRoot.Children)
             {
                 if (child is not GridViewItem container) continue;
                 if (container.ContentTemplateRoot is not Grid root) continue;
@@ -1202,8 +1206,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void OnTagDisplayChanged(object sender, RoutedEventArgs e)
     {
         // 优化:不再重置 ItemsSource 重建全列表——只遍历可见容器手动刷新角标(照 Papers)
-        if (ComponentsGridView.ItemsPanelRoot is not ItemsWrapGrid panel) return;
-        foreach (var child in panel.Children)
+        // 非反射(AOT 兼容):ItemsPanelRoot 返回类型是 Panel(基类),Children 是 Panel 属性,直接访问即可,不强转 ItemsWrapGrid
+        if (ComponentsGridView.ItemsPanelRoot is not { } panelRoot) return;
+        foreach (var child in panelRoot.Children)
         {
             if (child is not GridViewItem container) continue;
             if (container.ContentTemplateRoot is not Grid root) continue;

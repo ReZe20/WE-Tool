@@ -23,7 +23,7 @@
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
     <WindowsPackageType>None</WindowsPackageType>
     <!-- AOT/Trim 兼容:禁用 XAML 类型反射和绑定诊断(避免 0xC000027B stowed exception) -->
-    <EnableTypeInfoReflection>false</EnableTypeInfoReflection>
+    <EnableTypeInfoReflection>true</EnableTypeInfoReflection>
     <EnableBindingDiagnostics>false</EnableBindingDiagnostics>
   </PropertyGroup>
   <ItemGroup>
@@ -257,6 +257,8 @@
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- Native AOT:仅 Release 开启(.NET 10 Debug AOT 有 GC 死锁 bug,随机卡死 10-20s) -->
+    <PublishAot Condition="'$(Configuration)' != 'Debug'">true</PublishAot>
     <AssemblyName>WE_Tool</AssemblyName>
     <AssemblyTitle>WE_Tool</AssemblyTitle>
     <StartupObject>WE_Tool.Program</StartupObject>

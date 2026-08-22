@@ -13,7 +13,7 @@ namespace WE_Tool.Controls;
 /// SKCodec(Skia 引擎,与 Flutter 同源)按帧延迟流式解码 + SKXamlCanvas 绘制。
 /// 帧不驻留(仅当前帧 SKBitmap ~0.3MB),内存远小于批量解码;解码在共享时钟 Tick 内(UI 线程,小图 ~1ms/帧)。
 /// 共享 DispatcherQueueTimer 驱动所有实例(按各自帧延迟推进),避免每卡片一个定时器。</summary>
-public sealed class SkiaGifView : SKXamlCanvas
+public sealed partial class SkiaGifView : SKXamlCanvas
 {
     private SKCodec? _codec;
     private SKBitmap? _frame;

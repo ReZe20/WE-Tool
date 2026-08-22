@@ -54,8 +54,9 @@ public sealed partial class WallpaperBackup : Page
     /// <summary>遍历可见容器重启 GIF 播放(页面缓存切回时;容器未就绪/无项时无害)。</summary>
     private void RestartVisibleGifPlayback()
     {
-        if (BackupGridView.ItemsPanelRoot is not ItemsWrapGrid panel) return;
-        foreach (var child in panel.Children)
+        // 非反射(AOT 兼容):ItemsPanelRoot 返回类型是 Panel(基类),Children 是 Panel 属性,直接访问即可,不强转 ItemsWrapGrid
+        if (BackupGridView.ItemsPanelRoot is not { } panelRoot) return;
+        foreach (var child in panelRoot.Children)
         {
             if (child is not GridViewItem container) continue;
             if (container.ContentTemplateRoot is not FrameworkElement content) continue;
@@ -301,8 +302,9 @@ public sealed partial class WallpaperBackup : Page
         // 宽度未变时跳过,避免 SizeChanged 递归
         if (Math.Abs(itemWidth - _lastCardWidth) < 0.5) return;
         _lastCardWidth = itemWidth;
-        if (BackupGridView.ItemsPanelRoot is ItemsWrapGrid wrap)
-            wrap.ItemWidth = itemWidth;
+        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid,用 DP SetValue 直接灌值,不走 C# 类型匹配
+        if (BackupGridView.ItemsPanelRoot is { } panelRoot)
+            panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, itemWidth);
     }
 
     private double _lastCardWidth;

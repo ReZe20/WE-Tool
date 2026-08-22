@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace WE_Tool.Converters
 {
-    internal class DateTimeToString : IValueConverter
+    internal partial class DateTimeToString : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

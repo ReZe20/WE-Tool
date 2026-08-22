@@ -12,7 +12,7 @@ public sealed class CleanupFileItem
     public string FullPath { get; set; } = "";
 }
 
-public sealed class CleanupCardViewModel : INotifyPropertyChanged
+public sealed partial class CleanupCardViewModel : INotifyPropertyChanged
 {
     public string FolderId { get; set; } = "";      // 壁纸 ID
     public string TypeLabel { get; set; } = "多余";   // 卸载 / 多余

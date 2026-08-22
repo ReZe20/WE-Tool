@@ -8,7 +8,7 @@ using WE_Tool.Helper;
 
 namespace WE_Tool.Converters
 {
-    internal class RatingToDisplay : IValueConverter
+    internal partial class RatingToDisplay : IValueConverter
     {
         public object Convert(object value, Type? targetType, object parameter, string language)
         {

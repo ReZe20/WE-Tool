@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace WE_Tool.Converters
 {
-    internal class FileSizeToString : IValueConverter
+    internal partial class FileSizeToString : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

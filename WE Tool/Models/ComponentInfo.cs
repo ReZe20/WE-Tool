@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace WE_Tool.Models;
 
-public class ComponentInfo : INotifyPropertyChanged
+public partial class ComponentInfo : INotifyPropertyChanged
 {
     public string? Title { get; set; }
     public string? FilePath { get; set; }

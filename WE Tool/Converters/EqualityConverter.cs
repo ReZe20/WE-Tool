@@ -7,7 +7,7 @@ namespace WE_Tool.Converters;
 /// 将绑定值与 ConverterParameter 比较，相等返回 true。
 /// 用于将 RadioButton.IsChecked 绑定到 int 属性。
 /// </summary>
-public class EqualityConverter : IValueConverter
+public partial class EqualityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {

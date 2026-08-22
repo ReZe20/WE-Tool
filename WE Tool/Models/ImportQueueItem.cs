@@ -9,7 +9,7 @@ namespace WE_Tool.Models
     /// 导入壁纸页的队列项：一个待导入的 .pkg/.mpkg 壁纸包文件。
     /// 当前为 UI 骨架阶段：Status 停在"等待导入"，导入执行逻辑接入后驱动 Progress/Status。
     /// </summary>
-    public class ImportQueueItem : INotifyPropertyChanged
+    public partial class ImportQueueItem : INotifyPropertyChanged
     {
         public string FilePath { get; set; } = "";
 

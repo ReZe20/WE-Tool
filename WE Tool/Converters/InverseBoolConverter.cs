@@ -6,7 +6,7 @@ namespace WE_Tool.Converters;
 /// <summary>
 /// 布尔值取反转换器
 /// </summary>
-public class InverseBoolConverter : IValueConverter
+public partial class InverseBoolConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {

@@ -9,7 +9,7 @@ using WE_Tool.Helper;
 
 namespace WE_Tool.Converters
 {
-    internal class TypeToDisplay : IValueConverter
+    internal partial class TypeToDisplay : IValueConverter
     {
         public object Convert(object value, Type? targetType, object parameter, string language)
         {

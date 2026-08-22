@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Collections.Generic;
 using WE_Tool.Helper;
 using WE_Tool.Models;
 
@@ -21,6 +22,7 @@ namespace WE_Tool.Json
     [JsonSerializable(typeof(BridgeCommand))]
     [JsonSerializable(typeof(LoadPapersEntry))]
     [JsonSerializable(typeof(string))]
+    [JsonSerializable(typeof(List<string>))]
     [JsonSerializable(typeof(WallpaperScanner.CacheFile))]
     internal partial class JsonContext : JsonSerializerContext { }
 }
