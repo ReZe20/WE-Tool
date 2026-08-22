@@ -257,6 +257,8 @@
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- Native AOT:仅 Release 开启(.NET 10 Debug AOT 有 GC 死锁 bug,随机卡死 10-20s) -->
+    <PublishAot Condition="'$(Configuration)' != 'Debug'">true</PublishAot>
     <AssemblyName>WE_Tool</AssemblyName>
     <AssemblyTitle>WE_Tool</AssemblyTitle>
     <StartupObject>WE_Tool.Program</StartupObject>

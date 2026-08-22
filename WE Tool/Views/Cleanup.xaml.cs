@@ -179,12 +179,13 @@ public sealed partial class Cleanup : Page
     /// <summary>复刻 Papers:布局脏标记同帧合并,拖动中列宽实时更新。</summary>
     private void UpdateWrapGridItemWidth()
     {
-        if (ResultGridView.ItemsPanelRoot is not ItemsWrapGrid wrap) return;
-        wrap.CacheLength = 0;
+        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid,用 DP SetValue 直接灌值,不走 C# 类型匹配
+        if (ResultGridView.ItemsPanelRoot is not { } panelRoot) return;
+        panelRoot.SetValue(ItemsWrapGrid.CacheLengthProperty, 0);
         double available = ResultGridView.ActualWidth;
         if (available <= 0) return;
         int cols = Math.Max(1, (int)(available / (270 + 10)));
-        wrap.ItemWidth = available / cols - 2;
+        panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available / cols - 2);
     }
 
     private List<CleanupCardViewModel> Scan()
