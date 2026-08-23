@@ -1,5 +1,14 @@
 # 更新日志
 
+## v0.7.1
+
+- 新增:Native AOT 发布(Release 开启)——主程序编译为原生 exe(约 22MB),无需 .NET 运行时,启动更快
+- 新增:发布配置切换为 AOT 自包含单包(移除 framework-dependent 配置),发布包 zip 自动生成到 `bin/Package/`(含未压缩文件夹)
+- 优化:发布包大幅瘦身——剔除 WebView2 三件套、Microsoft.Windows.SDK.NET.dll(23.7MB)、UniversalBGTask.dll、AOT 调试符号 PDB(约 107MB),zip 体积从 85MB → 约 17MB
+- 优化:贡献者数据硬编码进程序(ContributorsData.cs),发布包不再携带 CSV 文件
+- 修复:随包 RePKG_Re 升级至 v0.5.3——修复流式转换下视频纹理(mp4)与非 raw 格式 TEX 输出空文件的问题(解包后图像/视频为 0 字节)
+- 其他:SteamworksBridge 部署排除历史残留运行时目录(win-x64/)
+
 ## v0.7.0
 
 - 新增:设置页「启动页面」选项增加「壁纸备份」——启动时可直接进入壁纸备份页

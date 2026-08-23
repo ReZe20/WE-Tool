@@ -186,8 +186,9 @@ public sealed partial class Info : Page
         var app = Application.Current as App;
         ViewModel = app?.ViewModel ?? new SettingsViewModel(new ConfigService(), new PickerService());
         InitializeComponent();
-        _ = LoadContributorsAsync(Contributors, Path.Combine(AppContext.BaseDirectory, "Assets", "Contributors.csv"));
-        _ = LoadContributorsAsync(RepkgContributors, Path.Combine(AppContext.BaseDirectory, "Assets", "ContributorsRepkg.csv"));
+        // 贡献者数据硬编码(ContributorsData.cs),发布包不再携带 CSV 文件
+        LoadContributors(Contributors, ContributorsData.Main);
+        LoadContributors(RepkgContributors, ContributorsData.Repkg);
 
         // 当前日志文件固定为 logs/log.txt(Serilog 统一单文件,不做滚动;启动时清理历史序号文件)。
         // 兜底:若目录里只有历史滚动文件(log_001.txt 等),读最新的那个,避免面板空白
@@ -553,30 +554,18 @@ public sealed partial class Info : Page
         => _logResizing = false; // 捕获意外丢失(系统中断等)时兜底,避免卡在拖拽态
 
     /// <summary>从 CSV 加载贡献者(照抄 BetterLyrics 的 CSV 解析)</summary>
-    private async Task LoadContributorsAsync(ObservableCollection<Contributor> target, string path)
+    private void LoadContributors(ObservableCollection<Contributor> target, IEnumerable<Contributor> source)
     {
         try
         {
-            if (!File.Exists(path)) return;
-
-            var lines = await File.ReadAllLinesAsync(path);
-
-            for (var i = 1; i < lines.Length; i++)
-            {
-                var line = lines[i];
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                var parts = Regex.Split(line, ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-
-                if (parts.Length >= 4)
-                    target.Add(new Contributor
-                    {
-                        Header = parts[0].Trim('"', ' '),
-                        AvatarSource = parts[1].Trim('"', ' '),
-                        Badges = parts[2].Trim('"', ' '),
-                        Description = parts[3].Trim('"', ' ')
-                    });
-            }
+            foreach (var c in source)
+                target.Add(new Contributor
+                {
+                    Header = c.Header,
+                    AvatarSource = c.AvatarSource,
+                    Badges = c.Badges,
+                    Description = c.Description
+                });
         }
         catch
         {

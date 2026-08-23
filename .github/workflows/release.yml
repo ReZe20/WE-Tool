@@ -32,18 +32,16 @@ jobs:
       - name: 获取 RePKG_Re（构建依赖）
         run: git clone --depth 1 https://github.com/ReZe20/repkg-Re.git external/repkg_Re
 
-      - name: 发布 SelfContained (x64)
+      - name: 发布 SelfContained AOT (x64)
         run: dotnet publish "WE Tool/WE Tool.csproj" -c Release -p:Platform=x64 -p:PublishProfile=SelfContained_win-amd64
 
-      - name: 发布 ExternalRuntime (x64)
-        run: dotnet publish "WE Tool/WE Tool.csproj" -c Release -p:Platform=x64 -p:PublishProfile=ExternalRuntime_win-amd64
-
-      - name: 打包 zip 并生成版本介绍
+      - name: 生成版本介绍
         shell: pwsh
         run: |
           $ver = if ("${{ inputs.version }}") { "${{ inputs.version }}" } elseif ("${{ github.ref_name }}" -like "v*") { "${{ github.ref_name }}" } else { "dev" }
-          Compress-Archive -Path "WE Tool/bin/Package/SelfContained_win-amd64/*" -DestinationPath "WE-Tool-$ver-win-x64-selfcontained.zip"
-          Compress-Archive -Path "WE Tool/bin/Package/ExternalRuntime_win-amd64/*" -DestinationPath "WE-Tool-$ver-win-x64-framework.zip"
+          # csproj 的 PackageZip 目标已自动打包到 bin/Package/,这里复制为带 tag 版本号的名字供 Release 上传
+          $zip = Get-ChildItem "WE Tool/bin/Package/WE-Tool-*-win-x64-selfcontained.zip" | Select-Object -First 1
+          Copy-Item $zip.FullName "WE-Tool-$ver-win-x64-selfcontained.zip" -Force
           echo "version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
 
           # 版本介绍：手动输入的 notes 优先，其次 CHANGELOG.md 中当前版本的段落
@@ -75,7 +73,6 @@ jobs:
           body_path: release-body.md
           files: |
             WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
-            WE-Tool-${{ env.version }}-win-x64-framework.zip
 
       - name: 创建 Release（自动生成介绍）
         if: env.HAS_BODY != 'true'
@@ -84,5 +81,4 @@ jobs:
           tag_name: ${{ env.version }}
           files: |
             WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
-            WE-Tool-${{ env.version }}-win-x64-framework.zip
           generate_release_notes: true

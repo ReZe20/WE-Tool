@@ -15,7 +15,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>0.7.0</Version>
+    <Version>0.7.1</Version>
     <!-- Release 下 WinUI 默认禁用反射序列化,导致 config.json 读写失败(实测:设置全部丢失);显式开启 -->
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <Authors>ReZe20</Authors>
@@ -78,7 +78,7 @@
            曾硬编码 net8.0 导致双缺陷:本地匹配到历史残留发布夹,把整套 .NET8 运行时拷进发布产物;
            CI 全新检出则失配,桥接被静默遗漏(正式包无 SteamworksBridge.exe,Steam 功能不可用)。改用
            $(TargetFramework) 跟随主项目 TFM,若两 TFM 未来不一致由下方 Error 失配保护兜底 -->
-      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\*.pdb" />
+      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\*.pdb;$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\win-x64\**\*" />
     </ItemGroup>
     <!-- 失配保护:桥接必须产出文件,空则直接报错,杜绝发布包静默缺失 -->
     <Error Condition="'@(BridgeOutput)' == ''" Text="CopySteamworksBridge 未找到任何桥接输出(...\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\),请检查 SteamworksBridge 的 TFM 是否与主项目一致" />
@@ -192,18 +192,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Link>repkg\LICENSE</Link>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Assets\Contributors.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Assets\ContributorsRepkg.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
@@ -366,13 +354,52 @@
     <!-- 剔除调试符号:SkiaSharp 等原生包自带 .pdb(仅调试用),发布产物不携带,避免体积虚增 -->
     <!-- 剔除 ANGLE 原生库:SkiaGifView 纯 CPU 光栅绘制(SKCodec+SKBitmap+SKXamlCanvas),不创建 GL 上下文;
          libEGL/libGLESv2 系 SkiaSharp.Views.WinUI 的 OpenGL 后端,实测删除后应用显示正常(2026-08-18) -->
+    <!-- 剔除 WebView2 三件套:WinUI 子包(Microsoft.WindowsAppSDK.WinUI)在 nuspec 硬性依赖
+         Microsoft.Web.WebView2,是无条件附赠的默认组件;本项目源码零 WebView2 调用,纯体积负担
+         (Core.dll 767KB + Core.Projection.dll 651KB + WebView2Loader.dll 162KB,2026-08-23 实测定稿) -->
+    <!-- 剔除 Microsoft.Windows.SDK.NET.dll(23.7MB):WinRT 投影桥(C# 调 Windows API 的翻译层)。
+         AOT 编译后启动路径的 API 已焊进原生 exe,运行时不需要此 dll;实测删除后程序正常
+         运行(2026-08-23 用户验证)。若未来某运行时功能异常,可加回 -->
     <ItemGroup>
       <_PublishUnneeded Include="$(PublishDir)**\*.pdb" />
       <_PublishUnneeded Include="$(PublishDir)**\libEGL.dll" />
       <_PublishUnneeded Include="$(PublishDir)**\libGLESv2.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Web.WebView2.Core.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Web.WebView2.Core.Projection.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\WebView2Loader.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.SDK.NET.dll" />
+      <!-- 剔除 Windows App SDK 后台任务组件:WE Tool 不用 WinRT 后台任务(自动备份是独立 exe 服务),
+           exe 无任何引用,纯附带体积 -->
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" />
     </ItemGroup>
     <Delete Files="@(_PublishUnneeded)" />
-    <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (launcher) + app/ (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE)" />
+    <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (launcher) + app/ (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />
+  </Target>
+
+  <!-- AOT 的 WE_Tool.pdb 由 NativeAOT 在 PackageWithLauncher 之后生成(时序晚,上面的剔除匹配不到),
+       独立目标在 PackageWithLauncher 之后执行删除(仅调试用,发布不携带;实测 117.9MB) -->
+  <Target Name="DeleteAotPdb" AfterTargets="PackageWithLauncher">
+    <Message Importance="high" Text="AOT PDB 检查: $(PublishDir)WE_Tool.pdb" Condition="Exists('$(PublishDir)WE_Tool.pdb')" />
+    <Delete Files="$(PublishDir)WE_Tool.pdb" Condition="Exists('$(PublishDir)WE_Tool.pdb')" />
+  </Target>
+
+  <!-- 发布完成后自动打包 zip 到 VS 默认发布目录 bin/Package/(与 PublishDir 同级,git 忽略)。
+       每次发布自动产出固定位置的分发包,无需手动 Compress-Archive -->
+  <Target Name="PackageZip" AfterTargets="DeleteAotPdb">
+    <PropertyGroup>
+      <ZipName>WE-Tool-$(Version)-win-x64-selfcontained.zip</ZipName>
+      <ZipOut>$(MSBuildProjectDirectory)\bin\Package\$(ZipName)</ZipOut>
+      <!-- 未压缩文件夹:与 zip 同名去 .zip,方便直接查看/拷贝 -->
+      <FolderOut>$(MSBuildProjectDirectory)\bin\Package\WE-Tool-$(Version)-win-x64-selfcontained</FolderOut>
+    </PropertyGroup>
+    <Delete Files="$(ZipOut)" Condition="Exists('$(ZipOut)')" />
+    <Exec Command="powershell -NoProfile -Command &quot;Compress-Archive -Path '$(PublishDir)*' -DestinationPath '$(ZipOut)' -Force&quot;" />
+    <!-- 复制未压缩文件夹(排除 pdb;AOT PDB 由 ILC 在发布末尾生成,时序晚于本目标,复制时一并剔除)。
+         注意:必须整目录复制保留 app/ 子目录结构,不能用 $(PublishDir)* 通配(会平铺) -->
+    <RemoveDir Directories="$(FolderOut)" />
+    <Exec Command="powershell -NoProfile -Command &quot;Copy-Item -Path '$(PublishDir)' -Destination '$(FolderOut)' -Recurse -Force; Get-ChildItem '$(FolderOut)' -Recurse -Filter '*.pdb' | Remove-Item -Force&quot;" />
+    <Message Importance="high" Text="zip 已生成: $(ZipOut)" />
+    <Message Importance="high" Text="未压缩文件夹已生成: $(FolderOut)" />
   </Target>
 
 </Project>
