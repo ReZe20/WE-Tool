@@ -366,3 +366,5 @@ FodyWeavers.xsd
 # Reasonix agent workspace files (AI assistant artifacts)
 .reasonix/
 .hermes/
+# Inno Setup 安装包编译输出
+installer/bin/

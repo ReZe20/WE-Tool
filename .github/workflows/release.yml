@@ -65,6 +65,25 @@ jobs:
             echo "HAS_BODY=false" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
+      # 安装包模式:用 Inno Setup 把 PackageZip 已生成的未压缩文件夹打成单个 setup.exe
+      # (runner 镜像自带 Inno Setup 6;产物复制为带 tag 版本号的名字供 Release 上传)
+      - name: 编译安装包（Inno Setup）
+        shell: pwsh
+        run: |
+          $iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+                    "${env:ProgramFiles}\Inno Setup 6\ISCC.exe",
+                    "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe") |
+                   Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "runner 上未找到 ISCC.exe（Inno Setup 6）" }
+          $src = Get-ChildItem "WE Tool/bin/Package/WE-Tool-*-win-x64-selfcontained" -Directory | Select-Object -First 1
+          if (-not $src) { throw "未找到发布文件夹" }
+          # 内部版本号用纯数字(0.7.1);Release 资产名沿用 tag 风格(v0.7.1)
+          $verNum = ($env:version -replace '^v', '')
+          & $iscc /Qp "/DAppVersion=$verNum" "/DSourceRoot=$($src.FullName)" "/O$(Resolve-Path 'installer')\bin" "installer/we-tool.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC 编译失败" }
+          $setup = Get-ChildItem "installer/bin/WE-Tool-*-win-x64-setup.exe" | Select-Object -First 1
+          Copy-Item $setup.FullName "WE-Tool-$($env:version)-win-x64-setup.exe" -Force
+
       - name: 创建 Release（自定义版本介绍）
         if: env.HAS_BODY == 'true'
         uses: softprops/action-gh-release@v2
@@ -73,6 +92,7 @@ jobs:
           body_path: release-body.md
           files: |
             WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
+            WE-Tool-${{ env.version }}-win-x64-setup.exe
 
       - name: 创建 Release（自动生成介绍）
         if: env.HAS_BODY != 'true'
@@ -81,4 +101,5 @@ jobs:
           tag_name: ${{ env.version }}
           files: |
             WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
+            WE-Tool-${{ env.version }}-win-x64-setup.exe
           generate_release_notes: true
