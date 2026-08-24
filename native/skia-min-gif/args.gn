@@ -1,0 +1,34 @@
+target_os = "win"
+target_cpu = "x64"
+is_debug = false
+is_official_build = true
+clang_win = "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64"
+extra_cflags = [
+  "-DSKIA_C_DLL",
+  "-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS",
+  "-DSK_ENABLE_LEGACY_SHADERCONTEXT",
+  "-D_HAS_AUTO_PTR_ETC=1",
+]
+skia_enable_tools = false
+skia_enable_skottie = true
+skia_use_expat = false
+skia_use_libpng_decode = false
+skia_use_libpng_encode = false
+skia_use_libjpeg_turbo_decode = false
+skia_use_libjpeg_turbo_encode = false
+skia_use_libwebp_decode = false
+skia_use_libwebp_encode = false
+skia_use_freetype = false
+skia_use_fontmgr_win_gdi = false
+skia_use_fontmgr_win = false
+skia_enable_fontmgr_empty = true
+skia_use_dng_sdk = false
+skia_use_piex = false
+skia_use_icu = false
+skia_use_harfbuzz = false
+skia_use_zlib = false
+skia_use_wuffs = true
+skia_enable_pdf = false
+skia_use_vulkan = false
+skia_use_direct3d = false
+skia_use_partition_alloc = false
