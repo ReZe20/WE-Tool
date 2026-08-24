@@ -263,7 +263,9 @@
     <IsAotCompatible>true</IsAotCompatible>
     <TrimMode>partial</TrimMode>
     <CsWinRTAotWarningLevel>2</CsWinRTAotWarningLevel>
-  </PropertyGroup>
+    <!-- [路线二] Skia 静态库产物目录(本机构建生成)。不存在时静态链接自动跳过,回退 NuGet dll 模式 -->
+    <SkiaStaticLibDir Condition="'$(SkiaStaticLibDir)' == ''">C:\Users\lijun\Documents\Projects\skia-engine\out\min-gif\</SkiaStaticLibDir>
+      </PropertyGroup>
   <ItemGroup>
     <PRIResource Update="Strings\zh-CN\Resources.resw">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -324,7 +326,29 @@
     </None>
   </ItemGroup>
 
-  <!-- Publish repkg-Re（单文件 exe + THIRD-PARTY-NOTICES.txt）并复制到 repkg/ 供 CLI 调用 -->
+    <!-- [路线二] NativeAOT 静态链接 Skia 主体(2026-08-24 实测通过):
+         发布时把精简版 Skia 静态库(约 45.6MB,本机构建产物 skia-engine/out/min-gif/*.lib)
+         直接链进 WE_Tool.exe,并通过 .def 导出表把 937 个 sk_* 符号烙进 exe 本体;
+         运行时 SkiaStaticLink.cs 的 DllImportResolver 把 "libSkiaSharp" 解析到进程自身。
+         -> 发布目录不再携带 libSkiaSharp.dll,Skia 完全长在 exe 里。
+         仅 Release AOT 发布生效;Debug 日常调试不受影响(仍走 NuGet 的 dll)。
+         注意:.def 严禁出现 LIBRARY 行(会把 exe 烙成 DLL 格式,Windows 拒载)。
+         注:SkiaSharp.Views.WinUI.Native.dll 保留官方原版不融入(2026-08-24 用户决定) -->
+    <ItemGroup Condition="'$(PublishAot)' == 'true' And '$(Configuration)' != 'Debug'">
+      <LinkerArg Include="/DEF:&quot;$(ProjectDir)..\native\skia-min-gif\libSkiaSharp.def&quot;" />
+      <NativeLibrary Include="$(SkiaStaticLibDir)SkiaSharp.lib" Condition="Exists('$(SkiaStaticLibDir)SkiaSharp.lib')" />
+      <NativeLibrary Include="$(SkiaStaticLibDir)skia.lib" Condition="Exists('$(SkiaStaticLibDir)skia.lib')" />
+      <NativeLibrary Include="$(SkiaStaticLibDir)skottie.lib" Condition="Exists('$(SkiaStaticLibDir)skottie.lib')" />
+      <NativeLibrary Include="$(SkiaStaticLibDir)sksg.lib" Condition="Exists('$(SkiaStaticLibDir)sksg.lib')" />
+      <NativeLibrary Include="$(SkiaStaticLibDir)skresources.lib" Condition="Exists('$(SkiaStaticLibDir)skresources.lib')" />
+      <NativeLibrary Include="$(SkiaStaticLibDir)jsonreader.lib" Condition="Exists('$(SkiaStaticLibDir)jsonreader.lib')" />
+      <NativeLibrary Include="$(SkiaStaticLibDir)skshaper.lib" Condition="Exists('$(SkiaStaticLibDir)skshaper.lib')" />
+      <!-- Windows 系统库:DirectWrite 字体管理 + XPS 字体子集化 -->
+      <NativeLibrary Include="dwrite.lib" />
+      <NativeLibrary Include="fontsub.lib" />
+    </ItemGroup>
+
+    <!-- Publish repkg-Re（单文件 exe + THIRD-PARTY-NOTICES.txt）并复制到 repkg/ 供 CLI 调用 -->
   <Target Name="BuildRepkg" BeforeTargets="BeforeBuild">
     <Exec Command="dotnet publish &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj&quot; -c $(Configuration) -p:PublishProfile=FolderProfile" />
     <ItemGroup>
@@ -371,6 +395,11 @@
       <!-- 剔除 Windows App SDK 后台任务组件:WE Tool 不用 WinRT 后台任务(自动备份是独立 exe 服务),
            exe 无任何引用,纯附带体积 -->
       <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" />
+      <!-- [路线二] 剔除 libSkiaSharp.dll:静态链接后 937 个 sk_* 符号焊进 exe 本体,
+           运行时经 SkiaStaticLink.cs 的 DllImportResolver 重定向到进程自身;
+           此 dll 仅是 NuGet 附带的原生库,不再需要(2026-08-24 实测)。
+           注:SkiaSharp.Views.WinUI.Native.dll 保留(激活服务器不做融入) -->
+      <_PublishUnneeded Include="$(PublishDir)**\libSkiaSharp.dll" />
     </ItemGroup>
     <Delete Files="@(_PublishUnneeded)" />
     <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (launcher) + app/ (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />
@@ -400,6 +429,30 @@
     <Exec Command="powershell -NoProfile -Command &quot;Copy-Item -Path '$(PublishDir)' -Destination '$(FolderOut)' -Recurse -Force; Get-ChildItem '$(FolderOut)' -Recurse -Filter '*.pdb' | Remove-Item -Force&quot;" />
     <Message Importance="high" Text="zip 已生成: $(ZipOut)" />
     <Message Importance="high" Text="未压缩文件夹已生成: $(FolderOut)" />
+  </Target>
+
+  <!-- 发布完成后用 Inno Setup 把未压缩文件夹打成单个安装包 setup.exe(bin/Package/,git 忽略)。
+       与 zip 并列的第二种发布模式;ISCC 不存在时仅告警跳过(允许只发 zip 的环境)。
+       版本号经 /D 注入 iss 脚本,避免双处维护 -->
+  <Target Name="PackageInstaller" AfterTargets="PackageZip">
+    <PropertyGroup>
+      <SetupName>WE-Tool-$(Version)-win-x64-setup.exe</SetupName>
+      <SetupOut>$(MSBuildProjectDirectory)\bin\Package\$(SetupName)</SetupOut>
+      <IssFile>$(MSBuildProjectDirectory)\..\installer\we-tool.iss</IssFile>
+      <!-- 与 PackageZip 的 FolderOut 同一表达式在此重算(那是目标内局部属性,跨目标不可见) -->
+      <InstallerSourceRoot>$(MSBuildProjectDirectory)\bin\Package\WE-Tool-$(Version)-win-x64-selfcontained</InstallerSourceRoot>
+    </PropertyGroup>
+    <ItemGroup>
+      <_IsccCandidates Include="$(LocalAppData)\Programs\Inno Setup 6\ISCC.exe" />
+      <_IsccCandidates Include="$(MSBuildProgramFiles32)\Inno Setup 6\ISCC.exe" />
+      <_IsccCandidates Include="$(ProgramFiles)\Inno Setup 6\ISCC.exe" />
+      <IsccExe Include="@(_IsccCandidates->'%(Identity)')" Condition="Exists('%(_IsccCandidates.Identity)')" />
+    </ItemGroup>
+    <Error Text="找不到 ISCC.exe(Inno Setup 6),无法生成安装包;或安装 Inno Setup 6 后重试,或忽略此目标继续发布 zip。" Condition="'@(IsccExe)' == '' and '$(RequireInstaller)' == 'true'" />
+    <Warning Text="找不到 ISCC.exe(Inno Setup 6),跳过安装包生成(仅产出 zip)。可安装后重跑 dotnet publish。" Condition="'@(IsccExe)' == ''" />
+    <Delete Files="$(SetupOut)" Condition="Exists('$(SetupOut)')" />
+    <Exec Command="&quot;%(IsccExe.Identity)&quot; /Qp /DAppVersion=$(Version) /DSourceRoot=&quot;$(InstallerSourceRoot)&quot; /O&quot;$(MSBuildProjectDirectory)\bin\Package&quot; &quot;$(IssFile)&quot;" Condition="'@(IsccExe)' != ''" />
+    <Message Importance="high" Text="安装包已生成: $(SetupOut)" Condition="'@(IsccExe)' != ''" />
   </Target>
 
 </Project>
