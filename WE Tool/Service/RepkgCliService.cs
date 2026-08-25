@@ -22,6 +22,7 @@ public class RepkgCliService
 {
     private readonly string _repkgDir;
     private readonly ConcurrentDictionary<int, Process> _runningProcesses = new();
+    private readonly ConcurrentBag<string> _startedOutputPaths = new();
 
     public RepkgCliService(string? repkgDir = null)
     {
@@ -104,6 +105,54 @@ public class RepkgCliService
     }
 
     /// <summary>
+    /// 停止提取并清理从未开始提取的壁纸对应的空输出文件夹。
+    /// 返回清理的文件夹数量。调用方在取消后调用此方法,以避免留下空文件夹。
+    /// </summary>
+    public int StopAndCleanupEmptyFolders(IEnumerable<WallpaperItem> wallpapers, string outputRoot, ExtractSettings settings)
+    {
+        Stop();
+        return CleanupUnprocessedOutputFolders(wallpapers, outputRoot, settings);
+    }
+
+    /// <summary>
+    /// 清理从未开始提取的壁纸对应的空输出文件夹(batch 壁纸走 RePKG_Re,
+    /// 文件夹只在处理该壁纸时创建;非 pkg 壁纸在复制前已创建,此方法不影响它们)。
+    /// 只删除空文件夹,有内容的保留。
+    /// </summary>
+    private int CleanupUnprocessedOutputFolders(
+        IEnumerable<WallpaperItem> pkgWallpapers, string outputRoot, ExtractSettings settings)
+    {
+        var pkgList = pkgWallpapers as ICollection<WallpaperItem> ?? pkgWallpapers.ToList();
+        if (pkgList.Count == 0) return 0;
+
+        var started = new HashSet<string>(_startedOutputPaths, StringComparer.OrdinalIgnoreCase);
+        int cleaned = 0;
+
+        foreach (var wallpaper in pkgList)
+        {
+            var outputPath = GetOutputPath(outputRoot, wallpaper, settings);
+            if (started.Contains(outputPath)) continue;
+
+            // 从未开始提取:如果输出文件夹存在且为空则删除
+            try
+            {
+                if (Directory.Exists(outputPath) && !Directory.EnumerateFileSystemEntries(outputPath).Any())
+                {
+                    Directory.Delete(outputPath, false);
+                    cleaned++;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "清理空输出文件夹失败: {Path}", outputPath);
+            }
+        }
+
+        _startedOutputPaths.Clear();
+        return cleaned;
+    }
+
+    /// <summary>
     /// 单进程 batch 提取:所有 pkg 壁纸交给一个 RePKG_Re.exe batch 进程(内部多线程),
     /// 非 pkg 壁纸(HTML 等)由本服务直接复制;进程崩溃自动重启(第二击跳壁纸,最多 3 次)。
     /// onProgress 消息格式保持 name|action|pct|entry 不变(UI 无感知)。
@@ -164,7 +213,18 @@ public class RepkgCliService
             ? CopyAllWallpapersAsync(copyWallpapers, outputRoot, settings, maxThreads, ReportProgress, ct)
             : Task.CompletedTask;
 
-        await Task.WhenAll(batchTask, copyTask);
+        try
+        {
+            await Task.WhenAll(batchTask, copyTask);
+        }
+        catch (OperationCanceledException)
+        {
+            // 用户停止:清理从未开始提取的壁纸对应的空输出文件夹
+            var cleaned = CleanupUnprocessedOutputFolders(pkgWallpapers, outputRoot, settings);
+            if (cleaned > 0)
+                Log.Information("[repkg] 已清理 {Count} 个空输出文件夹", cleaned);
+            throw;
+        }
 
         if (!ct.IsCancellationRequested)
         {
@@ -209,12 +269,13 @@ public class RepkgCliService
             if (ct.IsCancellationRequested) break;
 
             var manifestPath = WriteManifest(
-                items.Where(x => pending.Contains(x.Id)).ToList(), outputRoot, settings, maxThreads);
+                items.Where(x => pending.Contains(x.Id)).ToList(), outputRoot, settings, maxThreads,
+                out var outputPathsById);
 
             BatchRunResult result;
             try
             {
-                result = await RunBatchAsync(manifestPath, idToItem, reportProgress, ct);
+                result = await RunBatchAsync(manifestPath, idToItem, outputPathsById, reportProgress, ct);
             }
             finally
             {
@@ -282,6 +343,7 @@ public class RepkgCliService
     private async Task<BatchRunResult> RunBatchAsync(
         string manifestPath,
         Dictionary<string, BatchItem> idToItem,
+        Dictionary<string, string> outputPathsById,
         Action<string> reportProgress,
         CancellationToken ct)
     {
@@ -341,7 +403,12 @@ public class RepkgCliService
                         if (id == null || !idToItem.TryGetValue(id, out var item)) return;
                         var action = root.TryGetProperty("action", out var wa) ? wa.GetString() : null;
                         if (action == "start")
+                        {
+                            // 记录已开始提取的壁纸输出路径,用于停止时清理未开始壁纸的空文件夹
+                            if (outputPathsById.TryGetValue(id, out var outputPath))
+                                _startedOutputPaths.Add(outputPath);
                             reportProgress($"{NameOf(item.Wallpaper)}|开始|0");
+                        }
                         else if (action == "done")
                         {
                             result.DoneIds.Add(id);
@@ -437,17 +504,21 @@ public class RepkgCliService
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonNode DOM 手写构造零反射,AOT 安全")]
     [UnconditionalSuppressMessage("AotAnalysis", "IL3050", Justification = "JsonNode DOM 节点创建不涉及运行时反射")]
     private static string WriteManifest(
-        List<BatchItem> items, string outputRoot, ExtractSettings settings, int threads)
+        List<BatchItem> items, string outputRoot, ExtractSettings settings, int threads,
+        out Dictionary<string, string> outputPathsById)
     {
         // JsonNode 手写构造(DOM 零反射,AOT 安全):键名须保持小写与 repkg CLI 协议一致
         var wallpapersNode = new System.Text.Json.Nodes.JsonArray();
+        outputPathsById = new Dictionary<string, string>(items.Count, StringComparer.Ordinal);
         foreach (var x in items)
         {
+            var outputPath = GetOutputPath(outputRoot, x.Wallpaper, settings);
+            outputPathsById[x.Id] = outputPath;
             wallpapersNode.Add(new System.Text.Json.Nodes.JsonObject
             {
                 ["id"] = x.Id,
                 ["input"] = x.Wallpaper.FolderPath,
-                ["output"] = GetOutputPath(outputRoot, x.Wallpaper, settings)
+                ["output"] = outputPath
             });
         }
 

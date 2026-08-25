@@ -15,10 +15,17 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher=ReZe20
 AppPublisherURL=https://github.com/ReZe20/WE-Tool
+; 许可证页:展示仓库根目录的 GPLv3 全文(路径相对本脚本所在目录)
+LicenseFile=..\LICENSE
 DefaultDirName={autopf}\WE Tool
 ; 用户级安装:不弹 UAC,默认装到 %LOCALAPPDATA%\Programs\WE Tool
 PrivilegesRequired=lowest
+; 用户级安装时这两页默认被隐藏,显式打开:可选安装位置 + 可选开始菜单文件夹
+DisableDirPage=no
+DisableProgramGroupPage=no
 DefaultGroupName={#AppName}
+; 开始菜单文件夹页附"不创建开始菜单文件夹"勾选框(选了则只建程序组外的必要项)
+AllowNoIcons=yes
 ; 程序自带卸载入口,开始菜单文件夹用完即删
 Uninstallable=yes
 CloseApplications=no
@@ -38,18 +45,24 @@ OutputBaseFilename=WE-Tool-{#AppVersion}-win-x64-setup
 [Languages]
 Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 
+[Messages]
+; 随仓库的中文翻译文件较老,缺开始菜单页"不创建文件夹"勾选框的官方消息文案,在此覆盖补充
+NoIcons=不创建开始菜单文件夹(&W)
+
 [Files]
 ; 整目录递归打包(含 app\ 子目录与 repkg),忽略仅存在于本地的残留文件
 Source: "{#SourceRoot}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
-; 开始菜单 + 可选桌面快捷方式(默认勾选)
+; 开始菜单项由 AllowNoIcons 的"不创建开始菜单文件夹"勾选框控制:勾选则全部跳过
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
+; 可选桌面快捷方式(默认勾选)
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+; 可选桌面快捷方式(默认勾选)
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Run]
 ; 安装完成页可选直接启动

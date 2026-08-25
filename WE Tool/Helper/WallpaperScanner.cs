@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
@@ -19,6 +19,13 @@ namespace WE_Tool.Helper;
 
 internal class WallpaperScanner
 {
+    /// <summary>
+    /// 全局扫描并发闸:三个源(workshop/official/mine)同时扫描时,限制总并行解析数。
+    /// 解析工作是 IO 密集(读 project.json + 递归数文件),核数级并行对磁盘无益、反而抖动;
+    /// 2×核数让单源吃满、多源共存时不至于 3×核数线程同时抢盘。
+    /// </summary>
+    private static readonly SemaphoreSlim GlobalScanThrottle = new(2 * Environment.ProcessorCount);
+
     /// <summary>最近一次扫描收集到的组件列表（仅 workshop 源）。</summary>
     public static List<ComponentInfo>? LastComponents { get; private set; }
     private static readonly Regex WorkshopIdRegex = new(
@@ -33,12 +40,20 @@ internal class WallpaperScanner
         RegexOptions.Compiled | RegexOptions.Multiline);
 
     /// <summary>
-    /// 匹配 VDF 订阅文件中每个条目的 publishedfileid 和 disabled_locally 值。
-    /// 匹配格式: "0" { ... "publishedfileid" "12345" ... "disabled_locally" "0" ... }
-    /// 捕获组: [1]=publishedfileid, [2]=disabled_locally
+    /// 抓取 VDF 订阅文件中的叶子块(工坊条目块内无嵌套大括号)。
+    /// 两级匹配去字段顺序依赖:先抓块,再在块内独立找各字段;
+    /// disabled_locally 缺失或非 "1" 均视为未停用(旧实现要求两字段同现且有序,字段一变即静默漏判)。
     /// </summary>
-    private static readonly Regex VdfEntryRegex = new(
-        @"""publishedfileid""\s+""(\d+)""[^}]*""disabled_locally""\s+""(\d+)""",
+    private static readonly Regex VdfLeafBlockRegex = new(
+        @"""(\d+)""\s*\{([^{}]*)\}",
+        RegexOptions.Compiled);
+
+    private static readonly Regex VdfPublishedFileIdRegex = new(
+        @"""publishedfileid""\s+""(\d+)""",
+        RegexOptions.Compiled);
+
+    private static readonly Regex VdfDisabledLocallyRegex = new(
+        @"""disabled_locally""\s+""(\d+)""",
         RegexOptions.Compiled);
 
     // ====================== 扫描缓存(JSON 单文件,原子写) ======================
@@ -49,15 +64,30 @@ internal class WallpaperScanner
     // 注:CacheFile/CachedEntry 须为 internal(源生成器要求类型可达,private 嵌套类无法注册)。
     internal sealed class CacheFile
     {
+        /// <summary>缓存结构版本。版本不符 → 整体作废回退全量扫描(不做迁移)。当前:2。</summary>
+        public int Version { get; set; }
         public DateTime SavedAtUtc { get; set; }
         public List<CachedEntry> Entries { get; set; } = [];
+        public List<CachedComponent> Components { get; set; } = [];
     }
 
     internal sealed class CachedEntry
     {
         public WallpaperItem Item { get; set; } = null!;
         public DateTime UpdateTime { get; set; }
+        /// <summary>缓存键之一:project.json 的 LastWriteTimeUtc(解析时的文件元数据快照)。</summary>
+        public DateTime JsonUpdateTime { get; set; }
+        /// <summary>缓存键之二:project.json 的字节长度。</summary>
+        public long JsonLength { get; set; }
         public DateTime CachedAt { get; set; }
+    }
+
+    internal sealed class CachedComponent
+    {
+        public ComponentInfo Component { get; set; } = null!;
+        /// <summary>缓存键:project.json 的 LastWriteTimeUtc + Length。</summary>
+        public DateTime JsonUpdateTime { get; set; }
+        public long JsonLength { get; set; }
     }
 
     private static readonly object CacheWriteLock = new();
@@ -67,8 +97,21 @@ internal class WallpaperScanner
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "WE_Tool", "wallpaper_cache.json");
 
-    /// <summary>读取缓存文件(损坏/缺失 → 空字典,由调用方回退全量扫描)。</summary>
+    /// <summary>当前缓存结构版本,与 CacheFile.Version 对应;不符则整体作废。</summary>
+    private const int CacheSchemaVersion = 2;
+
+    /// <summary>读取缓存文件(损坏/缺失/版本不符 → 空字典,由调用方回退全量扫描)。
+    /// 调用方若已持有 CacheWriteLock,用 LoadCacheDictionaryLocked 避免重复加锁。</summary>
     private static Dictionary<string, CachedEntry> LoadCacheDictionary(string cachePath)
+    {
+        lock (CacheWriteLock)
+        {
+            return LoadCacheDictionaryLocked(cachePath);
+        }
+    }
+
+    /// <summary>锁内版本:不做自己的加锁,供 SaveItemsToCache 在持锁状态下复用。</summary>
+    private static Dictionary<string, CachedEntry> LoadCacheDictionaryLocked(string cachePath)
     {
         if (!File.Exists(cachePath)) return [];
 
@@ -76,7 +119,7 @@ internal class WallpaperScanner
         {
             var json = File.ReadAllText(cachePath);
             var cacheFile = JsonSerializer.Deserialize(json, JsonContext.Default.CacheFile);
-            if (cacheFile?.Entries == null) return [];
+            if (cacheFile?.Entries == null || cacheFile.Version != CacheSchemaVersion) return [];
 
             var dict = new Dictionary<string, CachedEntry>(StringComparer.Ordinal);
             foreach (var entry in cacheFile.Entries)
@@ -93,29 +136,58 @@ internal class WallpaperScanner
         }
     }
 
-    /// <summary>原子写缓存:先写临时文件再替换,避免写一半崩溃留下半截文件。</summary>
-    private static void SaveItemsToCache(string cachePath, IEnumerable<WallpaperItem> items)
+    /// <summary>原子写缓存(读-修剪-合并-写,全程持锁):
+    /// 1. 读入现有缓存(其它源的条目必须保留——三源并行共用同一文件);
+    /// 2. 按本源修剪:survivingKeys 之外、位于本源根目录下的条目视为"目录已消失",删除;
+    /// 3. upsert 本次新解析条目;
+    /// 4. 整体序列化,先落临时文件再原子替换。
+    /// </summary>
+    private static void SaveItemsToCache(
+        string cachePath,
+        string rootPath,
+        IReadOnlyDictionary<string, byte> survivingKeys,
+        IEnumerable<WallpaperItem> parsedItems,
+        IReadOnlyDictionary<string, (DateTime JsonTime, long JsonLen)> jsonMeta)
     {
-        var list = items.ToList();
-        if (list.Count == 0) return;
-
-        // 三个扫描源(workshop/official/mine)并行,共用同一缓存文件,写必须串行化
+        // 三源并行 + 与 LoadCacheDictionary 互斥,读写全程串行化
         lock (CacheWriteLock)
         {
             try
             {
+                var dict = LoadCacheDictionaryLocked(cachePath);
+
+                // 按源修剪:只动本源根目录下的键,其它源的条目一律不碰
+                var removed = 0;
+                foreach (var key in dict.Keys.ToList())
+                {
+                    if (!survivingKeys.ContainsKey(key) && IsPathUnderRoot(key, rootPath))
+                    {
+                        dict.Remove(key);
+                        removed++;
+                    }
+                }
+
+                foreach (var item in parsedItems)
+                {
+                    if (item.FolderPath == null) continue;
+                    var (jsonTime, jsonLen) = jsonMeta.TryGetValue(item.FolderPath, out var meta)
+                        ? meta
+                        : default;
+                    dict[item.FolderPath] = new CachedEntry
+                    {
+                        Item = item,
+                        UpdateTime = item.UpdateTime,
+                        JsonUpdateTime = jsonTime,
+                        JsonLength = jsonLen,
+                        CachedAt = DateTime.UtcNow
+                    };
+                }
+
                 var cacheFile = new CacheFile
                 {
+                    Version = CacheSchemaVersion,
                     SavedAtUtc = DateTime.UtcNow,
-                    Entries = list
-                        .Where(i => i.FolderPath != null)
-                        .Select(i => new CachedEntry
-                        {
-                            Item = i,
-                            UpdateTime = i.UpdateTime,
-                            CachedAt = DateTime.UtcNow
-                        })
-                        .ToList()
+                    Entries = [.. dict.Values]
                 };
 
                 var json = JsonSerializer.Serialize(cacheFile, JsonContext.Default.CacheFile);
@@ -125,7 +197,8 @@ internal class WallpaperScanner
                 var tempPath = cachePath + ".tmp";
                 File.WriteAllText(tempPath, json);
                 File.Move(tempPath, cachePath, overwrite: true);
-                Log.Information($"已缓存 {cacheFile.Entries.Count} 个壁纸到 JSON 缓存");
+                Log.Information("已缓存 {Count} 个壁纸到 JSON 缓存(修剪 {Removed} 个失效条目)",
+                    cacheFile.Entries.Count, removed);
             }
             catch (Exception ex)
             {
@@ -136,22 +209,129 @@ internal class WallpaperScanner
         }
     }
 
+    /// <summary>判断 path 是否位于 rootPath 目录之下(含子目录);两者都按完整路径比较。</summary>
+    private static bool IsPathUnderRoot(string path, string rootPath)
+    {
+        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(rootPath)) return false;
+        var root = rootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(path, root, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>读取组件缓存字典(key = FolderPath)。损坏/缺失/版本不符 → 空字典。
+    /// 与写入方共用 CacheWriteLock,避免读到原子替换中途的文件。</summary>
+    private static Dictionary<string, CachedComponent> LoadComponents(string cachePath)
+    {
+        lock (CacheWriteLock)
+        {
+            return LoadComponentsLocked(cachePath);
+        }
+    }
+
+    private static Dictionary<string, CachedComponent> LoadComponentsLocked(string cachePath)
+    {
+        if (!File.Exists(cachePath)) return [];
+        try
+        {
+            var cacheFile = JsonSerializer.Deserialize(File.ReadAllText(cachePath), JsonContext.Default.CacheFile);
+            if (cacheFile?.Components == null || cacheFile.Version != CacheSchemaVersion) return [];
+            var dict = new Dictionary<string, CachedComponent>(StringComparer.Ordinal);
+            foreach (var c in cacheFile.Components)
+            {
+                if (c.Component?.FolderPath != null)
+                    dict[c.Component.FolderPath] = c;
+            }
+            return dict;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "加载组件缓存失败，将全量解析组件。");
+            return [];
+        }
+    }
+
+    /// <summary>锁内整体替换组件缓存段(组件只有 workshop 一个写方,无需按源修剪)。
+    /// 与壁纸条目共用一个文件:读-改-写全程持 CacheWriteLock。</summary>
+    private static void SaveComponentsToCache(string cachePath, List<ComponentInfo> components)
+    {
+        lock (CacheWriteLock)
+        {
+            try
+            {
+                // 读入现有文件,保留壁纸条目
+                CacheFile? cacheFile = null;
+                if (File.Exists(cachePath))
+                {
+                    try
+                    {
+                        cacheFile = JsonSerializer.Deserialize(File.ReadAllText(cachePath), JsonContext.Default.CacheFile);
+                    }
+                    catch { /* 损坏则从空重建 */ }
+                }
+                cacheFile ??= new CacheFile();
+                cacheFile.Version = CacheSchemaVersion;
+                cacheFile.SavedAtUtc = DateTime.UtcNow;
+
+                var existing = cacheFile.Components ?? [];
+                var byFolder = new Dictionary<string, CachedComponent>(StringComparer.Ordinal);
+                foreach (var c in existing)
+                {
+                    if (c.Component?.FolderPath != null) byFolder[c.Component.FolderPath] = c;
+                }
+
+                // 只更新本次实际解析过的组件;未解析的(缓存命中复用)保留原键值
+                foreach (var comp in components)
+                {
+                    if (comp.FolderPath == null) continue;
+                    var fi = new FileInfo(Path.Combine(comp.FolderPath, "project.json"));
+                    byFolder[comp.FolderPath] = new CachedComponent
+                    {
+                        Component = comp,
+                        JsonUpdateTime = fi.LastWriteTimeUtc,
+                        JsonLength = fi.Length
+                    };
+                }
+
+                cacheFile.Components = [.. byFolder.Values];
+
+                var json = JsonSerializer.Serialize(cacheFile, JsonContext.Default.CacheFile);
+                var dir = Path.GetDirectoryName(cachePath);
+                if (dir != null) Directory.CreateDirectory(dir);
+                var tempPath = cachePath + ".tmp";
+                File.WriteAllText(tempPath, json);
+                File.Move(tempPath, cachePath, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "保存组件缓存失败（不影响扫描结果）");
+                try { if (File.Exists(cachePath + ".tmp")) File.Delete(cachePath + ".tmp"); }
+                catch { /* 忽略清理失败 */ }
+            }
+        }
+    }
+
     public static async Task<List<WallpaperItem>> ScanWallpapers(
         string rootPath,
         string source,
         string acfPath,
-        IProgress<int>? progress = null,
         string? cacheDbPath = null,
         string? vdfPath = null,
         bool useCache = true,
         CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
+        {
+            // 路径无效 = 库不存在:workshop 源的组件列表也要诚实置空,不能残留上次扫描的数据
+            if (source == "workshop")
+                LastComponents = [];
             return [];
+        }
 
-        var installedIDs = GetInstalledWorkshopIDs(acfPath);
-        var acfUpdateTimes = GetAcfUpdateTimes(acfPath);
-        var acfSizes = GetAcfSizes(acfPath);
+        // ACF 一次读取,三份数据(安装ID/更新时间/大小)一次解析;official/mine 无 acfPath → 空快照
+        var acf = ParseAcfSnapshot(acfPath);
+        var installedIDs = acf.InstalledIDs;
+        var acfUpdateTimes = acf.UpdateTimes;
+        var acfSizes = acf.Sizes;
         // 只对 workshop 源解析 VDF；VDF 不存在时返回 null（不进行校验）
         var activeSubscribedIDs = source == "workshop" ? GetActiveSubscribedIDs(vdfPath ?? "") : null;
         var resultsBag = new ConcurrentBag<WallpaperItem>();
@@ -180,20 +360,34 @@ internal class WallpaperScanner
 
             List<string> toParse;
 
+            // 本源"存活"目录全集(缓存命中 ∪ 解析成功),保存时用于按源修剪失效条目。
+            // 并行解析阶段多线程写入,必须用并发容器 —— 普通 HashSet 被并发 Add 会损坏内部数组
+            // (实测症状:AddIfNotPresent 抛 IndexOutOfRangeException)
+            var survivingKeys = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
+            // 各目录 project.json 元数据快照(缓存键),命中时来自枚举、解析后重新取值
+            var jsonMeta = new ConcurrentDictionary<string, (DateTime JsonTime, long JsonLen)>(StringComparer.Ordinal);
+
             if (useCache)
             {
                 var cacheDict = LoadCacheDictionary(effectiveCachePath!);
 
-                // 缓存命中判断（基于文件修改时间）
+                // 缓存命中判断:键 = project.json 的 LastWriteTimeUtc + Length。
+                // 原地改写 project.json(属性面板保存等)不改父目录 mtime,
+                // 旧方案(目录 mtime)会漏判;文件元数据恰好盖住元数据编辑场景。
                 toParse = [];
                 foreach (var current in wallpaperDirs)
                 {
-                    var currentUpdateTime = Directory.GetLastWriteTime(current);
+                    var fi = new FileInfo(Path.Combine(current, "project.json"));
+                    var currentJsonTime = fi.LastWriteTimeUtc;
+                    var currentJsonLength = fi.Length;
 
                     if (cacheDict.TryGetValue(current, out var entry) &&
-                        entry.UpdateTime == currentUpdateTime)
+                        entry.JsonUpdateTime == currentJsonTime &&
+                        entry.JsonLength == currentJsonLength)
                     {
                         resultsBag.Add(entry.Item);
+                        survivingKeys[current] = 0;
+                        jsonMeta[current] = (currentJsonTime, currentJsonLength);
                     }
                     else
                     {
@@ -201,7 +395,8 @@ internal class WallpaperScanner
                     }
                 }
 
-                Log.Information($"SQLite 缓存命中 {resultsBag.Count} 个壁纸，需解析 {toParse.Count} 个新/更新壁纸");
+                Log.Information("JSON 缓存命中 {Hit} 个壁纸，需解析 {Parse} 个新/更新壁纸",
+                    resultsBag.Count, toParse.Count);
             }
             else
             {
@@ -210,67 +405,122 @@ internal class WallpaperScanner
                 Log.Information($"缓存已关闭，将解析全部 {toParse.Count} 个壁纸");
             }
 
-            // 并行解析新增/修改的壁纸
-            if (toParse.Count > 0)
+            // === 合并并行:壁纸解析 + 组件扫描一次遍历 ===
+            // 旧结构是两个串行 ForEachAsync(先解析壁纸、再扫组件)遍历同一批目录两次;
+            // 合并后一次遍历同时产出壁纸与组件。全部目录都要看(组件不看壁纸缓存、只认组件缓存),
+            // 壁纸部分仅在缓存未命中的目录上真正解析。
+            // 空库边界:componentBag 为空时仍要诚实置空 LastComponents,不留上次残留。
+            if (source == "workshop" && wallpaperDirs.Count == 0)
+                LastComponents = [];
+            if (wallpaperDirs.Count > 0)
             {
+                var toParseSet = toParse.ToHashSet(StringComparer.Ordinal);
+                // 组件缓存仅 workshop 源需要;缓存关闭(useCache=false)时为空字典 → 全量解析
+                var componentCache = source == "workshop" && useCache
+                    ? LoadComponents(effectiveCachePath!)
+                    : [];
+                var componentBag = new ConcurrentBag<ComponentInfo>();
+                var parsedComponentCount = 0;
                 var parallelOptions = new ParallelOptions
                 {
                     MaxDegreeOfParallelism = Environment.ProcessorCount,
                     CancellationToken = ct
                 };
-
-                await Parallel.ForEachAsync(toParse, parallelOptions, async (current, token) =>
+                await Parallel.ForEachAsync(wallpaperDirs, parallelOptions, async (current, token) =>
                 {
-                    var item = await ParseWallpaperAsync(current, installedIDs, source, acfUpdateTimes, acfSizes, activeSubscribedIDs, token);
-                    if (item is not null)
+                    // ---- 壁纸部分:仅缓存未命中的目录需要解析 ----
+                    if (toParseSet.Contains(current))
                     {
-                        resultsBag.Add(item);
-                        parsedItems.Add(item);
+                        // 全局闸:三个源并行时限制总解析并发(IO 密集,核数级并行对磁盘无益)
+                        await GlobalScanThrottle.WaitAsync(token);
+                        try
+                        {
+                            var item = await ParseWallpaperAsync(current, installedIDs, source, acfUpdateTimes, acfSizes, activeSubscribedIDs, token);
+                            if (item is not null)
+                            {
+                                resultsBag.Add(item);
+                                parsedItems.Add(item);
+                                survivingKeys[current] = 0;
+                                // 解析后重取元数据:解析读的就是这个文件,以最新状态为缓存键
+                                var pj = new FileInfo(Path.Combine(current, "project.json"));
+                                jsonMeta[current] = (pj.LastWriteTimeUtc, pj.Length);
+                            }
+                        }
+                        finally
+                        {
+                            GlobalScanThrottle.Release();
+                        }
+                    }
+                    // ---- 组件部分:仅 workshop 源;组件缓存命中则直接复用 ----
+                    if (source == "workshop")
+                    {
+                        if (token.IsCancellationRequested) return;
+                        try
+                        {
+                            if (componentCache.TryGetValue(current, out var cached))
+                            {
+                                var cj = new FileInfo(Path.Combine(current, "project.json"));
+                                if (cached.JsonUpdateTime == cj.LastWriteTimeUtc && cached.JsonLength == cj.Length)
+                                {
+                                    componentBag.Add(cached.Component);
+                                    return;
+                                }
+                            }
+                            await GlobalScanThrottle.WaitAsync(token);
+                            try
+                            {
+                                var comp = await ParseComponentAsync(current, "", acfUpdateTimes, token);
+                                if (comp is not null)
+                                {
+                                    componentBag.Add(comp);
+                                    Interlocked.Increment(ref parsedComponentCount);
+                                }
+                            }
+                            finally
+                            {
+                                GlobalScanThrottle.Release();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex, "组件解析失败,已跳过: {Dir}", current);
+                        }
                     }
                 });
+                // 组件收尾:结果与"最近一次成功完成的 workshop 扫描"严格一致(空 → 空列表)
+                LastComponents = [.. componentBag];
+                Log.Information("组件扫描完成，共 {Count} 个(缓存命中 {Hit},解析 {Parsed})",
+                    componentBag.Count, componentBag.Count - parsedComponentCount, parsedComponentCount);
+                if (source == "workshop" && useCache && parsedComponentCount > 0)
+                    SaveComponentsToCache(effectiveCachePath!, [.. componentBag]);
             }
+            // === 保存新增/修改的壁纸到缓存(锁内读旧缓存合并,保留其它源条目) ===
 
-            // === 保存新增/修改的壁纸到缓存 ===
             if (useCache && parsedItems.Count > 0)
-                SaveItemsToCache(effectiveCachePath!, parsedItems);
+
+                SaveItemsToCache(effectiveCachePath!, rootPath, survivingKeys, parsedItems, jsonMeta);
+
 
             // === 对 workshop 源：统一校准所有壁纸（含缓存命中）的 ShouldNotExist ===
+
             // 订阅异常 = 不在有效订阅名单（取消订阅/本地停用）或已被下架（project.json visibility == "private"）
+
             if (source == "workshop" && activeSubscribedIDs != null)
+
             {
+
                 foreach (var item in resultsBag)
+
                 {
+
                     item.ShouldNotExist = string.IsNullOrEmpty(item.WorkshopID)
+
                         || !activeSubscribedIDs.Contains(item.WorkshopID)
+
                         || item.IsDelisted;
+
                 }
-            }
 
-            // === 扫描组件（仅 workshop 源） ===
-            // 组件和壁纸都在 workshop 根目录下同级，各有独立的 project.json
-            if (source == "workshop" && resultsBag.Count > 0)
-            {
-                var componentBag = new ConcurrentBag<ComponentInfo>();
-                await Parallel.ForEachAsync(wallpaperDirs, new ParallelOptions
-                {
-                    MaxDegreeOfParallelism = Environment.ProcessorCount,
-                    CancellationToken = ct
-                }, async (dir, token) =>
-                {
-                    if (token.IsCancellationRequested) return;
-                    try
-                    {
-                        var comp = await ParseComponentAsync(dir, "", acfUpdateTimes, token);
-                        if (comp != null) componentBag.Add(comp);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Warning(ex, "组件解析失败,已跳过: {Dir}", dir);
-                    }
-                });
-
-                LastComponents = [.. componentBag];
-                Log.Information("组件扫描完成，共 {Count} 个", componentBag.Count);
             }
         }
         catch (OperationCanceledException)
@@ -291,96 +541,61 @@ internal class WallpaperScanner
         return [.. resultsBag];
     }
 
-    private static FrozenSet<string> GetInstalledWorkshopIDs(string acfPath)
+    /// <summary>ACF 一次读取解析出的全部快照数据(安装 ID 集 / 更新时间 / Steam 报告大小)。</summary>
+    private sealed record AcfSnapshot(
+        FrozenSet<string> InstalledIDs,
+        Dictionary<string, DateTime> UpdateTimes,
+        Dictionary<string, long> Sizes);
+
+    private static readonly AcfSnapshot EmptyAcfSnapshot = new(
+        FrozenSet<string>.Empty, [], []);
+
+    /// <summary>读取并一次性解析 .acf 文件(旧实现三个函数各读一遍同一文件)。
+    /// 文件缺失/解析异常时返回空快照,调用方按无 ACF 处理。</summary>
+    private static AcfSnapshot ParseAcfSnapshot(string acfPath)
     {
-        if (!File.Exists(acfPath)) return FrozenSet<string>.Empty;
+        if (string.IsNullOrEmpty(acfPath) || !File.Exists(acfPath))
+            return EmptyAcfSnapshot;
 
         try
         {
             var content = File.ReadAllText(acfPath);
-            var matches = WorkshopIdRegex.Matches(content);
-            return matches.Select(m => m.Groups[1].Value).ToFrozenSet();
+
+            var ids = WorkshopIdRegex.Matches(content)
+                .Select(m => m.Groups[1].Value)
+                .ToFrozenSet();
+
+            // 只扫描 WorkshopItemsInstalled 段内的条目
+            var updateTimes = new Dictionary<string, DateTime>();
+            var sizes = new Dictionary<string, long>();
+            var sectionMatch = Regex.Match(content,
+                @"""WorkshopItemsInstalled""\s*\{(?<body>.+?)\}\s*""WorkshopItemDetails""",
+                RegexOptions.Singleline);
+            if (sectionMatch.Success)
+            {
+                var body = sectionMatch.Groups["body"].Value;
+
+                foreach (Match match in AcfTimeUpdatedRegex.Matches(body))
+                {
+                    if (long.TryParse(match.Groups[2].Value, out var unixTs))
+                        updateTimes[match.Groups[1].Value] =
+                            DateTimeOffset.FromUnixTimeSeconds(unixTs).DateTime;
+                }
+
+                foreach (Match match in AcfSizeRegex.Matches(body))
+                {
+                    if (long.TryParse(match.Groups[2].Value, out var size))
+                        sizes[match.Groups[1].Value] = size;
+                }
+            }
+
+            return new AcfSnapshot(ids, updateTimes, sizes);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "解析 .acf 文件出现异常。");
-            return FrozenSet<string>.Empty;
+            return EmptyAcfSnapshot;
         }
-    }
-
-    /// <summary>
-    /// 从 .acf 文件中解析每个工坊壁纸的更新时间 (timeupdated, Unix 秒 → DateTime)
-    /// </summary>
-    private static Dictionary<string, DateTime> GetAcfUpdateTimes(string acfPath)
-    {
-        var result = new Dictionary<string, DateTime>();
-        if (!File.Exists(acfPath)) return result;
-
-        try
-        {
-            var content = File.ReadAllText(acfPath);
-
-            // 只扫描 WorkshopItemsInstalled 段内的条目
-            var sectionMatch = Regex.Match(content,
-                @"""WorkshopItemsInstalled""\s*\{(?<body>.+?)\}\s*""WorkshopItemDetails""",
-                RegexOptions.Singleline);
-            if (!sectionMatch.Success) return result;
-
-            var body = sectionMatch.Groups["body"].Value;
-            var matches = AcfTimeUpdatedRegex.Matches(body);
-
-            foreach (Match match in matches)
-            {
-                var id = match.Groups[1].Value;
-                if (long.TryParse(match.Groups[2].Value, out var unixTs))
-                {
-                    result[id] = DateTimeOffset.FromUnixTimeSeconds(unixTs).DateTime;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "解析 .acf 更新时间出现异常。");
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// 从 .acf 文件中解析每个工坊壁纸的 Steam 报告大小 (size, 字节)
-    /// </summary>
-    private static Dictionary<string, long> GetAcfSizes(string acfPath)
-    {
-        var result = new Dictionary<string, long>();
-        if (!File.Exists(acfPath)) return result;
-
-        try
-        {
-            var content = File.ReadAllText(acfPath);
-
-            var sectionMatch = Regex.Match(content,
-                @"""WorkshopItemsInstalled""\s*\{(?<body>.+?)\}\s*""WorkshopItemDetails""",
-                RegexOptions.Singleline);
-            if (!sectionMatch.Success) return result;
-
-            var body = sectionMatch.Groups["body"].Value;
-            var matches = AcfSizeRegex.Matches(body);
-
-            foreach (Match match in matches)
-            {
-                var id = match.Groups[1].Value;
-                if (long.TryParse(match.Groups[2].Value, out var size))
-                {
-                    result[id] = size;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "解析 .acf 文件大小时出现异常。");
-        }
-
-        return result;
     }
 
     /// <summary>
@@ -396,15 +611,18 @@ internal class WallpaperScanner
         try
         {
             var content = File.ReadAllText(vdfPath);
-            var matches = VdfEntryRegex.Matches(content);
             var result = new HashSet<string>(StringComparer.Ordinal);
 
-            foreach (Match match in matches)
+            // 两级匹配:叶子块内独立判断,消除对字段顺序/同现的依赖
+            foreach (Match block in VdfLeafBlockRegex.Matches(content))
             {
-                var id = match.Groups[1].Value;
-                var disabled = match.Groups[2].Value;
-                if (disabled != "1")
-                    result.Add(id);
+                var body = block.Groups[2].Value;
+                var pid = VdfPublishedFileIdRegex.Match(body);
+                if (!pid.Success) continue;
+
+                var dis = VdfDisabledLocallyRegex.Match(body);
+                if (!dis.Success || dis.Groups[1].Value != "1")
+                    result.Add(pid.Groups[1].Value);
             }
 
             Log.Information($"VDF 解析完成: 有效订阅 {result.Count} 个工坊壁纸");
@@ -426,7 +644,6 @@ internal class WallpaperScanner
         if (string.IsNullOrEmpty(text)) return text;
         var sb = new System.Text.StringBuilder(text.Length);
         bool inString = false, inLineComment = false, inBlockComment = false;
-        char prev = '\0';
         for (int i = 0; i < text.Length; i++)
         {
             char c = text[i];
@@ -455,11 +672,10 @@ internal class WallpaperScanner
             if (c == ',')
             {
                 int j = i + 1;
-                while (j < text.Length && (text[j] == ' ' || text[j] == '\t' || text[j] == '\r' || text[j] == '\n')) j++;
-                if (j < text.Length && (text[j] == '}' || text[j] == ']')) { prev = c; continue; }
+                    while (j < text.Length && (text[j] == ' ' || text[j] == '\t' || text[j] == '\r' || text[j] == '\n')) j++;
+                if (j < text.Length && (text[j] == '}' || text[j] == ']')) continue;
             }
             sb.Append(c);
-            prev = c;
         }
         return sb.ToString();
     }
@@ -476,12 +692,16 @@ internal class WallpaperScanner
         try
         {
             var folderName = Path.GetFileName(current);
-            var matchedID = installedIDs.Contains(folderName) ? folderName : "";
+            string? matchedID = installedIDs.Contains(folderName) ? folderName : null;
 
             var jsonPath = Path.Combine(current, "project.json");
             var jsonText = SanitizeProjectJson(await File.ReadAllTextAsync(jsonPath, ct));
             var metadata = JsonSerializer.Deserialize(jsonText, JsonContext.Default.ProjectMetadata)
                            ?? throw new InvalidOperationException("JSON 反序列化失败");
+
+            // 文件夹名不在 ACF 安装表时兜底 project.json 的 workshopid
+            // (手动改过名的工坊文件夹不再被误判为"应不存在")
+            matchedID ??= metadata.Workshopid;
 
             // 类型推断
             string finalType = metadata.Type ?? string.Empty;
@@ -587,58 +807,6 @@ internal class WallpaperScanner
         }
     }
 
-    /// <summary>
-    /// 扫描创意工坊壁纸目录下的所有组件（category == "Asset"）。
-    /// </summary>
-    public static async Task<List<ComponentInfo>> ScanComponentsAsync(
-        string workshopPath,
-        string acfPath = "",
-        CancellationToken ct = default)
-    {
-        if (string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
-            return [];
-
-        var results = new List<ComponentInfo>();
-        var acfUpdateTimes = GetAcfUpdateTimes(acfPath);
-
-        try
-        {
-            var wallpaperDirs = Directory.EnumerateDirectories(workshopPath, "*", new EnumerationOptions
-            {
-                RecurseSubdirectories = false,
-                IgnoreInaccessible = true
-            }).Where(dir => !Path.GetFileName(dir).Equals(".we_backup", StringComparison.OrdinalIgnoreCase));
-
-            foreach (var wallpaperDir in wallpaperDirs)
-            {
-                if (ct.IsCancellationRequested) break;
-
-                try
-                {
-                    var component = await ParseComponentAsync(wallpaperDir, "", acfUpdateTimes, ct);
-                    if (component != null)
-                        results.Add(component);
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    Log.Warning(ex, "扫描组件失败: {Path}", wallpaperDir);
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            Log.Information("组件扫描被取消。已扫描 {Count} 个组件", results.Count);
-            return results;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "扫描组件时出现严重错误");
-        }
-
-        Log.Information("组件扫描完成，共 {Count} 个组件", results.Count);
-        return results;
-    }
-
     private static async Task<ComponentInfo?> ParseComponentAsync(
         string componentDir,
         string parentWallpaperDir,
@@ -676,7 +844,8 @@ internal class WallpaperScanner
                     .Select(e => e.GetString())
                     .Where(s => !string.IsNullOrEmpty(s))
                     .ToList();
-                tagsString = tags.Count > 0 ? string.Join(", ", tags) : "Unspecified";
+                // 与壁纸侧同一语义:每个项目只有一个标签(project.json 里是列表形态,取第一个非空项)
+                tagsString = tags.Count > 0 ? tags[0]! : "Unspecified";
             }
         }
 

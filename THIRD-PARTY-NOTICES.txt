@@ -4,15 +4,15 @@ WE Tool 使用的第三方组件及其许可证声明
 本项目采用 GPL-3.0 协议（见 LICENSE）。以下第三方组件按各自协议使用，
 版权归各自作者所有：
 
-- CommunityToolkit.Mvvm 8.4.0 — MIT License
+- CommunityToolkit.Mvvm 8.4.2 — MIT License
+- CommunityToolkit.WinUI.Animations 8.2.251219 — MIT License
 - CommunityToolkit.WinUI.Controls.Primitives 8.2.251219 — MIT License
 - CommunityToolkit.WinUI.Controls.SettingsControls 8.2.251219 — MIT License
 - Microsoft.Windows.SDK.BuildTools 10.0.26100.7705 — MIT License
-- Microsoft.WindowsAppSDK 1.8.260209005 — MIT License
-- Newtonsoft.Json 13.0.4 — MIT License
-- Serilog 4.3.1 — Apache License 2.0
+- Microsoft.WindowsAppSDK 1.8.260804001 — MIT License
+- Serilog 4.4.0 — Apache License 2.0
 - Serilog.Sinks.File 7.0.0 — Apache License 2.0
-- WinUIEx 2.9.0 — MIT License
+- WinUIEx 2.9.3 — MIT License
 
 各组件完整许可证文本见其官方仓库或 NuGet 包。
 

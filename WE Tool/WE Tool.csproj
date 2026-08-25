@@ -344,9 +344,15 @@
       <NativeLibrary Include="$(SkiaStaticLibDir)jsonreader.lib" Condition="Exists('$(SkiaStaticLibDir)jsonreader.lib')" />
       <NativeLibrary Include="$(SkiaStaticLibDir)skshaper.lib" Condition="Exists('$(SkiaStaticLibDir)skshaper.lib')" />
       <!-- Windows 系统库:DirectWrite 字体管理 + XPS 字体子集化 -->
-      <NativeLibrary Include="dwrite.lib" />
-      <NativeLibrary Include="fontsub.lib" />
-    </ItemGroup>
+            <NativeLibrary Include="dwrite.lib" />
+            <NativeLibrary Include="fontsub.lib" />
+          </ItemGroup>
+
+          <!-- [路线二] Debug/非 AOT 调试时排除 SkiaStaticLink.cs:resolver 会把 P/Invoke 指到无导出表的 exe,
+               导致版本检查读不到原生版本(TypeInitializationException)。仅 AOT 发布时才编译该文件。 -->
+          <ItemGroup Condition="'$(PublishAot)' != 'true' Or '$(Configuration)' == 'Debug'">
+            <Compile Remove="SkiaStaticLink.cs" />
+          </ItemGroup>
 
     <!-- Publish repkg-Re（单文件 exe + THIRD-PARTY-NOTICES.txt）并复制到 repkg/ 供 CLI 调用 -->
   <Target Name="BuildRepkg" BeforeTargets="BeforeBuild">
@@ -412,17 +418,36 @@
     <Delete Files="$(PublishDir)WE_Tool.pdb" Condition="Exists('$(PublishDir)WE_Tool.pdb')" />
   </Target>
 
+  <!-- [路线二] 发布后把 NuGet 附带的官方 libSkiaSharp.dll 替换为仓库内精简版(native/skia-min-gif/)。
+       场景:本机 AOT 静态链接成功→app/ 下无 libSkiaSharp.dll,此处无操作(Exists 保护);
+       CI 或静态库缺失时回退 NuGet 官方 dll 模式→app/ 下有官方 dll,此处替换为精简版,
+       使发布包体积与本机一致(zip 少 ~2.4MB)。仓库内精简 dll 与 libSkiaSharp.def/配方一起提交,
+       clone 后 CI 可直接复用,无需重新编译 Skia。 -->
+  <Target Name="ReplaceSkiaDll" BeforeTargets="PackageZip" AfterTargets="PackageWithLauncher;DeleteAotPdb">
+    <ItemGroup>
+      <_OfficialSkiaDll Include="$(PublishDir)app\libSkiaSharp.dll" Condition="Exists('$(PublishDir)app\libSkiaSharp.dll')" />
+    </ItemGroup>
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\native\skia-min-gif\libSkiaSharp.dll"
+          DestinationFiles="$(PublishDir)app\libSkiaSharp.dll"
+          SkipUnchangedFiles="true"
+          Condition="'@(_OfficialSkiaDll)' != '' And Exists('$(MSBuildProjectDirectory)\..\native\skia-min-gif\libSkiaSharp.dll')" />
+    <Message Importance="high" Text="libSkiaSharp.dll 已替换为仓库精简版 ($(MSBuildProjectDirectory)\..\native\skia-min-gif\libSkiaSharp.dll)" Condition="'@(_OfficialSkiaDll)' != '' And Exists('$(MSBuildProjectDirectory)\..\native\skia-min-gif\libSkiaSharp.dll')" />
+    <Message Importance="high" Text="app/ 下无 libSkiaSharp.dll(AOT 静态链接已内嵌),跳过替换" Condition="'@(_OfficialSkiaDll)' == ''" />
+  </Target>
+
   <!-- 发布完成后自动打包 zip 到 VS 默认发布目录 bin/Package/(与 PublishDir 同级,git 忽略)。
        每次发布自动产出固定位置的分发包,无需手动 Compress-Archive -->
   <Target Name="PackageZip" AfterTargets="DeleteAotPdb">
     <PropertyGroup>
-      <ZipName>WE-Tool-$(Version)-win-x64-selfcontained.zip</ZipName>
+      <ZipName>WE-Tool-$(Version)-portable.zip</ZipName>
       <ZipOut>$(MSBuildProjectDirectory)\bin\Package\$(ZipName)</ZipOut>
       <!-- 未压缩文件夹:与 zip 同名去 .zip,方便直接查看/拷贝 -->
-      <FolderOut>$(MSBuildProjectDirectory)\bin\Package\WE-Tool-$(Version)-win-x64-selfcontained</FolderOut>
+      <FolderOut>$(MSBuildProjectDirectory)\bin\Package\WE-Tool-$(Version)-portable</FolderOut>
     </PropertyGroup>
     <Delete Files="$(ZipOut)" Condition="Exists('$(ZipOut)')" />
-    <Exec Command="powershell -NoProfile -Command &quot;Compress-Archive -Path '$(PublishDir)*' -DestinationPath '$(ZipOut)' -Force&quot;" />
+    <!-- 极限压缩:优先 7-Zip -mx=9(windows-latest CI 自带 7z;aot 机器码高熵,收益 <1%),
+         无 7z 时回退 PowerShell Compress-Archive(本机) -->
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; { $ep = '$(PublishDir)'.TrimEnd('\'); $se7en = @($env:ProgramFiles, ${env:ProgramFiles(x86)}, $env:LOCALAPPDATA) | ForEach-Object { Join-Path $_ '7-Zip\7z.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1; if ($se7en) { Write-Host ('[PackageZip] 7-Zip 极限压缩: ' + $se7en); &amp; $se7en a -tzip -mx=9 -bd -y -- '$(ZipOut)' (Join-Path $ep '*') | Out-Null; if ($LASTEXITCODE -ne 0) { throw ('7z failed: ' + $LASTEXITCODE) } } else { Write-Host '[PackageZip] 未找到 7-Zip,回退 Compress-Archive'; Compress-Archive -Path (Join-Path $ep '*') -DestinationPath '$(ZipOut)' -Force } }&quot;" />
     <!-- 复制未压缩文件夹(排除 pdb;AOT PDB 由 ILC 在发布末尾生成,时序晚于本目标,复制时一并剔除)。
          注意:必须整目录复制保留 app/ 子目录结构,不能用 $(PublishDir)* 通配(会平铺) -->
     <RemoveDir Directories="$(FolderOut)" />
@@ -440,7 +465,7 @@
       <SetupOut>$(MSBuildProjectDirectory)\bin\Package\$(SetupName)</SetupOut>
       <IssFile>$(MSBuildProjectDirectory)\..\installer\we-tool.iss</IssFile>
       <!-- 与 PackageZip 的 FolderOut 同一表达式在此重算(那是目标内局部属性,跨目标不可见) -->
-      <InstallerSourceRoot>$(MSBuildProjectDirectory)\bin\Package\WE-Tool-$(Version)-win-x64-selfcontained</InstallerSourceRoot>
+      <InstallerSourceRoot>$(MSBuildProjectDirectory)\bin\Package\WE-Tool-$(Version)-portable</InstallerSourceRoot>
     </PropertyGroup>
     <ItemGroup>
       <_IsccCandidates Include="$(LocalAppData)\Programs\Inno Setup 6\ISCC.exe" />

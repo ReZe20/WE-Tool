@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Models;
@@ -42,8 +43,9 @@ namespace WE_Tool
         /// <summary>启动时的完整扫描链路（读配置 → StartBackgroundScan），页面可等待它确保扫描已开始</summary>
         public static Task? InitialScanTask { get; private set; }
         public static event EventHandler? ScanCompleted;
-        // 全局扫描进度事件（0-100）
-        public static event EventHandler<int>? ScanProgressChanged;
+        // 扫描防重入:代号(新扫描递增,旧代结果按代号判旧丢弃)+ 当前代的取消令牌
+        private static int _scanGeneration;
+        private static CancellationTokenSource? _scanCts;
         public static Window? MainWindowInstance { get; private set; }
         // 捕获启动时的系统首选 UI 语言（如 "zh-CN"/"en-US"），跟随系统时用作 PrimaryLanguageOverride
         public static readonly string SystemLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
@@ -185,43 +187,52 @@ namespace WE_Tool
         }
         public static void StartBackgroundScan(string workShopPath, string officialPath, string projectPath, string acfPath, string? vdfPath = null, bool useCache = true)
         {
-            ScanProgressChanged?.Invoke(null, 0);
+            // 防重入:每代扫描一个代号 + 取消令牌。新调用使上一代作废——
+            // 上一代被取消、其晚到的结果按代号判旧直接丢弃,绝不覆盖新一代数据。
+            // 注:CTS 无计时器、调用频度低,不做 Dispose(与在途 token 的竞态不值得冒)。
+            int gen = Interlocked.Increment(ref _scanGeneration);
+            try { _scanCts?.Cancel(); } catch (ObjectDisposedException) { /* 并发窗口,忽略 */ }
+            var cts = new CancellationTokenSource();
+            var ct = cts.Token;
+            _scanCts = cts;
 
             ScanTask = Task.Run(async () =>
             {
                 try
                 {
-                    int sources = 3;
-                    EventHandler<int>? handler = ScanProgressChanged;
-                    IProgress<int> makeProgress(int index)
-                    {
-                        int baseOffset = (int)Math.Round(index * (100.0 / sources));
-                        return new Progress<int>(val =>
-                        {
-                            double slot = 100.0 / sources;
-                            int overall = Math.Min(100, (int)Math.Round(baseOffset + (val / 100.0) * slot));
-                            handler?.Invoke(null, overall);
-                        });
-                    }
-
-                    var workShopListTask = WallpaperScanner.ScanWallpapers(workShopPath ?? "", "workshop", acfPath, makeProgress(0), vdfPath: vdfPath, useCache: useCache);
-                    var officialListTask = WallpaperScanner.ScanWallpapers(officialPath ?? "", "official", "", makeProgress(1), useCache: useCache);
-                    var projectListTask = WallpaperScanner.ScanWallpapers(projectPath ?? "", "mine", "", makeProgress(2), useCache: useCache);
+                    var workShopListTask = WallpaperScanner.ScanWallpapers(workShopPath ?? "", "workshop", acfPath, vdfPath: vdfPath, useCache: useCache, ct: ct);
+                    var officialListTask = WallpaperScanner.ScanWallpapers(officialPath ?? "", "official", "", useCache: useCache, ct: ct);
+                    var projectListTask = WallpaperScanner.ScanWallpapers(projectPath ?? "", "mine", "", useCache: useCache, ct: ct);
 
                     var workShopList = await workShopListTask;
                     var officialList = await officialListTask;
                     var projectList = await projectListTask;
 
+                    // 代号已过期 = 期间又发起了新扫描 → 本代结果作废,不覆盖
+                    if (gen != Volatile.Read(ref _scanGeneration))
+                    {
+                        Log.Information("后台扫描(gen {Gen})已过期,丢弃结果", gen);
+                        return;
+                    }
+                    ct.ThrowIfCancellationRequested();
+
                     GlobalAllWallpapers = workShopList.Concat(officialList).Concat(projectList).ToList();
 
-                    ScanProgressChanged?.Invoke(null, 100);
                     ScanCompleted?.Invoke(null, EventArgs.Empty);
+                }
+                catch (OperationCanceledException)
+                {
+                    Log.Information("后台全局扫描(gen {Gen})已被新扫描取代,静默退出。", gen);
+                    // 不清空 GlobalAllWallpapers、不发 ScanCompleted —— 那是新一代的事
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "后台全局扫描壁纸失败。");
-                    GlobalAllWallpapers = [];
-                    ScanProgressChanged?.Invoke(null, 100);
+                    if (gen == Volatile.Read(ref _scanGeneration))
+                    {
+                        // 真意外的异常:保留旧列表(好过整页空白),仍通知完成让页面刷新到保留数据
+                        ScanCompleted?.Invoke(null, EventArgs.Empty);
+                    }
                 }
             });
         }

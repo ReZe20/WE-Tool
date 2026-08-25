@@ -40,8 +40,8 @@ jobs:
         run: |
           $ver = if ("${{ inputs.version }}") { "${{ inputs.version }}" } elseif ("${{ github.ref_name }}" -like "v*") { "${{ github.ref_name }}" } else { "dev" }
           # csproj 的 PackageZip 目标已自动打包到 bin/Package/,这里复制为带 tag 版本号的名字供 Release 上传
-          $zip = Get-ChildItem "WE Tool/bin/Package/WE-Tool-*-win-x64-selfcontained.zip" | Select-Object -First 1
-          Copy-Item $zip.FullName "WE-Tool-$ver-win-x64-selfcontained.zip" -Force
+          $zip = Get-ChildItem "WE Tool/bin/Package/WE-Tool-*-portable.zip" | Select-Object -First 1
+          Copy-Item $zip.FullName "WE-Tool-$ver-portable.zip" -Force
           echo "version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
 
           # 版本介绍：手动输入的 notes 优先，其次 CHANGELOG.md 中当前版本的段落
@@ -75,7 +75,7 @@ jobs:
                     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe") |
                    Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $iscc) { throw "runner 上未找到 ISCC.exe（Inno Setup 6）" }
-          $src = Get-ChildItem "WE Tool/bin/Package/WE-Tool-*-win-x64-selfcontained" -Directory | Select-Object -First 1
+          $src = Get-ChildItem "WE Tool/bin/Package/WE-Tool-*-portable" -Directory | Select-Object -First 1
           if (-not $src) { throw "未找到发布文件夹" }
           # 内部版本号用纯数字(0.7.1);Release 资产名沿用 tag 风格(v0.7.1)
           $verNum = ($env:version -replace '^v', '')
@@ -91,7 +91,7 @@ jobs:
           tag_name: ${{ env.version }}
           body_path: release-body.md
           files: |
-            WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
+            WE-Tool-${{ env.version }}-portable.zip
             WE-Tool-${{ env.version }}-win-x64-setup.exe
 
       - name: 创建 Release（自动生成介绍）
@@ -100,6 +100,6 @@ jobs:
         with:
           tag_name: ${{ env.version }}
           files: |
-            WE-Tool-${{ env.version }}-win-x64-selfcontained.zip
+            WE-Tool-${{ env.version }}-portable.zip
             WE-Tool-${{ env.version }}-win-x64-setup.exe
           generate_release_notes: true
