@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
@@ -90,8 +90,6 @@ namespace WE_Tool
             {
                 Service.SteamWorkshopService.GetInstance().Dispose();
             };
-
-            LoadInitialLanguage();
         }
 
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
@@ -268,19 +266,12 @@ namespace WE_Tool
         {
             try
             {
-                string folderPath = GetAppDataRoot();
-                var configPath = System.IO.Path.Combine(folderPath, "config.json");
-
-                if (!System.IO.File.Exists(configPath))
-                {
-                    // 配置文件不存在 → 不设置 PrimaryLanguageOverride，使用系统默认语言
-                    Log.Information("语言加载完成: 首次启动，使用系统默认");
-                    return;
-                }
-
-                string json = File.ReadAllText(configPath);
-                var obj = System.Text.Json.Nodes.JsonNode.Parse(json)?.AsObject();
-                string lang = obj?["AppLanguage"]?.GetValue<string>() ?? "default";
+                // 统一走 ConfigService 缓存:构造期首次调用填缓存(真读一次盘),
+                // 之后 OnLaunched 的 InitializeAsync 及各处 LoadAsync 全部命中内存缓存。
+                // 文件缺失时 LoadAsync 会创建默认配置并返回默认值,与旧行为等价
+                // (旧实现文件缺失返回"跟随系统",而 InitializeAsync 本来也会创建文件)。
+                var settings = new WE_Tool.Service.ConfigService().LoadAsync().GetAwaiter().GetResult();
+                string lang = settings?.AppLanguage ?? "default";
 
                 // 跟随系统（空字符串或"default"）→ 不设置 PrimaryLanguageOverride
                 // 文档：空字符串不是合法的 BCP-47 标签，set 会抛 COMException

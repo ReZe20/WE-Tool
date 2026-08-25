@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -18,7 +18,7 @@ namespace WE_Tool.Service
     }
 
     public class ConfigService : IConfigService
-    {
+        {
         private const string FileName = "config.json";
 
         /// <summary>当前配置结构版本号（配置发生破坏性变更时递增，并在 Migrate 中补充对应迁移步骤）</summary>
@@ -26,6 +26,11 @@ namespace WE_Tool.Service
 
         // 静态路径，一次计算，终身使用
         private static readonly string ConfigPath = GetConfigFilePath();
+
+        // 进程内缓存:同一进程多次 LoadAsync 只真读一次盘,SaveAsync 同步更新。
+        // 静态:App/MainWindow/ViewModel 各自 new ConfigService 实例,必须共享同一份缓存。
+        private static AppSettings? _cached;
+        private static readonly object CacheLock = new();
 
         private static string GetConfigFilePath()
         {
@@ -36,27 +41,37 @@ namespace WE_Tool.Service
         }
         public async Task<AppSettings> LoadAsync()
         {
+            // 进程内缓存命中:直接返回(启动路径上多处调用,只真读一次盘)
+            lock (CacheLock)
+            {
+                if (_cached != null) return _cached;
+            }
+
             try
             {
                 if (!File.Exists(ConfigPath))
                 {
                     Log.Information("未找到 config.json，已创建默认配置。路径：{Path}", ConfigPath);
                     var defaultSettings = new AppSettings();
-                    await SaveAsync(defaultSettings);   // 复用 SaveAsync 创建文件
+                    await SaveAsync(defaultSettings).ConfigureAwait(false);   // 复用 SaveAsync 创建文件(内部会填充缓存)
                     return defaultSettings;
                 }
 
-                string text = await File.ReadAllTextAsync(ConfigPath);
+                string text = await File.ReadAllTextAsync(ConfigPath).ConfigureAwait(false);
                 var settings = JsonSerializer.Deserialize(text, JsonContext.Default.AppSettings) ?? new AppSettings();
 
                 if (settings.Version < CurrentVersion)
                 {
                     // 旧版本配置：执行迁移并写回，保证升级后设置不丢失
                     var migrated = Migrate(text, settings);
-                    await SaveAsync(migrated);
+                    await SaveAsync(migrated).ConfigureAwait(false);
                     return migrated;
                 }
 
+                lock (CacheLock)
+                {
+                    _cached = settings;
+                }
                 return settings;
             }
             catch (Exception ex)
@@ -76,7 +91,12 @@ namespace WE_Tool.Service
                     Directory.CreateDirectory(dir);
 
                 string text = JsonSerializer.Serialize(settings, JsonContext.Default.AppSettings);
-                await File.WriteAllTextAsync(ConfigPath, text);
+                await File.WriteAllTextAsync(ConfigPath, text).ConfigureAwait(false);
+                // 写盘成功后同步内存缓存,保证后续 LoadAsync 读到的就是刚落盘的值
+                lock (CacheLock)
+                {
+                    _cached = settings;
+                }
             }
             catch (Exception ex)
             {

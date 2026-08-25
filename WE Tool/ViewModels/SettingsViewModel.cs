@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using ABI.Microsoft.UI.Xaml;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -315,8 +315,15 @@ namespace WE_Tool.ViewModels
         }
 
 
+        private bool _initialized;
+
         public async Task InitializeAsync()
         {
+            // 幂等守卫:OnLaunched 与 Papers 首载都会调用本方法,第二次直接跳过。
+            // 每次完整执行都伴随整盘读 + 整盘写(LoadAsync + SaveAsync),重复执行纯属浪费。
+            if (_initialized) return;
+            _initialized = true;
+
             _isBatchUpdating = true;
 
             _settings = await _configService.LoadAsync() ?? new AppSettings();
