@@ -192,7 +192,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private int _extractTotalCount;
     private int _extractCompletedCount;
     private HashSet<string> _extractCompletedNames = [];
-    private Dictionary<string, ExtractProgressItem> _extractItemDict = [];
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
     public IAsyncRelayCommand ExtractSelectedCommand { get; }
@@ -360,7 +359,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
     }
     public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
-    public ObservableCollection<ExtractProgressItem> ExtractItems { get; } = [];
 
     /// <summary>多壁纸提取进行中列表数据源:每项 = 一个正在提取的壁纸(名称/预览图/实时进度)</summary>
     public ObservableCollection<ExtractProgressItem> ExtractProgressItems { get; } = [];
@@ -570,7 +568,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         this.Loaded += async (s, e) =>
         {
-            App.ScanCompleted += App_ScanCompleted;
 
             if (_isFirstLoad)
             {
@@ -607,11 +604,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 "全部删除",
                 "取消");
             if (!confirmed) return;
-
-            if (item != null)
-            {
-                await DeleteItemAsync(item);
-            }
 
             foreach (var toDelete in itemsToDelete)
             {
@@ -926,9 +918,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             UpdateMultiSelectCount();
-
-            GC.Collect(2, GCCollectionMode.Forced, true);
-            GC.WaitForPendingFinalizers();
         }
     }
     private void CancelAllAnimations()
@@ -994,13 +983,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             await App.ScanTask;
             _allWallpapers = [.. App.GlobalAllWallpapers];
 
+            // 此段必须在 UI 线程执行(调用点已全部核实);清选中同步做,
+            // 避免 TryEnqueue 异步回调在并发刷新时晚到、清掉新列表的选中状态
             Wallpapers.Clear();
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                SelectedWallpapers.Clear();
-                IsMultiSelectMode = false;
-                ViewModel.SelectedWallpaper = null;
-            });
+            SelectedWallpapers.Clear();
+            IsMultiSelectMode = false;
+            ViewModel.SelectedWallpaper = null;
 
             await ApplyFilters();
         }
@@ -1662,15 +1650,36 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     private async void ResetFilter_Click(object sender, RoutedEventArgs e)
     {
-        await ViewModel.ResetFiltersAsync(1,true);
+        try
+        {
+            await ViewModel.ResetFiltersAsync(1,true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "重置筛选失败");
+        }
     }
     private async void SelectAllTags_Click(object sender, RoutedEventArgs e)
     {
-        await ViewModel.ResetFiltersAsync(2, true);
+        try
+        {
+            await ViewModel.ResetFiltersAsync(2, true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "重置筛选失败");
+        }
     } 
     private async void DeselectAllTags_Click(object sender, RoutedEventArgs e)
     {
-        await ViewModel.ResetFiltersAsync(2, false);
+        try
+        {
+            await ViewModel.ResetFiltersAsync(2, false);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "重置筛选失败");
+        }
     }
 
     private Expander? _currentFilterExpander;
@@ -1848,7 +1857,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             UpdateItemCheckBoxOpacity(grid, item);
             ApplyScaleAnimation(grid, 1.0f);
-            UpdateItemCheckBoxOpacity(grid, item);
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             var scaleAnim = visual.Compositor.CreateSpringVector3Animation();
@@ -2089,8 +2097,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 grid.Translation = new System.Numerics.Vector3(0f, 0f, 64f);
             });
 
-            var pointerPoint = e.GetCurrentPoint(sender as UIElement);
-            var properties = pointerPoint.Properties;
         }
     }
     private void Item_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -2427,12 +2433,26 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private async void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
-        await CopyWallpapersAsync();
+        try
+        {
+            await CopyWallpapersAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "复制壁纸文件夹失败");
+        }
     }
     private async void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
-        HideWallpaperContextMenu();
-        await CopyWallpapersAsync();
+        try
+        {
+            HideWallpaperContextMenu();
+            await CopyWallpapersAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "复制壁纸文件夹失败");
+        }
     }
     private async Task CopyWallpapersAsync()
     {
@@ -2566,8 +2586,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         var invalid = Path.GetInvalidFileNameChars();
         var sb = new StringBuilder(name);
-        foreach (var c in new[] { '<', '>', ':', '\"', '/', '\\', '|', '?', '*' })
-            sb.Replace(c, '_');
         for (int i = 0; i < sb.Length; i++)
             if (invalid.Contains(sb[i])) sb[i] = '_';
         return sb.ToString().Trim();
@@ -2625,6 +2643,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath, ViewModel.PathManagementVM.AcfPath, ViewModel.PathManagementVM.VdfPath, ViewModel.AppSettingsVM.ScanCacheEnabled == "1");
             await RefreshWallpaperList();
         }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "刷新壁纸列表失败");
+        }
         finally
         {
             _isRefreshing = false;
@@ -2646,6 +2668,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private async Task PropertiesAsync()
     {
+        try
+        {
         HideWallpaperContextMenu();
         // 多选模式:为每个选中壁纸打开独立属性窗口
         var items = IsMultiSelectMode && SelectedWallpapers.Count > 0
@@ -2670,11 +2694,23 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
         foreach (var wp in items)
             PropertiesWindow.Open(wp);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "打开属性窗口失败");
+        }
     }
     private async void OnIconSizeChanged(object sender, RoutedEventArgs e)
     {
-        await Task.Delay(100);
-        HideWallpaperContextMenu();
+        try
+        {
+            await Task.Delay(100);
+            HideWallpaperContextMenu();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "图标尺寸变更处理失败");
+        }
     }
     private void OnDisplayModeChanged(object sender, RoutedEventArgs e)
     {
@@ -2758,9 +2794,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         UpdateMultiSelectCount();
         UpdateStackVisuals();
-
-        GC.Collect(2, GCCollectionMode.Forced, true);
-        GC.WaitForPendingFinalizers();
     }
     private void SetExtractPreviewImage(string? previewPath, string title)
     {
@@ -2837,7 +2870,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             SetExtractPreviewImage(itemsToExtract[0].Preview, firstName);
 
             // 多壁纸模式：通过 _extractCompletedCount 跟踪总体进度
-            _extractItemDict = [];
 
             Action<string> onProgress = msg =>
             {

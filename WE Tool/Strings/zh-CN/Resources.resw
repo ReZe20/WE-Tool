@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>已安装组件</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>主日志</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>RePKG_Re 提取日志</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>自动备份服务日志</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>关于</value>
   </data>
@@ -1618,6 +1630,12 @@
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>清理失败</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>{0} 个文件删除失败(可能被占用或无权限),磁盘上仍残留,下次扫描会再次出现</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>{0} 张卡片清理失败,磁盘上仍残留,下次扫描会再次出现</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>删除选中 ({0} 项)</value>
   </data>
@@ -1704,6 +1722,9 @@
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>壁纸备份</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>扫描备份失败,请查看日志</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>暂无备份</value>

@@ -13,6 +13,7 @@ using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Controls;
+using Serilog;
 using WE_Tool.ViewModels;
 using WE_Tool.Helper;
 using WE_Tool.Json;
@@ -72,7 +73,10 @@ public sealed partial class Cleanup : Page
                 foreach (var id in list)
                     _whitelist.Add(id);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[Cleanup] 白名单读取失败");
+        }
     }
 
     private void SaveWhitelist()
@@ -82,7 +86,10 @@ public sealed partial class Cleanup : Page
             Directory.CreateDirectory(Path.GetDirectoryName(WhitelistFile)!);
             File.WriteAllText(WhitelistFile, JsonSerializer.Serialize(_whitelist.ToList(), JsonContext.Default.ListString));
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[Cleanup] 白名单写入失败");
+        }
     }
 
     // ---------- 扫描 ----------
@@ -214,11 +221,13 @@ public sealed partial class Cleanup : Page
             if (IsComponentFolder(dir)) return null;
 
             // 壁纸:多余文件(对比 project.json 引用)
+            // 单趟枚举:EnumerateFiles 惰性 + FileInfo 自带 Length,免二次 stat
             var std = GetStdFiles(dir);
             var excess = new List<CleanupFileItem>();
-            foreach (var f in Directory.GetFiles(dir, "*", SearchOption.AllDirectories))
+            foreach (var fi in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories)
+                                         .Select(f => new FileInfo(f)))
             {
-                var rel = Path.GetRelativePath(dir, f);
+                var rel = Path.GetRelativePath(dir, fi.FullName);
                 // 标准场景文件:shaders/shader 文件夹整体、scene.pkg 不算残留
                 var firstSeg = rel.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
                 if (firstSeg.Equals("shaders", StringComparison.OrdinalIgnoreCase)
@@ -228,9 +237,9 @@ public sealed partial class Cleanup : Page
                     excess.Add(new CleanupFileItem
                     {
                         Name = rel,
-                        SizeText = FormatSize(new FileInfo(f).Length),
-                        Size = new FileInfo(f).Length,
-                        FullPath = f
+                        SizeText = FormatSize(fi.Length),
+                        Size = fi.Length,
+                        FullPath = fi.FullName
                     });
                 }
             }
@@ -249,15 +258,21 @@ public sealed partial class Cleanup : Page
         }
         else
         {
-            // 已卸载壁纸残留(整个文件夹)
-            var files = Directory.GetFiles(dir, "*", SearchOption.AllDirectories)
-                .Select(f => new CleanupFileItem
+            // 已卸载壁纸残留(整个文件夹):一次遍历同时产出文件列表与总大小
+            var files = new List<CleanupFileItem>();
+            long total = 0;
+            foreach (var fi in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories)
+                                         .Select(f => new FileInfo(f)))
+            {
+                total += fi.Length;
+                files.Add(new CleanupFileItem
                 {
-                    Name = Path.GetRelativePath(dir, f),
-                    SizeText = FormatSize(new FileInfo(f).Length),
-                    Size = new FileInfo(f).Length,
-                    FullPath = f
-                }).ToList();
+                    Name = Path.GetRelativePath(dir, fi.FullName),
+                    SizeText = FormatSize(fi.Length),
+                    Size = fi.Length,
+                    FullPath = fi.FullName
+                });
+            }
 
             if (files.Count == 0)
                 files.Add(new CleanupFileItem { Name = L("Cleanup_EmptyFolderName"), SizeText = "", Size = 0, FullPath = "" });
@@ -268,8 +283,8 @@ public sealed partial class Cleanup : Page
                 TypeLabel = L("Cleanup_TypeUnloaded"),
                 FullPath = dir,
                 IsUnloaded = true,
-                TotalSize = DirSize(dir),
-                StatsText = L("Cleanup_StatsUnloaded", files.Count, FormatSize(DirSize(dir))),
+                TotalSize = total,
+                StatsText = L("Cleanup_StatsUnloaded", files.Count, FormatSize(total)),
                 Files = files
             };
         }
@@ -352,17 +367,35 @@ public sealed partial class Cleanup : Page
         };
         if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
 
+        int failed = 0;
         try
         {
             if (card.IsUnloaded)
+            {
                 Directory.Delete(card.FullPath, true);
+            }
             else
+            {
                 foreach (var f in card.Files)
                 {
-                    try { File.Delete(f.FullPath); } catch { }
+                    try { File.Delete(f.FullPath); } catch { failed++; }
                 }
+            }
 
             RemoveCard(card);
+
+            // 有文件删失败(占用/权限):提示失败数,磁盘残留下次扫描会再出现
+            if (failed > 0)
+            {
+                var partial = new ContentDialog
+                {
+                    XamlRoot = XamlRoot,
+                    Title = L("Cleanup_CleanFail.Title"),
+                    Content = L("Cleanup_CleanPartialFail", failed),
+                    CloseButtonText = L("Cleanup_CommonOk")
+                };
+                await partial.ShowAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -420,6 +453,7 @@ public sealed partial class Cleanup : Page
         };
         if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
 
+        int failed = 0;
         foreach (var card in selected)
         {
             try
@@ -431,9 +465,21 @@ public sealed partial class Cleanup : Page
                         try { File.Delete(f.FullPath); } catch { }
                 RemoveCard(card);
             }
-            catch { }
+            catch { failed++; }
         }
         UpdateBatchButtons();
+
+        if (failed > 0)
+        {
+            var err = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = L("Cleanup_CleanFail.Title"),
+                Content = L("Cleanup_BatchDeletePartialFail", failed),
+                CloseButtonText = L("Cleanup_CommonOk")
+            };
+            await err.ShowAsync();
+        }
     }
 
     private void WhitelistCard_Click(object sender, RoutedEventArgs e)
@@ -448,6 +494,13 @@ public sealed partial class Cleanup : Page
 
     private void WhitelistButton_Click(object sender, RoutedEventArgs e)
     {
+        // 单实例守卫:窗口已开(未关闭)则聚焦已有窗口,不再叠加
+        if (_whitelistWin != null)
+        {
+            try { _whitelistWin.Activate(); }
+            catch { _whitelistWin = null; }
+            return;
+        }
         _whitelistWin = new WhitelistWindow(_whitelist, WorkshopPath);
         var win = _whitelistWin;
         // 白名单项被移除时立即把该壁纸加回列表
@@ -455,13 +508,15 @@ public sealed partial class Cleanup : Page
         {
             DispatcherQueue.TryEnqueue(() => RescanCardForId(id));
         };
-        // 窗口关闭后刷新列表(可能有其他变化)
-        win.Closed += (_, _) =>
+        // 窗口关闭后清引用 + 刷新列表(可能有其他变化);Scan 走后台线程,完成后回 UI 线程填集合
+        win.Closed += async (_, _) =>
         {
+            _whitelistWin = null;
+            var list = await Task.Run(Scan);
             DispatcherQueue.TryEnqueue(() =>
             {
                 Cards.Clear();
-                foreach (var card in Scan())
+                foreach (var card in list)
                     Cards.Add(card);
                 ApplySort();
                 UpdateSummary();
@@ -489,7 +544,7 @@ public sealed partial class Cleanup : Page
         };
         if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
 
-        int ok = 0;
+        int ok = 0, failed = 0;
         foreach (var card in Cards.ToList())
         {
             try
@@ -504,15 +559,27 @@ public sealed partial class Cleanup : Page
                 Cards.Remove(card);
                 ok++;
             }
-            catch { }
+            catch { failed++; }
         }
 
         bool has = Cards.Count > 0;
         ResultGridView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
-        EmptyState.Visibility = Visibility.Visible;
+        EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
         EmptyStateText.Text = L("Cleanup_CleanedComplete", ok);
         if (!has) ActionBar.Visibility = Visibility.Collapsed;
         UpdateSummary();
+
+        if (failed > 0)
+        {
+            var err = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = L("Cleanup_CleanFail.Title"),
+                Content = L("Cleanup_BatchDeletePartialFail", failed),
+                CloseButtonText = L("Cleanup_CommonOk")
+            };
+            await err.ShowAsync();
+        }
     }
 
     /// <summary>更新总结:总项数·总大小。</summary>
@@ -612,12 +679,6 @@ public sealed partial class Cleanup : Page
     }
 
     // ---------- 工具 ----------
-
-    private static long DirSize(string path)
-    {
-        try { return Directory.GetFiles(path, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length); }
-        catch { return 0; }
-    }
 
     private static string FormatSize(long b)
     {

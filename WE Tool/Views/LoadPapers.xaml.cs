@@ -271,7 +271,15 @@ namespace WE_Tool
                     string safeName = GetSafeName(Path.GetFileNameWithoutExtension(item.FilePath));
                     string title = safeName;
                     int seq = 1;
-                    while (usedTitles.Contains(title) || Directory.Exists(Path.Combine(outputRoot, title)))
+                    // 重名检测排除本队列项自己的 OutputPath:停止后再点开始,该项上次已分配
+                    // 的输出目录不算"已存在"冲突(原样复用续提),而不是另建 _1 新目录;
+                    // 其它项的历史遗留目录仍照常加序号防止覆盖
+                    while (usedTitles.Contains(title) ||
+                           (Directory.Exists(Path.Combine(outputRoot, title)) &&
+                            !string.Equals(
+                                Path.Combine(outputRoot, title),
+                                item.OutputPath,
+                                StringComparison.OrdinalIgnoreCase)))
                         title = $"{safeName}_{seq++}";
                     usedTitles.Add(title);
 

@@ -30,6 +30,7 @@
     <None Remove="Assets\noPreview.png" />
     <None Remove="LoadPapers.xaml" />
     <None Remove="Views\Info.xaml" />
+    <None Remove="Views\Logs.xaml" />
     <None Remove="Papers.xaml" />
   </ItemGroup>
 
@@ -211,6 +212,11 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\Settings.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Logs.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

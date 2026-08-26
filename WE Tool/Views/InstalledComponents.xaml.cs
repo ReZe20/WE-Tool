@@ -37,6 +37,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private List<ComponentInfo> _allComponents = [];
     private string _searchText = "";
     private bool _isUpdating;
+    private bool _isFirstLoad = true;
     private bool _isLeftMouseButtonPressed;
     private bool _isComponentItemTapped;
     private bool _isMultiSelectMode;
@@ -362,17 +363,19 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             var reorderDuration = TimeSpan.FromMilliseconds(100);
             foreach (var gv in AllComponentGridViews)
                 ItemsReorderAnimation.SetDuration(gv, reorderDuration);
-            // Skia 流式播放 + 角标:容器绑定时刷新(照 Papers)
-            ComponentsGridView.ContainerContentChanging += (s2, e2) =>
+        };
+
+        // Skia 流式播放 + 角标:容器绑定时刷新。订阅放构造函数(页面有导航缓存,
+        // Loaded 每次切回都重发,放里面会造成订阅数随访问次数翻倍,容器实化时处理 N 遍)
+        ComponentsGridView.ContainerContentChanging += (s2, e2) =>
+        {
+            if (e2.InRecycleQueue) return;
+            if (e2.Item is ComponentInfo cItem &&
+                e2.ItemContainer.ContentTemplateRoot is Grid cRoot)
             {
-                if (e2.InRecycleQueue) return;
-                if (e2.Item is ComponentInfo cItem &&
-                    e2.ItemContainer.ContentTemplateRoot is Grid cRoot)
-                {
-                    UpdateSkiaGif(cRoot, cItem);
-                    UpdateTagBadge(cRoot, cItem);
-                }
-            };
+                UpdateSkiaGif(cRoot, cItem);
+                UpdateTagBadge(cRoot, cItem);
+            }
         };
 
         // 多选集合变化时刷新计数、堆叠图与面板（批量操作时抑制，避免逐项触发）
@@ -421,7 +424,13 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _ = LoadComponents();
+            // 首载标志(对齐 Papers):只需首次进入完整加载;切走再切回只重启 GIF,
+            // 不重建列表也不清空选择。手动刷新按钮/F5 始终走 LoadComponents 完整重载。
+            if (_isFirstLoad)
+            {
+                _isFirstLoad = false;
+                _ = LoadComponents();
+            }
             // 页面缓存:切走时 Unloaded 停播,切回后容器不重新绑定 → 延迟一帧重启可见 GIF 动画
             DispatcherQueue.TryEnqueue(() => RestartVisibleGifPlayback());
         }
@@ -708,6 +717,10 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             });
         }
         catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "筛选组件时出现异常。");
+        }
     }
 
     /// <summary>增量同步列表:删除/插入/移动只作用于真实变化的项,触发 GridView 补位动画(照抄 Papers.ApplyListDiff)</summary>
@@ -949,6 +962,10 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             await App.ScanTask;
             await LoadComponents();
         }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "刷新组件列表失败");
+        }
         finally
         {
             _isRefreshing = false;
@@ -958,29 +975,36 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private async void CopyComponent_Click(object sender, RoutedEventArgs e)
     {
-        var items = GetTargetItems();
-        if (items.Count == 0) return;
-
-        var folders = new List<Windows.Storage.StorageFolder>();
-        foreach (var item in items)
+        try
         {
-            if (string.IsNullOrEmpty(item.FolderPath)) continue;
-            try
+            var items = GetTargetItems();
+            if (items.Count == 0) return;
+
+            var folders = new List<Windows.Storage.StorageFolder>();
+            foreach (var item in items)
             {
-                folders.Add(await Windows.Storage.StorageFolder.GetFolderFromPathAsync(item.FolderPath));
+                if (string.IsNullOrEmpty(item.FolderPath)) continue;
+                try
+                {
+                    folders.Add(await Windows.Storage.StorageFolder.GetFolderFromPathAsync(item.FolderPath));
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "获取组件文件夹失败: {Path}", item.FolderPath);
+                }
             }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "获取组件文件夹失败: {Path}", item.FolderPath);
-            }
+
+            if (folders.Count == 0) return;
+
+            var dataPackage = new DataPackage();
+            dataPackage.RequestedOperation = DataPackageOperation.Copy;
+            dataPackage.SetStorageItems(folders);
+            Clipboard.SetContent(dataPackage);
         }
-
-        if (folders.Count == 0) return;
-
-        var dataPackage = new DataPackage();
-        dataPackage.RequestedOperation = DataPackageOperation.Copy;
-        dataPackage.SetStorageItems(folders);
-        Clipboard.SetContent(dataPackage);
+        catch (Exception ex)
+        {
+            Log.Error(ex, "复制组件文件夹失败");
+        }
     }
 
     private async void ExtractComponent_Click(object sender, RoutedEventArgs e)
@@ -996,6 +1020,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
         try
         {
+            int successCount = 0;
             foreach (var item in items)
             {
                 if (string.IsNullOrEmpty(item.FolderPath)) continue;
@@ -1014,11 +1039,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 {
                     File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
                 }
+                successCount++;
                 Log.Information("组件 {Title} 已提取到 {Path}", item.Title, targetDir);
             }
 
             await Helper.DialogHelper.ShowMessageAsync("提取完成",
-                $"已提取 {items.Count} 个组件到：\n{downloadPath}");
+                $"已提取 {successCount}/{items.Count} 个组件到：\n{downloadPath}");
         }
         catch (Exception ex)
         {
@@ -1030,57 +1056,71 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private async void UnsubscribeComponent_Click(object sender, RoutedEventArgs e)
     {
         // 照抄 Papers：执行前先收起右键菜单，避免菜单停留在确认对话框上方
-        HideComponentContextMenu();
-
-        var items = GetTargetItems().Where(i => !string.IsNullOrEmpty(i.WorkshopID)).ToList();
-        if (items.Count == 0) return;
-
-        bool confirmed = await Helper.DialogHelper.ShowConfirmDialogAsync(
-            "取消订阅",
-            $"确定要取消订阅选中的 {items.Count} 个组件吗？\n\n操作将同步删除本地的组件文件。",
-            "确定",
-            "取消");
-        if (!confirmed) return;
-
-        var service = Service.SteamWorkshopService.GetInstance();
-        if (!service.IsAvailable)
+        try
         {
-            await Helper.DialogHelper.ShowMessageAsync(
-                "Steamworks 初始化失败",
-                "无法连接到 Steam，请确认 Steam 已在运行。\n\n如果问题持续，请尝试以管理员身份运行本程序。");
-            return;
+            HideComponentContextMenu();
+
+            var items = GetTargetItems().Where(i => !string.IsNullOrEmpty(i.WorkshopID)).ToList();
+            if (items.Count == 0) return;
+
+            bool confirmed = await Helper.DialogHelper.ShowConfirmDialogAsync(
+                "取消订阅",
+                $"确定要取消订阅选中的 {items.Count} 个组件吗？\n\n操作将同步删除本地的组件文件。",
+                "确定",
+                "取消");
+            if (!confirmed) return;
+
+            var service = Service.SteamWorkshopService.GetInstance();
+            if (!service.IsAvailable)
+            {
+                await Helper.DialogHelper.ShowMessageAsync(
+                    "Steamworks 初始化失败",
+                    "无法连接到 Steam，请确认 Steam 已在运行。\n\n如果问题持续，请尝试以管理员身份运行本程序。");
+                return;
+            }
+
+            int success = 0;
+            foreach (var item in items)
+            {
+                if (ulong.TryParse(item.WorkshopID, out var wid) && await service.UnsubscribeAsync(wid))
+                    success++;
+            }
+
+            await Helper.DialogHelper.ShowMessageAsync("取消订阅完成",
+                $"成功向 Steam 发送取消订阅请求: {success}/{items.Count} 个组件。\n\n正在同步删除本地组件文件...");
+
+            foreach (var item in items)
+            {
+                await DeleteComponentCoreAsync(item, skipConfirm: true);
+            }
         }
-
-        int success = 0;
-        foreach (var item in items)
+        catch (Exception ex)
         {
-            if (ulong.TryParse(item.WorkshopID, out var wid) && await service.UnsubscribeAsync(wid))
-                success++;
-        }
-
-        await Helper.DialogHelper.ShowMessageAsync("取消订阅完成",
-            $"成功向 Steam 发送取消订阅请求: {success}/{items.Count} 个组件。\n\n正在同步删除本地组件文件...");
-
-        foreach (var item in items)
-        {
-            await DeleteComponentCoreAsync(item, skipConfirm: true);
+            Log.Error(ex, "取消订阅组件失败");
         }
     }
 
     private async void DeleteComponent_Click(object sender, RoutedEventArgs e)
     {
-        var items = GetTargetItems();
-        if (items.Count == 0) return;
-
-        bool confirmed = await Helper.DialogHelper.ShowConfirmDialogAsync("删除组件",
-            $"确定要删除选中的 {items.Count} 个组件吗？",
-            "删除",
-            "取消");
-        if (!confirmed) return;
-
-        foreach (var item in items)
+        try
         {
-            await DeleteComponentCoreAsync(item, skipConfirm: items.Count > 1);
+            var items = GetTargetItems();
+            if (items.Count == 0) return;
+
+            bool confirmed = await Helper.DialogHelper.ShowConfirmDialogAsync("删除组件",
+                $"确定要删除选中的 {items.Count} 个组件吗？",
+                "删除",
+                "取消");
+            if (!confirmed) return;
+
+            foreach (var item in items)
+            {
+                await DeleteComponentCoreAsync(item, skipConfirm: items.Count > 1);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "删除组件失败");
         }
     }
 
@@ -1150,6 +1190,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private async Task ComponentPropertiesAsync()
     {
+        try
+        {
         HideComponentContextMenu();
         // 多选模式:为每个选中组件打开独立属性窗口(组件无 project.json 可配置属性,只显示文件属性页)
         var items = IsMultiSelectMode && SelectedComponents.Count > 0
@@ -1174,6 +1216,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
         foreach (var c in items)
             PropertiesWindow.Open(ToWallpaperItem(c), showPropsPage: false);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "打开属性窗口失败");
+        }
     }
     private void ComponentProperties_Click(object sender, RoutedEventArgs e)
     {
@@ -1464,7 +1511,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             UpdateItemCheckBoxOpacity(grid, item);
             ApplyScaleAnimation(grid, 1.0f);
-            UpdateItemCheckBoxOpacity(grid, item);
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             var scaleAnim = visual.Compositor.CreateSpringVector3Animation();
@@ -1685,9 +1731,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 }
                 grid.Translation = new Vector3(0f, 0f, 64f);
             });
-
-            var pointerPoint = e.GetCurrentPoint(sender as UIElement);
-            var properties = pointerPoint.Properties;
         }
     }
 

@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Installed Components</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>Logs</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>Main log</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>RePKG_Re extraction log</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>Auto-backup service log</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>About</value>
   </data>
@@ -1618,6 +1630,12 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>Cleanup Failed</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>{0} file(s) failed to delete (locked or no permission); they remain on disk and will reappear on next scan</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>{0} card(s) failed to clean; they remain on disk and will reappear on next scan</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>Delete Selected ({0})</value>
   </data>
@@ -1704,6 +1722,9 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>Wallpaper Backup</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>Failed to scan backups. Check the log for details</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>No backups</value>

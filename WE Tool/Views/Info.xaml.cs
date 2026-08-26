@@ -46,49 +46,8 @@ public sealed partial class Info : Page
     public ObservableCollection<Contributor> RepkgContributors { get; } = new();
 
     private readonly DispatcherTimer _logTimer = new() { Interval = TimeSpan.FromSeconds(1) };
-    private readonly string? _logPath;
-    private long _logPosition;
-    private bool _logAtBottom = true;
-    // 日志面板拖拽调高:手柄拖动改 LogScrollViewer.Height(不持久化,重启回默认 220)
-    private bool _logResizing;
-    private double _logResizeStartY;
-    private double _logResizeStartHeight;
-    private const double MinLogHeight = 60;
-    private const double MaxLogHeight = 800;
-    // RePKG_Re 日志面板(独立文件 repkg.log,RepkgCliService 写入,每次提取开始清空)
-    private readonly string? _repkgLogPath;
-    private long _repkgLogPosition;
-    private bool _repkgLogAtBottom = true;
-    private bool _repkgLogResizing;
-    private double _repkgLogResizeStartY;
-    private double _repkgLogResizeStartHeight;
-    // 自动备份服务日志面板(独立文件 AutoBackupService.log,服务进程写入)
-    private readonly string? _autoBackupLogPath;
-    private long _autoBackupLogPosition;
-    private bool _autoBackupLogAtBottom = true;
-    private bool _autoBackupLogResizing;
-    private double _autoBackupLogResizeStartY;
-    private double _autoBackupLogResizeStartHeight;
     private int _lastSteamState = -1; // -1=未检查 0=正常 1=初始化失败 2=中途断开
     private Task? _steamInitTask;
-
-    // 控制台风格配色(Windows Terminal 色板;日志面板在两种主题下均保持深色)
-    private static readonly SolidColorBrush LogInfoBrush = new(Color.FromArgb(0xFF, 0xCC, 0xCC, 0xCC));
-    private static readonly SolidColorBrush LogWarnBrush = new(Color.FromArgb(0xFF, 0xF9, 0xF1, 0xA5));
-    private static readonly SolidColorBrush LogErrorBrush = new(Color.FromArgb(0xFF, 0xF1, 0x4C, 0x4C));
-    private static readonly SolidColorBrush LogDebugBrush = new(Color.FromArgb(0xFF, 0x76, 0x76, 0x76));
-
-    private static Brush GetLogLevelBrush(string line)
-    {
-        if (line.Contains("[ERR]", StringComparison.Ordinal) || line.Contains("[FTL]", StringComparison.Ordinal))
-            return LogErrorBrush;
-        if (line.Contains("[WRN]", StringComparison.Ordinal))
-            return LogWarnBrush;
-        if (line.Contains("[DBG]", StringComparison.Ordinal) || line.Contains("[VRB]", StringComparison.Ordinal))
-            return LogDebugBrush;
-        return LogInfoBrush;
-    }
-
     /// <summary>RePKG_Re 后端版本:读取随包 exe 的文件版本(0.5.0.0 → 0.5.0),自动跟随后端发布</summary>
     public string RepkgVersionText
     {
@@ -107,7 +66,6 @@ public sealed partial class Info : Page
             }
         }
     }
-
     /// <summary>随包 RePKG_Re 是否为目标版本(静态信息,运行时不变;Info 页 InfoBar 与导航徽标共用)</summary>
     public static bool IsRepkgStatusOk()
     {
@@ -138,7 +96,6 @@ public sealed partial class Info : Page
             return $"{parts[0]}.{parts[1]}.{parts[2]}";
         return fileVersion;
     }
-
     /// <summary>校验随包 RePKG_Re 是否为目标版本(目标版本构建时从 external/repkg_Re 仓库 csproj 注入)</summary>
     private void UpdateRepkgStatus()
     {
@@ -180,7 +137,6 @@ public sealed partial class Info : Page
     }
 
     public ObservableCollection<TranslationStatusItem> TranslationStatus { get; } = new();
-
     public Info()
     {
         var app = Application.Current as App;
@@ -189,18 +145,7 @@ public sealed partial class Info : Page
         // 贡献者数据硬编码(ContributorsData.cs),发布包不再携带 CSV 文件
         LoadContributors(Contributors, ContributorsData.Main);
         LoadContributors(RepkgContributors, ContributorsData.Repkg);
-
-        // 当前日志文件固定为 logs/log.txt(Serilog 统一单文件,不做滚动;启动时清理历史序号文件)。
-        // 兜底:若目录里只有历史滚动文件(log_001.txt 等),读最新的那个,避免面板空白
-        _logPath = ResolveMainLogPath(ViewModel.AppSettingsVM.LogPath);
-        // RePKG_Re 日志:RepkgCliService 写入 logs/repkg.log(每次提取开始清空)
-        _repkgLogPath = Path.Combine(ViewModel.AppSettingsVM.LogPath, "repkg.log");
-        // 自动备份服务日志:AutoBackupService 写入 %LOCALAPPDATA%/WE_Tool/AutoBackupService.log
-        _autoBackupLogPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "WE_Tool", "AutoBackupService.log");
         _logTimer.Tick += OnLogTimerTick;
-        _logTimer.Start();
         // Steamworks 首次初始化放后台线程,避免页面加载卡顿;完成后立即反映状态
         _steamInitTask = SteamWorkshopService.InitializeOnBackground();
         _ = RefreshSteamStatusAsync();
@@ -210,29 +155,11 @@ public sealed partial class Info : Page
         foreach (var item in TranslationStatusInfo.Items)
             TranslationStatus.Add(item);
     }
-
-    /// <summary>解析主日志路径:优先 logs/log.txt;若不存在(旧版本滚动遗留),取最新的 log_*.txt。</summary>
-    private static string ResolveMainLogPath(string logDir)
-    {
-        var primary = Path.Combine(logDir, "log.txt");
-        if (File.Exists(primary)) return primary;
-        try
-        {
-            var latest = Directory.GetFiles(logDir, "log_*.txt")
-                .OrderByDescending(f => new FileInfo(f).LastWriteTime)
-                .FirstOrDefault();
-            if (latest != null) return latest;
-        }
-        catch { }
-        return primary; // 目录不存在/无文件时仍指向 log.txt(Serilog 启动时会创建)
-    }
-
     private static string GetVersionText()
     {
         var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         return version == null ? string.Empty : $"{version.Major}.{version.Minor}.{version.Build}";
     }
-
     /// <summary>InfoBar 动作按钮:正常态=关闭 Steamworks,异常/已关闭态=重试。按当前状态分发。</summary>
     private async void SteamActionButton_Click(object sender, RoutedEventArgs e)
     {
@@ -262,7 +189,6 @@ public sealed partial class Info : Page
         await SteamWorkshopService.GetInstance().RefreshStatusAsync();
         UpdateSteamStatus();
     }
-
     /// <summary>等待后台初始化完成后刷新状态(初始化期间 UI 不阻塞)</summary>
     private async Task RefreshSteamStatusAsync()
     {
@@ -274,7 +200,6 @@ public sealed partial class Info : Page
         await SteamWorkshopService.GetInstance().RefreshStatusAsync();
         UpdateSteamStatus();
     }
-
     /// <summary>反映 Steamworks 工作状况(经桥接子进程):正常=绿、初始化失败=红、断开(Steam 关闭桥接被杀)=黄;
     /// 状态变化才更新 UI;随日志轮询每秒复查</summary>
     private void UpdateSteamStatus()
@@ -334,225 +259,25 @@ public sealed partial class Info : Page
         }
     }
 
-    /// <summary>每秒轮询 log.txt 尾部,追加新内容;文件被截断/重建时从头重读。
-    /// 主日志文件不存在时仅跳过自身轮询,repkg/自动备份面板照常更新(否则一个文件缺失三个面板全空白)。</summary>
+    /// <summary>每秒复查 Steamworks 状态(仅页面可见时运行;日志轮询已迁至独立"日志"页)。</summary>
     private void OnLogTimerTick(object? sender, object e)
     {
         _ = RefreshSteamStatusAsync();
-        PollRepkgLog();
-        PollAutoBackupLog();
-
-        if (_logPath == null || !File.Exists(_logPath)) return;
-        try
-        {
-            // 首次加载只读尾部 64KB,避免刷出整屏历史
-            if (_logPosition == 0 && LogTextBlock.Inlines.Count == 0)
-                _logPosition = Math.Max(0, new FileInfo(_logPath).Length - 64 * 1024);
-
-            using var fs = new FileStream(_logPath, FileMode.Open, FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete);
-            if (fs.Length < _logPosition)
-            {
-                _logPosition = 0;
-                LogTextBlock.Inlines.Clear();
-            }
-            if (fs.Length == _logPosition) return;
-
-            fs.Seek(_logPosition, SeekOrigin.Begin);
-            using var reader = new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
-            var chunk = reader.ReadToEnd();
-            _logPosition = fs.Position;
-            if (chunk.Length == 0) return;
-
-            AppendLogChunk(chunk, LogTextBlock);
-            if (_logAtBottom)
-            {
-                // 先强制布局再滚动:直接 ChangeView 时 ScrollableHeight 可能尚未更新,首次加载会停在顶部
-                LogScrollViewer.UpdateLayout();
-                LogScrollViewer.ChangeView(null, double.MaxValue, null, true);
-            }
-        }
-        catch
-        {
-            // 文件暂时被占用,跳过本次轮询
-        }
     }
 
-    /// <summary>RePKG_Re 日志面板:同一 tick 轮询 repkg.log(RepkgCliService 写入,每次提取开始清空——截断检测自动清面板)</summary>
-    private void PollRepkgLog()
+    protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
-        if (_repkgLogPath == null || !File.Exists(_repkgLogPath)) return;
-        try
-        {
-            if (_repkgLogPosition == 0 && RepkgLogTextBlock.Inlines.Count == 0)
-                _repkgLogPosition = Math.Max(0, new FileInfo(_repkgLogPath).Length - 64 * 1024);
-
-            using var fs = new FileStream(_repkgLogPath, FileMode.Open, FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete);
-            if (fs.Length < _repkgLogPosition)
-            {
-                _repkgLogPosition = 0;
-                RepkgLogTextBlock.Inlines.Clear();
-            }
-            if (fs.Length == _repkgLogPosition) return;
-
-            fs.Seek(_repkgLogPosition, SeekOrigin.Begin);
-            using var reader = new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
-            var chunk = reader.ReadToEnd();
-            _repkgLogPosition = fs.Position;
-            if (chunk.Length == 0) return;
-
-            AppendLogChunk(chunk, RepkgLogTextBlock);
-            if (_repkgLogAtBottom)
-            {
-                RepkgLogScrollViewer.UpdateLayout();
-                RepkgLogScrollViewer.ChangeView(null, double.MaxValue, null, true);
-            }
-        }
-        catch
-        {
-            // 文件暂时被占用,跳过本次轮询
-        }
+        base.OnNavigatedTo(e);
+        // 页面可见才轮询(离开即停;页面缓存复用不重建实例)
+        _ = RefreshSteamStatusAsync();
+        _logTimer.Start();
     }
 
-    private void RepkgLogScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
-        => _repkgLogAtBottom = RepkgLogScrollViewer.VerticalOffset >= RepkgLogScrollViewer.ScrollableHeight - 4;
-
-    private void RepkgLogResizeHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
-        _repkgLogResizing = true;
-        _repkgLogResizeStartY = e.GetCurrentPoint(null).Position.Y;
-        _repkgLogResizeStartHeight = RepkgLogScrollViewer.Height;
-        RepkgLogResizeHandle.CapturePointer(e.Pointer);
+        base.OnNavigatedFrom(e);
+        _logTimer.Stop();
     }
-
-    private void RepkgLogResizeHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_repkgLogResizing) return;
-        var delta = e.GetCurrentPoint(null).Position.Y - _repkgLogResizeStartY;
-        RepkgLogScrollViewer.Height = Math.Clamp(_repkgLogResizeStartHeight + delta, MinLogHeight, MaxLogHeight);
-    }
-
-    private void RepkgLogResizeHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        _repkgLogResizing = false;
-        RepkgLogResizeHandle.ReleasePointerCapture(e.Pointer);
-    }
-
-    private void RepkgLogResizeHandle_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
-        => _repkgLogResizing = false; // 捕获意外丢失(系统中断等)时兜底,避免卡在拖拽态
-
-    /// <summary>按行追加日志,按级别着色([ERR]/[FTL] 红、[WRN] 黄、[DBG]/[VRB] 灰、其余亮灰);
-    /// 文件尾部的半行(未写完)不加换行,等下一个 tick 续接</summary>
-    /// <summary>轮询自动备份服务日志(AutoBackupService.log,增量追加 + 自动滚动)。</summary>
-    private void PollAutoBackupLog()
-    {
-        if (_autoBackupLogPath == null || !File.Exists(_autoBackupLogPath)) return;
-        try
-        {
-            if (_autoBackupLogPosition == 0 && AutoBackupLogTextBlock.Inlines.Count == 0)
-                _autoBackupLogPosition = Math.Max(0, new FileInfo(_autoBackupLogPath).Length - 64 * 1024);
-
-            using var fs = new FileStream(_autoBackupLogPath, FileMode.Open, FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete);
-            if (fs.Length < _autoBackupLogPosition)
-            {
-                _autoBackupLogPosition = 0;
-                AutoBackupLogTextBlock.Inlines.Clear();
-            }
-            if (fs.Length == _autoBackupLogPosition) return;
-
-            fs.Seek(_autoBackupLogPosition, SeekOrigin.Begin);
-            using var reader = new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
-            var chunk = reader.ReadToEnd();
-            _autoBackupLogPosition = fs.Position;
-            if (chunk.Length == 0) return;
-
-            AppendLogChunk(chunk, AutoBackupLogTextBlock);
-            if (_autoBackupLogAtBottom)
-            {
-                AutoBackupLogScrollViewer.UpdateLayout();
-                AutoBackupLogScrollViewer.ChangeView(null, double.MaxValue, null, true);
-            }
-        }
-        catch
-        {
-            // 文件暂时被占用,跳过本次轮询
-        }
-    }
-
-    private void AutoBackupLogScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
-        => _autoBackupLogAtBottom = AutoBackupLogScrollViewer.VerticalOffset >= AutoBackupLogScrollViewer.ScrollableHeight - 4;
-
-    private void AutoBackupLogResizeHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        _autoBackupLogResizing = true;
-        _autoBackupLogResizeStartY = e.GetCurrentPoint(null).Position.Y;
-        _autoBackupLogResizeStartHeight = AutoBackupLogScrollViewer.Height;
-        AutoBackupLogResizeHandle.CapturePointer(e.Pointer);
-    }
-
-    private void AutoBackupLogResizeHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_autoBackupLogResizing) return;
-        double delta = e.GetCurrentPoint(null).Position.Y - _autoBackupLogResizeStartY;
-        double h = Math.Clamp(_autoBackupLogResizeStartHeight + delta, MinLogHeight, MaxLogHeight);
-        AutoBackupLogScrollViewer.Height = h;
-    }
-
-    private void AutoBackupLogResizeHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        _autoBackupLogResizing = false;
-        AutoBackupLogResizeHandle.ReleasePointerCapture(e.Pointer);
-    }
-
-    private void AutoBackupLogResizeHandle_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
-        => _autoBackupLogResizing = false;
-
-    private void AppendLogChunk(string chunk, TextBlock target)
-    {
-        var lines = chunk.Split('\n');
-        for (var i = 0; i < lines.Length; i++)
-        {
-            var line = lines[i];
-            var isLast = i == lines.Length - 1;
-            if (isLast && line.Length == 0) continue; // 末尾换行产生的空元素
-
-            var complete = !isLast || chunk.EndsWith('\n');
-            var text = complete ? line + "\n" : line;
-            if (text.Length > 0)
-                target.Inlines.Add(new Run { Text = text, Foreground = GetLogLevelBrush(line) });
-        }
-    }
-
-    private void LogScrollViewer_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
-        => _logAtBottom = LogScrollViewer.VerticalOffset >= LogScrollViewer.ScrollableHeight - 4;
-
-    /// <summary>日志面板拖拽调高:按下时记录起点,捕获指针后按窗口坐标算增量(指针离开手柄也能继续拖)</summary>
-    private void LogResizeHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        _logResizing = true;
-        _logResizeStartY = e.GetCurrentPoint(null).Position.Y;
-        _logResizeStartHeight = LogScrollViewer.Height;
-        LogResizeHandle.CapturePointer(e.Pointer);
-    }
-
-    private void LogResizeHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_logResizing) return;
-        var delta = e.GetCurrentPoint(null).Position.Y - _logResizeStartY;
-        LogScrollViewer.Height = Math.Clamp(_logResizeStartHeight + delta, MinLogHeight, MaxLogHeight);
-    }
-
-    private void LogResizeHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        _logResizing = false;
-        LogResizeHandle.ReleasePointerCapture(e.Pointer);
-    }
-
-    private void LogResizeHandle_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
-        => _logResizing = false; // 捕获意外丢失(系统中断等)时兜底,避免卡在拖拽态
-
     /// <summary>从 CSV 加载贡献者(照抄 BetterLyrics 的 CSV 解析)</summary>
     private void LoadContributors(ObservableCollection<Contributor> target, IEnumerable<Contributor> source)
     {
@@ -572,7 +297,6 @@ public sealed partial class Info : Page
             // 贡献者加载失败不影响页面
         }
     }
-
     private async void LicenseButton_Click(object sender, RoutedEventArgs e)
         => await ShowTextFileDialogAsync(
             LanguageHelper.GetResource("Info_License.Header"),
@@ -596,7 +320,6 @@ public sealed partial class Info : Page
             LanguageHelper.GetResource("Info_RepkgThirdPartyButton.Content"),
             Path.Combine(AppContext.BaseDirectory, "repkg", "THIRD-PARTY-NOTICES.txt"),
             "https://github.com/ReZe20/repkg-Re/blob/master/THIRD-PARTY-NOTICES.txt");
-
     /// <summary>在应用内对话框显示许可证/第三方组件全文(可选中、可滚动);viewUrl 非空时在"关闭"左边加"在浏览器中查看"按钮</summary>
     private async Task ShowTextFileDialogAsync(string title, string filePath, string? viewUrl = null)
     {
@@ -664,7 +387,6 @@ public sealed partial class Info : Page
 
         await dialog.ShowAsync();
     }
-
     private void CopyConfigPath_Click(object sender, RoutedEventArgs e) => CopyToClipboard(ConfigPathText);
 
     private void CopyLogPath_Click(object sender, RoutedEventArgs e) => CopyToClipboard(LogPathText);

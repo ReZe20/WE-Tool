@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="WE_Tool.Views.Logs"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Enabled">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="75"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock x:Uid="LogsPage_Header" FontSize="25" VerticalAlignment="Bottom" Margin="30,0,0,6"/>
+        <Pivot Grid.Row="1" x:Name="SourcePivot" Margin="25,0,25,20"
+               SelectionChanged="SourcePivot_SelectionChanged">
+            <PivotItem>
+                <PivotItem.Header>
+                    <TextBlock x:Uid="LogsPage_SourceMain" Style="{ThemeResource BodyTextBlockStyle}"/>
+                </PivotItem.Header>
+                <!-- 面板本体(Border)撑满内容区跟随窗口大小,圆角完整;滚动在 Border 内部 -->
+                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
+                    <ScrollViewer x:Name="MainLogScrollViewer"
+                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                  ViewChanged="LogScrollViewer_ViewChanged">
+                        <TextBlock x:Name="MainLogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
+                    </ScrollViewer>
+                </Border>
+            </PivotItem>
+            <PivotItem>
+                <PivotItem.Header>
+                    <TextBlock x:Uid="LogsPage_SourceRepkg" Style="{ThemeResource BodyTextBlockStyle}"/>
+                </PivotItem.Header>
+                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
+                    <ScrollViewer x:Name="RepkgLogScrollViewer"
+                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                  ViewChanged="LogScrollViewer_ViewChanged">
+                        <TextBlock x:Name="RepkgLogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
+                    </ScrollViewer>
+                </Border>
+            </PivotItem>
+            <PivotItem>
+                <PivotItem.Header>
+                    <TextBlock x:Uid="LogsPage_SourceAutoBackup" Style="{ThemeResource BodyTextBlockStyle}"/>
+                </PivotItem.Header>
+                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
+                    <ScrollViewer x:Name="AutoBackupLogScrollViewer"
+                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                  ViewChanged="LogScrollViewer_ViewChanged">
+                        <TextBlock x:Name="AutoBackupLogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
+                    </ScrollViewer>
+                </Border>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

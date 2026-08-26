@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>已安裝元件</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>日誌</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>主日誌</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>RePKG_Re 提取日誌</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>自動備份服務日誌</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>關於</value>
   </data>
@@ -1619,6 +1631,12 @@
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>清理失敗</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>{0} 個檔案刪除失敗(可能被占用或無權限)，磁碟上仍殘留，下次掃描會再次出現</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>{0} 張卡片清理失敗，磁碟上仍殘留，下次掃描會再次出現</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>刪除選取 ({0} 項)</value>
   </data>
@@ -1705,6 +1723,9 @@
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>桌布備份</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>掃描備份失敗，請查看日誌</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>暫無備份</value>

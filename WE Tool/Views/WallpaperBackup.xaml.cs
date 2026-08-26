@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -26,6 +27,7 @@ public sealed partial class WallpaperBackup : Page
     private bool _initialScanDone;
     private readonly AutoBackupServiceManager _serviceManager = new();
     private bool _isApplyingUi;   // 避免 UI 初始化时的 Checked 事件触发保存
+    private CancellationTokenSource? _saveDebounceCts; // 配置变更防抖:500ms 只写最后一次
 
     /// <summary>自动备份配置(页面持有副本,变化时回写 config.json)。</summary>
     private Models.AutoBackupConfig? _autoCfg;
@@ -81,103 +83,133 @@ public sealed partial class WallpaperBackup : Page
         ScanProgress.IsActive = true;
         BackupGridView.Visibility = Visibility.Collapsed;
 
-        await Task.Run(() =>
+        // 代次号:本次扫描的代;期间若有删除等变更,回填时按代丢弃旧结果
+        int gen = ++_scanGeneration;
+
+        List<BackupItemViewModel>? collected = null;
+        long totalBytes = 0;
+        try
         {
-            var collected = new List<BackupItemViewModel>();
-            long totalBytes = 0;
-            if (!Directory.Exists(BackupRoot)) { ShowEmpty(); return; }
-
-            foreach (var dir in Directory.GetDirectories(BackupRoot))
+            (collected, totalBytes) = await Task.Run(CollectBackups);
+        }
+        catch (Exception ex)
+        {
+            // 扫描与删除并发时后台可能撞上已删除目录/文件;兜底复位 UI,不留永久转圈
+            Log.Error(ex, "[备份] 扫描备份失败");
+            if (gen == _scanGeneration)
             {
-                var id = Path.GetFileName(dir);
-                var marker = Path.Combine(dir, BackupService.MarkerFileName);
-                if (!File.Exists(marker)) continue; // 未完成备份
-
-                // 读取标题：优先从 project.json，否则用 ID
-                string title = id;
-                string projectPath = Path.Combine(dir, "project.json");
-                if (File.Exists(projectPath))
+                DispatcherQueue.TryEnqueue(() =>
                 {
-                    try
-                    {
-                        var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(projectPath));
-                        if (json.RootElement.TryGetProperty("title", out var titleProp))
-                            title = titleProp.GetString() ?? id;
-                    }
-                    catch { /* 忽略解析失败 */ }
-                }
-
-                // 读取预览图路径;找不到用占位图(避免 UriSource 绑定 null/空串抛 Uri 转换异常,与 Papers 一致)
-                string? previewPath = null;
-                foreach (var ext in new[] { "preview.png", "preview.jpg", "preview.gif" })
-                {
-                    var p = Path.Combine(dir, ext);
-                    if (File.Exists(p)) { previewPath = p; break; }
-                }
-                if (string.IsNullOrEmpty(previewPath))
-                    previewPath = "ms-appx:///Assets/NoPreview.png";
-
-                // 计算总大小
-                long totalSize = 0;
-                foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
-                    totalSize += new FileInfo(f).Length;
-                totalBytes += totalSize;
-
-                // 读取备份时间
-                string backupTimeText = "";
-                DateTime? backupTime = null;
-                try
-                {
-                    var lines = File.ReadAllLines(marker);
-                    var createdLine = lines.FirstOrDefault(l => l.StartsWith("created="));
-                    if (createdLine != null)
-                    {
-                        backupTimeText = createdLine.Substring("created=".Length).Trim();
-                        if (DateTime.TryParse(backupTimeText, out var parsed))
-                            backupTime = parsed;
-                    }
-                }
-                catch { }
-
-                // 源文件是否已删除:content/431960/<id> 目录不存在 = 取消订阅/下架,仅剩备份
-                bool sourceMissing = !Directory.Exists(Path.Combine(WorkshopPath, id));
-
-                collected.Add(new BackupItemViewModel
-                {
-                    WorkshopId = id,
-                    Title = title,
-                    PreviewPath = previewPath,
-                    SizeText = FormatSize(totalSize),
-                    SizeBytes = totalSize,
-                    BackupTimeText = backupTimeText,
-                    BackupTime = backupTime,
-                    FullPath = dir,
-                    IsSourceMissing = sourceMissing,
+                    ScanProgress.IsActive = false;
+                    EmptyState.Visibility = Visibility.Visible;
+                    EmptyStateText.Text = L("BackupPage_ScanFailed.Text");
+                    BackupGridView.Visibility = Visibility.Collapsed;
                 });
             }
+            return;
+        }
 
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                _allItems.Clear();
-                _allItems.AddRange(collected);
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (gen != _scanGeneration) return; // 期间有删除等变更,旧结果作废
 
-                int missingCount = _allItems.Count(it => it.IsSourceMissing);
-                SummaryText.Text = _allItems.Count > 0
-                    ? missingCount > 0
-                        ? $"共 {_allItems.Count} 个备份 · {FormatSize(totalBytes)} · {missingCount} 个源已删除"
-                        : $"共 {_allItems.Count} 个备份 · {FormatSize(totalBytes)}"
-                    : "";
-                if (_allItems.Count == 0) ShowEmpty();
+            _allItems.Clear();
+            _allItems.AddRange(collected!);
 
-                // 应用筛选+排序后刷新可见集合
-                ApplyFilterAndSort();
+            int missingCount = _allItems.Count(it => it.IsSourceMissing);
+            SummaryText.Text = _allItems.Count > 0
+                ? missingCount > 0
+                    ? $"共 {_allItems.Count} 个备份 · {FormatSize(totalBytes)} · {missingCount} 个源已删除"
+                    : $"共 {_allItems.Count} 个备份 · {FormatSize(totalBytes)}"
+                : "";
+            if (_allItems.Count == 0) ShowEmpty();
 
-                ScanProgress.IsActive = false;
-                BackupGridView.Visibility = BackupItems.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-                // 强制刷新一次卡片宽度(Visibility 变化触发的 SizeChanged 时序不可靠)
-                UpdateCardWidths();
-            });
+            // 应用筛选+排序后刷新可见集合
+            ApplyFilterAndSort();
+
+            ScanProgress.IsActive = false;
+            BackupGridView.Visibility = BackupItems.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            // 强制刷新一次卡片宽度(Visibility 变化触发的 SizeChanged 时序不可靠)
+            UpdateCardWidths();
         });
+    }
+
+    /// <summary>后台收集全部备份(同步执行:标题/预览/大小/备份时间/源删除标记)。目录不存在返回空列表。</summary>
+    private (List<BackupItemViewModel> Collected, long TotalBytes) CollectBackups()
+    {
+        var collected = new List<BackupItemViewModel>();
+        long totalBytes = 0;
+        if (!Directory.Exists(BackupRoot)) return (collected, 0);
+
+        foreach (var dir in Directory.GetDirectories(BackupRoot))
+        {
+            var id = Path.GetFileName(dir);
+            var marker = Path.Combine(dir, BackupService.MarkerFileName);
+            if (!File.Exists(marker)) continue; // 未完成备份
+
+            // 读取标题：优先从 project.json，否则用 ID
+            string title = id;
+            string projectPath = Path.Combine(dir, "project.json");
+            if (File.Exists(projectPath))
+            {
+                try
+                {
+                    var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(projectPath));
+                    if (json.RootElement.TryGetProperty("title", out var titleProp))
+                        title = titleProp.GetString() ?? id;
+                }
+                catch { /* 忽略解析失败 */ }
+            }
+
+            // 读取预览图路径;找不到用占位图(避免 UriSource 绑定 null/空串抛 Uri 转换异常,与 Papers 一致)
+            string? previewPath = null;
+            foreach (var ext in new[] { "preview.png", "preview.jpg", "preview.gif" })
+            {
+                var p = Path.Combine(dir, ext);
+                if (File.Exists(p)) { previewPath = p; break; }
+            }
+            if (string.IsNullOrEmpty(previewPath))
+                previewPath = "ms-appx:///Assets/NoPreview.png";
+
+            // 计算总大小
+            long totalSize = 0;
+            foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
+                totalSize += new FileInfo(f).Length;
+            totalBytes += totalSize;
+
+            // 读取备份时间
+            string backupTimeText = "";
+            DateTime? backupTime = null;
+            try
+            {
+                var lines = File.ReadAllLines(marker);
+                var createdLine = lines.FirstOrDefault(l => l.StartsWith("created="));
+                if (createdLine != null)
+                {
+                    backupTimeText = createdLine.Substring("created=".Length).Trim();
+                    if (DateTime.TryParse(backupTimeText, out var parsed))
+                        backupTime = parsed;
+                }
+            }
+            catch { }
+
+            // 源文件是否已删除:content/431960/<id> 目录不存在 = 取消订阅/下架,仅剩备份
+            bool sourceMissing = !Directory.Exists(Path.Combine(WorkshopPath, id));
+
+            collected.Add(new BackupItemViewModel
+            {
+                WorkshopId = id,
+                Title = title,
+                PreviewPath = previewPath,
+                SizeText = FormatSize(totalSize),
+                SizeBytes = totalSize,
+                BackupTimeText = backupTimeText,
+                BackupTime = backupTime,
+                FullPath = dir,
+                IsSourceMissing = sourceMissing,
+            });
+        }
+        return (collected, totalBytes);
     }
 
     private void ShowEmpty()
@@ -201,18 +233,17 @@ public sealed partial class WallpaperBackup : Page
         try
         {
             Directory.Delete(item.FullPath, true);
+            _scanGeneration++; // 作废在途扫描,防止其旧结果回填把刚删的卡片变回来
             _allItems.Remove(item);
             ApplyFilterAndSort();
 
-            long remaining = 0;
-            foreach (var it in _allItems)
-            {
-                if (Directory.Exists(it.FullPath))
-                    foreach (var f in Directory.EnumerateFiles(it.FullPath, "*", SearchOption.AllDirectories))
-                        remaining += new FileInfo(f).Length;
-            }
+            // 内存求和(SizeBytes 扫描时已存),不再重扫全部备份目录
+            long remaining = _allItems.Sum(it => it.SizeBytes);
+            int missingCount = _allItems.Count(it => it.IsSourceMissing);
             SummaryText.Text = _allItems.Count > 0
-                ? $"共 {_allItems.Count} 个备份 · {FormatSize(remaining)}"
+                ? missingCount > 0
+                    ? $"共 {_allItems.Count} 个备份 · {FormatSize(remaining)} · {missingCount} 个源已删除"
+                    : $"共 {_allItems.Count} 个备份 · {FormatSize(remaining)}"
                 : "";
             if (_allItems.Count == 0) ShowEmpty();
         }
@@ -231,7 +262,7 @@ public sealed partial class WallpaperBackup : Page
             "全部删除", "取消");
         if (!confirmed) return;
 
-        int success = 0;
+        int success = 0, failed = 0;
         foreach (var item in _allItems.ToList())
         {
             try
@@ -242,14 +273,18 @@ public sealed partial class WallpaperBackup : Page
                     success++;
                 }
             }
-            catch { /* 跳过删除失败项 */ }
+            catch { failed++; }
         }
 
+        _scanGeneration++; // 作废在途扫描
         _allItems.Clear();
         ApplyFilterAndSort();
         SummaryText.Text = "";
         ShowEmpty();
-        await DialogHelper.ShowMessageAsync("删除完成", $"成功删除 {success} 个备份。");
+        await DialogHelper.ShowMessageAsync("删除完成",
+            failed > 0
+                ? $"成功删除 {success} 个备份,{failed} 个删除失败(占用或权限)。"
+                : $"成功删除 {success} 个备份。");
     }
 
     private void BackupGridView_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -321,6 +356,9 @@ public sealed partial class WallpaperBackup : Page
 
     /// <summary>全部备份(筛选前的完整数据)。</summary>
     private readonly List<BackupItemViewModel> _allItems = new();
+
+    /// <summary>扫描代次号:删除等变更递增,回填时旧代结果直接丢弃,防止旧扫描覆盖删除后的状态。</summary>
+    private int _scanGeneration;
 
     /// <summary>应用筛选+排序并刷新可见集合。</summary>
     private void ApplyFilterAndSort()
@@ -508,7 +546,7 @@ public sealed partial class WallpaperBackup : Page
         // 仅"后台服务"模式显示服务管理面板
         ServicePanel.Visibility = ModeServiceRadio.IsChecked == true
             ? Visibility.Visible : Visibility.Collapsed;
-        await SaveAutoBackupConfigAsync();
+        ScheduleSaveAutoBackupConfig();
         RefreshServicePanel();
     }
 
@@ -524,6 +562,28 @@ public sealed partial class WallpaperBackup : Page
         _autoCfg.RatingG = RatingGCheck.IsChecked == true;
         _autoCfg.RatingPg = RatingPgCheck.IsChecked == true;
         _autoCfg.RatingR = RatingRCheck.IsChecked == true;
+        ScheduleSaveAutoBackupConfig();
+    }
+
+    /// <summary>500ms 防抖保存配置:连续勾选/切模式只落盘最后一次(LoadPapers 同款先例)。</summary>
+    private void ScheduleSaveAutoBackupConfig()
+    {
+        var cts = new CancellationTokenSource();
+        _saveDebounceCts?.Cancel();
+        _saveDebounceCts = cts;
+        _ = SaveWithDebounceAsync(cts.Token);
+    }
+
+    private async Task SaveWithDebounceAsync(CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(500, ct);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
         await SaveAutoBackupConfigAsync();
     }
 

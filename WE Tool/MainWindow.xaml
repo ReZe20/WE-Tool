@@ -54,6 +54,11 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
+                <NavigationViewItem x:Uid="LogsPage" Tag="Logs">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE823;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem x:Uid="AboutPage" Tag="Info">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;"/>

@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Componentes instalados</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>Registros</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>Registro principal</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>Registro de extração RePKG_Re</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>Registro do serviço de backup automático</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>Sobre</value>
   </data>
@@ -1619,6 +1631,12 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>Falha na limpeza</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>Não foi possível excluir {0} arquivo(s) (bloqueado ou sem permissão); eles permanecem no disco e reaparecerão na próxima varredura</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>Não foi possível limpar {0} cartão(ões); eles permanecem no disco e reaparecerão na próxima varredura</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>Excluir selecionados ({0})</value>
   </data>
@@ -1705,6 +1723,9 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>Backup de wallpapers</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>Falha ao escanear backups. Consulte o log</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>Sem backups</value>

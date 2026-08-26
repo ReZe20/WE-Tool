@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Installierte Komponenten</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>Protokolle</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>Hauptprotokoll</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>RePKG_Re-Extraktionsprotokoll</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>Protokoll des Auto-Backup-Dienstes</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>Über</value>
   </data>
@@ -1619,6 +1631,12 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>Bereinigung fehlgeschlagen</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>{0} Datei(en) konnten nicht gelöscht werden (gesperrt oder ohne Berechtigung); sie verbleiben und erscheinen beim nächsten Scan erneut</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>{0} Karte(n) konnte(n) nicht bereinigt werden; sie verbleiben und erscheinen beim nächsten Scan erneut</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>Ausgewählte löschen ({0})</value>
   </data>
@@ -1705,6 +1723,9 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>Hintergrundbild-Sicherung</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>Sicherungs-Scan fehlgeschlagen. Siehe Protokoll</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>Keine Sicherungen vorhanden</value>

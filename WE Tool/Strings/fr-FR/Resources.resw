@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Composants installés</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>Journaux</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>Journal principal</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>Journal d'extraction RePKG_Re</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>Journal du service de sauvegarde automatique</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>À propos</value>
   </data>
@@ -1619,6 +1631,12 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>Échec du nettoyage</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>{0} fichier(s) n'ont pas pu être supprimés (verrouillé ou sans autorisation) ; ils restent sur le disque et réapparaîtront lors du prochain scan</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>{0} carte(s) n'ont pas pu être nettoyées ; elles restent sur le disque et réapparaîtront lors du prochain scan</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>Supprimer la sélection ({0})</value>
   </data>
@@ -1705,6 +1723,9 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>Sauvegarde des fonds d'écran</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>Échec de l'analyse des sauvegardes. Consultez le journal</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>Aucune sauvegarde</value>

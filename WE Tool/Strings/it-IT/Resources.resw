@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Componenti installati</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>Registri</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>Registro principale</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>Registro di estrazione RePKG_Re</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>Registro del servizio di backup automatico</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>Informazioni</value>
   </data>
@@ -1619,6 +1631,12 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>Pulizia fallita</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>Impossibile eliminare {0} file (bloccati o senza autorizzazione); rimangono sul disco e ricompariranno alla prossima scansione</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>Impossibile pulire {0} scheda(e); rimangono sul disco e ricompariranno alla prossima scansione</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>Elimina selezionati ({0})</value>
   </data>
@@ -1705,6 +1723,9 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>Backup sfondi</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>Scansione backup fallita. Controllare il registro</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>Nessun backup</value>

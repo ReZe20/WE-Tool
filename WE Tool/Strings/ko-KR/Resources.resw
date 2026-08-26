@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>설치된 구성 요소</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>로그</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>메인 로그</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>RePKG_Re 추출 로그</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>자동 백업 서비스 로그</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>정보</value>
   </data>
@@ -1619,6 +1631,12 @@ project.json 및 미리보기 복사
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>정리 실패</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>{0}개 파일을 삭제하지 못했습니다(잠김 또는 권한 없음). 디스크에 남아 있어 다음 스캔에서 다시 나타납니다</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>{0}개 카드를 정리하지 못했습니다. 디스크에 남아 있어 다음 스캔에서 다시 나타납니다</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>선택 삭제 ({0})</value>
   </data>
@@ -1705,6 +1723,9 @@ project.json 및 미리보기 복사
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>배경화면 백업</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>백업 스캔에 실패했습니다. 로그를 확인하세요</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>백업 없음</value>

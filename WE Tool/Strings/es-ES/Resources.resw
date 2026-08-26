@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Componentes instalados</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>Registros</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>Registro principal</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>Registro de extracción RePKG_Re</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>Registro del servicio de copia de seguridad automática</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>Acerca de</value>
   </data>
@@ -1619,6 +1631,12 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>Error de limpieza</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>No se pudieron eliminar {0} archivo(s) (bloqueado o sin permiso); permanecen en el disco y aparecerán en el próximo escaneo</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>No se pudieron limpiar {0} tarjeta(s); permanecen en el disco y aparecerán en el próximo escaneo</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>Eliminar seleccionados ({0})</value>
   </data>
@@ -1705,6 +1723,9 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>Copia de seguridad de fondos</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>Error al escanear las copias de seguridad. Consulte el registro</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>No hay copias de seguridad</value>

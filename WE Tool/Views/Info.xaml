@@ -20,48 +20,6 @@
         <TextBlock x:Uid="Info_AboutHeader" FontSize="25" VerticalAlignment="Bottom" Margin="30,0,0,6"/>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
             <StackPanel Margin="25,10,25,0">
-                <TextBlock x:Uid="Info_WEToolLogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
-                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
-                    <ScrollViewer x:Name="LogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="LogScrollViewer_ViewChanged">
-                        <TextBlock x:Name="LogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
-                    </ScrollViewer>
-                </Border>
-                <!-- 拖拽手柄:按住上下拖动调整日志面板高度(默认 220,60~800) -->
-                <uc:LogResizeHandle x:Name="LogResizeHandle" Height="12" Margin="0,4,0,0" Background="Transparent"
-                        AutomationProperties.AccessibilityView="Raw"
-                        PointerPressed="LogResizeHandle_PointerPressed" PointerMoved="LogResizeHandle_PointerMoved"
-                        PointerReleased="LogResizeHandle_PointerReleased" PointerCaptureLost="LogResizeHandle_PointerCaptureLost">
-                    <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
-                </uc:LogResizeHandle>
-                <TextBlock x:Uid="Info_repkgLogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
-                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
-                    <ScrollViewer x:Name="RepkgLogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="RepkgLogScrollViewer_ViewChanged">
-                        <TextBlock x:Name="RepkgLogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
-                    </ScrollViewer>
-                </Border>
-                <!-- 拖拽手柄:按住上下拖动调整日志面板高度(默认 220,60~800) -->
-                <uc:LogResizeHandle x:Name="RepkgLogResizeHandle" Height="12" Margin="0,4,0,0" Background="Transparent"
-                        AutomationProperties.AccessibilityView="Raw"
-                        PointerPressed="RepkgLogResizeHandle_PointerPressed" PointerMoved="RepkgLogResizeHandle_PointerMoved"
-                        PointerReleased="RepkgLogResizeHandle_PointerReleased" PointerCaptureLost="RepkgLogResizeHandle_PointerCaptureLost">
-                    <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
-                </uc:LogResizeHandle>
-                <TextBlock x:Uid="Info_AutoBackupLogTitle" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,20,0,10"/>
-                <Border Background="#0C0C0C" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8,4">
-                    <ScrollViewer x:Name="AutoBackupLogScrollViewer" Height="220" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ViewChanged="AutoBackupLogScrollViewer_ViewChanged">
-                        <TextBlock x:Name="AutoBackupLogTextBlock" FontFamily="Consolas" FontSize="12" Foreground="#CCCCCC" IsTextSelectionEnabled="True"/>
-                    </ScrollViewer>
-                </Border>
-                <!-- 拖拽手柄:按住上下拖动调整日志面板高度(默认 220,60~800) -->
-                <uc:LogResizeHandle x:Name="AutoBackupLogResizeHandle" Height="12" Margin="0,4,0,0" Background="Transparent"
-                        AutomationProperties.AccessibilityView="Raw"
-                        PointerPressed="AutoBackupLogResizeHandle_PointerPressed" PointerMoved="AutoBackupLogResizeHandle_PointerMoved"
-                        PointerReleased="AutoBackupLogResizeHandle_PointerReleased" PointerCaptureLost="AutoBackupLogResizeHandle_PointerCaptureLost">
-                    <Border Width="32" Height="3" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
-                </uc:LogResizeHandle>
                 <Grid Margin="0,8,0,0">
                     <InfoBar x:Name="SteamStatusBar" IsOpen="False" IsClosable="False">
                         <InfoBar.ActionButton>
@@ -140,14 +98,19 @@
                                 <StackPanel>
                                     <TextBlock x:Uid="Info_TranslationTitle" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
                                     <ItemsControl ItemsSource="{x:Bind TranslationStatus}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <controls:WrapPanel HorizontalSpacing="12" VerticalSpacing="4"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="models:TranslationStatusItem">
                                                 <Grid ColumnSpacing="8" Margin="0,2">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{x:Bind Name}"/>
                                                     <TextBlock Grid.Column="1" Text="{x:Bind PercentText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                                 </Grid>
                                             </DataTemplate>

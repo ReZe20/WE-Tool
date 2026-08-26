@@ -354,6 +354,18 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Установленные компоненты</value>
   </data>
+  <data name="LogsPage_Header.Text" xml:space="preserve">
+    <value>Журналы</value>
+  </data>
+  <data name="LogsPage_SourceMain.Text" xml:space="preserve">
+    <value>Основной журнал</value>
+  </data>
+  <data name="LogsPage_SourceRepkg.Text" xml:space="preserve">
+    <value>Журнал извлечения RePKG_Re</value>
+  </data>
+  <data name="LogsPage_SourceAutoBackup.Text" xml:space="preserve">
+    <value>Журнал службы автоматического резервного копирования</value>
+  </data>
   <data name="AboutPage.Content" xml:space="preserve">
     <value>О программе</value>
   </data>
@@ -1619,6 +1631,12 @@
   <data name="Cleanup_CleanFail.Title" xml:space="preserve">
     <value>Не удалось очистить</value>
   </data>
+  <data name="Cleanup_CleanPartialFail" xml:space="preserve">
+    <value>Не удалось удалить {0} файл(ов) (заблокированы или нет прав); они остаются на диске и появятся при следующем сканировании</value>
+  </data>
+  <data name="Cleanup_BatchDeletePartialFail" xml:space="preserve">
+    <value>Не удалось очистить {0} карточку(и); они остаются на диске и появятся при следующем сканировании</value>
+  </data>
   <data name="Cleanup_ConfirmBatchDelete.Title" xml:space="preserve">
     <value>Удалить выбранные ({0})</value>
   </data>
@@ -1705,6 +1723,9 @@
   </data>
   <data name="BackupPage_Title.Text" xml:space="preserve">
     <value>Резервные копии обоев</value>
+  </data>
+  <data name="BackupPage_ScanFailed.Text" xml:space="preserve">
+    <value>Не удалось сканировать резервные копии. См. журнал</value>
   </data>
   <data name="BackupPage_Empty.Text" xml:space="preserve">
     <value>Нет резервных копий</value>
