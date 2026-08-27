@@ -354,6 +354,9 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>Установленные компоненты</value>
   </data>
+  <data name="LogsPage.Content" xml:space="preserve">
+    <value>Журналы</value>
+  </data>
   <data name="LogsPage_Header.Text" xml:space="preserve">
     <value>Журналы</value>
   </data>

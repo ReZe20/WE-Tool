@@ -354,6 +354,9 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>インストール済みコンポーネント</value>
   </data>
+  <data name="LogsPage.Content" xml:space="preserve">
+    <value>ログ</value>
+  </data>
   <data name="LogsPage_Header.Text" xml:space="preserve">
     <value>ログ</value>
   </data>

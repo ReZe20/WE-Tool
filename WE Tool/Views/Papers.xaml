@@ -477,7 +477,7 @@
                 <ScrollView>
                     <Grid Padding="15,15,15,15" Background="Transparent" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
                         <StackPanel Spacing="15">
-                            <Grid x:Name="PreviewImageContainer" Height="280" Width="280" HorizontalAlignment="Center">
+                            <Grid x:Name="PreviewImageContainer" Height="290" Width="280" HorizontalAlignment="Center">
                                 <Border x:Name="SinglePreviewBorder" Margin="0,10,0,0" Width="280" Height="280" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                                     <Grid>
                                         <Image x:Name="SinglePreviewImage" Source="{x:Bind ViewModel.SelectedWallpaper.Preview, Mode=OneWay, FallbackValue=null}" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5">
@@ -502,6 +502,7 @@
                                                 <Border.Background>
                                                     <ImageBrush ImageSource="{x:Bind Preview}" Stretch="UniformToFill"/>
                                                 </Border.Background>
+                                                <Image x:Name="StackBlurOverlay" Stretch="UniformToFill" Visibility="Collapsed"/>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

@@ -297,6 +297,41 @@ namespace WE_Tool
             ContentRoot.Visibility = isProps ? Visibility.Collapsed : Visibility.Visible;
         }
 
+        /// <summary>把含 \n 的文本拆成 Run + LineBreak 序列(&lt;br/&gt; 在模型层已转为 \n)</summary>
+        private static void AddTextWithLineBreaks(Paragraph paragraph, string text)
+        {
+            var parts = text.Split('\n');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (i > 0) paragraph.Inlines.Add(new LineBreak());
+                if (parts[i].Length > 0) paragraph.Inlines.Add(new Run { Text = parts[i] });
+            }
+        }
+
+        /// <summary>链接按钮内容:TextBlock 先建再填 Inlines(内含 &lt;br/&gt; 转出的换行拆行),拷贝载体字体。</summary>
+        private static TextBlock BuildLinkContent(RichTextBlock rtb, string text)
+        {
+            var tb = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                FontSize = rtb.FontSize,
+                FontWeight = rtb.FontWeight,
+            };
+            BuildRuns(tb, text);
+            return tb;
+        }
+
+        /// <summary>同上,但写入目标 TextBlock 的 Inlines(InlineCollection 无公共构造器,不能独立创建)。</summary>
+        private static void BuildRuns(TextBlock target, string text)
+        {
+            var parts = text.Split('\n');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (i > 0) target.Inlines.Add(new LineBreak());
+                if (parts[i].Length > 0) target.Inlines.Add(new Run { Text = parts[i] });
+            }
+        }
+
         /// <summary>
         /// 纯文本组件链接/图片渲染:含 <a href>/裸 URL 时用 InlineUIContainer + HyperlinkButton 接管显示,
         /// 含 <img> 时渲染 HTTP 图片;约定:外部链接统一 HyperlinkButton + App.xaml 的 ExternalLinkButtonStyle
@@ -317,10 +352,10 @@ namespace WE_Tool
             bool hasLink = segments.Any(s => s.Url != null);
             bool hasImage = prop.ImageSegments.Count > 0;
 
-            // 无链接无图片:纯文本,直接 Run
+            // 无链接无图片:纯文本,<br/> 已转的换行用 LineBreak 表达
             if (!hasLink && !hasImage)
             {
-                paragraph.Inlines.Add(new Run { Text = prop.DisplayText });
+                AddTextWithLineBreaks(paragraph, prop.DisplayText);
                 rtb.Blocks.Add(paragraph);
                 return;
             }
@@ -331,7 +366,7 @@ namespace WE_Tool
                 if (string.IsNullOrWhiteSpace(text)) continue;
                 if (url == null)
                 {
-                    paragraph.Inlines.Add(new Run { Text = text });
+                    AddTextWithLineBreaks(paragraph, text);
                 }
                 else
                 {
@@ -341,13 +376,7 @@ namespace WE_Tool
                         NavigateUri = new Uri(url),
                         Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"],
                         Padding = new Thickness(0), // 内联:去掉 ButtonPadding,避免文字偏移
-                        Content = new TextBlock
-                        {
-                            Text = text,
-                            TextWrapping = TextWrapping.Wrap,
-                            FontSize = rtb.FontSize,
-                            FontWeight = rtb.FontWeight
-                        }
+                        Content = BuildLinkContent(rtb, text)
                     };
                     paragraph.Inlines.Add(container);
                 }

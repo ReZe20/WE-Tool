@@ -503,6 +503,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 {
                     OnPropertyChanged(nameof(IsUnsubscribeEnabled));
                     OnPropertyChanged(nameof(IsImportToEditorEnabled));
+                    // 多选模式下详情面板的显示/提示由 ToggleMultiSelectVisuals 全权接管:
+                    // 此处不得重新点亮无选择提示(否则勾选引发的 SelectedWallpaper 变动会把提示盖回堆叠视图上)
+                    if (_isMultiSelectMode) return;
                     SingleSelectionInfoPanel.Visibility = ViewModel.SelectedWallpaper != null
                         ? Visibility.Visible : Visibility.Collapsed;
                     NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
@@ -652,18 +655,25 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         UpdateStackVisuals();
         OnPropertyChanged(nameof(IsUnsubscribeEnabled));
     }
+    private int _lastStackCount; // 上次布局的卡片数,用于识别"新增了卡片"
+
     private void UpdateStackVisuals()
     {
         int count = DisplayedSelectedWallpapers.Count;
+        bool grew = count > _lastStackCount && _lastStackCount > 0; // 新增了卡片(初始化不算)
         for (int i = 0; i < count; i++)
         {
             var container = StackedImagesControl.ContainerFromIndex(i) as FrameworkElement;
             if (container == null) continue;
 
             container.Visibility = Visibility.Visible;
-            ApplyStackAnimation(container, i);
-            Canvas.SetZIndex(container, i);
+            int depth = count - 1 - i; // 集合尾=最新:深度 0 居中,越老越深(朝左上)
+            ApplyStackAnimation(container, depth, entering: grew && i == count - 1); // 最后一张=新卡
+            Canvas.SetZIndex(container, i); // 新卡 i 最大 => 最上层
+            if (DisplayedSelectedWallpapers[i] is WallpaperItem stackItem)
+                UpdateStackItemBlur(container, stackItem); // 预览模糊同步到堆叠卡片
         }
+        _lastStackCount = count;
     }
     /// <summary>实验分支(feature/skia-gif):GIF 卡片用 Skia 流式播放覆盖 BitmapImage 直播(验证流畅度/内存/CPU)</summary>
     private static void UpdateSkiaGif(Grid root, WallpaperItem item)
@@ -716,10 +726,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             int idx = SelectedWallpapers.IndexOf(item);
             if (idx < 0) return;
-            int relative = Math.Max(0, idx - Math.Max(0, SelectedWallpapers.Count - 5));
             fe.Visibility = Visibility.Visible;
-            ApplyStackAnimation(fe, relative);
-            Canvas.SetZIndex(fe, relative);
+            int depth = Math.Min(4, SelectedWallpapers.Count - 1 - idx); // 深度封顶 4,保持原有可视展开范围
+            ApplyStackAnimation(fe, depth, entering: true); // 容器刚 Loaded=新卡,右下滑入居中
+            Canvas.SetZIndex(fe, idx); // idx 大=新卡=上层
+            UpdateStackItemBlur(fe, item); // 预览模糊同步到堆叠卡片
         }
     }
 
@@ -736,6 +747,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 visual.StopAnimation("Offset");
                 visual.StopAnimation("RotationAngleInDegrees");
                 visual.StopAnimation("Scale");
+                visual.StopAnimation("Opacity");
+                visual.Scale = Vector3.One;      // 复位缩放,防深度缩小残留到容器复用
+                visual.Opacity = 1f;             // 复位透明度(历史动画保险)
             }
         }
     }
@@ -802,7 +816,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
     }
 
-    private static void ApplyStackAnimation(FrameworkElement element, int relativeIndex)
+    private static void ApplyStackAnimation(FrameworkElement element, int depth, bool entering = false)
     {
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
         Compositor compositor = visual.Compositor;
@@ -811,36 +825,64 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         float size = 200f;
         visual.CenterPoint = new Vector3(size / 2, size / 2, 0f);
 
-        // 基于相对位置计算位移和旋转
-        // relativeIndex 越大（越新），偏移越多
-        float offsetY = relativeIndex * -12f;
-        float offsetX = relativeIndex * 8f;
-        float rotation = (relativeIndex % 2 == 0) ? relativeIndex * 2.5f : relativeIndex * -2.5f;
+        // 整齐 deck 层叠(用户指定):所有卡片正对(0°)。调用方传入 depth(距最新层数,最新=0):
+        // 最新卡居中原位,越旧的卡越朝左上退 8px——新卡加入时全部旧卡深度+1,整摞向左上平移一格;
+        // 新卡自身由 entering 从右下(+2 步)滑入居中位。
+        const float StepX = 8f, StepY = 8f;
+        float offsetX = -depth * StepX;
+        float offsetY = -depth * StepY;
 
-        // 使用动画平滑移动到新位置（防止新增图片时旧图片位置突跳）
-        var offsetAnim = compositor.CreateSpringVector3Animation();
+        if (entering)
+        {
+            // 入场起点:右下两步之外,随后动画滑入 d0 原位(插值从当前值出发,无需起始帧)
+            visual.Offset = new Vector3(StepX * 2, StepY * 2, 0f);
+        }
+
+        // 深度缩放:距最新越远越小(1.0 → -3%/层)——"近大远小"透视层级,卡片保持完全不透明,
+        // 比透明度退让更干净(旧卡不发虚),叠层轮廓也更清晰
+        const float ScaleStep = 0.03f;
+        float depthScale = Math.Clamp(1f - depth * ScaleStep, 0.88f, 1f);
+
+        // 使用动画平滑移动到新位置（防止新增图片时旧图片位置突跳)——KeyFrame 确定性时间轴
+        var offsetAnim = compositor.CreateVector3KeyFrameAnimation();
         offsetAnim.Target = "Offset";
-        offsetAnim.FinalValue = new Vector3(offsetX, offsetY, 0f);
-        offsetAnim.DampingRatio = 0.7f;
+        offsetAnim.InsertKeyFrame(1f, new Vector3(offsetX, offsetY, 0f),
+            compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+        offsetAnim.Duration = TimeSpan.FromMilliseconds(150);
 
-        var rotationAnim = compositor.CreateSpringScalarAnimation();
-        rotationAnim.Target = "RotationAngleInDegrees";
-        rotationAnim.FinalValue = rotation;
-        rotationAnim.DampingRatio = 0.7f;
+        // 历史卡片可能带旋转残留,统一动画归零(整齐层叠要求正对)
+        var rotationZeroAnim = compositor.CreateScalarKeyFrameAnimation();
+        rotationZeroAnim.Target = "RotationAngleInDegrees";
+        rotationZeroAnim.InsertKeyFrame(1f, 0f);
+        rotationZeroAnim.Duration = TimeSpan.FromMilliseconds(150);
+
+
+        // 缩放同步动画(与位移同缓动同时长;CenterPoint 已设为卡片中心,向内收缩)
+        var scaleAnim = compositor.CreateVector3KeyFrameAnimation();
+        scaleAnim.Target = "Scale";
+        scaleAnim.InsertKeyFrame(1f, new Vector3(depthScale, depthScale, 1f),
+            compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+        scaleAnim.Duration = TimeSpan.FromMilliseconds(150);
 
         visual.StartAnimation("Offset", offsetAnim);
-        visual.StartAnimation("RotationAngleInDegrees", rotationAnim);
+        visual.StartAnimation("RotationAngleInDegrees", rotationZeroAnim);
+        visual.StartAnimation("Scale", scaleAnim);
     }
 
-    private async void ToggleMultiSelectVisuals(bool isMulti)
+private void ToggleMultiSelectVisuals(bool isMulti)
     {
+        // 过渡 = 淡入淡出(用户指定):Composition 逐值动画在本环境概率性延迟提交,
+        // 改用 XAML Storyboard 双动画交叉——单图淡出 / 堆叠图淡入,时间轴由框架保证
         CancelAllAnimations();
 
         if (isMulti)
         {
+            NoSelectionHintText.Visibility = Visibility.Collapsed; // 最高优先级:进入多选即刻隐藏无结果提示
+
             // 如果单选有焦点，顺便加入多选
             if (ViewModel.SelectedWallpaper != null && !SelectedWallpapers.Contains(ViewModel.SelectedWallpaper))
             {
+                ViewModel.SelectedWallpaper.IsSelected = true;
                 SelectedWallpapers.Add(ViewModel.SelectedWallpaper);
                 RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             }
@@ -849,24 +891,38 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             }
 
-            // 1. 核心视觉：缩小 + 圆角
             SinglePreviewBorder.CornerRadius = new CornerRadius(8);
-            var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
-            visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
 
-            var scaleAnimation = visual.Compositor.CreateSpringVector3Animation();
-            scaleAnimation.Target = "Scale";
-            scaleAnimation.FinalValue = new Vector3(0.6f, 0.6f, 1.0f);
-            scaleAnimation.DampingRatio = 0.6f;
-            visual.StartAnimation("Scale", scaleAnimation);
-
-            await Task.Delay(150);
+            // 堆叠图先摆到可见状态但全透明,再淡入;淡入完成后隐藏单图面板
+            StackedImagesControl.Opacity = 0;
             StackedImagesControl.Visibility = Visibility.Visible;
-            SinglePreviewBorder.Visibility = Visibility.Collapsed;
-            SingleSelectionInfoPanel.Visibility = Visibility.Collapsed;
-            MultiSelectionInfoPanel.Visibility = Visibility.Visible;
-            NoSelectionHintText.Visibility = Visibility.Collapsed;
 
+            var fadeInStack = new DoubleAnimation { To = 1.0, Duration = TimeSpan.FromMilliseconds(180) };
+            Storyboard.SetTarget(fadeInStack, StackedImagesControl);
+            Storyboard.SetTargetProperty(fadeInStack, "Opacity");
+            var stackBoard = new Storyboard();
+            stackBoard.Children.Add(fadeInStack);
+            stackBoard.Completed += (s, e) =>
+            {
+                SinglePreviewBorder.Visibility = Visibility.Collapsed;
+                SingleSelectionInfoPanel.Visibility = Visibility.Collapsed;
+            };
+            stackBoard.Begin();
+
+            // 单图同时淡出(180ms 同速交叉),完成后复位透明度并隐藏单图
+            var fadeOutSingle = new DoubleAnimation { To = 0.0, Duration = TimeSpan.FromMilliseconds(180) };
+            Storyboard.SetTarget(fadeOutSingle, SinglePreviewBorder);
+            Storyboard.SetTargetProperty(fadeOutSingle, "Opacity");
+            var singleBoard = new Storyboard();
+            singleBoard.Children.Add(fadeOutSingle);
+            singleBoard.Completed += (s, e) =>
+            {
+                SinglePreviewBorder.Opacity = 1; // 复位透明度供下次显示
+                SinglePreviewBorder.Visibility = Visibility.Collapsed;
+            };
+            singleBoard.Begin();
+
+            MultiSelectionInfoPanel.Visibility = Visibility.Visible;
             UpdateMultiSelectCount();
         }
         else
@@ -884,28 +940,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             StackedImagesControl.Visibility = Visibility.Collapsed;
             MultiSelectionInfoPanel.Visibility = Visibility.Collapsed;
 
-            var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
-            visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
-
-            // 缩放回 1.0 (250px)
-            var scaleReturnAnim = visual.Compositor.CreateSpringVector3Animation();
-            scaleReturnAnim.Target = "Scale";
-            scaleReturnAnim.FinalValue = new Vector3(1.0f, 1.0f, 1.0f);
-            scaleReturnAnim.DampingRatio = 0.7f; // 略微有弹性的恢复
-            scaleReturnAnim.Period = TimeSpan.FromMilliseconds(50);
-
-            // 位置归零 (防止在堆叠时有微小的 Offset)
-            var offsetReturnAnim = visual.Compositor.CreateSpringVector3Animation();
-            offsetReturnAnim.Target = "Offset";
-            offsetReturnAnim.FinalValue = new Vector3(0f, 0f, 0f);
-            offsetReturnAnim.DampingRatio = 1.0f; // 平滑归位
-
             SinglePreviewBorder.CornerRadius = new CornerRadius(0);
-
-            // 启动动画
-            visual.StartAnimation("Scale", scaleReturnAnim);
-            visual.StartAnimation("Offset", offsetReturnAnim);
-
+            SinglePreviewBorder.Opacity = 1;  // 复位,防上次淡出被快速操作打断后残留半透明
+            StackedImagesControl.Opacity = 1;
 
             foreach (var wp in SelectedWallpapers)
             {
@@ -937,6 +974,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             imageVisual.StopAnimation("Scale.X");
             imageVisual.StopAnimation("Scale.Y");
             imageVisual.StopAnimation("Opacity");
+            // Stop 会把属性冻结在动画中间态(如 Opacity=0.3、Scale=0.9)——必须复位到正常值,
+            // 否则下次显示时图片半透明/微缩,且视觉残留导致后续动画"看起来没触发"
+            imageVisual.Scale = Vector3.One;
+            imageVisual.Opacity = 1f;
         }
 
         // 打断堆叠图片的所有动画（复用你已有的方法）
@@ -1459,6 +1500,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 if (itemRootGrid != null) UpdateItemBlur(itemRootGrid, item);
             }
         }
+
+        // 多选堆叠视图同步:逐张重算模糊层
+        for (int i = 0; i < DisplayedSelectedWallpapers.Count; i++)
+        {
+            if (StackedImagesControl.ContainerFromIndex(i) is FrameworkElement stackContainer
+                && DisplayedSelectedWallpapers[i] is WallpaperItem stackItem)
+            {
+                UpdateStackItemBlur(stackContainer, stackItem);
+            }
+        }
     }
 
     /// <summary>详情面板大图的模糊层:与查看菜单"预览模糊"选项同步</summary>
@@ -1477,6 +1528,54 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             blurOverlay.Source = null;
             SinglePreviewImage.Visibility = Visibility.Visible;
         }
+    }
+
+    /// <summary>堆叠卡片模糊层:按各模式档位,应模糊的壁纸隐藏背景图、显示高斯模糊位图(与列表卡片同源缓存)</summary>
+    private void UpdateStackItemBlur(FrameworkElement cardRoot, WallpaperItem item)
+    {
+        // 调用方传入的就是模板根 Border(StackedImage_Loaded 的 sender / ContainerFromIndex 的容器内容)
+        var cardBorder = cardRoot as Border;
+        if (cardBorder == null) return;
+        if (FindInCardNamescope(cardBorder, "StackBlurOverlay") is not Image blurOverlay) return;
+
+        // 背景 ImageBrush 挂在卡片 Border 自身
+        if (ShouldBlurPreview(item))
+        {
+            // 先隐藏原图(ImageBrush 置空),避免模糊位图异步生成期间"先原图后模糊"
+            cardBorder.Background = null;
+            _ = ShowBlurOverlayAsync(blurOverlay, item, () => { });
+        }
+        else
+        {
+            blurOverlay.Visibility = Visibility.Collapsed;
+            blurOverlay.Source = null;
+            RestoreStackBackground(cardBorder, item);
+        }
+    }
+
+    /// <summary>恢复堆叠卡片的原图背景(ImageBrush 被模糊流程置空后回填)</summary>
+    private static void RestoreStackBackground(Border cardBorder, WallpaperItem item)
+    {
+        if (cardBorder.Background is null && !string.IsNullOrEmpty(item.Preview))
+        {
+            cardBorder.Background = new ImageBrush
+            {
+                ImageSource = new BitmapImage(new Uri(item.Preview)),
+                Stretch = Stretch.UniformToFill,
+            };
+        }
+    }
+
+    /// <summary>视觉树查找指定名元素(DataTemplate namescope 通用兜底:从模板根 Border 递归子树)</summary>
+    private static FrameworkElement? FindInCardNamescope(DependencyObject root, string name)
+    {
+        if (root is FrameworkElement fe && fe.Name == name) return fe;
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var hit = FindInCardNamescope(VisualTreeHelper.GetChild(root, i), name);
+            if (hit != null) return hit;
+        }
+        return null;
     }
 
     /// <summary>视觉树深搜指定名字的 Grid(从容器进模板根,规避模板命名作用域)</summary>
@@ -1777,6 +1876,18 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         return null;
     }
 
+    /// <summary>判断指针事件源是否位于卡片 CheckBox 内(含其内部元素),用于拦截 PointerPressed 的双路径翻转。</summary>
+    private static bool IsEventSourceInCheckBox(object? originalSource)
+    {
+        if (originalSource is not DependencyObject current) return false;
+        while (current != null)
+        {
+            if (current is CheckBox) return true;
+            current = VisualTreeHelper.GetParent(current) as DependencyObject;
+        }
+        return false;
+    }
+
     private void UpdateAllVisibleCheckBoxes()
     {
         foreach (var gv in AllWallpaperGridViews)
@@ -1805,13 +1916,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (sender is CheckBox cb && cb.DataContext is WallpaperItem item)
         {
-            if (!IsMultiSelectMode)
-            {
-                IsMultiSelectMode = true;
-            }
             if (cb.IsChecked == true && !SelectedWallpapers.Contains(item))
             {
                 SelectedWallpapers.Add(item);
+                // 勾选成功(Count>0)才进入多选;取消到 0 项时由 UpdateMultiSelectCount 自动退出,
+                // 不再无条件重进——避免快速连点时"自动退出"与"强制进入"互搏导致模式横跳
+                if (!IsMultiSelectMode)
+                {
+                    IsMultiSelectMode = true;
+                }
             }
             else if (cb.IsChecked == false)
             {
@@ -1901,6 +2014,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
                     if (_isMultiSelectMode)
                     {
+                        // 点击目标是 CheckBox 时,勾选已由 SelectionCheckBox_Click 全权处理,
+                        // 这里不再翻转,避免一次点击被两条路径重复处理(快速点击计数归零的根因)
+                        if (IsEventSourceInCheckBox(e.OriginalSource)) return;
+
                         item.IsSelected = !item.IsSelected;
                         if (item.IsSelected && !SelectedWallpapers.Contains(item))
                             SelectedWallpapers.Add(item);
@@ -2183,6 +2300,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
                     if (_isMultiSelectMode)
                     {
+                        // 点击目标是 CheckBox 时,勾选已由 SelectionCheckBox_Click 全权处理(同 ContentItem_PointerPressed)
+                        if (IsEventSourceInCheckBox(e.OriginalSource)) return;
+
                         item.IsSelected = !item.IsSelected;
 
                         if (item.IsSelected && !SelectedWallpapers.Contains(item))

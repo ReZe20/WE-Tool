@@ -229,6 +229,20 @@ namespace WE_Tool.Models
         private static readonly Regex LinkUrlRegex = new(@"https?://[^\s<>""']+", RegexOptions.IgnoreCase);
         private static readonly Regex LinkTagRegex = new(@"<[^>]+>");
         private static readonly Regex LinkBrRegex = new(@"<br\s*/?>", RegexOptions.IgnoreCase);
+        private static readonly Regex AnchorOpenRegex = new(@"<a\b[^>]*>", RegexOptions.IgnoreCase);
+        private static readonly Regex AnchorCloseRegex = new(@"</a\s*>", RegexOptions.IgnoreCase);
+
+        /// <summary>补全未闭合的 &lt;a&gt; 标签:部分壁纸作者漏写 &lt;/a&gt;,导致锚点正则不匹配、
+        /// 链接被拆成"裸URL+纯文本"错乱渲染。在文本末尾补足缺失数量的闭合标签后再解析。</summary>
+        private string NormalizeAnchorTags()
+        {
+            int open = AnchorOpenRegex.Matches(Text).Count;
+            int close = AnchorCloseRegex.Matches(Text).Count;
+            if (open <= close) return Text;
+            var sb = new System.Text.StringBuilder(Text);
+            for (int i = close; i < open; i++) sb.Append("</a>");
+            return sb.ToString();
+        }
 
         private IReadOnlyList<(string Text, string? Url)>? _linkSegments;
 
@@ -238,18 +252,19 @@ namespace WE_Tool.Models
 
         private IReadOnlyList<(string Text, string? Url)> BuildLinkSegments()
         {
+            string html = NormalizeAnchorTags();
             var result = new List<(string, string?)>();
             int pos = 0;
-            foreach (Match m in LinkAnchorRegex.Matches(Text))
+            foreach (Match m in LinkAnchorRegex.Matches(html))
             {
-                AddPlainSegments(result, Text.Substring(pos, m.Index - pos));
+                AddPlainSegments(result, html.Substring(pos, m.Index - pos));
                 string inner = StripLinkHtml(m.Groups[2].Value);
                 string url = m.Groups[1].Value;
                 if (inner.Length > 0)
                     result.Add((inner, url));
                 pos = m.Index + m.Length;
             }
-            AddPlainSegments(result, Text.Substring(pos));
+            AddPlainSegments(result, html.Substring(pos));
             return result;
         }
 
@@ -274,6 +289,7 @@ namespace WE_Tool.Models
 
         private static string StripLinkHtml(string text)
         {
+            // <br/> → \n:与解析器 StripHtml 同规;后续按 \n 拆行渲染
             string t = LinkBrRegex.Replace(text, "\n");
             t = LinkTagRegex.Replace(t, "");
             t = t.Replace("&amp;", "&")
@@ -282,7 +298,9 @@ namespace WE_Tool.Models
                  .Replace("&quot;", "\"")
                  .Replace("&#39;", "'")
                  .Replace("&nbsp;", " ");
-            return t.Trim();
+            // 只去首尾空白、保留段首/段尾的换行符——<br/> 位于锚点或文本边缘时,
+            // 换行承担着"与下一段分行"的职责,Trim() 会把它剥掉导致两段挤回一行
+            return t.Trim(' ', '\t');
         }
 
         // === 图片段(纯文本组件中的 <img src>,HTTP 加载显示) ===
@@ -300,9 +318,10 @@ namespace WE_Tool.Models
 
         private IReadOnlyList<(string Src, string? Link, int? Width, int? Height)> BuildImageSegments()
         {
+            string html = NormalizeAnchorTags();
             var result = new List<(string, string?, int?, int?)>();
-            var anchors = LinkAnchorRegex.Matches(Text);
-            foreach (Match im in ImageTagRegex.Matches(Text))
+            var anchors = LinkAnchorRegex.Matches(html);
+            foreach (Match im in ImageTagRegex.Matches(html))
             {
                 string src = im.Groups[1].Value.Length > 0 ? im.Groups[1].Value : im.Groups[2].Value;
                 if (src.Length == 0) continue;

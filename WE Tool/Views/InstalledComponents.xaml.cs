@@ -289,7 +289,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                         item.IsInMultiSelectMode = value;
                 }
                 UpdateStackVisuals();
-                _ = ToggleMultiSelectVisuals(_isMultiSelectMode);
+                ToggleMultiSelectVisuals(_isMultiSelectMode);
                 UpdateAllVisibleCheckBoxes();
             }
         }
@@ -1457,13 +1457,15 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         if (sender is CheckBox cb && cb.DataContext is ComponentInfo item)
         {
-            if (!IsMultiSelectMode)
-            {
-                IsMultiSelectMode = true;
-            }
             if (cb.IsChecked == true && !SelectedComponents.Contains(item))
             {
                 SelectedComponents.Add(item);
+                // 勾选成功(Count>0)才进入多选;取消到 0 项时由 UpdateMultiSelectCount 自动退出,
+                // 不再无条件重进——避免快速连点时"自动退出"与"强制进入"互搏导致模式横跳(与 Papers 修复一致)
+                if (!IsMultiSelectMode)
+                {
+                    IsMultiSelectMode = true;
+                }
             }
             else if (cb.IsChecked == false)
             {
@@ -1556,6 +1558,10 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
                     if (_isMultiSelectMode)
                     {
+                        // 点击目标是 CheckBox 时,勾选已由 SelectionCheckBox_Click 全权处理,
+                        // 这里不再翻转,避免一次点击被两条路径重复处理(与 Papers 修复一致)
+                        if (IsEventSourceInCheckBox(e.OriginalSource)) return;
+
                         item.IsSelected = !item.IsSelected;
                         if (item.IsSelected && !SelectedComponents.Contains(item))
                             SelectedComponents.Add(item);
@@ -1816,6 +1822,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
                     if (_isMultiSelectMode)
                     {
+                        // 点击目标是 CheckBox 时,勾选已由 SelectionCheckBox_Click 全权处理(同 ContentItem_PointerPressed)
+                        if (IsEventSourceInCheckBox(e.OriginalSource)) return;
+
                         item.IsSelected = !item.IsSelected;
 
                         if (item.IsSelected && !SelectedComponents.Contains(item))
@@ -1934,6 +1943,18 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (cb != null) return cb;
         }
         return null;
+    }
+
+    /// <summary>判断指针事件源是否位于卡片 CheckBox 内(含其内部元素),用于拦截 PointerPressed 的双路径翻转。</summary>
+    private static bool IsEventSourceInCheckBox(object? originalSource)
+    {
+        if (originalSource is not DependencyObject current) return false;
+        while (current != null)
+        {
+            if (current is CheckBox) return true;
+            current = VisualTreeHelper.GetParent(current) as DependencyObject;
+        }
+        return false;
     }
 
     private void UpdateAllVisibleCheckBoxes()
@@ -2079,11 +2100,30 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         visual.StartAnimation("RotationAngleInDegrees", rotationAnim);
     }
 
-    /// <summary>多选/单选视觉切换（照抄 Papers.ToggleMultiSelectVisuals，去掉 GC 收集）</summary>
-    private async Task ToggleMultiSelectVisuals(bool isMulti)
+    /// <summary>打断 SinglePreviewBorder 上的残留动画(与 Papers.CancelAllAnimations 对齐的精简版)。</summary>
+    private void CancelAllAnimations()
     {
+        var singleVisual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
+        if (singleVisual != null)
+        {
+            singleVisual.StopAnimation("Scale");
+            singleVisual.StopAnimation("Offset");
+            singleVisual.StopAnimation("Opacity");
+        }
+        StopAllStackAnimations();
+    }
+
+    /// <summary>多选/单选视觉切换（与 Papers.ToggleMultiSelectVisuals 同步:Storyboard 交叉淡入淡出）</summary>
+    private void ToggleMultiSelectVisuals(bool isMulti)
+    {
+        // 过渡 = 淡入淡出:Composition 逐值动画在本环境概率性延迟提交,
+        // 改用 XAML Storyboard 双动画交叉——单图淡出 / 堆叠图淡入,时间轴由框架保证(与 Papers 一致)
+        CancelAllAnimations();
+
         if (isMulti)
         {
+            NoSelectionHintText.Visibility = Visibility.Collapsed; // 最高优先级:进入多选即刻隐藏无结果提示
+
             // 如果单选有焦点，顺便加入多选
             if (SelectedComponent != null && !SelectedComponents.Contains(SelectedComponent))
             {
@@ -2096,24 +2136,38 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 RefreshDisplayedSelectedComponents(forceRebuild: true);
             }
 
-            // 核心视觉：缩小 + 圆角
             SinglePreviewBorder.CornerRadius = new CornerRadius(8);
-            var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
-            visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
 
-            var scaleAnimation = visual.Compositor.CreateSpringVector3Animation();
-            scaleAnimation.Target = "Scale";
-            scaleAnimation.FinalValue = new Vector3(0.6f, 0.6f, 1.0f);
-            scaleAnimation.DampingRatio = 0.6f;
-            visual.StartAnimation("Scale", scaleAnimation);
-
-            await Task.Delay(150);
+            // 堆叠图先摆到可见状态但全透明,再淡入;淡入完成后隐藏单图面板
+            StackedImagesControl.Opacity = 0;
             StackedImagesControl.Visibility = Visibility.Visible;
-            SinglePreviewBorder.Visibility = Visibility.Collapsed;
-            SingleSelectionInfoPanel.Visibility = Visibility.Collapsed;
-            MultiSelectionInfoPanel.Visibility = Visibility.Visible;
-            NoSelectionHintText.Visibility = Visibility.Collapsed;
 
+            var fadeInStack = new DoubleAnimation { To = 1.0, Duration = TimeSpan.FromMilliseconds(180) };
+            Storyboard.SetTarget(fadeInStack, StackedImagesControl);
+            Storyboard.SetTargetProperty(fadeInStack, "Opacity");
+            var stackBoard = new Storyboard();
+            stackBoard.Children.Add(fadeInStack);
+            stackBoard.Completed += (s, e) =>
+            {
+                SinglePreviewBorder.Visibility = Visibility.Collapsed;
+                SingleSelectionInfoPanel.Visibility = Visibility.Collapsed;
+            };
+            stackBoard.Begin();
+
+            // 单图同时淡出(180ms 同速交叉),完成后复位透明度并隐藏单图
+            var fadeOutSingle = new DoubleAnimation { To = 0.0, Duration = TimeSpan.FromMilliseconds(180) };
+            Storyboard.SetTarget(fadeOutSingle, SinglePreviewBorder);
+            Storyboard.SetTargetProperty(fadeOutSingle, "Opacity");
+            var singleBoard = new Storyboard();
+            singleBoard.Children.Add(fadeOutSingle);
+            singleBoard.Completed += (s, e) =>
+            {
+                SinglePreviewBorder.Opacity = 1; // 复位透明度供下次显示
+                SinglePreviewBorder.Visibility = Visibility.Collapsed;
+            };
+            singleBoard.Begin();
+
+            MultiSelectionInfoPanel.Visibility = Visibility.Visible;
             UpdateMultiSelectCount();
         }
         else
@@ -2129,26 +2183,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             StackedImagesControl.Visibility = Visibility.Collapsed;
             MultiSelectionInfoPanel.Visibility = Visibility.Collapsed;
 
-            var visual = ElementCompositionPreview.GetElementVisual(SinglePreviewBorder);
-            visual.CenterPoint = new Vector3((float)SinglePreviewBorder.ActualWidth / 2, (float)SinglePreviewBorder.ActualHeight / 2, 0f);
-
-            // 缩放回 1.0 (280px)
-            var scaleReturnAnim = visual.Compositor.CreateSpringVector3Animation();
-            scaleReturnAnim.Target = "Scale";
-            scaleReturnAnim.FinalValue = new Vector3(1.0f, 1.0f, 1.0f);
-            scaleReturnAnim.DampingRatio = 0.7f;
-            scaleReturnAnim.Period = TimeSpan.FromMilliseconds(50);
-
-            // 位置归零 (防止在堆叠时有微小的 Offset)
-            var offsetReturnAnim = visual.Compositor.CreateSpringVector3Animation();
-            offsetReturnAnim.Target = "Offset";
-            offsetReturnAnim.FinalValue = new Vector3(0f, 0f, 0f);
-            offsetReturnAnim.DampingRatio = 1.0f;
-
             SinglePreviewBorder.CornerRadius = new CornerRadius(0);
-
-            visual.StartAnimation("Scale", scaleReturnAnim);
-            visual.StartAnimation("Offset", offsetReturnAnim);
+            SinglePreviewBorder.Opacity = 1;  // 复位,防上次淡出被快速操作打断后残留半透明
+            StackedImagesControl.Opacity = 1;
 
             foreach (var item in SelectedComponents)
             {

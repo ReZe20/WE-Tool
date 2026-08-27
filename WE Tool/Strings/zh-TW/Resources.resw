@@ -354,6 +354,9 @@
   <data name="StartPage_Components.Text" xml:space="preserve">
     <value>已安裝元件</value>
   </data>
+  <data name="LogsPage.Content" xml:space="preserve">
+    <value>日誌</value>
+  </data>
   <data name="LogsPage_Header.Text" xml:space="preserve">
     <value>日誌</value>
   </data>

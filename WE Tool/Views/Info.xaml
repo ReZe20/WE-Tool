@@ -100,19 +100,26 @@
                                     <ItemsControl ItemsSource="{x:Bind TranslationStatus}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <controls:WrapPanel HorizontalSpacing="12" VerticalSpacing="4"/>
+                                                <controls:WrapPanel HorizontalSpacing="8" VerticalSpacing="8"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="models:TranslationStatusItem">
-                                                <Grid ColumnSpacing="8" Margin="0,2">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{x:Bind Name}"/>
-                                                    <TextBlock Grid.Column="1" Text="{x:Bind PercentText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                                </Grid>
+                                                <!-- 每个语言一张小卡片:主题自适应(Card 资源),圆角 + 细边框 -->
+                                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="12,4">
+                                                    <Grid ColumnSpacing="8">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="1" Text="{x:Bind PercentText}"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                                   VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
