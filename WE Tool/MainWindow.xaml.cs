@@ -1,6 +1,7 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Serilog;
 using System;
@@ -50,6 +51,27 @@ namespace WE_Tool
         private void OnSteamworksStatusChanged()
         {
             DispatcherQueue.TryEnqueue(UpdateSteamStatusBadge);
+        }
+
+        /// <summary>
+        /// 窗口级快捷键分发:内容根 Grid 挂 KeyDown(整棵视觉树的总根,任何按键都必经此处)。
+        /// 页面自挂在 Page.KeyDown 上的快捷键在键盘焦点不在页面子树内时收不到事件
+        /// (卡片为无焦点样式,点击卡片不会把焦点拉进页面),故由窗口统一收键后分发给当前页面。
+        /// 焦点在 TextBox/AutoSuggestBox 时直接放行:文本编辑键(Ctrl+A/C、Delete)由文本框合法消费。
+        /// </summary>
+        private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            // 已被内层控件处理(如文本框吞掉编辑键)则不重复分发
+            if (e.Handled) return;
+
+            if (FocusManager.GetFocusedElement() is TextBox or AutoSuggestBox)
+                return; // 文本输入中,让位
+
+            // 分发到当前页面的快捷键处理(页面内部仍保留各自分支)
+            if (contentFrame.Content is Papers papersPage)
+                papersPage.HandleShortcutKey(e);
+            else if (contentFrame.Content is InstalledComponents componentsPage)
+                componentsPage.HandleShortcutKey(e);
         }
 
         /// <summary>焦点跟踪:提取等后台事件仅在主窗口无焦点时弹系统通知(Deactivated = 失去焦点)</summary>

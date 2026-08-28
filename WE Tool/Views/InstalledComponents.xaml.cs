@@ -42,6 +42,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private bool _isComponentItemTapped;
     private bool _isMultiSelectMode;
     private bool _isBatchUpdating;
+    private int _lastStackCount;
     private FrameworkElement? _rightClickedComponentElement;
     private DateTime _lastDrillInAnimationTime;
     private CancellationTokenSource? _filterCts;
@@ -877,6 +878,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             _currentFilterExpander = flyout.Target as Expander;
     }
 
+    // 弹层(菜单/Flyout)不自动继承主窗口运行时主题,打开时显式应用(公共逻辑见 App.ApplyFlyoutTheme)
+    private void FlyoutThemeRefresh_Opened(object sender, object e) => App.ApplyFlyoutTheme(sender, e);
+
     private void FilterExpanderSelectAll_Click(object sender, RoutedEventArgs e)
     {
         if (_currentFilterExpander == null) return;
@@ -1206,6 +1210,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             var dlg = new ContentDialog
             {
                 XamlRoot = XamlRoot,
+                RequestedTheme = App.GetPopupTheme(),
                 Title = "打开多个属性窗口",
                 Content = $"将打开 {items.Count} 个属性窗口（当前已有 {PropertiesWindow.OpenWindowCount} 个），是否继续？",
                 PrimaryButtonText = "打开",
@@ -1296,13 +1301,18 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
     }
 
-    // ===================== 键盘快捷键（对齐 Papers） =====================
+    /// <summary>窗口级快捷键分发入口:MainWindow.RootGrid_KeyDown 把按键转交到本方法(焦点不在页面子树时页面自身 KeyDown 收不到)。
+    /// e.Handled 标记由本方法负责;返回后窗口不再重复处理。</summary>
+    public void HandleShortcutKey(KeyRoutedEventArgs e) => Page_KeyDown_Core(e);
+
     /// <summary>页面级快捷键统一入口（原 KeyboardAccelerator 在部分焦点/输入法环境下 Ctrl+I 等组合键不触发，改用 KeyDown 路由事件）。
     /// 焦点在 TextBox 时 Ctrl+A/C、Delete 会被文本框消费并标记 Handled，此处收不到，自动让位。</summary>
-    private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
+    private void Page_KeyDown(object sender, KeyRoutedEventArgs e) => Page_KeyDown_Core(e);
+
+    /// <summary>快捷键分支共用核心:页面自身 KeyDown 与窗口分发两条路径都汇到这里,避免逻辑重复。</summary>
+    private void Page_KeyDown_Core(KeyRoutedEventArgs e)
     {
         var ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
-        var menu = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
 
         if (ctrl)
         {
@@ -1320,12 +1330,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                     Copy_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
+                case VirtualKey.E:
+                    Properties_Accelerator_Invoked(null!, null!);
+                    e.Handled = true;
+                    return;
             }
-        }
-        else if (menu && e.Key == VirtualKey.Enter)
-        {
-            Properties_Accelerator_Invoked(null!, null!);
-            e.Handled = true;
         }
         else if (e.Key == VirtualKey.Delete)
         {
@@ -1365,8 +1374,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // ===================== 多选面板按钮 =====================
     private void SelectAllComponents_Click(object sender, RoutedEventArgs e)
     {
-        if (!IsMultiSelectMode) IsMultiSelectMode = true;
-
+        // 先填充选中集合,后进多选模式:Toggle 期间 Count==0 会被 UpdateMultiSelectCount
+        // 的"0 项自动退出"立刻翻回 false(原因同 Papers.SelectAllWallpapers_Click)
         _isBatchUpdating = true;
         foreach (var item in FilteredComponents)
         {
@@ -1378,14 +1387,14 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
         _isBatchUpdating = false;
 
+        if (!IsMultiSelectMode) IsMultiSelectMode = true;
+
         RefreshDisplayedSelectedComponents(forceRebuild: true);
         UpdateMultiSelectCount();
     }
 
     private void InvertSelection_Click(object sender, RoutedEventArgs e)
     {
-        if (!IsMultiSelectMode) IsMultiSelectMode = true;
-
         _isBatchUpdating = true;
         foreach (var item in FilteredComponents)
         {
@@ -1396,6 +1405,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 SelectedComponents.Remove(item);
         }
         _isBatchUpdating = false;
+
+        if (!IsMultiSelectMode) IsMultiSelectMode = true;
 
         RefreshDisplayedSelectedComponents(forceRebuild: true);
         UpdateMultiSelectCount();
@@ -2030,15 +2041,18 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void UpdateStackVisuals()
     {
         int count = DisplayedSelectedComponents.Count;
+        bool grew = count > _lastStackCount && _lastStackCount > 0; // 新增了卡片(初始化不算)
         for (int i = 0; i < count; i++)
         {
             var container = StackedImagesControl.ContainerFromIndex(i) as FrameworkElement;
             if (container == null) continue;
 
             container.Visibility = Visibility.Visible;
-            ApplyStackAnimation(container, i);
-            Canvas.SetZIndex(container, i);
+            int depth = count - 1 - i; // 集合尾=最新:深度 0 居中,越老越深(朝左上)
+            ApplyStackAnimation(container, depth, entering: grew && i == count - 1); // 最后一张=新卡
+            Canvas.SetZIndex(container, i); // 新卡 i 最大 => 最上层
         }
+        _lastStackCount = count;
     }
 
     private void StopAllStackAnimations()
@@ -2054,6 +2068,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 visual.StopAnimation("Offset");
                 visual.StopAnimation("RotationAngleInDegrees");
                 visual.StopAnimation("Scale");
+                visual.StopAnimation("Opacity");
+                visual.Scale = Vector3.One;      // 复位缩放,防深度缩小残留到容器复用
+                visual.Opacity = 1f;             // 复位透明度(历史动画保险)
             }
         }
     }
@@ -2070,7 +2087,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
     }
 
-    private static void ApplyStackAnimation(FrameworkElement element, int relativeIndex)
+    private static void ApplyStackAnimation(FrameworkElement element, int depth, bool entering = false)
     {
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
         Compositor compositor = visual.Compositor;
@@ -2079,25 +2096,46 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         float size = 200f;
         visual.CenterPoint = new Vector3(size / 2, size / 2, 0f);
 
-        // 基于相对位置计算位移和旋转
-        // relativeIndex 越大（越新），偏移越多
-        float offsetY = relativeIndex * -12f;
-        float offsetX = relativeIndex * 8f;
-        float rotation = (relativeIndex % 2 == 0) ? relativeIndex * 2.5f : relativeIndex * -2.5f;
+        // 整齐 deck 层叠(Papers 同步):所有卡片正对(0°)。调用方传入 depth(距最新层数,最新=0):
+        // 最新卡居中原位,越旧的卡越朝左上退 8px——新卡加入时全部旧卡深度+1,整摞向左上平移一格;
+        // 新卡自身由 entering 从右下(+2 步)滑入居中位。
+        const float StepX = 8f, StepY = 8f;
+        float offsetX = -depth * StepX;
+        float offsetY = -depth * StepY;
 
-        // 使用动画平滑移动到新位置（防止新增图片时旧图片位置突跳）
-        var offsetAnim = compositor.CreateSpringVector3Animation();
+        if (entering)
+        {
+            // 入场起点:右下两步之外,随后动画滑入 d0 原位(插值从当前值出发,无需起始帧)
+            visual.Offset = new Vector3(StepX * 2, StepY * 2, 0f);
+        }
+
+        // 深度缩放:距最新越远越小(1.0 → -3%/层)——"近大远小"透视层级,卡片保持完全不透明
+        const float ScaleStep = 0.03f;
+        float depthScale = Math.Clamp(1f - depth * ScaleStep, 0.88f, 1f);
+
+        // 使用动画平滑移动到新位置（防止新增图片时旧图片位置突跳)——KeyFrame 确定性时间轴
+        var offsetAnim = compositor.CreateVector3KeyFrameAnimation();
         offsetAnim.Target = "Offset";
-        offsetAnim.FinalValue = new Vector3(offsetX, offsetY, 0f);
-        offsetAnim.DampingRatio = 0.7f;
+        offsetAnim.InsertKeyFrame(1f, new Vector3(offsetX, offsetY, 0f),
+            compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+        offsetAnim.Duration = TimeSpan.FromMilliseconds(150);
 
-        var rotationAnim = compositor.CreateSpringScalarAnimation();
-        rotationAnim.Target = "RotationAngleInDegrees";
-        rotationAnim.FinalValue = rotation;
-        rotationAnim.DampingRatio = 0.7f;
+        // 历史卡片可能带旋转残留,统一动画归零(整齐层叠要求正对)
+        var rotationZeroAnim = compositor.CreateScalarKeyFrameAnimation();
+        rotationZeroAnim.Target = "RotationAngleInDegrees";
+        rotationZeroAnim.InsertKeyFrame(1f, 0f);
+        rotationZeroAnim.Duration = TimeSpan.FromMilliseconds(150);
+
+        // 缩放同步动画(与位移同缓动同时长;CenterPoint 已设为卡片中心,向内收缩)
+        var scaleAnim = compositor.CreateVector3KeyFrameAnimation();
+        scaleAnim.Target = "Scale";
+        scaleAnim.InsertKeyFrame(1f, new Vector3(depthScale, depthScale, 1f),
+            compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+        scaleAnim.Duration = TimeSpan.FromMilliseconds(150);
 
         visual.StartAnimation("Offset", offsetAnim);
-        visual.StartAnimation("RotationAngleInDegrees", rotationAnim);
+        visual.StartAnimation("RotationAngleInDegrees", rotationZeroAnim);
+        visual.StartAnimation("Scale", scaleAnim);
     }
 
     /// <summary>打断 SinglePreviewBorder 上的残留动画(与 Papers.CancelAllAnimations 对齐的精简版)。</summary>
@@ -2194,6 +2232,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             SelectedComponents.Clear();
             DisplayedSelectedComponents.Clear();
 
+            RefreshDisplayedSelectedComponents(forceRebuild: true);
             UpdateMultiSelectCount();
         }
     }

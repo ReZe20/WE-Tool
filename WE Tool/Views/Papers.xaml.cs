@@ -1810,6 +1810,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         }
     }
 
+    // 弹层(菜单/Flyout)不自动继承主窗口运行时主题,打开时显式应用(公共逻辑见 App.ApplyFlyoutTheme)
+    private void FlyoutThemeRefresh_Opened(object sender, object e) => App.ApplyFlyoutTheme(sender, e);
+
     private void FilterExpanderSelectAll_Click(object sender, RoutedEventArgs e)
     {
         if (_currentFilterExpander == null) return;
@@ -2476,29 +2479,37 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
     private void SelectAllWallpapers_Click(object sender, RoutedEventArgs e)
     {
+        // 先填充选中集合,后进多选模式:Toggle(true) 期间若 Count==0,会被 UpdateMultiSelectCount
+        // 的"0 项自动退出"立刻翻回 false,导致首次全选面板被收起、需按两次(旧顺序的根因)
+        InternalSelectAllWallpapers();
         if (!IsMultiSelectMode)
         {
             IsMultiSelectMode = true;
         }
-        InternalSelectAllWallpapers();
     }
     private void InvertSelection_CLick(object sender, RoutedEventArgs e)
     {
+        InternalInvertSelection();
         if (!IsMultiSelectMode)
         {
             IsMultiSelectMode = true;
         }
-        InternalInvertSelection();
     }
     private void ChangeSort(object sender, RoutedEventArgs e)
     {
     }
+    /// <summary>窗口级快捷键分发入口:MainWindow.RootGrid_KeyDown 把按键转交到本方法(焦点不在页面子树时页面自身 KeyDown 收不到)。
+    /// e.Handled 标记由本方法负责;返回后窗口不再重复处理。</summary>
+    public void HandleShortcutKey(KeyRoutedEventArgs e) => Page_KeyDown_Core(e);
+
     /// <summary>页面级快捷键统一入口（原 KeyboardAccelerator 在部分焦点/输入法环境下 Ctrl+I 等组合键不触发，改用 KeyDown 路由事件）。
     /// 焦点在 TextBox 时 Ctrl+A/C、Delete 会被文本框消费并标记 Handled，此处收不到，自动让位。</summary>
-    private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
+    private void Page_KeyDown(object sender, KeyRoutedEventArgs e) => Page_KeyDown_Core(e);
+
+    /// <summary>快捷键分支共用核心:页面自身 KeyDown 与窗口分发两条路径都汇到这里,避免逻辑重复。</summary>
+    private void Page_KeyDown_Core(KeyRoutedEventArgs e)
     {
         var ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
-        var menu = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
 
         if (ctrl)
         {
@@ -2516,12 +2527,11 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                     Copy_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
+                case VirtualKey.E:
+                    Property_Accelerator_Invoked(null!, null!);
+                    e.Handled = true;
+                    return;
             }
-        }
-        else if (menu && e.Key == VirtualKey.Enter)
-        {
-            Property_Accelerator_Invoked(null!, null!);
-            e.Handled = true;
         }
         else if (e.Key == VirtualKey.Delete)
         {
@@ -2537,19 +2547,20 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     }
     private void SelectAllWallpaper_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
+        // 先填集合后进模式,原因同 SelectAllWallpapers_Click
+        InternalSelectAllWallpapers();
         if (!IsMultiSelectMode)
         {
             IsMultiSelectMode = true;
         }
-        InternalSelectAllWallpapers();
     }
     private void InvertSelection_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
+        InternalInvertSelection();
         if (!IsMultiSelectMode)
         {
             IsMultiSelectMode = true;
         }
-        InternalInvertSelection();
     }
     private async void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
@@ -2713,7 +2724,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
     private async void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
-        e.Handled = true;
+        // 经 Page_KeyDown_Core 由窗口分发调用,e 参数恒为 null,不可解引用(Handled 由调用方标记)
         if (DeleteSelectedCommand == null) return;
 
         try
@@ -2735,19 +2746,20 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
     private void SelectAllWallpapers_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
+        // 先填集合后进模式,原因同 SelectAllWallpapers_Click
+        InternalSelectAllWallpapers();
         if (!IsMultiSelectMode)
         {
             IsMultiSelectMode = true;
         }
-        InternalSelectAllWallpapers();
     }
     private void InvertSelection_CLick_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
+        InternalInvertSelection();
         if (!IsMultiSelectMode)
         {
             IsMultiSelectMode = true;
         }
-        InternalInvertSelection();
     }
     private bool _isRefreshing;
 
@@ -2779,8 +2791,8 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     }
     private void Property_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
+        // 经 Page_KeyDown_Core 由窗口分发调用,e 参数恒为 null,不可解引用(Handled 由调用方标记)
         _ = PropertiesAsync();
-        e.Handled = true;
     }
     private void Properties_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
@@ -2804,6 +2816,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             var dlg = new ContentDialog
             {
                 XamlRoot = XamlRoot,
+                RequestedTheme = App.GetPopupTheme(),
                 Title = "打开多个属性窗口",
                 Content = $"将打开 {items.Count} 个属性窗口（当前已有 {PropertiesWindow.OpenWindowCount} 个），是否继续？",
                 PrimaryButtonText = "打开",

@@ -80,7 +80,7 @@
                                          OtherTemplate="{StaticResource FileTreeOtherTemplate}"/>
 
         <!-- 右键菜单 -->
-        <CommandBarFlyout x:Name="ComponentContextMenuFlyout" AlwaysExpanded="True">
+        <CommandBarFlyout x:Name="ComponentContextMenuFlyout" AlwaysExpanded="True" Opened="FlyoutThemeRefresh_Opened">
             <CommandBarFlyout.PrimaryCommands>
                 <AppBarButton x:Uid="AppBarButton_Extract"
                               Click="ExtractComponent_Click">
@@ -136,7 +136,7 @@
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_Properties"
                               Click="ComponentProperties_Click"
-                              KeyboardAcceleratorTextOverride="Alt+Enter">
+                              KeyboardAcceleratorTextOverride="     Ctrl+E">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE90F;"/>
                     </AppBarButton.Icon>
@@ -144,7 +144,7 @@
             </CommandBarFlyout.SecondaryCommands>
         </CommandBarFlyout>
 
-        <MenuFlyout x:Name="ScrollViewBackgroundMenu">
+        <MenuFlyout x:Name="ScrollViewBackgroundMenu" Opened="FlyoutThemeRefresh_Opened">
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_Refresh" Click="ComponentsRefresh_Click"
                             KeyboardAcceleratorTextOverride="    F5">
                 <MenuFlyoutItem.Icon>
@@ -227,7 +227,7 @@
             </MenuFlyoutSubItem>
         </MenuFlyout>
 
-        <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening">
+        <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening" Opened="FlyoutThemeRefresh_Opened">
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="FilterExpanderSelectAll_Click">
                 <MenuFlyoutItem.Icon>
                     <FontIcon Glyph="&#xE8B3;"/>
@@ -329,7 +329,7 @@
                         <FontIcon Glyph="&#xE71D;" FontSize="16"/>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
-                        <MenuFlyout Placement="Bottom">
+                        <MenuFlyout Placement="Bottom" Opened="FlyoutThemeRefresh_Opened">
                             <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon" GroupName="ViewGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SmallIconViewItem, Mode=TwoWay}"/>
                             <RadioMenuFlyoutItem x:Uid="AppBarButton_MediumIcon" GroupName="ViewGroup"
@@ -378,7 +378,7 @@
                         <FontIcon Glyph="&#xE8CB;" FontSize="16"/>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
-                        <MenuFlyout Placement="Bottom">
+                        <MenuFlyout Placement="Bottom" Opened="FlyoutThemeRefresh_Opened">
                             <RadioMenuFlyoutItem x:Uid="SortByName" GroupName="SortGroup"
                                                  IsChecked="{x:Bind ViewModel.ComponentsDisplayVM.SortByName, Mode=TwoWay}"/>
                             <RadioMenuFlyoutItem x:Uid="SortBySubTime" GroupName="SortGroup"

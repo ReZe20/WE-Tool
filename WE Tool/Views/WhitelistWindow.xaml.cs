@@ -43,6 +43,15 @@ public sealed partial class WhitelistWindow : WindowEx
         ExtendsContentIntoTitleBar = true;
         AppWindow.TitleBar.PreferredHeightOption = Microsoft.UI.Windowing.TitleBarHeightOption.Tall;
         Title = LanguageHelper.GetResource("WhitelistWindowTitle.Title");
+        // 主题跟随主程序:独立窗口不继承 MainWindow 根元素的 RequestedTheme,创建时显式同步一次
+        // (主窗口为 Default=跟随系统时,本窗口保持 Default)
+        if (App.MainWindowInstance?.Content is FrameworkElement mainRoot
+            && mainRoot.RequestedTheme is Microsoft.UI.Xaml.ElementTheme et
+            && et is not Microsoft.UI.Xaml.ElementTheme.Default
+            && Content is FrameworkElement thisRoot)
+        {
+            thisRoot.RequestedTheme = et;
+        }
         CardGridView.ItemsSource = _cards;
         LoadWhitelistCards();
     }

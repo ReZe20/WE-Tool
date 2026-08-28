@@ -14,7 +14,7 @@
     <winuiex:WindowEx.SystemBackdrop>
         <DesktopAcrylicBackdrop/>
     </winuiex:WindowEx.SystemBackdrop>
-    <Grid Background="Transparent" >
+    <Grid Background="Transparent" KeyDown="RootGrid_KeyDown">
         <Grid.RowDefinitions>
             <RowDefinition Height="47"/>
             <RowDefinition Height="*"/>

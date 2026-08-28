@@ -502,6 +502,8 @@ namespace WE_Tool
         /// <summary>Flyout 打开时把焦点给文本框(WinUI 3 坑:Flyout 内容的键盘焦点不会自动落到 TextBox,不聚焦则无法输入)。</summary>
         private void ExportDirFlyout_Opened(object sender, object e)
         {
+            // 弹层不自动继承主窗口运行时主题,打开时显式应用(公共逻辑见 App.ApplyFlyoutTheme)
+            App.ApplyFlyoutTheme(sender, e);
             ExportPathBox.Focus(FocusState.Programmatic);
         }
 

@@ -20,7 +20,9 @@ namespace WE_Tool.Helper
                 Title = title,
                 Content = content,
                 CloseButtonText = "确定",
-                XamlRoot = xamlRoot
+                XamlRoot = xamlRoot,
+                // 弹层不自动继承主窗口运行时主题,显式应用(见 App.ApplyPopupTheme)
+                RequestedTheme = App.GetPopupTheme()
             };
             await dialog.ShowAsync();
         }
@@ -38,7 +40,9 @@ namespace WE_Tool.Helper
                 PrimaryButtonText = primaryText,
                 CloseButtonText = closeText,
                 DefaultButton = ContentDialogButton.Primary,
-                XamlRoot = xamlRoot
+                XamlRoot = xamlRoot,
+                // 弹层不自动继承主窗口运行时主题,显式应用(见 App.ApplyPopupTheme)
+                RequestedTheme = App.GetPopupTheme()
             };
 
             var result = await dialog.ShowAsync();

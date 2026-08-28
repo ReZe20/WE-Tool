@@ -4,12 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:WE_Tool.ViewModels"
     xmlns:skia="using:WE_Tool.Controls"
+    xmlns:animations="using:CommunityToolkit.WinUI.Animations"
     x:Name="PageRoot"
     NavigationCacheMode="Enabled">
 
         <Page.Resources>
         <!-- 自动备份设置 Flyout：类型/分级用 Expander 分组 -->
-        <Flyout x:Name="AutoBackupFlyout">
+        <Flyout x:Name="AutoBackupFlyout" Opened="FlyoutThemeRefresh_Opened">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
                     <Setter Property="CornerRadius" Value="8"/>
@@ -130,7 +131,7 @@
                     </StackPanel>
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
-                    <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedRight">
+                    <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedRight" Opened="FlyoutThemeRefresh_Opened">
                         <RadioMenuFlyoutItem x:Name="SortByNameItem" GroupName="BackupSortGroup"
                                              Text="名称" Click="SortMenu_ItemClick" Tag="name"/>
                         <RadioMenuFlyoutItem x:Name="SortByTimeItem" GroupName="BackupSortGroup"
@@ -165,7 +166,8 @@
         <!-- 备份卡片网格 -->
         <GridView x:Name="BackupGridView" Grid.Row="1" Visibility="Collapsed"
                   SelectionMode="None" SizeChanged="BackupGridView_SizeChanged"
-                  ContainerContentChanging="BackupGridView_ContainerContentChanging">
+                  ContainerContentChanging="BackupGridView_ContainerContentChanging"
+                  animations:ItemsReorderAnimation.Duration="0:0:0.1">
             <GridView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <ItemsWrapGrid x:Name="BackupWrapGrid" Orientation="Horizontal"
@@ -223,13 +225,20 @@
                             <TextBlock Text="{x:Bind BackupTimeText, Mode=OneWay}"
                                        FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         </StackPanel>
-                        <Button Grid.Column="2" VerticalAlignment="Center"
-                                CommandParameter="{x:Bind}"
-                                Click="DeleteBackup_Click"
-                                Background="Transparent"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                            <FontIcon Glyph="&#xE74D;" FontSize="16"/>
-                        </Button>
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
+                            <Button CommandParameter="{x:Bind}"
+                                    Click="DeleteBackup_Click"
+                                    Background="Transparent"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                            </Button>
+                            <Button CommandParameter="{x:Bind}"
+                                    Click="OpenBackupFolder_Click"
+                                    Background="Transparent"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                <FontIcon Glyph="&#xE838;" FontSize="16"/>
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </GridView.ItemTemplate>

@@ -253,6 +253,23 @@ public sealed partial class WallpaperBackup : Page
         }
     }
 
+    private void OpenBackupFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.CommandParameter is not BackupItemViewModel item) return;
+        if (string.IsNullOrEmpty(item.FullPath) || !Directory.Exists(item.FullPath)) return;
+        try
+        {
+            Process.Start("explorer.exe", $"\"{item.FullPath}\"");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "打开备份目录失败: {Path}", item.FullPath);
+        }
+    }
+
+    // 弹层(菜单/Flyout)不自动继承主窗口运行时主题,打开时显式应用(公共逻辑见 App.ApplyFlyoutTheme)
+    private void FlyoutThemeRefresh_Opened(object sender, object e) => App.ApplyFlyoutTheme(sender, e);
+
     private async void DeleteAll_Click(object sender, RoutedEventArgs e)
     {
         if (_allItems.Count == 0) return;

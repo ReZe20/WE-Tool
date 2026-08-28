@@ -94,7 +94,7 @@
                                 </StackPanel>
                             </Button.Content>
                             <Button.Flyout>
-                                <Flyout>
+                                <Flyout Opened="FlyoutThemeRefresh_Opened">
                                     <ColorPicker Color="{Binding ColorValue, Mode=TwoWay}"
                                                  IsAlphaEnabled="False"
                                                  IsColorPreviewVisible="False"

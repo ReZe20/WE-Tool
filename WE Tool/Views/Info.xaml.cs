@@ -382,6 +382,8 @@ public sealed partial class Info : Page
             Title = title,
             Content = content,
             XamlRoot = xamlRoot,
+            // 显式跟随主程序主题:弹窗默认可能落回系统主题,与主窗口设置的主题不一致(统一走 App.GetPopupTheme)
+            RequestedTheme = App.GetPopupTheme(),
         };
         closeButton.Click += (_, _) => dialog.Hide();
 

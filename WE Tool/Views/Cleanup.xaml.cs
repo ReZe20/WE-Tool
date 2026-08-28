@@ -352,6 +352,9 @@ public sealed partial class Cleanup : Page
         catch { }
     }
 
+    // 弹层(菜单/Flyout)不自动继承主窗口运行时主题,打开时显式应用(公共逻辑见 App.ApplyFlyoutTheme)
+    private void FlyoutThemeRefresh_Opened(object sender, object e) => App.ApplyFlyoutTheme(sender, e);
+
     private async void CleanCard_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as Button)?.CommandParameter is not CleanupCardViewModel card) return;
@@ -359,6 +362,7 @@ public sealed partial class Cleanup : Page
         var dlg = new ContentDialog
         {
             XamlRoot = XamlRoot,
+            RequestedTheme = App.GetPopupTheme(),
             Title = L("Cleanup_ConfirmClean.Title", card.FolderId),
             Content = L("Cleanup_ConfirmClean.Content", card.Files.Count),
             PrimaryButtonText = L("Cleanup_ConfirmClean.Ok"),
@@ -390,6 +394,7 @@ public sealed partial class Cleanup : Page
                 var partial = new ContentDialog
                 {
                     XamlRoot = XamlRoot,
+                    RequestedTheme = App.GetPopupTheme(),
                     Title = L("Cleanup_CleanFail.Title"),
                     Content = L("Cleanup_CleanPartialFail", failed),
                     CloseButtonText = L("Cleanup_CommonOk")
@@ -402,6 +407,7 @@ public sealed partial class Cleanup : Page
             var err = new ContentDialog
             {
                 XamlRoot = XamlRoot,
+                RequestedTheme = App.GetPopupTheme(),
                 Title = L("Cleanup_CleanFail.Title"),
                 Content = ex.Message,
                 CloseButtonText = L("Cleanup_CommonOk")
@@ -445,6 +451,7 @@ public sealed partial class Cleanup : Page
         var dlg = new ContentDialog
         {
             XamlRoot = XamlRoot,
+            RequestedTheme = App.GetPopupTheme(),
             Title = L("Cleanup_ConfirmBatchDelete.Title", selected.Count),
             Content = L("Cleanup_ConfirmClean.Content", totalFiles),
             PrimaryButtonText = L("Cleanup_CommonDelete"),
@@ -474,6 +481,7 @@ public sealed partial class Cleanup : Page
             var err = new ContentDialog
             {
                 XamlRoot = XamlRoot,
+                RequestedTheme = App.GetPopupTheme(),
                 Title = L("Cleanup_CleanFail.Title"),
                 Content = L("Cleanup_BatchDeletePartialFail", failed),
                 CloseButtonText = L("Cleanup_CommonOk")
@@ -536,6 +544,7 @@ public sealed partial class Cleanup : Page
         var dlg = new ContentDialog
         {
             XamlRoot = XamlRoot,
+            RequestedTheme = App.GetPopupTheme(),
             Title = L("Cleanup_ConfirmDeleteAll.Title"),
             Content = L("Cleanup_ConfirmDeleteAll.Content", Cards.Count, totalFiles),
             PrimaryButtonText = L("Cleanup_ConfirmDeleteAll.Ok"),
@@ -574,6 +583,7 @@ public sealed partial class Cleanup : Page
             var err = new ContentDialog
             {
                 XamlRoot = XamlRoot,
+                RequestedTheme = App.GetPopupTheme(),
                 Title = L("Cleanup_CleanFail.Title"),
                 Content = L("Cleanup_BatchDeletePartialFail", failed),
                 CloseButtonText = L("Cleanup_CommonOk")

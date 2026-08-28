@@ -37,7 +37,7 @@
                     </StackPanel>
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
-                    <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedRight">
+                    <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedRight" Opened="FlyoutThemeRefresh_Opened">
                         <RadioMenuFlyoutItem x:Name="SortByNameItem" GroupName="CleanupSortGroup"
                                              Text="名称" Click="SortMenu_ItemClick" Tag="name"/>
                         <RadioMenuFlyoutItem x:Name="SortByTypeItem" GroupName="CleanupSortGroup"
@@ -113,9 +113,9 @@
                                            TextTrimming="CharacterEllipsis"
                                            ToolTipService.ToolTip="{x:Bind FullPath}"/>
                                 <Border Grid.Column="1" CornerRadius="4"
-                                        Background="{ThemeResource TextFillColorSecondaryBrush}">
+                                        Background="{ThemeResource AccentFillColorDefaultBrush}">
                                     <TextBlock Text="{x:Bind TypeLabel}" FontSize="11"
-                                               Foreground="Black" Margin="6,2"
+                                               Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Margin="6,2"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                             </Grid>

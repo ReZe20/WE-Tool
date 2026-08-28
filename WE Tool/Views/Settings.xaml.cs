@@ -55,6 +55,14 @@ public sealed partial class Settings : Page
             { SceneWallpaperTeachingTip_2, null! },
         };
 
+        // TeachingTip 没有 Opened 事件,改为监听 IsOpen 依赖属性变化——打开瞬间应用主题
+        foreach (var tip in _nextTeachingTip.Keys)
+            tip.RegisterPropertyChangedCallback(TeachingTip.IsOpenProperty, (s, _) =>
+            {
+                if (((TeachingTip)s).IsOpen)
+                    App.ApplyFlyoutTheme(s, EventArgs.Empty);
+            });
+
         Loaded += async (s, e) =>
         {
             await Task.Delay(500);
@@ -112,7 +120,9 @@ public sealed partial class Settings : Page
             PrimaryButtonText = LanguageHelper.GetResource("Settings_ResetConfirm.PrimaryButtonText"),
             CloseButtonText = LanguageHelper.GetResource("Settings_ResetConfirm.CloseButtonText"),
             DefaultButton = ContentDialogButton.Close,
-            XamlRoot = XamlRoot
+            XamlRoot = XamlRoot,
+            // 弹层不自动继承主窗口运行时主题,显式应用(见 App.ApplyPopupTheme)
+            RequestedTheme = App.GetPopupTheme()
         };
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)

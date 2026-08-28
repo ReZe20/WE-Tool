@@ -155,6 +155,72 @@ namespace WE_Tool
                 Log.Error(ex, "应用主题时发生异常。");
             }
         }
+
+        /// <summary>
+        /// 当前生效的弹层主题:用户显式选了 Dark/Light 就返回它;Default(跟随系统)返回 Default 不干预。
+        /// 弹层(ContentDialog/Flyout/MenuFlyout)挂在独立弹层,不自动继承主窗口根元素运行时设置的 RequestedTheme。
+        /// </summary>
+        public static ElementTheme GetPopupTheme()
+            => MainWindowInstance?.Content is FrameworkElement root
+                ? root.RequestedTheme
+                : ElementTheme.Default;
+
+        /// <summary>对弹层根元素显式应用当前主题(Default 时不写,保持跟随系统)。</summary>
+        public static void ApplyPopupTheme(FrameworkElement popupRoot)
+        {
+            ElementTheme theme = GetPopupTheme();
+            if (theme != ElementTheme.Default)
+                popupRoot.RequestedTheme = theme;
+        }
+
+        /// <summary>
+        /// Flyout/MenuFlyout/CommandBarFlyout Opened 事件通用处理:对弹层显式应用当前主题。
+        /// XAML 里挂 Opened="FlyoutThemeRefresh_Opened"(code-behind 一行转发到本方法)。
+        /// </summary>
+        public static void ApplyFlyoutTheme(object sender, object e)
+        {
+            switch (sender)
+            {
+                case Flyout flyout:
+                    if (flyout.Content is FrameworkElement content)
+                        ApplyThemeToFlyoutRoot(content);
+                    break;
+                case MenuFlyout menu:
+                    FrameworkElement? firstItem = menu.Items.OfType<FrameworkElement>().FirstOrDefault();
+                    if (firstItem != null)
+                        ApplyThemeToFlyoutRoot(firstItem);
+                    break;
+                case CommandBarFlyout commandBar:
+                    FrameworkElement? firstCommand = commandBar.PrimaryCommands.OfType<FrameworkElement>().FirstOrDefault()
+                        ?? commandBar.SecondaryCommands.OfType<FrameworkElement>().FirstOrDefault();
+                    if (firstCommand != null)
+                        ApplyThemeToFlyoutRoot(firstCommand);
+                    break;
+                case TeachingTip tip:
+                    ApplyPopupTheme(tip);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 从弹层内容元素沿可视树向上找弹层根(FlyoutPresenter/CommandBar)应用主题——
+        /// 弹层底色由容器决定,只设内容元素会出现"容器浅色底 + 内容深色"混合;找不到时兜底设内容本身。
+        /// </summary>
+        private static void ApplyThemeToFlyoutRoot(FrameworkElement start)
+        {
+            DependencyObject current = start;
+            for (int depth = 0; depth < 10 && current != null; depth++)
+            {
+                if (current is FlyoutPresenter or MenuFlyoutPresenter or CommandBar)
+                {
+                    ApplyPopupTheme((FrameworkElement)current);
+                    return;
+                }
+                current = VisualTreeHelper.GetParent(current);
+            }
+            ApplyPopupTheme(start);
+        }
+
         private async Task ScanWallpaperWhenStart()
         {
             try
