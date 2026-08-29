@@ -32,8 +32,8 @@ public sealed partial class Cleanup : Page
     /// <summary>创意工坊壁纸根目录(从设置读取,不再硬编码)。</summary>
     private string WorkshopPath => ((App)Application.Current).ViewModel.PathManagementVM.WorkshopPath;
     private static readonly string WhitelistFile = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "WE_Tool", "cleanup_whitelist.json");
+        // 统一走 App.GetAppDataRoot():便携模式落在包内 Data\,否则 %LOCALAPPDATA%\WE_Tool
+        App.GetAppDataRoot(), "cleanup_whitelist.json");
 
     private readonly HashSet<string> _whitelist = new(StringComparer.OrdinalIgnoreCase);
     private WhitelistWindow? _whitelistWin;

@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Converters;
@@ -87,7 +88,24 @@ namespace WE_Tool
                 Log.Warning(ex, "读取属性窗口标题资源失败");
             }
             Title = title;
-            AppWindow.Resize(new SizeInt32(560, 720));
+            // 恢复上次尺寸(开关开启且已记录过);否则用默认 560×720。
+            // 尺寸在构造时应用,避免打开后闪一下再跳(与主窗口恢复逻辑解耦,只存大小不存位置)。
+            // 尺寸字段只在配置模型(主窗口 WindowX/Y 同模式),VM 仅暴露开关,此处直接读模型。
+            int w = 560, h = 720;
+            if (ViewModel.AppSettingsVM.RestorePropertiesWindowSize)
+            {
+                try
+                {
+                    var boot = new ConfigService().LoadAsync().GetAwaiter().GetResult();
+                    if (boot.PropertiesWindowWidth > 0 && boot.PropertiesWindowHeight > 0)
+                    {
+                        w = boot.PropertiesWindowWidth;
+                        h = boot.PropertiesWindowHeight;
+                    }
+                }
+                catch { /* 读取失败用默认尺寸 */ }
+            }
+            AppWindow.Resize(new SizeInt32(w, h));
             ApplyTheme();
 
             // 设置页切换主题时跟随
@@ -97,11 +115,73 @@ namespace WE_Tool
                     ApplyTheme();
             };
 
-            Closed += (s, e) => _openWindows.Remove(this);
+            // 尺寸防抖保存:窗口尺寸变化(手动拖拽/最大化)后 500ms 落盘,只存最后一次(照抄 MainWindow 模式)
+            AppWindow.Changed += OnAppWindowChanged;
+
+            Closed += (s, e) =>
+            {
+                _openWindows.Remove(this);
+                AppWindow.Changed -= OnAppWindowChanged;
+                SavePropertiesWindowSize(); // 关闭时兜底保存一次(防抖可能未触发)
+            };
         }
 
         /// <summary>打开时快照的壁纸(与主窗口选中分离,不跟随主窗口切换)</summary>
         public WallpaperItem? Selected { get; private set; }
+
+        private CancellationTokenSource? _sizeSaveCts;
+
+        /// <summary>窗口尺寸变化(拖拽/最大化)防抖 500ms 后保存;只记录最后一次。</summary>
+        private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
+        {
+            if (!args.DidSizeChange) return;
+
+            _sizeSaveCts?.Cancel();
+            _sizeSaveCts = new CancellationTokenSource();
+            var token = _sizeSaveCts.Token;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(500, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
+                if (token.IsCancellationRequested) return;
+                try
+                {
+                    var settings = await new ConfigService().LoadAsync();
+                    settings.PropertiesWindowWidth = sender.Size.Width;
+                    settings.PropertiesWindowHeight = sender.Size.Height;
+                    await new ConfigService().SaveAsync(settings);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "保存属性窗口尺寸失败");
+                }
+            });
+        }
+
+        /// <summary>关闭时兜底保存一次当前尺寸(防抖可能未触发,如快速关闭)。</summary>
+        private void SavePropertiesWindowSize()
+        {
+            try
+            {
+                var size = AppWindow.Size;
+                if (size.Width <= 0 || size.Height <= 0) return;
+                var settings = new ConfigService().LoadAsync().GetAwaiter().GetResult();
+                settings.PropertiesWindowWidth = size.Width;
+                settings.PropertiesWindowHeight = size.Height;
+                new ConfigService().SaveAsync(settings).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "保存属性窗口尺寸失败(关闭时)");
+            }
+        }
 
         /// <summary>是否显示"壁纸属性"页(组件等无 project.json 可配置属性的条目传 false,只显示文件属性页)</summary>
         public bool ShowPropsPage { get; set; } = true;

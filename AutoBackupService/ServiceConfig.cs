@@ -38,11 +38,10 @@ public sealed class ServiceConfig
         public bool RatingR { get; set; } = true;
     }
 
-    /// <summary>读取主程序 config.json;不存在或解析失败返回 null。</summary>
+    /// <summary>读取 config.json(根目录 = Program.DataRoot,由 --data-dir 或默认 AppData 决定);不存在或解析失败返回 null。</summary>
     public static ServiceConfig? Load()
     {
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string path = System.IO.Path.Combine(localAppData, "WE_Tool", "config.json");
+        string path = System.IO.Path.Combine(Program.DataRoot, "config.json");
         if (!File.Exists(path))
         {
             Log.Write($"config.json 不存在: {path}");

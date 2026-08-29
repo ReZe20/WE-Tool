@@ -255,8 +255,7 @@ public sealed partial class WhitelistWindow : WindowEx
         try
         {
             var file = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "WE_Tool", "cleanup_whitelist.json");
+                App.GetAppDataRoot(), "cleanup_whitelist.json");
             File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(_whitelist.ToList(), JsonContext.Default.ListString));
         }
         catch { }

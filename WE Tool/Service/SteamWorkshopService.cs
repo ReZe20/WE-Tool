@@ -189,18 +189,23 @@ public partial class SteamWorkshopService : IDisposable
                 return false;
             }
 
+            var startInfo = new ProcessStartInfo(exePath)
+            {
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                StandardInputEncoding = Encoding.UTF8,
+                StandardOutputEncoding = Encoding.UTF8,
+            };
+            // 桥接是独立进程,读不到主程序日志级别;主程序"关闭日志"(Off→Fatal)时以参数同步静默
+            if (App.LogLevelSwitch.MinimumLevel == Serilog.Events.LogEventLevel.Fatal)
+                startInfo.ArgumentList.Add("--log-off");
+
             var bridge = new Process
             {
-                StartInfo = new ProcessStartInfo(exePath)
-                {
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    StandardInputEncoding = Encoding.UTF8,
-                    StandardOutputEncoding = Encoding.UTF8,
-                },
+                StartInfo = startInfo,
                 EnableRaisingEvents = true,
             };
             // 自包含发布(无对应 .NET 运行时的机器)时,桥接为框架依赖进程,须指向应用自带的运行时;

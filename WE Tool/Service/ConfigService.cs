@@ -34,8 +34,9 @@ namespace WE_Tool.Service
 
         private static string GetConfigFilePath()
         {
-            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string appFolder = Path.Combine(localAppData, "WE_Tool");
+            // 统一走 App.GetAppDataRoot():便携模式(exe 同目录 portable.ini)下配置落在包内 Data\,
+            // 否则 %LOCALAPPDATA%\WE_Tool。所有用户数据同根,避免便携/安装分叉。
+            string appFolder = App.GetAppDataRoot();
             Directory.CreateDirectory(appFolder);
             return Path.Combine(appFolder, FileName);
         }

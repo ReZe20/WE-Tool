@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -479,6 +479,9 @@
   </data>
   <data name="LogLevel.Description" xml:space="preserve">
     <value>Steuert den Detaillgrad der Protokollierung, Änderungen wirken sofort</value>
+  </data>
+  <data name="LogLevel_Off.Content" xml:space="preserve">
+    <value>Deaktiviert</value>
   </data>
   <data name="LogLevel_Debug.Content" xml:space="preserve">
     <value>Debug</value>
@@ -1690,6 +1693,8 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   </data>
   <data name="WindowBehavior_Restore.Content" xml:space="preserve">
     <value>Vorherige Fenstergröße und -position wiederherstellen</value>
+  </data>  <data name="WindowBehavior_RestorePropertiesWindowSize.Content" xml:space="preserve">
+    <value>Größe des Eigenschaftenfensters beim Öffnen wiederherstellen</value>
   </data>
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>Bereinigung</value>
@@ -1798,15 +1803,6 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   </data>
   <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
     <value>Altersfreigabe für die automatische Sicherung</value>
-  </data>
-  <data name="AutoBackup_RatingG.Content" xml:space="preserve">
-    <value>Alle</value>
-  </data>
-  <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
-    <value>Jugendliche</value>
-  </data>
-  <data name="AutoBackup_RatingR.Content" xml:space="preserve">
-    <value>Erwachsene</value>
   </data>
   <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
     <value>Vorgang fehlgeschlagen</value>

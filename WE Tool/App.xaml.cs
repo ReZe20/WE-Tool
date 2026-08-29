@@ -38,8 +38,8 @@ namespace WE_Tool
         private readonly IConfigService _configService = new ConfigService();
         public static List<WallpaperItem> GlobalAllWallpapers { get; private set; } = [];
         public static Task ScanTask { get; private set; } = Task.CompletedTask;
-        /// <summary>日志级别运行时开关(设置页修改即时生效,无需重启)</summary>
-        public static LoggingLevelSwitch LogLevelSwitch { get; } = new(LogEventLevel.Information);
+        /// <summary>日志级别运行时开关(设置页修改即时生效,无需重启;默认关闭)</summary>
+        public static LoggingLevelSwitch LogLevelSwitch { get; } = new(LogEventLevel.Fatal);
         /// <summary>启动时的完整扫描链路（读配置 → StartBackgroundScan），页面可等待它确保扫描已开始</summary>
         public static Task? InitialScanTask { get; private set; }
         public static event EventHandler? ScanCompleted;
@@ -71,6 +71,19 @@ namespace WE_Tool
                     File.WriteAllText(logPath, string.Empty);
             }
             catch { /* 日志初始化失败不阻塞启动 */ }
+
+            // 日志级别从配置预读:让启动横幅(下方第一条日志)起就受设置约束(含"关闭")。
+            // 正式加载在 ScanWallpaperWhenStart(ConfigService 进程内缓存,只真读一次盘);
+            // 此处时机早于 Log.Logger 赋值,LoadAsync 自身的日志打给 Serilog 默认静默器,不会落盘。
+            try
+            {
+                var bootSettings = new ConfigService().LoadAsync().GetAwaiter().GetResult();
+                if (bootSettings?.LogLevel == "Off")
+                    LogLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+                else if (Enum.TryParse<LogEventLevel>(bootSettings?.LogLevel, true, out var bootLevel))
+                    LogLevelSwitch.MinimumLevel = bootLevel;
+            }
+            catch { /* 预读失败不阻塞启动,保持默认级别 */ }
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(LogLevelSwitch) // 级别由设置页控制,运行时即时生效
@@ -125,8 +138,30 @@ namespace WE_Tool
                 Log.Error("未处理的 AppDomain 异常: {ExceptionObject}", e.ExceptionObject);
         }
 
+        /// <summary>
+        /// 数据根目录:所有用户数据(配置 config.json / 日志 logs / 缓存 wallpaper_cache.json / 清理白名单)
+        /// 的统一根。便携模式(exe 同目录存在 portable.ini)→ 包内 Data\ 目录(真正随身带);
+        /// 否则 → %LOCALAPPDATA%\WE_Tool(安装版/默认)。
+        /// </summary>
         public static string GetAppDataRoot()
         {
+            // 便携标记(exe 同目录,或上一级目录):portable 布局 = launcher + portable.ini 在包根,
+            // 主程序在 app\ 子目录(Environment.ProcessPath 指向 app\WE_Tool.exe),需向上找一级。
+            string exeDir = System.IO.Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+            string? portableRoot = null;
+            if (File.Exists(System.IO.Path.Combine(exeDir, "portable.ini")))
+                portableRoot = exeDir;
+            else if (System.IO.Path.GetDirectoryName(exeDir) is { } parent
+                     && File.Exists(System.IO.Path.Combine(parent, "portable.ini")))
+                portableRoot = parent;
+
+            if (portableRoot != null)
+            {
+                string portableData = System.IO.Path.Combine(portableRoot, "Data");
+                Directory.CreateDirectory(portableData);
+                return portableData;
+            }
+
             string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appFolder = System.IO.Path.Combine(localAppData, "WE_Tool");
             System.IO.Directory.CreateDirectory(appFolder);
@@ -228,8 +263,12 @@ namespace WE_Tool
                 var settings = await _configService.LoadAsync();
                 if (settings != null)
                 {
-                    // 应用日志级别配置(非法值回落 Debug)
-                    if (Enum.TryParse<LogEventLevel>(settings.LogLevel, true, out var configuredLevel))
+                    // 应用日志级别配置(Off=关闭→Fatal 等效零输出;非法值回落默认级别)
+                    if (settings.LogLevel == "Off")
+                    {
+                        LogLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+                    }
+                    else if (Enum.TryParse<LogEventLevel>(settings.LogLevel, true, out var configuredLevel))
                     {
                         LogLevelSwitch.MinimumLevel = configuredLevel;
                     }

@@ -47,8 +47,7 @@ public sealed partial class Logs : Page
         _mainLogPath = ResolveMainLogPath(logDir);
         _repkgLogPath = Path.Combine(logDir, "repkg.log");
         _autoBackupLogPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "WE_Tool", "AutoBackupService.log");
+            App.GetAppDataRoot(), "AutoBackupService.log");
 
         _logTimer.Tick += (_, _) => PollCurrentSource();
     }

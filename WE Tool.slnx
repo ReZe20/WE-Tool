@@ -12,7 +12,6 @@
     <Platform Solution="Release|x86" Project="x86" />
     <Deploy />
   </Project>
-  <Project Path="WE_Tool.Launcher/WE_Tool.Launcher.csproj" />
   <Project Path="TestSteamUnsub/TestSteamUnsub.csproj" />
   <Project Path="FakeRePkg/FakeRePkg.csproj" />
   <Project Path="TestBatchRestart/TestBatchRestart.csproj" />

@@ -195,6 +195,7 @@
                     <ComboBox SelectedValuePath="Tag"
                               SelectedValue="{x:Bind ViewModel.LogLevel, Mode=TwoWay}"
                               MinWidth="150">
+                        <ComboBoxItem Tag="Off" x:Uid="LogLevel_Off"/>
                         <ComboBoxItem Tag="Debug" x:Uid="LogLevel_Debug"/>
                         <ComboBoxItem Tag="Information" x:Uid="LogLevel_Information"/>
                         <ComboBoxItem Tag="Warning" x:Uid="LogLevel_Warning"/>
@@ -211,6 +212,12 @@
                             <controls:SettingsCard.Header>
                                 <CheckBox x:Uid="WindowBehavior_Restore"
                                               IsChecked="{x:Bind ViewModel.AppSettingsVM.RestoreWindowGeometry, Mode=TwoWay}"/>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <CheckBox x:Uid="WindowBehavior_RestorePropertiesWindowSize"
+                                              IsChecked="{x:Bind ViewModel.AppSettingsVM.RestorePropertiesWindowSize, Mode=TwoWay}"/>
                             </controls:SettingsCard.Header>
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>

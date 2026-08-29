@@ -93,9 +93,8 @@ internal class WallpaperScanner
     private static readonly object CacheWriteLock = new();
 
     private static string GetDefaultCachePath() =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "WE_Tool", "wallpaper_cache.json");
+        // 统一走 App.GetAppDataRoot():便携模式落在包内 Data\,否则 %LOCALAPPDATA%\WE_Tool
+        Path.Combine(App.GetAppDataRoot(), "wallpaper_cache.json");
 
     /// <summary>当前缓存结构版本,与 CacheFile.Version 对应;不符则整体作废。</summary>
     private const int CacheSchemaVersion = 2;
@@ -487,12 +486,18 @@ internal class WallpaperScanner
                         }
                     }
                 });
-                // 组件收尾:结果与"最近一次成功完成的 workshop 扫描"严格一致(空 → 空列表)
-                LastComponents = [.. componentBag];
-                Log.Information("组件扫描完成，共 {Count} 个(缓存命中 {Hit},解析 {Parsed})",
-                    componentBag.Count, componentBag.Count - parsedComponentCount, parsedComponentCount);
-                if (source == "workshop" && useCache && parsedComponentCount > 0)
-                    SaveComponentsToCache(effectiveCachePath!, [.. componentBag]);
+                // 组件收尾(仅 workshop 源):结果与"最近一次成功完成的 workshop 扫描"严格一致(空 → 空列表)。
+                // ⚠ 必须守卫 source:三源并发扫描,official/mine 的 componentBag 恒为空,
+                // 若不设防会在 workshop 写入后把 LastComponents 覆盖成空列表——
+                // 症状为"刷新后组件全消失"(缓存全热时 workshop 最先跑完,反而被后完成的空源覆盖)
+                if (source == "workshop")
+                {
+                    LastComponents = [.. componentBag];
+                    Log.Information("组件扫描完成，共 {Count} 个(缓存命中 {Hit},解析 {Parsed})",
+                        componentBag.Count, componentBag.Count - parsedComponentCount, parsedComponentCount);
+                    if (useCache && parsedComponentCount > 0)
+                        SaveComponentsToCache(effectiveCachePath!, [.. componentBag]);
+                }
             }
             // === 保存新增/修改的壁纸到缓存(锁内读旧缓存合并,保留其它源条目) ===
 

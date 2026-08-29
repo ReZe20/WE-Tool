@@ -87,11 +87,11 @@
                                    Padding="0,4"/>
                     </Expander.Header>
                     <StackPanel Margin="4,8,4,4">
-                        <CheckBox x:Name="RatingGCheck" x:Uid="AutoBackup_RatingG"
+                        <CheckBox x:Name="RatingGCheck" x:Uid="Rating_Everyone"
                                   Checked="Filter_Changed" Unchecked="Filter_Changed"/>
-                        <CheckBox x:Name="RatingPgCheck" x:Uid="AutoBackup_RatingPg"
+                        <CheckBox x:Name="RatingPgCheck" x:Uid="Rating_Questionable"
                                   Checked="Filter_Changed" Unchecked="Filter_Changed"/>
-                        <CheckBox x:Name="RatingRCheck" x:Uid="AutoBackup_RatingR"
+                        <CheckBox x:Name="RatingRCheck" x:Uid="Rating_Mature"
                                   Checked="Filter_Changed" Unchecked="Filter_Changed"/>
                     </StackPanel>
                 </Expander>

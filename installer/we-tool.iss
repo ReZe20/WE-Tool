@@ -50,7 +50,7 @@ Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 NoIcons=不创建开始菜单文件夹(&W)
 
 [Files]
-; 整目录递归打包(含 app\ 子目录与 repkg),忽略仅存在于本地的残留文件
+; 整目录递归打包(含 repkg 等子目录),忽略仅存在于本地的残留文件
 Source: "{#SourceRoot}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
@@ -71,3 +71,60 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#AppName}}"; F
 [UninstallDelete]
 ; 卸载时清掉运行期可能生成的空目录残留
 Type: filesandordirs; Name: "{app}\repkg"
+
+[Code]
+{ 卸载器:可选删除用户数据与配置。
+  安装版数据落在 %LOCALAPPDATA%\WE_Tool(主程序 GetAppDataRoot 非便携分支)。
+  卸载进度窗体上提供勾选框,勾选则卸载完成后一并删除该目录(含 config.json / logs / 缓存 / 白名单)。
+  仅删除确切路径,不做通配,且确认目标名=WE_Tool 才删(防误删)。
+
+  注意:不可在 InitializeUninstall 里访问 WizardForm/UninstallProgressForm(此时未创建,会空指针崩)。
+  勾选框在 InitializeUninstallProgressForm(卸载进度窗体创建后)里挂到 UninstallProgressForm。 }
+
+var
+  UninstallDeleteDataCheck: TNewCheckBox;
+
+function InitializeUninstall(): Boolean;
+begin
+  Result := True;   { 继续卸载 }
+end;
+
+procedure InitializeUninstallProgressForm();
+begin
+  { 在卸载进度窗体上追加勾选框(默认不勾,用户主动选才删数据)。
+    进度窗体创建后触发,此时 UninstallProgressForm 可用。
+    位置:取消按钮上方,避免遮挡按钮/进度条 }
+  UninstallDeleteDataCheck := TNewCheckBox.Create(UninstallProgressForm);
+  UninstallDeleteDataCheck.Parent := UninstallProgressForm;
+  UninstallDeleteDataCheck.Top := UninstallProgressForm.CancelButton.Top - ScaleY(32);
+  UninstallDeleteDataCheck.Left := ScaleX(8);
+  UninstallDeleteDataCheck.Width := UninstallProgressForm.ClientWidth - ScaleX(16);
+  UninstallDeleteDataCheck.Height := ScaleY(24);
+  UninstallDeleteDataCheck.Caption := '同时删除用户数据与配置(日志、缓存、白名单等,保存在 %LOCALAPPDATA%\WE_Tool)';
+  UninstallDeleteDataCheck.Checked := False;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  DataDir: String;
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    if UninstallDeleteDataCheck <> nil then
+    begin
+      if UninstallDeleteDataCheck.Checked then
+      begin
+        { 精确计算数据目录(与主程序 GetAppDataRoot 非便携分支一致:%LOCALAPPDATA%\WE_Tool) }
+        DataDir := ExpandConstant('{localappdata}\WE_Tool');
+        { 防护:目标目录名必须确实是 WE_Tool 才删,避免路径解析意外(如 localappdata 为空) }
+        if (DataDir <> '') and (ExtractFileName(DataDir) = 'WE_Tool') then
+        begin
+          if DelTree(DataDir, True, True, True) then
+            MsgBox('已删除用户数据与配置。', mbInformation, MB_OK)
+          else
+            MsgBox('用户数据删除失败(部分文件可能被占用)。', mbError, MB_OK);
+        end;
+      end;
+    end;
+  end;
+end;

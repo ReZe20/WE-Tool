@@ -73,6 +73,22 @@ public class AutoBackupServiceManager
         }
     }
 
+    /// <summary>
+    /// 服务启动命令行:--run 常驻;便携模式(数据根非 AppData)时追加 --data-dir 让服务
+    /// 读包内 Data\ 的 config.json/写日志(服务是独立进程,不知道 portable.ini,必须显式传递)。
+    /// </summary>
+    private static string ServiceRunArgs
+    {
+        get
+        {
+            string dataRoot = App.GetAppDataRoot();
+            // 非便携(数据根 = %LOCALAPPDATA%\WE_Tool)时不必传参,服务默认即 AppData,保持与旧版一致
+            bool isPortable = Path.GetDirectoryName(dataRoot) is { } root
+                              && File.Exists(Path.Combine(root, "portable.ini"));
+            return isPortable ? $"--run --data-dir \"{dataRoot}\"" : "--run";
+        }
+    }
+
     /// <summary>安装:写入 HKCU Run 键(开机登录自启,免管理员)。</summary>
     public string? Install()
     {
@@ -80,8 +96,8 @@ public class AutoBackupServiceManager
             return $"未找到服务程序: {ServiceExePath}";
         try
         {
-            // Run 键值:引号包裹路径 + --run 参数
-            string cmd = $"\"{ServiceExePath}\" --run";
+            // Run 键值:引号包裹路径 + 服务运行参数(--run [--data-dir 便携根])
+            string cmd = $"\"{ServiceExePath}\" {ServiceRunArgs}";
             using var key = Registry.CurrentUser.CreateSubKey(RunKeyPath);
             key?.SetValue(TaskName, cmd, RegistryValueKind.String);
             // 安装后立即启动,让服务马上生效(不必等下次登录)
@@ -118,7 +134,7 @@ public class AutoBackupServiceManager
         if (IsRunning()) return null;
         try
         {
-            Process.Start(new ProcessStartInfo(ServiceExePath, "--run")
+            Process.Start(new ProcessStartInfo(ServiceExePath, ServiceRunArgs)
             {
                 UseShellExecute = true,
                 CreateNoWindow = true

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -479,6 +479,9 @@
   </data>
   <data name="LogLevel.Description" xml:space="preserve">
     <value>Управляет детализацией журнала. Изменения вступают в силу немедленно.</value>
+  </data>
+  <data name="LogLevel_Off.Content" xml:space="preserve">
+    <value>Выключено</value>
   </data>
   <data name="LogLevel_Debug.Content" xml:space="preserve">
     <value>Отладка</value>
@@ -1690,6 +1693,8 @@
   </data>
   <data name="WindowBehavior_Restore.Content" xml:space="preserve">
     <value>Восстановить предыдущий размер и положение окна</value>
+  </data>  <data name="WindowBehavior_RestorePropertiesWindowSize.Content" xml:space="preserve">
+    <value>Восстанавливать размер окна свойств при открытии</value>
   </data>
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>Очистка</value>
@@ -1798,15 +1803,6 @@
   </data>
   <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
     <value>Возрастной рейтинг</value>
-  </data>
-  <data name="AutoBackup_RatingG.Content" xml:space="preserve">
-    <value>Для всех</value>
-  </data>
-  <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
-    <value>Подростки</value>
-  </data>
-  <data name="AutoBackup_RatingR.Content" xml:space="preserve">
-    <value>Для взрослых</value>
   </data>
   <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
     <value>Сбой операции</value>

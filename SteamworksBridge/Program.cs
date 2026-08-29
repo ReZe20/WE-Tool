@@ -17,6 +17,10 @@ internal static class Program
 
     private static readonly object LogLock = new();
 
+    /// <summary>--log-off:主程序日志级别为"关闭"(Off→Fatal)时由启动参数传入,所有文件日志静默
+    /// (桥接是独立进程,读不到主程序的 LoggingLevelSwitch;含未处理异常在内全部静默,与主程序 Off 语义一致)</summary>
+    private static bool _logOff;
+
     private static string LogPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "WE_Tool", "logs", "steamworks-bridge.log");
@@ -24,8 +28,10 @@ internal static class Program
     /// <summary>日志大小上限(字节):超过后从头截断重写,防止日志无限增长</summary>
     private const long MaxLogSize = 5 * 1024 * 1024;
 
-    private static int Main()
+    private static int Main(string[] args)
     {
+        _logOff = args.Contains("--log-off");
+
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             Log($"未处理异常: {e.ExceptionObject}");
@@ -132,6 +138,7 @@ internal static class Program
 
     private static void Log(string message)
     {
+        if (_logOff) return; // 主程序要求关闭日志:全部静默(见 _logOff 注释)
         try
         {
             lock (LogLock)

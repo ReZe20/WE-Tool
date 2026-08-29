@@ -3,14 +3,15 @@ using System.IO;
 namespace AutoBackupService;
 
 /// <summary>
-/// 轻量日志:追加写入 %LOCALAPPDATA%/WE_Tool/AutoBackupService.log,控制台同显。
+/// 轻量日志:追加写入数据根目录(Program.DataRoot,便携模式 = 包内 Data\,
+/// 否则 %LOCALAPPDATA%/WE_Tool)/AutoBackupService.log,控制台同显。
 /// 不用 Serilog,保持 NativeAOT 体积与零第三方依赖。
 /// </summary>
 public static class Log
 {
     private static readonly string LogPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "WE_Tool", "AutoBackupService.log");
+        Program.DataRoot,
+        "AutoBackupService.log");
 
     /// <summary>日志大小上限(字节):超过后从头截断重写,防止日志无限增长</summary>
     private const long MaxLogSize = 5 * 1024 * 1024;

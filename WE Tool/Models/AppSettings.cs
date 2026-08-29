@@ -10,7 +10,7 @@ namespace WE_Tool.Models
         public string AppLanguage { get; set; } = "default";
         public string StartPageTag { get; set; } = "Papers";
         public string Theme { get; set; } = "Default";
-        public string LogLevel { get; set; } = "Information";
+        public string LogLevel { get; set; } = "Off";
         public int WindowX { get; set; } = -1;
         public int WindowY { get; set; } = -1;
         public int WindowWidth { get; set; } = -1;
@@ -23,6 +23,11 @@ namespace WE_Tool.Models
         public string ScanCacheEnabled { get; set; } = "1";
         public bool RestoreWindowGeometry { get; set; } = true;
         public bool WindowMaximized { get; set; } = false;
+        /// <summary>属性面板打开时恢复之前大小(按最后一次手动改变的大小;默认开启)。</summary>
+        public bool RestorePropertiesWindowSize { get; set; } = true;
+        /// <summary>属性面板上次尺寸(像素);-1 表示未记录。</summary>
+        public int PropertiesWindowWidth { get; set; } = -1;
+        public int PropertiesWindowHeight { get; set; } = -1;
     }
 
     public class PapersConfig

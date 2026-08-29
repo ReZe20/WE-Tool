@@ -235,7 +235,24 @@ public sealed partial class WallpaperBackup : Page
             Directory.Delete(item.FullPath, true);
             _scanGeneration++; // 作废在途扫描,防止其旧结果回填把刚删的卡片变回来
             _allItems.Remove(item);
-            ApplyFilterAndSort();
+
+            // 增量移除:播单项移除+补位动画(Remove 通知,与 Papers 的删除同路)。
+            // 旧做法走 ApplyFilterAndSort 的 Clear+Add 全量重建(Reset=整页刷新,无单项动画)。
+            if (BackupItems.Remove(item))
+            {
+                // 可见列表被删空但全量还有项 → 筛选空态(按 ApplyFilterAndSort 语义补齐;全空由下方尾部 ShowEmpty 兜底)
+                if (BackupItems.Count == 0 && _allItems.Count > 0)
+                {
+                    BackupGridView.Visibility = Visibility.Collapsed;
+                    EmptyState.Visibility = Visibility.Visible;
+                    EmptyStateText.Text = L("BackupPage_FilterEmpty.Text");
+                }
+            }
+            else
+            {
+                // 项被筛掉不在可见集合,无动画可播;走旧路径刷新
+                ApplyFilterAndSort();
+            }
 
             // 内存求和(SizeBytes 扫描时已存),不再重扫全部备份目录
             long remaining = _allItems.Sum(it => it.SizeBytes);

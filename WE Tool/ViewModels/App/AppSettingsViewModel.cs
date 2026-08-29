@@ -21,6 +21,10 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial bool RestoreWindowGeometry { get; set; } = true;
 
+        /// <summary>属性面板打开时恢复之前大小(默认开启)。</summary>
+        [ObservableProperty]
+        public partial bool RestorePropertiesWindowSize { get; set; } = true;
+
 #pragma warning disable CA1822 // ConfigPath在之后需要实例访问，不标记static
         public string ConfigPath
         {

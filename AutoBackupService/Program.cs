@@ -6,11 +6,21 @@ namespace AutoBackupService;
 ///   --once   单次:补齐后退出(调试/验证/手动用)
 ///   --verify 校验:输出配置与状态(WE Tool 调用判断服务可用性),exit 0=可用/1=不可用
 ///   (无参数)  等价 --verify
+///   --data-dir &lt;path&gt;  数据根目录覆盖(便携模式):config.json 与日志都落在该目录;
+///                       不传则默认 %LOCALAPPDATA%/WE_Tool(安装版/独立运行)。
 /// </summary>
 public static class Program
 {
+    /// <summary>进程内数据根目录(由 --data-dir 或默认 AppData 解析,只算一次)。</summary>
+    public static string DataRoot { get; private set; } = "";
+
     public static int Main(string[] args)
     {
+        // 解析 --data-dir(便携模式由 WE Tool 主程序传入);其余参数原样保留给模式分发
+        DataRoot = ParseDataDir(args) ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "WE_Tool");
+
         string mode = args.Length > 0 ? args[0].ToLowerInvariant() : "--verify";
 
         var config = ServiceConfig.Load();
@@ -30,9 +40,20 @@ public static class Program
             case "--verify":
                 return Verify(config);
             default:
-                Console.WriteLine("未知参数。用法: AutoBackupService [--run|--once|--verify]");
+                Console.WriteLine("未知参数。用法: AutoBackupService [--run|--once|--verify] [--data-dir <path>]");
                 return Verify(config);
         }
+    }
+
+    /// <summary>从参数中提取 --data-dir 的值;未提供返回 null。</summary>
+    private static string? ParseDataDir(string[] args)
+    {
+        for (int i = 0; i < args.Length - 1; i++)
+        {
+            if (string.Equals(args[i], "--data-dir", StringComparison.OrdinalIgnoreCase))
+                return args[i + 1];
+        }
+        return null;
     }
 
     private static int Run(ServiceConfig config)

@@ -953,6 +953,24 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         RefreshButton.IsEnabled = false;
         HideComponentContextMenu();
 
+        // 先清空列表再扫描：旧数据先撤下，扫描完成后由 LoadComponents 回填。
+        // 注意不能复用 LoadComponents 里的清理——那边刻意不清显示列表（切页缓存优化，见其 497 行注释），
+        // 因此这里手动清 UI 集合 + 筛选管道 + 多选状态 + 页码（顺序照抄 LoadComponents 490-495 行）。
+        FilteredComponents.Clear();
+        _filteredComponents = [];
+        _allComponents = [];
+        foreach (var item in SelectedComponents)
+            item.IsSelected = false;
+        SelectedComponents.Clear();
+        DisplayedSelectedComponents.Clear();
+        IsMultiSelectMode = false;
+        SelectedComponent = null;
+        CurrentPage = 1;
+        NotifyPagerStateChanged();
+        ShowTip(NoResultTip, false);
+        ShowTip(NoScanResultTip, false);
+        Log.Information("刷新组件：已清空显示列表，等待扫描回填");
+
         try
         {
             // 触发后台扫描（更新 WallpaperScanner.LastComponents），完成后重新加载

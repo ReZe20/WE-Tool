@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -479,6 +479,9 @@
   </data>
   <data name="LogLevel.Description" xml:space="preserve">
     <value>ログ記録の詳細度を制御します。変更後は即座に反映されます</value>
+  </data>
+  <data name="LogLevel_Off.Content" xml:space="preserve">
+    <value>無効</value>
   </data>
   <data name="LogLevel_Debug.Content" xml:space="preserve">
     <value>デバッグ</value>
@@ -1690,6 +1693,8 @@ project.json とプレビューをコピー
   </data>
   <data name="WindowBehavior_Restore.Content" xml:space="preserve">
     <value>前回のウィンドウサイズと位置を復元</value>
+  </data>  <data name="WindowBehavior_RestorePropertiesWindowSize.Content" xml:space="preserve">
+    <value>プロパティウィンドウを開くとき前回のサイズを復元</value>
   </data>
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>残りクリーンアップ</value>
@@ -1798,15 +1803,6 @@ project.json とプレビューをコピー
   </data>
   <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
     <value>自動バックアップする年齢区分</value>
-  </data>
-  <data name="AutoBackup_RatingG.Content" xml:space="preserve">
-    <value>全年齢</value>
-  </data>
-  <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
-    <value>ティーン</value>
-  </data>
-  <data name="AutoBackup_RatingR.Content" xml:space="preserve">
-    <value>成人向け</value>
   </data>
   <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
     <value>操作に失敗しました</value>

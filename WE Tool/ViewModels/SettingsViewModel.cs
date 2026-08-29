@@ -206,14 +206,20 @@ namespace WE_Tool.ViewModels
         /// <summary>分块解析，逐条读取减少内存占用</summary>
         [ObservableProperty]
         public partial bool LazyLoad { get; set; } = true;
-        /// <summary>日志记录级别(Verbose/Debug/Information/Warning/Error/Fatal),修改即时生效</summary>
+        /// <summary>日志记录级别(Off=关闭/Verbose/Debug/Information/Warning/Error/Fatal),修改即时生效。默认关闭。</summary>
         [ObservableProperty]
-        public partial string LogLevel { get; set; } = "Information";
+        public partial string LogLevel { get; set; } = "Off";
 
         partial void OnLogLevelChanged(string value)
         {
-            // 运行时切换 Serilog 最小级别,无需重启
-            if (Enum.TryParse<Serilog.Events.LogEventLevel>(value, true, out var level))
+            // 运行时切换 Serilog 最小级别,无需重启。
+            // Off(关闭):Serilog 无 Off 级别(LogEventLevel 仅 Verbose→Fatal 六档),
+            // 最小级别提到 Fatal 即等效零输出——项目代码无 Log.Fatal 调用,已反射实证。
+            if (value == "Off")
+            {
+                App.LogLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Fatal;
+            }
+            else if (Enum.TryParse<Serilog.Events.LogEventLevel>(value, true, out var level))
             {
                 App.LogLevelSwitch.MinimumLevel = level;
             }
@@ -349,6 +355,7 @@ namespace WE_Tool.ViewModels
             AppSettingsVM.Theme = _settings.Theme;
             AppSettingsVM.ScanCacheEnabled = _settings.ScanCacheEnabled;
             AppSettingsVM.RestoreWindowGeometry = _settings.RestoreWindowGeometry;
+            AppSettingsVM.RestorePropertiesWindowSize = _settings.RestorePropertiesWindowSize;
 
             WallpaperDisplayVM.IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             WallpaperDisplayVM.AutoPlayGif = _settings.Papers.AutoPlayGif;
@@ -729,6 +736,7 @@ namespace WE_Tool.ViewModels
                     _settings.Theme = AppSettingsVM.Theme;
                     _settings.ScanCacheEnabled = AppSettingsVM.ScanCacheEnabled;
                     _settings.RestoreWindowGeometry = AppSettingsVM.RestoreWindowGeometry;
+                    _settings.RestorePropertiesWindowSize = AppSettingsVM.RestorePropertiesWindowSize;
 
                     _settings.Papers.IsBottomBarOpen = WallpaperDisplayVM.IsBottomBarOpen;
                     _settings.Papers.WallpaperViewIndex = WallpaperDisplayVM.WallpaperViewIndex;

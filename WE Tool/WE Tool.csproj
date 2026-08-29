@@ -375,18 +375,10 @@
     <Copy SourceFiles="@(RepkgOutput)" DestinationFolder="$(OutputPath)\repkg" />
   </Target>
 
-  <!-- Post-publish: restructure with .NET Framework launcher -->
+  <!-- Post-publish: 剔除发布不需要的附带文件。AOT 主程序 WE_Tool.exe 直接位于发布根目录。
+       portable zip 另由 PackageZip 组装 launcher + app\ 布局(见该目标);setup 直接用本根目录版。
+       目标名保留作 CopySteamworksBridge/CopyAutoBackupService/DeleteAotPdb/ReplaceSkiaDll 的时序锚点 -->
   <Target Name="PackageWithLauncher" AfterTargets="Publish">
-    <PropertyGroup>
-      <LauncherProj>$(ProjectDir)..\WE_Tool.Launcher\WE_Tool.Launcher.csproj</LauncherProj>
-      <LauncherExe>$(ProjectDir)..\WE_Tool.Launcher\bin\Release\WE_Tool.exe</LauncherExe>
-    </PropertyGroup>
-    <!-- Build launcher -->
-    <Exec Command="dotnet build &quot;$(LauncherProj)&quot; -c Release" />
-    <!-- Create app/ and move all files into it in one PowerShell call (先删除旧 app/ 保证重复发布幂等) -->
-    <Exec Command="powershell -NoProfile -Command &quot;$p='$(PublishDir)'; $a=Join-Path $p 'app'; if (Test-Path $a) { Remove-Item $a -Recurse -Force }; New-Item -ItemType Directory -Force -Path $a | Out-Null; Get-ChildItem $p -Exclude app | Move-Item -Destination $a -Force&quot;" />
-    <!-- Copy launcher EXE to root -->
-    <Copy SourceFiles="$(LauncherExe)" DestinationFiles="$(PublishDir)WE_Tool.exe" />
     <!-- 剔除调试符号:SkiaSharp 等原生包自带 .pdb(仅调试用),发布产物不携带,避免体积虚增 -->
     <!-- 剔除 ANGLE 原生库:SkiaGifView 纯 CPU 光栅绘制(SKCodec+SKBitmap+SKXamlCanvas),不创建 GL 上下文;
          libEGL/libGLESv2 系 SkiaSharp.Views.WinUI 的 OpenGL 后端,实测删除后应用显示正常(2026-08-18) -->
@@ -414,7 +406,7 @@
       <_PublishUnneeded Include="$(PublishDir)**\libSkiaSharp.dll" />
     </ItemGroup>
     <Delete Files="@(_PublishUnneeded)" />
-    <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (launcher) + app/ (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />
+    <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (AOT 主程序,无 launcher) (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />
   </Target>
 
   <!-- AOT 的 WE_Tool.pdb 由 NativeAOT 在 PackageWithLauncher 之后生成(时序晚,上面的剔除匹配不到),
@@ -425,54 +417,72 @@
   </Target>
 
   <!-- [路线二] 发布后把 NuGet 附带的官方 libSkiaSharp.dll 替换为仓库内精简版(native/skia-min-gif/)。
-       场景:本机 AOT 静态链接成功→app/ 下无 libSkiaSharp.dll,此处无操作(Exists 保护);
-       CI 或静态库缺失时回退 NuGet 官方 dll 模式→app/ 下有官方 dll,此处替换为精简版,
+       场景:本机 AOT 静态链接成功→发布根目录无 libSkiaSharp.dll,此处无操作(Exists 保护);
+       CI 或静态库缺失时回退 NuGet 官方 dll 模式→根目录下有官方 dll,此处替换为精简版,
        使发布包体积与本机一致(zip 少 ~2.4MB)。仓库内精简 dll 与 libSkiaSharp.def/配方一起提交,
        clone 后 CI 可直接复用,无需重新编译 Skia。 -->
   <Target Name="ReplaceSkiaDll" BeforeTargets="PackageZip" AfterTargets="PackageWithLauncher;DeleteAotPdb">
     <ItemGroup>
-      <_OfficialSkiaDll Include="$(PublishDir)app\libSkiaSharp.dll" Condition="Exists('$(PublishDir)app\libSkiaSharp.dll')" />
+      <_OfficialSkiaDll Include="$(PublishDir)libSkiaSharp.dll" Condition="Exists('$(PublishDir)libSkiaSharp.dll')" />
     </ItemGroup>
     <Copy SourceFiles="$(MSBuildProjectDirectory)\..\native\skia-min-gif\libSkiaSharp.dll"
-          DestinationFiles="$(PublishDir)app\libSkiaSharp.dll"
+          DestinationFiles="$(PublishDir)libSkiaSharp.dll"
           SkipUnchangedFiles="true"
           Condition="'@(_OfficialSkiaDll)' != '' And Exists('$(MSBuildProjectDirectory)\..\native\skia-min-gif\libSkiaSharp.dll')" />
     <Message Importance="high" Text="libSkiaSharp.dll 已替换为仓库精简版 ($(MSBuildProjectDirectory)\..\native\skia-min-gif\libSkiaSharp.dll)" Condition="'@(_OfficialSkiaDll)' != '' And Exists('$(MSBuildProjectDirectory)\..\native\skia-min-gif\libSkiaSharp.dll')" />
-    <Message Importance="high" Text="app/ 下无 libSkiaSharp.dll(AOT 静态链接已内嵌),跳过替换" Condition="'@(_OfficialSkiaDll)' == ''" />
+    <Message Importance="high" Text="发布根目录无 libSkiaSharp.dll(AOT 静态链接已内嵌),跳过替换" Condition="'@(_OfficialSkiaDll)' == ''" />
   </Target>
 
   <!-- 发布完成后自动打包 zip 到 VS 默认发布目录 bin/Package/(与 PublishDir 同级,git 忽略)。
-       每次发布自动产出固定位置的分发包,无需手动 Compress-Archive -->
+       每次发布自动产出固定位置的分发包,无需手动 Compress-Archive。
+       portable 布局 = 根目录 WE_Tool.exe(launcher 转发壳,启动 app\WE_Tool.exe) + app\ 主程序整套(与旧版一致);
+       setup 布局 = 根目录 AOT WE_Tool.exe 整套(无 launcher,见 PackageInstaller) -->
   <Target Name="PackageZip" AfterTargets="DeleteAotPdb">
     <PropertyGroup>
       <ZipName>WE-Tool-$(Version)-portable.zip</ZipName>
       <ZipOut>$(MSBuildProjectDirectory)\bin\Package\$(ZipName)</ZipOut>
       <!-- 未压缩文件夹:与 zip 同名去 .zip,方便直接查看/拷贝 -->
       <FolderOut>$(MSBuildProjectDirectory)\bin\Package\WE-Tool-$(Version)-portable</FolderOut>
+      <LauncherProj>$(MSBuildProjectDirectory)\..\WE_Tool.Launcher\WE_Tool.Launcher.csproj</LauncherProj>
+      <LauncherExe>$(MSBuildProjectDirectory)\..\WE_Tool.Launcher\bin\Release\WE_Tool.exe</LauncherExe>
     </PropertyGroup>
+    <!-- 构建 launcher(net472 转发壳,几十 KB;产物名恰为 WE_Tool.exe,与 app 内 AOT 主程序同名不同位置) -->
+    <MSBuild Projects="$(LauncherProj)" Targets="Build" Properties="Configuration=Release" />
+    <Error Condition="!Exists('$(LauncherExe)')" Text="Launcher 构建失败,未找到: $(LauncherExe)" />
     <Delete Files="$(ZipOut)" Condition="Exists('$(ZipOut)')" />
-    <!-- 极限压缩:优先 7-Zip -mx=9(windows-latest CI 自带 7z;aot 机器码高熵,收益 <1%),
-         无 7z 时回退 PowerShell Compress-Archive(本机) -->
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; { $ep = '$(PublishDir)'.TrimEnd('\'); $se7en = @($env:ProgramFiles, ${env:ProgramFiles(x86)}, $env:LOCALAPPDATA) | ForEach-Object { Join-Path $_ '7-Zip\7z.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1; if ($se7en) { Write-Host ('[PackageZip] 7-Zip 极限压缩: ' + $se7en); &amp; $se7en a -tzip -mx=9 -bd -y -- '$(ZipOut)' (Join-Path $ep '*') | Out-Null; if ($LASTEXITCODE -ne 0) { throw ('7z failed: ' + $LASTEXITCODE) } } else { Write-Host '[PackageZip] 未找到 7-Zip,回退 Compress-Archive'; Compress-Archive -Path (Join-Path $ep '*') -DestinationPath '$(ZipOut)' -Force } }&quot;" />
-    <!-- 复制未压缩文件夹(排除 pdb;AOT PDB 由 ILC 在发布末尾生成,时序晚于本目标,复制时一并剔除)。
-         注意:必须整目录复制保留 app/ 子目录结构,不能用 $(PublishDir)* 通配(会平铺) -->
     <RemoveDir Directories="$(FolderOut)" />
-    <Exec Command="powershell -NoProfile -Command &quot;Copy-Item -Path '$(PublishDir)' -Destination '$(FolderOut)' -Recurse -Force; Get-ChildItem '$(FolderOut)' -Recurse -Filter '*.pdb' | Remove-Item -Force&quot;" />
-    <Message Importance="high" Text="zip 已生成: $(ZipOut)" />
+    <!-- 组装 portable 文件夹:launcher 放根目录 + 发布内容整体复制进 app\ + 便携标记 portable.ini。
+         portable.ini 是便携模式开关:主程序 exe 同目录存在它 → 数据(配置/日志/缓存)落包内 Data\;
+         setup 版无此文件 → 数据落 %LOCALAPPDATA%\WE_Tool -->
+    <MakeDir Directories="$(FolderOut)" />
+    <Copy SourceFiles="$(LauncherExe)" DestinationFolder="$(FolderOut)" SkipUnchangedFiles="true" />
+    <WriteLinesToFile File="$(FolderOut)\portable.ini" Lines="# WE Tool 便携模式标记:存在此文件时,配置/日志/缓存保存在包内 Data 目录(随包携带,删除即回到安装版行为)" Overwrite="true" Encoding="UTF-8" />
+    <Exec Command="powershell -NoProfile -Command &quot;Copy-Item -Path '$(PublishDir)' -Destination '$(FolderOut)\app' -Recurse -Force; Get-ChildItem '$(FolderOut)' -Recurse -Filter '*.pdb' | Remove-Item -Force&quot;" />
+    <!-- 极限压缩:优先 7-Zip -mx=9(windows-latest CI 自带 7z;aot 机器码高熵,收益 <1%),
+         无 7z 时回退 PowerShell Compress-Archive(本机)。从 portable 文件夹打包,保证 zip 与文件夹一致 -->
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; { $ep = '$(FolderOut)'.TrimEnd('\'); $se7en = @($env:ProgramFiles, ${env:ProgramFiles(x86)}, $env:LOCALAPPDATA) | ForEach-Object { Join-Path $_ '7-Zip\7z.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1; if ($se7en) { Write-Host ('[PackageZip] 7-Zip 极限压缩: ' + $se7en); &amp; $se7en a -tzip -mx=9 -bd -y -- '$(ZipOut)' (Join-Path $ep '*') | Out-Null; if ($LASTEXITCODE -ne 0) { throw ('7z failed: ' + $LASTEXITCODE) } } else { Write-Host '[PackageZip] 未找到 7-Zip,回退 Compress-Archive'; Compress-Archive -Path (Join-Path $ep '*') -DestinationPath '$(ZipOut)' -Force } }&quot;" />
+    <Message Importance="high" Text="zip 已生成: $(ZipOut) (launcher + app\ 主程序)" />
     <Message Importance="high" Text="未压缩文件夹已生成: $(FolderOut)" />
   </Target>
 
-  <!-- 发布完成后用 Inno Setup 把未压缩文件夹打成单个安装包 setup.exe(bin/Package/,git 忽略)。
+  <!-- 发布完成后用 Inno Setup 把发布目录打成单个安装包 setup.exe(bin/Package/,git 忽略)。
        与 zip 并列的第二种发布模式;ISCC 不存在时仅告警跳过(允许只发 zip 的环境)。
+       setup 版 = 根目录 AOT WE_Tool.exe 整套(无 launcher 转发壳,快捷方式直接指向根目录主程序)。
        版本号经 /D 注入 iss 脚本,避免双处维护 -->
   <Target Name="PackageInstaller" AfterTargets="PackageZip">
     <PropertyGroup>
       <SetupName>WE-Tool-$(Version)-win-x64-setup.exe</SetupName>
       <SetupOut>$(MSBuildProjectDirectory)\bin\Package\$(SetupName)</SetupOut>
       <IssFile>$(MSBuildProjectDirectory)\..\installer\we-tool.iss</IssFile>
-      <!-- 与 PackageZip 的 FolderOut 同一表达式在此重算(那是目标内局部属性,跨目标不可见) -->
-      <InstallerSourceRoot>$(MSBuildProjectDirectory)\bin\Package\WE-Tool-$(Version)-portable</InstallerSourceRoot>
+      <!-- 源 = 发布目录(根目录 AOT 版,无 launcher);注意:不可用 portable 文件夹(那是 launcher + app\ 布局)。
+           用绝对路径 + 去尾反斜杠:ISCC 以 msbuild cwd 解析相对路径会找不到;尾反斜杠会吞掉引号 -->
+      <InstallerSourceRoot>$([System.IO.Path]::GetFullPath('$(PublishDir)').TrimEnd('\'))</InstallerSourceRoot>
     </PropertyGroup>
+    <!-- 打包前清理发布目录里的 AOT PDB 与 portable 残留 app\ 子目录:
+         AOT PDB 在 DeleteAotPdb 之后才生成(ILC 发布末尾落盘),必须在这里再删一次,
+         否则 133MB PDB 被 iss 卷进 setup;app\ 是 portable 组装的历史残留,setup 不需要 -->
+    <Delete Files="$(PublishDir)WE_Tool.pdb" Condition="Exists('$(PublishDir)WE_Tool.pdb')" />
+    <RemoveDir Directories="$(PublishDir)app" Condition="Exists('$(PublishDir)app')" />
     <ItemGroup>
       <_IsccCandidates Include="$(LocalAppData)\Programs\Inno Setup 6\ISCC.exe" />
       <_IsccCandidates Include="$(MSBuildProgramFiles32)\Inno Setup 6\ISCC.exe" />

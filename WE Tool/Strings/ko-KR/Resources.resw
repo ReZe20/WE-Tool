@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -479,6 +479,9 @@
   </data>
   <data name="LogLevel.Description" xml:space="preserve">
     <value>로그 기록의 상세 수준을 제어합니다. 변경 후 즉시 적용됩니다.</value>
+  </data>
+  <data name="LogLevel_Off.Content" xml:space="preserve">
+    <value>비활성화</value>
   </data>
   <data name="LogLevel_Debug.Content" xml:space="preserve">
     <value>디버그</value>
@@ -1690,6 +1693,8 @@ project.json 및 미리보기 복사
   </data>
   <data name="WindowBehavior_Restore.Content" xml:space="preserve">
     <value>이전 창 크기 및 위치 복원</value>
+  </data>  <data name="WindowBehavior_RestorePropertiesWindowSize.Content" xml:space="preserve">
+    <value>속성 창을 열 때 이전 크기 복원</value>
   </data>
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
     <value>잔여 정리</value>
@@ -1798,15 +1803,6 @@ project.json 및 미리보기 복사
   </data>
   <data name="AutoBackup_RatingLabel.Text" xml:space="preserve">
     <value>자동 백업할 연령 등급</value>
-  </data>
-  <data name="AutoBackup_RatingG.Content" xml:space="preserve">
-    <value>전체 이용가</value>
-  </data>
-  <data name="AutoBackup_RatingPg.Content" xml:space="preserve">
-    <value>청소년</value>
-  </data>
-  <data name="AutoBackup_RatingR.Content" xml:space="preserve">
-    <value>성인</value>
   </data>
   <data name="AutoBackup_OperationFailed.Text" xml:space="preserve">
     <value>작업 실패</value>
