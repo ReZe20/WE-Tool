@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NativeAOT 裁剪保留:LinkPart 属性段数据由 ItemsControl + DataTemplate 渲染,
+     x:Bind 需要其属性元数据(Text/Url/TextVisibility/LinkVisibility)。 -->
+<linker>
+  <assembly fullname="WE Tool">
+    <type fullname="WE_Tool.Models.LinkPart" preserve="all" />
+  </assembly>
+</linker>

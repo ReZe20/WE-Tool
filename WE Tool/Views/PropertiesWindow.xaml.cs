@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Windowing;
 using Serilog;
@@ -23,6 +24,8 @@ using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using Windows.Graphics;
+using Windows.UI;
+using Microsoft.UI.Text;
 using WinUIEx;
 
 namespace WE_Tool
@@ -48,14 +51,8 @@ namespace WE_Tool
             InitializeComponent();
             // 壁纸属性页的 DataContext = 窗口自身(绑定 Properties/IsPropertyLoading 等)
             WallpaperPropsRoot.DataContext = this;
-            // 虚拟化属性列表:XamlCompiler 对窗口内 ItemsRepeater 标签稳定崩溃(Pass1 MSB3073),
-            // 改为 code-behind 实例化——运行时创建,虚拟化行为不变(StackLayout + 外层 ScrollViewer)
-            PropertyItemsHost.Children.Add(new ItemsRepeater
-            {
-                ItemsSource = Properties,
-                Layout = new StackLayout { Spacing = 4 },
-                ItemTemplate = RootGrid.Resources["PropertyRowTemplate"] as DataTemplate
-            });
+            // 壁纸属性页行:代码构建(LoadPropertiesAsync 增量填充 PropertyItemsHost.Children),
+            // 不用 DataTemplate/ItemsRepeater——NativeAOT 下 x:Bind 对二级模板/Visibility 枚举绑定失效。
             // 文件属性页虚拟化列表:ItemsRepeater 由 code-behind 创建(同 PropertyItemsHost 模式,
             // XamlCompiler 对窗口内 ItemsRepeater 标签稳定 Pass1 崩溃);直接挂 ScrollViewer.Content,
             // 获得有界视口,StackLayout 才真正虚拟化(行模板 FileInfoRowTemplate 在 RootGrid.Resources)
@@ -326,13 +323,18 @@ namespace WE_Tool
                 var props = await Task.Run(() => WallpaperPropertyParser.Parse(folder));
                 if (version != _propertyLoadVersion) return;
 
-                // 增量填充防卡顿:大壁纸(200+ 属性)每批添加后等一帧渲染,创建+布局渐进分摊,UI 不冻结
+                // 增量填充防卡顿:大壁纸(200+ 属性)每批构建+添加后等一帧,创建+布局渐进分摊,UI 不冻结
+                // (代码构建行,非 DataTemplate——AOT 下 x:Bind 复杂绑定不可靠)
                 Properties.Clear();
+                PropertyItemsHost.Children.Clear();
                 foreach (var chunk in props.Chunk(10))
                 {
                     if (version != _propertyLoadVersion) return;
                     foreach (var p in chunk)
+                    {
                         Properties.Add(p);
+                        PropertyItemsHost.Children.Add(BuildPropertyRow(p));
+                    }
                     await Task.Delay(16);
                 }
             }
@@ -370,144 +372,255 @@ namespace WE_Tool
                 await DialogHelper.ShowMessageAsync("保存失败", error ?? "未知错误");
         }
 
-        private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        // ========== 壁纸属性页:代码构建行(NativeAOT 下 x:Bind 对 Visibility 枚举/二级 DataTemplate/
+        //   ItemTemplateSelector 的绑定全部失效,整行代码构建彻底绕开——UI 线程调用,不依赖绑定) ==========
+
+        /// <summary>构建文字内容:纯文本 → TextBlock;含链接 → StackPanel + HyperlinkButton(可点击跳转);
+        /// 含 &lt;font color&gt; 应用文字色;含 &lt;img&gt; 渲染 HTTP 图片(外层 &lt;a href&gt; 时整图可点击)。
+        /// 图片段不渲染其文本;加载失败隐藏。</summary>
+        private static FrameworkElement BuildTextContent(WallpaperProperty prop)
         {
-            bool isProps = (args.SelectedItem as NavigationViewItem)?.Tag as string == "props";
-            WallpaperPropsRoot.Visibility = isProps ? Visibility.Visible : Visibility.Collapsed;
-            ContentRoot.Visibility = isProps ? Visibility.Collapsed : Visibility.Visible;
-        }
-
-        /// <summary>把含 \n 的文本拆成 Run + LineBreak 序列(&lt;br/&gt; 在模型层已转为 \n)</summary>
-        private static void AddTextWithLineBreaks(Paragraph paragraph, string text)
-        {
-            var parts = text.Split('\n');
-            for (int i = 0; i < parts.Length; i++)
-            {
-                if (i > 0) paragraph.Inlines.Add(new LineBreak());
-                if (parts[i].Length > 0) paragraph.Inlines.Add(new Run { Text = parts[i] });
-            }
-        }
-
-        /// <summary>链接按钮内容:TextBlock 先建再填 Inlines(内含 &lt;br/&gt; 转出的换行拆行),拷贝载体字体。</summary>
-        private static TextBlock BuildLinkContent(RichTextBlock rtb, string text)
-        {
-            var tb = new TextBlock
-            {
-                TextWrapping = TextWrapping.Wrap,
-                FontSize = rtb.FontSize,
-                FontWeight = rtb.FontWeight,
-            };
-            BuildRuns(tb, text);
-            return tb;
-        }
-
-        /// <summary>同上,但写入目标 TextBlock 的 Inlines(InlineCollection 无公共构造器,不能独立创建)。</summary>
-        private static void BuildRuns(TextBlock target, string text)
-        {
-            var parts = text.Split('\n');
-            for (int i = 0; i < parts.Length; i++)
-            {
-                if (i > 0) target.Inlines.Add(new LineBreak());
-                if (parts[i].Length > 0) target.Inlines.Add(new Run { Text = parts[i] });
-            }
-        }
-
-        /// <summary>
-        /// 纯文本组件链接/图片渲染:含 <a href>/裸 URL 时用 InlineUIContainer + HyperlinkButton 接管显示,
-        /// 含 <img> 时渲染 HTTP 图片;约定:外部链接统一 HyperlinkButton + App.xaml 的 ExternalLinkButtonStyle
-        /// (无阴影无背景),样式必须从 Application.Current.Resources 取(页面/窗口 Resources 索引器抛
-        /// COMException 0x80004005);载体必须用 RichTextBlock——InlineUIContainer 不能进 TextBlock.Inlines
-        /// (运行时会抛 System.ArgumentException),Paragraph 才支持;内联按钮不继承字体,内容 TextBlock 显式拷贝。
-        /// 图片段不显示其文本(剥标签残留的换行/占位空白段跳过)。
-        /// </summary>
-        private void TextBlock_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
-        {
-            if (sender is not RichTextBlock rtb || rtb.DataContext is not WallpaperProperty prop)
-                return;
-
-            rtb.Blocks.Clear();
-            var paragraph = new Paragraph();
-
-            var segments = prop.LinkSegments;
-            bool hasLink = segments.Any(s => s.Url != null);
+            bool hasLink = prop.LinkSegments.Any(s => s.Url != null);
             bool hasImage = prop.ImageSegments.Count > 0;
+            Brush? textBrush = prop.TextColor is Color c ? new SolidColorBrush(c) : null;
 
-            // 无链接无图片:纯文本,<br/> 已转的换行用 LineBreak 表达
+            // 无链接无图片:单 TextBlock(带颜色)
             if (!hasLink && !hasImage)
             {
-                AddTextWithLineBreaks(paragraph, prop.DisplayText);
-                rtb.Blocks.Add(paragraph);
-                return;
+                var tb = new TextBlock
+                {
+                    Text = prop.DisplayText,
+                    TextWrapping = TextWrapping.Wrap,
+                    FontSize = prop.TextFontSize,
+                    FontWeight = prop.TextFontWeight,
+                    TextAlignment = prop.TextAlignmentValue
+                };
+                if (textBrush != null) tb.Foreground = textBrush;
+                return tb;
             }
 
-            // 有链接/图片:分段渲染;空白文本段跳过(img 剥标签残留的换行/占位不显示)
-            foreach (var (text, url) in segments)
+            var sp = new StackPanel { Spacing = 2 };
+
+            // 文字段(链接 → HyperlinkButton;普通 → TextBlock;均应用文字色)
+            foreach (var (text, url) in prop.LinkSegments)
             {
                 if (string.IsNullOrWhiteSpace(text)) continue;
                 if (url == null)
                 {
-                    AddTextWithLineBreaks(paragraph, text);
+                    var tb = new TextBlock
+                    {
+                        Text = text,
+                        TextWrapping = TextWrapping.Wrap,
+                        FontSize = prop.TextFontSize,
+                        FontWeight = prop.TextFontWeight
+                    };
+                    if (textBrush != null) tb.Foreground = textBrush;
+                    sp.Children.Add(tb);
                 }
                 else
                 {
-                    var container = new InlineUIContainer();
-                    container.Child = new HyperlinkButton
+                    try
                     {
-                        NavigateUri = new Uri(url),
-                        Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"],
-                        Padding = new Thickness(0), // 内联:去掉 ButtonPadding,避免文字偏移
-                        Content = BuildLinkContent(rtb, text)
-                    };
-                    paragraph.Inlines.Add(container);
+                        var hb = new HyperlinkButton
+                        {
+                            Content = text,
+                            NavigateUri = new Uri(url),
+                            Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"]
+                        };
+                        if (textBrush != null) hb.Foreground = textBrush;
+                        sp.Children.Add(hb);
+                    }
+                    catch
+                    {
+                        var tb = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap };
+                        if (textBrush != null) tb.Foreground = textBrush;
+                        sp.Children.Add(tb);
+                    }
                 }
             }
 
-            // 图片段(<img src>,HTTP 加载;外层 <a href> 时整图可点击)
+            // 图片段(<img src>,HTTP 加载;外层 <a href> 时整图可点击;加载失败隐藏)
             foreach (var (src, link, width, height) in prop.ImageSegments)
             {
-                var image = new Image
+                try
                 {
-                    Source = new BitmapImage(new Uri(src)),
-                    Stretch = Stretch.Uniform,
-                    MaxWidth = 200,
-                    MaxHeight = 200,
-                    Margin = new Thickness(0, 4, 0, 4)
-                };
-                if (width.HasValue) image.Width = Math.Min(width.Value, 200);
-                if (height.HasValue) image.Height = Math.Min(height.Value, 200);
-                // 加载失败(网络/URL 失效)隐藏,不占位
-                image.ImageFailed += (s, e) => image.Visibility = Visibility.Collapsed;
-
-                var container = new InlineUIContainer();
-                if (link != null)
-                {
-                    container.Child = new HyperlinkButton
+                    var image = new Microsoft.UI.Xaml.Controls.Image
                     {
-                        NavigateUri = new Uri(link),
-                        Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"],
-                        Padding = new Thickness(0),
-                        Content = image
+                        Source = new BitmapImage(new Uri(src)),
+                        Stretch = Stretch.Uniform,
+                        MaxWidth = 200,
+                        MaxHeight = 200,
+                        Margin = new Thickness(0, 4, 0, 4)
                     };
+                    if (width.HasValue) image.Width = Math.Min(width.Value, 200);
+                    if (height.HasValue) image.Height = Math.Min(height.Value, 200);
+                    image.ImageFailed += (s, e) => image.Visibility = Visibility.Collapsed;
+
+                    if (link != null)
+                    {
+                        try
+                        {
+                            var hb = new HyperlinkButton
+                            {
+                                NavigateUri = new Uri(link),
+                                Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"],
+                                Content = image
+                            };
+                            sp.Children.Add(hb);
+                        }
+                        catch { sp.Children.Add(image); }
+                    }
+                    else
+                    {
+                        sp.Children.Add(image);
+                    }
                 }
-                else
-                {
-                    container.Child = image;
-                }
-                paragraph.Inlines.Add(container);
+                catch { /* 无效图片 URL → 跳过 */ }
             }
-            rtb.Blocks.Add(paragraph);
+            return sp;
         }
 
-        /// <summary>
-        /// combo 类型下拉:DropDownButton + 动态菜单——显示区是普通 TextBlock(绑定 ComboDisplayText),
-        /// 没有 ComboBox SelectionBoxItem 的滚动显示空白 bug(实测 SelectedIndex/SelectedItem 状态正确
-        /// 仅显示区不刷新的 WinUI 缺陷,滚动/虚拟化重用均触发,各种 workaround 无效,故换控件根治)。
-        /// </summary>
-        private void ComboButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>构建单个属性行(Grid 两列:左标签 + 右控件);分组标题/Expander 由 BuildPropertyRow 分发。</summary>
+        private FrameworkElement BuildEditableRow(WallpaperProperty prop)
         {
-            if (sender is not DropDownButton button || button.DataContext is not WallpaperProperty prop)
-                return;
+            var grid = new Grid { Margin = new Thickness(0, 4, 0, 4), ColumnSpacing = 12 };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
+            // 左列:标签(文字/链接)
+            var label = BuildTextContent(prop);
+            label.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(label, 0);
+            grid.Children.Add(label);
+
+            // 右列:按类型构建编辑控件
+            var editor = BuildEditor(prop);
+            if (editor != null)
+            {
+                Grid.SetColumn(editor, 1);
+                grid.Children.Add(editor);
+            }
+            return grid;
+        }
+
+        /// <summary>按类型构建右列编辑控件;只读类型返回 null(无控件)。</summary>
+        private FrameworkElement? BuildEditor(WallpaperProperty prop)
+        {
+            switch (prop.Type)
+            {
+                case "bool":
+                {
+                    var cb = new CheckBox
+                    {
+                        IsChecked = prop.BoolValue,
+                        MinWidth = 0,
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    cb.Checked += (s, e) => prop.BoolValue = cb.IsChecked == true;
+                    cb.Unchecked += (s, e) => prop.BoolValue = false;
+                    return cb;
+                }
+                case "slider":
+                {
+                    var sp = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+                    var slider = new Slider
+                    {
+                        Value = prop.SliderValue,
+                        Minimum = prop.SliderMin,
+                        Maximum = prop.SliderMax,
+                        StepFrequency = prop.SliderStep,
+                        Width = 100,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    var valueText = new TextBlock
+                    {
+                        Text = prop.SliderValueText,
+                        MinWidth = 40,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    slider.ValueChanged += (s, e) =>
+                    {
+                        prop.SliderValue = slider.Value;
+                        valueText.Text = prop.SliderValueText;
+                    };
+                    sp.Children.Add(slider);
+                    sp.Children.Add(valueText);
+                    return sp;
+                }
+                case "combo":
+                {
+                    var button = new DropDownButton
+                    {
+                        MinWidth = 140,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    var display = new TextBlock { Text = prop.ComboDisplayText };
+                    button.Content = display;
+                    button.Click += (s, e) => ShowComboMenu(button, prop, display);
+                    return button;
+                }
+                case "color":
+                {
+                    var button = new Button { Padding = new Thickness(8, 4, 8, 4), VerticalAlignment = VerticalAlignment.Center };
+                    var sp = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+                    var swatch = new Microsoft.UI.Xaml.Shapes.Rectangle { Width = 14, Height = 14, Fill = prop.ColorBrush, VerticalAlignment = VerticalAlignment.Center };
+                    var hex = new TextBlock { Text = prop.ColorHexText, VerticalAlignment = VerticalAlignment.Center };
+                    sp.Children.Add(swatch);
+                    sp.Children.Add(hex);
+                    button.Content = sp;
+                    var picker = new ColorPicker
+                    {
+                        Color = prop.ColorValue,
+                        IsAlphaEnabled = false,
+                        IsColorPreviewVisible = false,
+                        IsColorSpectrumVisible = true,
+                        IsColorSliderVisible = true,
+                        IsHexInputVisible = true
+                    };
+                    var flyout = new Flyout { Content = picker };
+                    flyout.Opened += FlyoutThemeRefresh_Opened;
+                    picker.ColorChanged += (s, e) =>
+                    {
+                        prop.ColorValue = picker.Color;
+                        swatch.Fill = prop.ColorBrush;
+                        hex.Text = prop.ColorHexText;
+                    };
+                    button.Flyout = flyout;
+                    return button;
+                }
+                case "textinput":
+                {
+                    var tb = new TextBox
+                    {
+                        Text = prop.TextValue,
+                        TextWrapping = TextWrapping.Wrap,
+                        Width = 180,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    tb.TextChanged += (s, e) => prop.TextValue = tb.Text;
+                    return tb;
+                }
+                case "scenetexture":
+                {
+                    var button = new Button
+                    {
+                        Command = prop.PickFileCommand,
+                        Content = prop.FilePathDisplay,
+                        MaxWidth = 180,
+                        Padding = new Thickness(10, 4, 10, 4),
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    return button;
+                }
+                default:
+                    return null; // 只读类型:无编辑控件(值已在标签区? 原 XAML ReadOnly 分支显示 DisplayValue)
+            }
+        }
+
+        /// <summary>combo 下拉:DropDownButton + 动态 MenuFlyout(复用原 ComboButton_Click 逻辑;弹层主题显式应用)</summary>
+        private void ShowComboMenu(DropDownButton button, WallpaperProperty prop, TextBlock display)
+        {
             var flyout = new MenuFlyout();
             string group = $"Combo_{prop.Key}";
             for (int i = 0; i < prop.Options.Count; i++)
@@ -519,13 +632,136 @@ namespace WE_Tool
                     IsChecked = i == prop.ComboIndex,
                     GroupName = group
                 };
-                item.Click += (s, e2) => prop.ComboIndex = index;
+                item.Click += (s, e2) =>
+                {
+                    prop.ComboIndex = index;
+                    display.Text = prop.ComboDisplayText;
+                };
                 flyout.Items.Add(item);
             }
-            // 弹层不自动继承窗口运行时主题,打开时显式应用(公共逻辑见 App.ApplyFlyoutTheme)
             flyout.Opened += App.ApplyFlyoutTheme;
             button.Flyout = flyout;
             flyout.ShowAt(button);
+        }
+
+        /// <summary>构建分组标题(分隔线 + 粗体文字)。分组标题是纯文本组件(无链接),直接 TextBlock。</summary>
+        private FrameworkElement BuildGroupHeader(WallpaperProperty prop)
+        {
+            var sp = new StackPanel();
+            sp.Children.Add(new Microsoft.UI.Xaml.Shapes.Rectangle
+            {
+                Height = 1,
+                Fill = (Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"],
+                Margin = new Thickness(0, 6, 0, 10)
+            });
+            sp.Children.Add(new TextBlock
+            {
+                Text = prop.DisplayText,
+                TextWrapping = TextWrapping.Wrap,
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                TextAlignment = prop.TextAlignmentValue
+            });
+            return sp;
+        }
+
+        /// <summary>构建分组 Expander(header = 文字/链接;内容 = 子属性行递归构建)。</summary>
+        private FrameworkElement BuildGroupExpander(WallpaperProperty prop)
+        {
+            var expander = new Expander
+            {
+                IsExpanded = false,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(0, 4, 0, 4),
+                Header = BuildTextContent(prop)
+            };
+            var items = new ItemsControl { IsTabStop = false };
+            foreach (var child in prop.Children)
+                items.Items.Add(BuildPropertyRow(child));
+            expander.Content = items;
+            return expander;
+        }
+
+        /// <summary>构建单行:按类型分发(分组标题/Expander/可编辑行)。</summary>
+        private FrameworkElement BuildPropertyRow(WallpaperProperty prop)
+        {
+            if (prop.IsGroupHeader) return BuildGroupHeader(prop);
+            if (prop.IsGroup) return BuildGroupExpander(prop);
+            return BuildEditableRow(prop);
+        }
+
+        private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        {
+            bool isProps = (args.SelectedItem as NavigationViewItem)?.Tag as string == "props";
+            // 平移动画:切入页从右滑入,切出页向左滑出(方向随切换双向)
+            AnimatePageSwitch(isProps);
+        }
+
+        /// <summary>文件属性页 ↔ 壁纸属性页切换动画:iOS push 风格,方向感知——两页一左一右,
+        /// 向右切(文件→壁纸):壁纸从右滑入、文件被推向左侧;向左切(壁纸→文件):文件从左滑入、壁纸被推回右侧。
+        /// 同一个 Storyboard 同步驱动(两页同时动,位移一致,形成"推动"感)。切到的页 ZIndex 置顶。</summary>
+        private void AnimatePageSwitch(bool toProps)
+        {
+            var incoming = toProps ? (FrameworkElement)WallpaperPropsRoot : ContentRoot;
+            var outgoing = toProps ? (FrameworkElement)ContentRoot : WallpaperPropsRoot;
+
+            // 旧页不可见(首次/异常)则直接切,无动画
+            if (outgoing.Visibility != Visibility.Visible)
+            {
+                incoming.Visibility = Visibility.Visible;
+                outgoing.Visibility = Visibility.Collapsed;
+                incoming.RenderTransform = null;
+                outgoing.RenderTransform = null;
+                return;
+            }
+
+            // 平移距离 = 页面宽度(push 感);窗口未布局时兜底 300
+            double w = RootGrid.ActualWidth > 0 ? RootGrid.ActualWidth : 300;
+            // 方向:向右切(toProps)新页从 +w 滑入、旧页滑到 -w;向左切反向
+            double dir = toProps ? 1 : -1;
+            var duration = new Duration(TimeSpan.FromMilliseconds(220));
+
+            // 新页置顶,从对应侧整宽滑入
+            Canvas.SetZIndex(incoming, 1);
+            Canvas.SetZIndex(outgoing, 0);
+            incoming.Visibility = Visibility.Visible;
+            incoming.RenderTransform = new TranslateTransform { X = dir * w };
+            outgoing.RenderTransform = new TranslateTransform { X = 0 };
+
+            var sb = new Storyboard();
+
+            var inAnim = new DoubleAnimation
+            {
+                From = dir * w,
+                To = 0,
+                Duration = duration,
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            Storyboard.SetTarget(inAnim, incoming);
+            Storyboard.SetTargetProperty(inAnim, "(UIElement.RenderTransform).(TranslateTransform.X)");
+            sb.Children.Add(inAnim);
+
+            // 旧页同速反向滑出,动画结束收起并复位
+            var outAnim = new DoubleAnimation
+            {
+                From = 0,
+                To = -dir * w,
+                Duration = duration,
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            Storyboard.SetTarget(outAnim, outgoing);
+            Storyboard.SetTargetProperty(outAnim, "(UIElement.RenderTransform).(TranslateTransform.X)");
+            sb.Children.Add(outAnim);
+
+            sb.Completed += (s, e) =>
+            {
+                outgoing.Visibility = Visibility.Collapsed;
+                incoming.RenderTransform = null;
+                outgoing.RenderTransform = null;
+                Canvas.SetZIndex(incoming, 0);
+                Canvas.SetZIndex(outgoing, 0);
+            };
+            sb.Begin();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -792,22 +1028,52 @@ namespace WE_Tool
         public object? Value { get; }
         public TextWrapping ValueWrap { get; }
 
-        private FileInfoRow(FileInfoRowKind kind, string? label = null, string? sectionTitle = null, object? value = null, TextWrapping wrap = TextWrapping.NoWrap)
+        /// <summary>预览图源(仅 Preview 行有值;x:Bind 需要强类型,Value 是 object 不能直接绑 ImageSource)</summary>
+        public Microsoft.UI.Xaml.Media.ImageSource? PreviewImageSource { get; }
+
+        private FileInfoRow(FileInfoRowKind kind, string? label = null, string? sectionTitle = null, object? value = null, TextWrapping wrap = TextWrapping.NoWrap, Microsoft.UI.Xaml.Media.ImageSource? previewSource = null)
         {
             Kind = kind;
             Label = label;
             SectionTitle = sectionTitle;
             Value = value;
             ValueWrap = wrap;
+            PreviewImageSource = previewSource;
         }
 
-        public static FileInfoRow Preview(object? imageSource) => new(FileInfoRowKind.Preview, value: imageSource);
+        public static FileInfoRow Preview(object? imageSource) => new(
+            FileInfoRowKind.Preview,
+            value: imageSource,
+            previewSource: imageSource is string path && !string.IsNullOrEmpty(path)
+                ? PathToImageSource(path)
+                : imageSource as Microsoft.UI.Xaml.Media.ImageSource);
         public static FileInfoRow Title(string? text) => new(FileInfoRowKind.Title, value: text);
         public static FileInfoRow Section(string title) => new(FileInfoRowKind.Section, sectionTitle: title);
         public static FileInfoRow Info(string label, string? value, bool wrap = false)
             => new(FileInfoRowKind.Info, label: label, value: value, wrap: wrap ? TextWrapping.Wrap : TextWrapping.NoWrap);
         public static FileInfoRow Divider() => new(FileInfoRowKind.Divider);
         public static FileInfoRow Tree() => new(FileInfoRowKind.Tree);
+
+        /// <summary>
+        /// 把预览字符串转 ImageSource:ms-appx:/// 占位图 URI 直接建;本地文件路径先确认存在,
+        /// 用 file:/// 绝对 URI 建 BitmapImage(x:Bind 需要强类型,且 string 不会隐式转 ImageSource)。
+        /// </summary>
+        private static Microsoft.UI.Xaml.Media.ImageSource? PathToImageSource(string path)
+        {
+            try
+            {
+                if (path.StartsWith("ms-appx:///", StringComparison.OrdinalIgnoreCase))
+                    return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(path, UriKind.Absolute));
+                if (System.IO.File.Exists(path))
+                {
+                    // C:\... → file:///C:/... (Uri 不认裸盘符路径)
+                    string fileUri = "file:///" + path.Replace('\\', '/');
+                    return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(fileUri, UriKind.Absolute));
+                }
+            }
+            catch { /* 无效路径/坏图 → null,Image 不显示 */ }
+            return null;
+        }
 
         public Visibility PreviewVisibility => Kind == FileInfoRowKind.Preview ? Visibility.Visible : Visibility.Collapsed;
         public Visibility TitleVisibility => Kind == FileInfoRowKind.Title ? Visibility.Visible : Visibility.Collapsed;

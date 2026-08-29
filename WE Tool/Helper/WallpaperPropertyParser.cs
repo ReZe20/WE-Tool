@@ -91,6 +91,7 @@ namespace WE_Tool.Helper
                           || text.Contains("<b ", StringComparison.OrdinalIgnoreCase)
                           || text.Contains("<strong", StringComparison.OrdinalIgnoreCase),
                     IsCentered = text.Contains("<center", StringComparison.OrdinalIgnoreCase),
+                    TextColor = ParseFontColor(text),
                     IsGroup = type == "group" && !isGroupHeader
                 };
                 LoadEditableValue(prop, obj);
@@ -306,6 +307,33 @@ namespace WE_Tool.Helper
                     break;
             }
         }
+
+        /// <summary>解析 &lt;font color=#rrggbb&gt; 文字色;不支持/无效返回 null(用主题默认色)。</summary>
+        private static Color? ParseFontColor(string text)
+        {
+            var m = FontColorRegex.Match(text);
+            if (!m.Success) return null;
+            string hex = m.Groups[1].Value.Trim();
+            try
+            {
+                // 支持 #rrggbb 与 #rgb
+                if (hex.Length == 6 || hex.Length == 3)
+                {
+                    if (hex.Length == 3)
+                        hex = string.Concat(hex.Select(c => $"{c}{c}"));
+                    byte r = byte.Parse(hex[..2], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    byte g = byte.Parse(hex[2..4], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    byte b = byte.Parse(hex[4..6], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    return Color.FromArgb(255, r, g, b);
+                }
+            }
+            catch { /* 无效色值 → null */ }
+            return null;
+        }
+
+        private static readonly Regex FontColorRegex = new(
+            @"<font\s+[^>]*color\s*=\s*[\""']?#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})[\""']?",
+            RegexOptions.IgnoreCase);
 
         /// <summary>已知的 ui_ 本地化 key 映射（WE 编辑器内置文案，作者可能直接用 key 当标签）</summary>
         private static readonly Dictionary<string, string> KnownUiKeys = new()

@@ -26,6 +26,11 @@
     <EnableTypeInfoReflection>true</EnableTypeInfoReflection>
     <EnableBindingDiagnostics>false</EnableBindingDiagnostics>
   </PropertyGroup>
+  <!-- NativeAOT 裁剪保留:LinkPartTemplateSelector/SelectTemplateCore 虚方法被 WinUI ItemsControl
+       运行时调用(非静态可达),trimmer 会裁掉导致 AOT 下属性面板文字显示为类型名。 -->
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="Properties\TrimmerRoots.xml" />
+  </ItemGroup>
   <ItemGroup>
     <None Remove="Assets\noPreview.png" />
     <None Remove="LoadPapers.xaml" />

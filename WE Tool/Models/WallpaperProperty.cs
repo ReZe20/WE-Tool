@@ -1,10 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Media;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -38,6 +42,41 @@ namespace WE_Tool.Models
         /// <summary>只读类型的显示值（scenetexture 文件名/未知类型原文）</summary>
         public string DisplayValue { get; set; } = "";
 
+        /// <summary>
+        /// 渲染分段(纯数据,无 UI):x:Bind 模式不设 DataContext,事件构建链接全失效;
+        /// 模型直接返回分段数据,XAML 用 ItemsControl + 模板渲染(文本段 TextBlock / 链接段 HyperlinkButton)。
+        /// 不在 getter 里建 UI 元素——属性在后台线程解析时被绑定求值,跨线程建 UI 会崩
+        /// (曾用 ContentControl.Content={x:Bind TextContent} 返回 TextBlock,Set_Content 崩)。
+        /// 返回 List&lt;LinkPart&gt;(具体类):AOT 下 ItemsControl.ItemsSource 绑 IReadOnlyList 接口/数组
+        /// 抛 ArgumentException "Value does not fall within the expected range"(WinUI 无法识别接口集合)。
+        /// </summary>
+        public List<LinkPart> LinkParts
+        {
+            get
+            {
+                bool hasLink = LinkSegments.Any(s => s.Url != null);
+                if (!hasLink)
+                    return new List<LinkPart> { new(DisplayText, null) };
+
+                var parts = new List<LinkPart>();
+                foreach (var (text, url) in LinkSegments)
+                {
+                    if (string.IsNullOrWhiteSpace(text)) continue;
+                    // \n 拆行:纯文本段按行拆(LinkPart 单行);链接段原样
+                    if (url == null)
+                    {
+                        foreach (var line in text.Split('\n'))
+                            if (line.Length > 0) parts.Add(new LinkPart(line, null));
+                    }
+                    else
+                    {
+                        parts.Add(new LinkPart(text, url));
+                    }
+                }
+                return parts;
+            }
+        }
+
         /// <summary>是否为分组标题（分隔线 + 粗体，无编辑控件；仅纯文本组件判定）</summary>
         public bool IsGroupHeader { get; set; }
 
@@ -55,6 +94,9 @@ namespace WE_Tool.Models
 
         /// <summary>纯文本组件字重：标题/粗体 SemiBold，普通 Normal</summary>
         public FontWeight TextFontWeight => IsTitle || IsBold ? FontWeights.SemiBold : FontWeights.Normal;
+
+        /// <summary>纯文本组件文字色（&lt;font color=#rrggbb&gt;，未指定为 null 用主题默认色）</summary>
+        public Color? TextColor { get; set; }
 
         /// <summary>纯文本组件对齐：含 &lt;center&gt; 时居中</summary>
         public TextAlignment TextAlignmentValue => IsCentered ? TextAlignment.Center : TextAlignment.Left;
@@ -353,5 +395,30 @@ namespace WE_Tool.Models
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    /// <summary>文字渲染分段:Text=显示文本,Url=null 为纯文本段(TextBlock 显示),否则为链接段(HyperlinkButton 跳转)。
+    /// Visibility 在构造时算好存字段(非计算属性):x:Bind 对计算属性/枚举绑定的求值在 AOT DataTemplate 里不可靠,
+    /// 但字符串绑定与字段绑定可靠。单一 ItemTemplate(直接 StaticResource 引用,不走 Selector)内双控件切换。</summary>
+    public sealed class LinkPart
+    {
+        public string Text { get; }
+        public string? Url { get; }
+
+        /// <summary>纯文本段可见性(Url 为 null 时 Visible)。</summary>
+        public Visibility TextVisibility { get; }
+        /// <summary>链接段可见性(Url 非 null 时 Visible)。</summary>
+        public Visibility LinkVisibility { get; }
+
+        public LinkPart(string text, string? url)
+        {
+            Text = text;
+            Url = url;
+            TextVisibility = string.IsNullOrEmpty(url) ? Visibility.Visible : Visibility.Collapsed;
+            LinkVisibility = string.IsNullOrEmpty(url) ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        /// <summary>是否为链接段(有 Url)。</summary>
+        public bool IsLink => !string.IsNullOrEmpty(Url);
     }
 }

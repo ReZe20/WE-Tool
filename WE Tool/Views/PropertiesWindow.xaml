@@ -20,145 +20,42 @@
         CS1503 编译失败 -->
     <Grid x:Name="RootGrid" Background="Transparent">
         <Grid.Resources>
-        <!-- 属性行模板：分组标题(<hr> 纯文本) / group 类型 Expander(递归渲染子属性) / 属性行(标签+控件) 按标志切换。
-             从 Papers.xaml 搬入,x:Bind 改普通 Binding(窗口内禁用 x:Bind+StaticResource) -->
-        <DataTemplate x:Key="PropertyRowTemplate">
-            <Grid>
-                <StackPanel Visibility="{Binding GroupHeaderVisibility, Mode=OneWay}">
-                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6,0,10"/>
-                    <RichTextBlock TextWrapping="Wrap" FontWeight="SemiBold" FontSize="14"
-                                   TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"
-                                   DataContextChanged="TextBlock_DataContextChanged"/>
-                </StackPanel>
-                <!-- group 类型 → Expander 折叠组（默认折叠：组内子属性不展开渲染，大量分组壁纸切换不卡；点击组标题展开） -->
-                <Expander Visibility="{Binding GroupBorderVisibility, Mode=OneWay}"
-                          IsExpanded="False"
-                          HorizontalAlignment="Stretch"
-                          Margin="0,4">
-                    <Expander.Header>
-                        <RichTextBlock TextWrapping="Wrap" FontSize="13" FontWeight="SemiBold"
-                                       TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"
-                                       DataContextChanged="TextBlock_DataContextChanged"/>
-                    </Expander.Header>
-                    <ItemsControl ItemsSource="{Binding Children, Mode=OneWay}">
-                        <ItemsControl.ItemTemplate>
-                            <StaticResource ResourceKey="PropertyRowTemplate"/>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Expander>
-                <!-- 属性行：左标签 + 右控件两列布局（RowVisibility 含 condition 条件） -->
-                <Grid Visibility="{Binding RowVisibility, Mode=OneWay}" Margin="0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <!-- 标签：纯文本（含 HTML 样式：字号/粗体/居中/文字色） -->
-                    <RichTextBlock TextWrapping="Wrap" VerticalAlignment="Center"
-                                   FontSize="{Binding TextFontSize, Mode=OneWay}"
-                                   FontWeight="{Binding TextFontWeight, Mode=OneWay}"
-                                   TextAlignment="{Binding TextAlignmentValue, Mode=OneWay}"
-                                   DataContextChanged="TextBlock_DataContextChanged"/>
-                    <Grid Grid.Column="1" Margin="12,0,0,0">
-                        <CheckBox Visibility="{Binding BoolVisibility, Mode=OneWay}"
-                                  IsChecked="{Binding BoolValue, Mode=TwoWay}"
-                                  MinWidth="0"
-                                  HorizontalAlignment="Right"
-                                  VerticalAlignment="Center"/>
-                        <!-- slider:滑杆 + 右侧当前值文字(Width 100 为文字腾空间) -->
-                        <StackPanel Orientation="Horizontal" Spacing="6"
-                                    Visibility="{Binding SliderVisibility, Mode=OneWay}"
-                                    VerticalAlignment="Center">
-                            <Slider Value="{Binding SliderValue, Mode=TwoWay}"
-                                    Minimum="{Binding SliderMin, Mode=OneWay}"
-                                    Maximum="{Binding SliderMax, Mode=OneWay}"
-                                    StepFrequency="{Binding SliderStep, Mode=OneWay}"
-                                    Width="100"
-                                    VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding SliderValueText, Mode=OneWay}"
-                                       MinWidth="40"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <!-- combo:DropDownButton + 动态菜单(显示区为普通 TextBlock,根治 WinUI
-                             ComboBox 滚动后 SelectionBoxItem 不刷新的显示空白 bug) -->
-                        <DropDownButton Visibility="{Binding ComboVisibility, Mode=OneWay}"
-                                        MinWidth="140"
-                                        VerticalAlignment="Center"
-                                        Click="ComboButton_Click">
-                            <TextBlock Text="{Binding ComboDisplayText, Mode=OneWay}"/>
-                        </DropDownButton>
-                        <Button Visibility="{Binding ColorVisibility, Mode=OneWay}" Padding="8,4" VerticalAlignment="Center">
-                            <Button.Content>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Rectangle Width="14" Height="14" Fill="{Binding ColorBrush, Mode=OneWay}" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding ColorHexText, Mode=OneWay}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button.Content>
-                            <Button.Flyout>
-                                <Flyout Opened="FlyoutThemeRefresh_Opened">
-                                    <ColorPicker Color="{Binding ColorValue, Mode=TwoWay}"
-                                                 IsAlphaEnabled="False"
-                                                 IsColorPreviewVisible="False"
-                                                 IsColorSpectrumVisible="True"
-                                                 IsColorSliderVisible="True"
-                                                 IsHexInputVisible="True"/>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                        <TextBox Visibility="{Binding TextInputVisibility, Mode=OneWay}"
-                                 Text="{Binding TextValue, Mode=TwoWay}"
-                                 TextWrapping="Wrap"
-                                 Width="180"
-                                 VerticalAlignment="Center"/>
-                        <Button Visibility="{Binding FilePathVisibility, Mode=OneWay}"
-                                Command="{Binding PickFileCommand}"
-                                Content="{Binding FilePathDisplay, Mode=OneWay}"
-                                MaxWidth="180"
-                                Padding="10,4"
-                                VerticalAlignment="Center"/>
-                        <TextBlock Visibility="{Binding ReadOnlyVisibility, Mode=OneWay}"
-                                   Text="{Binding DisplayValue}"
-                                   TextWrapping="Wrap"
-                                   VerticalAlignment="Center"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </DataTemplate>
         <!-- 文件属性页虚拟化行模板:预览/标题/节标题/信息行/分隔线/文件树 单模板按行类型 Visibility 切换
-             (同 PropertyRowTemplate 模式);标签/值在 code-behind 预计算(快照语义) -->
-        <DataTemplate x:Key="FileInfoRowTemplate">
+             (同 PropertyRowTemplate 模式);标签/值在 code-behind 预计算(快照语义)。
+             x:DataType + x:Bind:AOT 安全(普通 Binding 反射失效) -->
+        <DataTemplate x:Key="FileInfoRowTemplate" x:DataType="local:FileInfoRow">
             <Grid Margin="24,0,24,0">
                 <!-- 预览图 -->
-                <Border Visibility="{Binding PreviewVisibility, Mode=OneWay}"
+                <Border Visibility="{x:Bind PreviewVisibility, Mode=OneWay}"
                         Width="200" Height="200" HorizontalAlignment="Center"
                         Margin="0,20,0,0"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4">
-                    <Image Source="{Binding Value}" Stretch="Uniform"/>
+                    <Image Source="{x:Bind PreviewImageSource}" Stretch="Uniform"/>
                 </Border>
                 <!-- 壁纸标题 -->
-                <TextBlock Visibility="{Binding TitleVisibility, Mode=OneWay}" Text="{Binding Value}"
+                <TextBlock Visibility="{x:Bind TitleVisibility, Mode=OneWay}" Text="{x:Bind Value}"
                            Style="{StaticResource SubtitleTextBlockStyle}" FontSize="28" FontWeight="SemiBold"
                            Padding="0,20,0,4" TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True"/>
                 <!-- 节标题 -->
-                <TextBlock Visibility="{Binding SectionVisibility, Mode=OneWay}" Text="{Binding SectionTitle}"
+                <TextBlock Visibility="{x:Bind SectionVisibility, Mode=OneWay}" Text="{x:Bind SectionTitle}"
                            Style="{StaticResource SubtitleTextBlockStyle}" FontWeight="SemiBold"
                            Margin="0,8,0,8" Foreground="{ThemeResource SystemAccentColor}" IsTextSelectionEnabled="True"/>
                 <!-- 信息行:左标签(100) + 右值 -->
-                <Grid Visibility="{Binding InfoVisibility, Mode=OneWay}" ColumnSpacing="12">
+                <Grid Visibility="{x:Bind InfoVisibility, Mode=OneWay}" ColumnSpacing="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{Binding Label}" Style="{StaticResource CaptionTextBlockStyle}"
+                    <TextBlock Grid.Column="0" Text="{x:Bind Label}" Style="{StaticResource CaptionTextBlockStyle}"
                                Foreground="Gray" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
-                    <TextBlock Grid.Column="1" Text="{Binding Value}" Style="{StaticResource BodyTextBlockStyle}"
-                               TextWrapping="{Binding ValueWrap}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
+                    <TextBlock Grid.Column="1" Text="{x:Bind Value}" Style="{StaticResource BodyTextBlockStyle}"
+                               TextWrapping="{x:Bind ValueWrap}" Margin="0,4,0,4" IsTextSelectionEnabled="True"/>
                 </Grid>
                 <!-- 分隔线 -->
-                <Rectangle Visibility="{Binding DividerVisibility, Mode=OneWay}" Height="1"
+                <Rectangle Visibility="{x:Bind DividerVisibility, Mode=OneWay}" Height="1"
                            Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
                 <!-- 文件结构树:虚拟化回收后重新实化时由 Loaded 从缓存重建根节点 -->
-                <TreeView Visibility="{Binding TreeVisibility, Mode=OneWay}"
+                <TreeView Visibility="{x:Bind TreeVisibility, Mode=OneWay}"
                           MaxHeight="200" Margin="0,0,0,20"
                           Loaded="FileStructureTree_Loaded"
                           Expanding="FileStructureTree_Expanding"
@@ -168,35 +65,36 @@
             </Grid>
         </DataTemplate>
 
-        <!-- TreeView 文件结构模板(自 ScrollViewer.Resources 移入:模板内 StaticResource 以定义处解析) -->
-        <DataTemplate x:Key="FileTreeFolderTemplate">
+        <!-- TreeView 文件结构模板(自 ScrollViewer.Resources 移入:模板内 StaticResource 以定义处解析)。
+             DataContext = TreeViewNode,x:Bind 用类型转换取 Content.FileItem.DisplayText(AOT 安全) -->
+        <DataTemplate x:Key="FileTreeFolderTemplate" x:DataType="TreeViewNode">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <FontIcon Glyph="&#xE8B7;" FontSize="14"/>
-                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Bind ((models:FileItem)Content).DisplayText}" VerticalAlignment="Center"/>
             </StackPanel>
         </DataTemplate>
-        <DataTemplate x:Key="FileTreeImageTemplate">
+        <DataTemplate x:Key="FileTreeImageTemplate" x:DataType="TreeViewNode">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <FontIcon Glyph="&#xEB9F;" FontSize="14"/>
-                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Bind ((models:FileItem)Content).DisplayText}" VerticalAlignment="Center"/>
             </StackPanel>
         </DataTemplate>
-        <DataTemplate x:Key="FileTreeVideoTemplate">
+        <DataTemplate x:Key="FileTreeVideoTemplate" x:DataType="TreeViewNode">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <FontIcon Glyph="&#xE8B2;" FontSize="14"/>
-                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Bind ((models:FileItem)Content).DisplayText}" VerticalAlignment="Center"/>
             </StackPanel>
         </DataTemplate>
-        <DataTemplate x:Key="FileTreeDocumentTemplate">
+        <DataTemplate x:Key="FileTreeDocumentTemplate" x:DataType="TreeViewNode">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <FontIcon Glyph="&#xE8A5;" FontSize="14"/>
-                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Bind ((models:FileItem)Content).DisplayText}" VerticalAlignment="Center"/>
             </StackPanel>
         </DataTemplate>
-        <DataTemplate x:Key="FileTreeOtherTemplate">
+        <DataTemplate x:Key="FileTreeOtherTemplate" x:DataType="TreeViewNode">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <FontIcon Glyph="&#xE7C3;" FontSize="14"/>
-                <TextBlock Text="{Binding Content.DisplayText}" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Bind ((models:FileItem)Content).DisplayText}" VerticalAlignment="Center"/>
             </StackPanel>
         </DataTemplate>
         <models:FileTreeTemplateSelector x:Key="FileTreeTemplateSelector"
@@ -253,8 +151,8 @@
                                         Click="PropertySaveButton_Click"
                                         HorizontalAlignment="Left"/>
                                 <ProgressRing x:Name="PropertyPanelLoadingRing"
-                                              IsActive="{Binding IsPropertyLoading, Mode=OneWay}"
-                                              Visibility="{Binding PropertyPanelLoadingVisibility, Mode=OneWay}"
+                                              IsActive="{x:Bind IsPropertyLoading, Mode=OneWay}"
+                                              Visibility="{x:Bind PropertyPanelLoadingVisibility, Mode=OneWay}"
                                               Width="36"
                                               Height="36"
                                               HorizontalAlignment="Center"/>
@@ -266,12 +164,12 @@
                                            FontSize="16"
                                            Margin="0,10,0,0"
                                            TextWrapping="Wrap"
-                                           Visibility="{Binding PropertyEmptyHintVisibility, Mode=OneWay}"/>
+                                           Visibility="{x:Bind PropertyEmptyHintVisibility, Mode=OneWay}"/>
                                 <!-- 虚拟化属性列表:ItemsRepeater 由 code-behind 创建(XamlCompiler 对窗口内
                                      ItemsRepeater 标签稳定 Pass1 崩溃,2026-08-10 实测 3 连崩);
                                      combo 已换 DropDownButton(显示区自控),虚拟化重用不再有显示 bug -->
                                 <StackPanel x:Name="PropertyItemsHost"
-                                            Visibility="{Binding PropertyListVisibility, Mode=OneWay}"/>
+                                            Visibility="{x:Bind PropertyListVisibility, Mode=OneWay}"/>
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>
