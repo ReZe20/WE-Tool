@@ -87,7 +87,23 @@ namespace WE_Tool.Models
             }
         }
 
-        public double CheckBoxOpacity => (IsSelected || IsInMultiSelectMode) ? 1.0 : 0.0;
+        private bool _isHovered;
+        /// <summary>鼠标是否悬停在该壁纸上(checkbox 保持显示用)。UI 层 PointerEntered/Exited 设置。</summary>
+        public bool IsHovered
+        {
+            get => _isHovered;
+            set
+            {
+                if (_isHovered != value)
+                {
+                    _isHovered = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(CheckBoxOpacity));
+                }
+            }
+        }
+
+        public double CheckBoxOpacity => (IsSelected || IsInMultiSelectMode || IsHovered) ? 1.0 : 0.0;
 
         public bool IsTypeScene => string.Equals(Type, "scene", StringComparison.OrdinalIgnoreCase);
         public bool IsSourceMine => string.Equals(Source, "mine", StringComparison.OrdinalIgnoreCase);

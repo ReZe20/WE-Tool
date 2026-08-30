@@ -828,6 +828,9 @@
   <data name="Toolbar_ListView.ToolTipService.ToolTip" xml:space="preserve">
     <value>Copia</value>
   </data>
+  <data name="Toolbar_CopyButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copia</value>
+  </data>
   <data name="Toolbar_Delete.ToolTipService.ToolTip" xml:space="preserve">
     <value>Elimina</value>
   </data>
@@ -835,6 +838,9 @@
     <value>Elimina definitivamente</value>
   </data>
   <data name="Toolbar_SelectAll.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Seleziona tutto</value>
+  </data>
+  <data name="Toolbar_SelectAllButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Seleziona tutto</value>
   </data>
   <data name="Toolbar_InvertSelection.ToolTipService.ToolTip" xml:space="preserve">

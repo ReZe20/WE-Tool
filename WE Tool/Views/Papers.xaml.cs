@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -199,6 +200,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private bool _isWallpaperItemTapped = false;
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
+    private AppBarButton? _pressedButton; // 当前被按下的 CommandBar 按钮(指针捕获后释放弹回用)
     private DateTime _lastDrillInAnimationTime = DateTime.MinValue;
     private bool _isExtracting;
     public bool IsExtracting
@@ -767,10 +769,99 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             _isLeftMouseButtonPressed = true;
         }
+        // CommandBar 内按钮按下反馈:按钮缩小(AddHandler handledEventsToo:true 能收到 Button 内部的 handled 事件)
+        if (e.OriginalSource is FrameworkElement fe && IsDescendantOf(fe, ToolbarCommands))
+        {
+            if (FindAncestorButton(fe) is { } btn)
+            {
+                _pressedButton = btn;                       // 记录按下的按钮(供释放时弹回)
+                btn.CapturePointer(e.Pointer);              // 捕获指针:移开按钮后释放仍收到事件
+                PlayPressScale(btn, 0.88f);
+            }
+        }
     }
     private void Global_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         _isLeftMouseButtonPressed = false;
+        // 弹回按下的按钮(指针捕获保证即使移开后释放也触发)
+        if (_pressedButton is { } pressedBtn)
+        {
+            _pressedButton = null;
+            pressedBtn.ReleasePointerCapture(e.Pointer);
+            PlayPressScale(pressedBtn, 1f);
+            // 刷新按钮:图标旋转动画在鼠标松开后播放(按下只缩小)
+            if (pressedBtn == RefreshButton)
+            {
+                PlayRefreshSpin();
+            }
+        }
+    }
+
+    // 刷新图标旋转动画:按下后快速转几圈(Composition RotationAngleInDegrees)
+    private void PlayRefreshSpin()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            var visual = ElementCompositionPreview.GetElementVisual(RefreshIcon);
+            var compositor = visual.Compositor;
+            visual.StopAnimation("RotationAngleInDegrees");
+            visual.CenterPoint = new Vector3(8f, 8f, 0); // FontIcon 约 16px,中心固定 8,8
+            visual.RotationAngleInDegrees = 0f;
+
+            // 转 2 圈(720°),2000ms,带缓出
+            var spin = compositor.CreateScalarKeyFrameAnimation();
+            spin.Target = "RotationAngleInDegrees";
+            spin.InsertKeyFrame(0f, 0f);
+            spin.InsertKeyFrame(1f, 720f,
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+            spin.Duration = TimeSpan.FromMilliseconds(2000);
+            visual.StartAnimation("RotationAngleInDegrees", spin);
+        });
+    }
+
+    // 从事件源向上找最近的 AppBarButton/AppBarToggleButton(CommandBar 命令按钮)
+    private static AppBarButton? FindAncestorButton(DependencyObject? current)
+    {
+        while (current != null)
+        {
+            if (current is AppBarButton abb) return abb;
+            if (current is AppBarToggleButton) return null; // 开关按钮不加缩放
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return null;
+    }
+
+    // 按钮缩放反馈(Composition Scale,固定 CenterPoint 避免 NaN)
+    private void PlayPressScale(AppBarButton button, float targetScale)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            var visual = ElementCompositionPreview.GetElementVisual(button);
+            var compositor = visual.Compositor;
+            visual.StopAnimation("Scale");
+            visual.CenterPoint = new Vector3((float)button.ActualWidth / 2, (float)button.ActualHeight / 2, 0);
+            visual.Scale = Vector3.One;
+
+            var anim = compositor.CreateVector3KeyFrameAnimation();
+            anim.Target = "Scale";
+            anim.InsertKeyFrame(0f, Vector3.One);
+            anim.InsertKeyFrame(1f, new Vector3(targetScale, targetScale, 1f),
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+            anim.Duration = TimeSpan.FromMilliseconds(120);
+            visual.StartAnimation("Scale", anim);
+        });
+    }
+
+    // 判断 element 是否是 ancestor 的后代(含自身)
+    private static bool IsDescendantOf(FrameworkElement element, FrameworkElement ancestor)
+    {
+        DependencyObject? current = element;
+        while (current != null)
+        {
+            if (current == ancestor) return true;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return false;
     }
 
     private void RefreshDisplayedSelectedWallpapers(bool forceRebuild = false)
@@ -1852,10 +1943,19 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     {
         if (grid == null || item == null) return;
 
+        // checkbox 可见性由绑定 CheckBoxOpacity(IsSelected || IsInMultiSelectMode || IsHovered)驱动,
+        // 这里只做最终兜底同步(非多选、未选中、未悬停 → 隐藏)
         var checkBox = FindCheckBoxInGrid(grid);
         if (checkBox != null)
         {
-            checkBox.Opacity = (IsMultiSelectMode || item.IsSelected) ? 1 : 0;
+            if (!IsMultiSelectMode && !item.IsSelected && !item.IsHovered)
+            {
+                checkBox.Opacity = 0;
+            }
+            else
+            {
+                checkBox.Opacity = 1;
+            }
         }
     }
 
@@ -1940,6 +2040,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     {
         if (sender is Grid grid)
         {
+            if (grid.DataContext is WallpaperItem hovered) hovered.IsHovered = true; // 数据层标记悬停
             var checkBox = FindCheckBoxInGrid(grid);
             if (checkBox != null) checkBox.Opacity = 1;
 
@@ -1956,11 +2057,13 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 }
                 if (IsMultiSelectMode)
                 {
-                    item.IsSelected = !item.IsSelected;
-                    if (item.IsSelected && !SelectedWallpapers.Contains(item))
-                        SelectedWallpapers.Add(item);
-                    else if (!item.IsSelected)
-                        SelectedWallpapers.Remove(item);
+                    // 拖拽滑过 = 连选:只选中(加入集合),不翻转——避免与 PointerPressed 的双重翻转抵消
+                    if (!item.IsSelected)
+                    {
+                        item.IsSelected = true;
+                        if (!SelectedWallpapers.Contains(item))
+                            SelectedWallpapers.Add(item);
+                    }
                     UpdateMultiSelectCount();
                 }
                 return;
@@ -1971,6 +2074,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     {
         if (sender is Grid grid && grid.DataContext is WallpaperItem item)
         {
+            item.IsHovered = false; // 鼠标离开,清除悬停标记(数据层)
             UpdateItemCheckBoxOpacity(grid, item);
             ApplyScaleAnimation(grid, 1.0f);
 
@@ -2006,13 +2110,17 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             {
                 if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
                 {
-                    var modifiers = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+                    var modifiers = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Control); // Pointer 事件用 KeyModifiers,GetKeyStateForCurrentThread 会读到过期状态
                     if (modifiers && !_isMultiSelectMode)
                     {
-                        IsMultiSelectMode = true;
-                        item.IsSelected = !item.IsSelected;
-                        if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                        // CTRL+按下:先选中再加入集合,最后进多选——若先进多选,setter 里 UpdateAllVisibleCheckBoxes
+                        // 等同步调用会以 Count=0 触发 UpdateMultiSelectCount 立即退出多选
+                        item.IsSelected = true;
+                        if (!SelectedWallpapers.Contains(item))
                             SelectedWallpapers.Add(item);
+                        UpdateMultiSelectCount();
+                        IsMultiSelectMode = true;
+                        return;
                     }
 
                     if (_isMultiSelectMode)
@@ -2085,6 +2193,8 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     {
         if (sender is Grid grid)
         {
+            // 数据层标记悬停:checkbox 绑定 CheckBoxOpacity 自动保持显示(避开 UI 实例/虚拟化问题)
+            if (grid.DataContext is WallpaperItem hovered) hovered.IsHovered = true;
             var checkBox = FindCheckBoxInGrid(grid);
             if (checkBox != null) checkBox.Opacity = 1;
 
@@ -2123,14 +2233,13 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 }
                 if (IsMultiSelectMode)
                 {
-                    item.IsSelected = !item.IsSelected;
-
-                    if (item.IsSelected && !SelectedWallpapers.Contains(item))
-                        SelectedWallpapers.Add(item);
-                    else if (!item.IsSelected)
-                        SelectedWallpapers.Remove(item);
-
-
+                    // 拖拽滑过 = 连选:只选中(加入集合),不翻转——避免与 PointerPressed 的双重翻转抵消
+                    if (!item.IsSelected)
+                    {
+                        item.IsSelected = true;
+                        if (!SelectedWallpapers.Contains(item))
+                            SelectedWallpapers.Add(item);
+                    }
                     UpdateMultiSelectCount();
                 }
                 return;
@@ -2174,6 +2283,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     {
         if (sender is Grid grid && grid.DataContext is WallpaperItem item)
         {
+            item.IsHovered = false; // 鼠标离开,清除悬停标记(数据层)
             UpdateItemCheckBoxOpacity(grid, item);
 
             ApplyScaleAnimation(grid, 1.0f);
@@ -2291,14 +2401,17 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             {
                 if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
                 {
-                    var modifiers = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+                    var modifiers = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Control); // Pointer 事件用 KeyModifiers,GetKeyStateForCurrentThread 会读到过期状态
                     if (modifiers && !_isMultiSelectMode)
                     {
-                        IsMultiSelectMode = true;
-                        item.IsSelected = !item.IsSelected;
-
-                        if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                        // CTRL+按下:先选中再加入集合,最后进多选——若先进多选,setter 里 UpdateAllVisibleCheckBoxes
+                        // 等同步调用会以 Count=0 触发 UpdateMultiSelectCount 立即退出多选
+                        item.IsSelected = true;
+                        if (!SelectedWallpapers.Contains(item))
                             SelectedWallpapers.Add(item);
+                        UpdateMultiSelectCount();
+                        IsMultiSelectMode = true;
+                        return;
                     }
 
                     if (_isMultiSelectMode)
@@ -2572,6 +2685,11 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             Log.Error(ex, "复制壁纸文件夹失败");
         }
+        finally
+        {
+            // 动画不依赖复制结果,即使复制抛异常/无选中项也执行
+            await PlayCopyCheckAnimationAsync();
+        }
     }
     private async void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
@@ -2584,14 +2702,152 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             Log.Error(ex, "复制壁纸文件夹失败");
         }
+        finally
+        {
+            // 动画不依赖复制结果,即使复制抛异常/无选中项也执行
+            await PlayCopyCheckAnimationAsync();
+        }
     }
-    private async Task CopyWallpapersAsync()
+
+    // 复制成功反馈(单 FontIcon 序列):淡出 → 切勾 → 从左往右扫出 → 停留 → 淡出 → 切回复制 → 淡入
+    private int _copyCheckAnimationGeneration;
+    private Microsoft.UI.Composition.InsetClip? _copyCheckClip; // 勾扫出的 clip
+
+    private async Task PlayCopyCheckAnimationAsync()
+    {
+        int gen = ++_copyCheckAnimationGeneration;
+
+        // 点击处理器同一帧做了大量同步变更,此帧内 StartAnimation 会被 Composition
+        // 帧调度丢弃/延迟(项目已定位根因)。整体包进 DispatcherQueue.TryEnqueue 排到下一个空闲帧起跑。
+        var tcs = new TaskCompletionSource();
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (gen != _copyCheckAnimationGeneration) { tcs.TrySetResult(); return; } // 排队期间已作废
+
+            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var compositor = visual.Compositor;
+
+            // 复位:可见、无裁剪
+            visual.StopAnimation("Opacity");
+            visual.Opacity = 1f;
+            visual.Clip = null;
+            _copyCheckClip?.StopAnimation("RightInset");
+            _copyCheckClip = null;
+
+            // 淡出(Opacity 1→0)
+            var fadeOut = compositor.CreateScalarKeyFrameAnimation();
+            fadeOut.Target = "Opacity";
+            fadeOut.InsertKeyFrame(0f, 1f);
+            fadeOut.InsertKeyFrame(1f, 0f,
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+            fadeOut.Duration = TimeSpan.FromMilliseconds(150);
+            visual.StartAnimation("Opacity", fadeOut);
+
+            tcs.TrySetResult();
+        });
+        await tcs.Task;
+        if (gen != _copyCheckAnimationGeneration) return; // 过期续体直接作废(代次守卫)
+
+        await Task.Delay(150); // 淡出完成
+        if (gen != _copyCheckAnimationGeneration) return;
+
+        // 切为勾
+        ToolbarCopyIcon.Glyph = "\uE73E";
+
+        // 勾从左往右扫出(InsetClip RightInset 20→0)
+        var tcs2 = new TaskCompletionSource();
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (gen != _copyCheckAnimationGeneration) { tcs2.TrySetResult(); return; }
+
+            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var compositor = visual.Compositor;
+            visual.Clip = null;
+            _copyCheckClip?.StopAnimation("RightInset");
+            var clip = compositor.CreateInsetClip();
+            clip.RightInset = 20f;
+            visual.Clip = clip;
+            _copyCheckClip = clip;
+
+            var reveal = compositor.CreateScalarKeyFrameAnimation();
+            reveal.Target = "RightInset";
+            reveal.InsertKeyFrame(0f, 20f);
+            reveal.InsertKeyFrame(1f, 0f,
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+            reveal.Duration = TimeSpan.FromMilliseconds(300);
+            clip.StartAnimation("RightInset", reveal);
+
+            tcs2.TrySetResult();
+        });
+        await tcs2.Task;
+        if (gen != _copyCheckAnimationGeneration) return;
+
+        // 勾显示时淡入到完全可见(Opacity 0→1,与扫出并行)
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (gen != _copyCheckAnimationGeneration) return;
+            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var compositor = visual.Compositor;
+            visual.Opacity = 0f;
+            var fadeIn = compositor.CreateScalarKeyFrameAnimation();
+            fadeIn.Target = "Opacity";
+            fadeIn.InsertKeyFrame(0f, 0f);
+            fadeIn.InsertKeyFrame(1f, 1f,
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+            fadeIn.Duration = TimeSpan.FromMilliseconds(300);
+            visual.StartAnimation("Opacity", fadeIn);
+        });
+
+        await Task.Delay(1200); // 勾停留(300ms 扫出+淡入 + 900ms 停留)
+        if (gen != _copyCheckAnimationGeneration) return; // 过期续体直接作废(代次守卫)
+
+        // 勾淡出(Opacity 1→0)
+        var tcs3 = new TaskCompletionSource();
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (gen != _copyCheckAnimationGeneration) { tcs3.TrySetResult(); return; }
+            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var compositor = visual.Compositor;
+            visual.StopAnimation("Opacity");
+            visual.Opacity = 1f;
+            var fadeOut2 = compositor.CreateScalarKeyFrameAnimation();
+            fadeOut2.Target = "Opacity";
+            fadeOut2.InsertKeyFrame(0f, 1f);
+            fadeOut2.InsertKeyFrame(1f, 0f,
+                compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+            fadeOut2.Duration = TimeSpan.FromMilliseconds(150);
+            visual.StartAnimation("Opacity", fadeOut2);
+            tcs3.TrySetResult();
+        });
+        await tcs3.Task;
+        if (gen != _copyCheckAnimationGeneration) return;
+
+        await Task.Delay(150); // 淡出完成
+        if (gen != _copyCheckAnimationGeneration) return;
+
+        // 切回复制图标 + 移除裁剪 + 淡入
+        ToolbarCopyIcon.Glyph = "\uE8C8";
+        _copyCheckClip?.StopAnimation("RightInset");
+        _copyCheckClip = null;
+        var v = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+        v.StopAnimation("Opacity");
+        v.Clip = null;
+        v.Opacity = 0f;
+        var fadeIn2 = v.Compositor.CreateScalarKeyFrameAnimation();
+        fadeIn2.Target = "Opacity";
+        fadeIn2.InsertKeyFrame(0f, 0f);
+        fadeIn2.InsertKeyFrame(1f, 1f,
+            v.Compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
+        fadeIn2.Duration = TimeSpan.FromMilliseconds(150);
+        v.StartAnimation("Opacity", fadeIn2);
+    }
+    private async Task<bool> CopyWallpapersAsync()
     {
         var items = SelectedWallpapers.Count > 0
             ? SelectedWallpapers.ToList()
             : ViewModel?.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
 
-        if (items.Count == 0) return;
+        if (items.Count == 0) return false;
 
         var folders = new List<Windows.Storage.StorageFolder>();
         foreach (var item in items)
@@ -2607,11 +2863,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 Log.Warning(ex, "获取文件夹失败: {Path}", item.FolderPath);
             }
         }
-        if (folders.Count == 0) return;
+        if (folders.Count == 0) return false;
 
         var dataPackage = new Windows.ApplicationModel.DataTransfer.DataPackage();
         dataPackage.SetStorageItems(folders);
         Clipboard.SetContent(dataPackage);
+        return true;
     }
     private async void ImportToEditor_Click(object sender, RoutedEventArgs e)
     {
@@ -2753,6 +3010,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             IsMultiSelectMode = true;
         }
     }
+
+    // 全选按钮按下反馈:官方 PointerDown/UpThemeAnimation,Storyboard 定义在 XAML,
+    // 触发走全局 Global_PointerPressed/Released(AddHandler handledEventsToo:true 能收到 Button 内部 handled 事件)
     private void InvertSelection_CLick_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {
         InternalInvertSelection();
@@ -2769,6 +3029,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         if (_isRefreshing) return;
         _isRefreshing = true;
         RefreshButton.IsEnabled = false;
+        var pressTime = DateTime.Now; // 记录按下时刻(旋转动画 2 秒)
 
         try
         {
@@ -2782,6 +3043,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         finally
         {
             _isRefreshing = false;
+            // 等旋转动画播完(按下后 2 秒)再启用按钮,保证动画完整播放
+            var elapsed = (DateTime.Now - pressTime).TotalMilliseconds;
+            if (elapsed < 2000)
+            {
+                await Task.Delay((int)(2000 - elapsed));
+            }
             RefreshButton.IsEnabled = true;
         }
     }

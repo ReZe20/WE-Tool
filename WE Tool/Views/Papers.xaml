@@ -297,12 +297,13 @@
                     </AppBarToggleButton.Icon>
                 </AppBarToggleButton>
                 <AppBarSeparator/>
-                <AppBarButton x:Uid="Toolbar_ListView"
+                <AppBarButton x:Name="ToolbarCopyButton" x:Uid="Toolbar_CopyButton"
                               IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
                               Click="Copy_Click_ByCommandBarFlyout"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8C8;" HorizontalAlignment="Right"/>
+                        <!-- 复制图标:官方字形 E8C8;动画:淡出→切 E73E→从左往右扫出→淡出→切回 E8C8→淡入 -->
+                        <FontIcon x:Name="ToolbarCopyIcon" Glyph="&#xE8C8;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_Delete"
@@ -313,11 +314,11 @@
                         <FontIcon Glyph="&#xE74D;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Uid="Toolbar_SelectAll"
+                <AppBarButton x:Name="ToolbarSelectAllButton" x:Uid="Toolbar_SelectAll"
                               Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8B3;" FontSize="16"/>
+                        <FontIcon x:Name="ToolbarSelectAllIcon" Glyph="&#xE8B3;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_InvertSelection"
@@ -331,7 +332,7 @@
                               Click="WallpaperListRefresh_Click_ByCommandBarFlyout"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE777;" FontSize="16"/>
+                        <FontIcon x:Name="RefreshIcon" Glyph="&#xE777;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>

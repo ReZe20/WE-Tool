@@ -828,6 +828,9 @@
   <data name="Toolbar_ListView.ToolTipService.ToolTip" xml:space="preserve">
     <value>コピー</value>
   </data>
+  <data name="Toolbar_CopyButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>コピー</value>
+  </data>
   <data name="Toolbar_Delete.ToolTipService.ToolTip" xml:space="preserve">
     <value>削除</value>
   </data>
@@ -835,6 +838,9 @@
     <value>完全に削除</value>
   </data>
   <data name="Toolbar_SelectAll.ToolTipService.ToolTip" xml:space="preserve">
+    <value>すべて選択</value>
+  </data>
+  <data name="Toolbar_SelectAllButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>すべて選択</value>
   </data>
   <data name="Toolbar_InvertSelection.ToolTipService.ToolTip" xml:space="preserve">
