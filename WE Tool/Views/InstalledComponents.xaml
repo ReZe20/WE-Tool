@@ -295,7 +295,7 @@
                               IsEnabled="{x:Bind IsComponentButtonEnabled, Mode=OneWay}"
                               Click="CopyComponent_Click">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8C8;" HorizontalAlignment="Right"/>
+                        <FontIcon x:Name="ToolbarCopyIcon" Glyph="&#xE8C8;" HorizontalAlignment="Right"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_Delete" LabelPosition="Collapsed"
@@ -305,10 +305,10 @@
                         <FontIcon Glyph="&#xE74D;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Uid="Toolbar_SelectAll" LabelPosition="Collapsed"
+                <AppBarButton x:Name="ToolbarSelectAllButton" x:Uid="Toolbar_SelectAll" LabelPosition="Collapsed"
                               Click="SelectAllComponents_Click">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8B3;" FontSize="16"/>
+                        <FontIcon x:Name="ToolbarSelectAllIcon" Glyph="&#xE8B3;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_InvertSelection" LabelPosition="Collapsed"
@@ -320,7 +320,7 @@
                 <AppBarButton x:Name="RefreshButton" x:Uid="Toolbar_Refresh" LabelPosition="Collapsed"
                               Click="ComponentsRefresh_Click">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE777;" FontSize="16"/>
+                        <FontIcon x:Name="RefreshIcon" Glyph="&#xE777;" FontSize="16"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>

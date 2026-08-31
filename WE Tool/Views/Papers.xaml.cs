@@ -201,6 +201,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
     private AppBarButton? _pressedButton; // 当前被按下的 CommandBar 按钮(指针捕获后释放弹回用)
+    private Storyboard? _multiEnterStackBoard;   // 进入多选:堆叠图淡入(退出多选时需 Stop,防动画值残留)
+    private Storyboard? _multiEnterSingleBoard;  // 进入多选:单图淡出(同上)
     private DateTime _lastDrillInAnimationTime = DateTime.MinValue;
     private bool _isExtracting;
     public bool IsExtracting
@@ -992,9 +994,13 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             Storyboard.SetTarget(fadeInStack, StackedImagesControl);
             Storyboard.SetTargetProperty(fadeInStack, "Opacity");
             var stackBoard = new Storyboard();
+            _multiEnterStackBoard = stackBoard;
             stackBoard.Children.Add(fadeInStack);
             stackBoard.Completed += (s, e) =>
             {
+                // 竞态防护:快速进出多选时,本回调(180ms 后)可能晚于退出多选执行,
+                // 若已不在多选模式则不得隐藏单图面板(否则 preview/文字被错误隐藏)
+                if (!_isMultiSelectMode) return;
                 SinglePreviewBorder.Visibility = Visibility.Collapsed;
                 SingleSelectionInfoPanel.Visibility = Visibility.Collapsed;
             };
@@ -1005,9 +1011,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             Storyboard.SetTarget(fadeOutSingle, SinglePreviewBorder);
             Storyboard.SetTargetProperty(fadeOutSingle, "Opacity");
             var singleBoard = new Storyboard();
+            _multiEnterSingleBoard = singleBoard;
             singleBoard.Children.Add(fadeOutSingle);
             singleBoard.Completed += (s, e) =>
             {
+                // 竞态防护:同 stackBoard.Completed——快速进出多选时晚到的回调不得隐藏单图
+                if (!_isMultiSelectMode) return;
                 SinglePreviewBorder.Opacity = 1; // 复位透明度供下次显示
                 SinglePreviewBorder.Visibility = Visibility.Collapsed;
             };
@@ -1019,6 +1028,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         else
         {
             StopAllStackAnimations();
+            // Stop 进入多选的 Storyboard:它们在 180ms 后仍会把 Opacity 拉向目标值(0),
+            // 快速进出多选时,退出复位 Opacity=1 会被动画值覆盖(border.Opacity=0 → preview 不可见)
+            _multiEnterStackBoard?.Stop();
+            _multiEnterSingleBoard?.Stop();
+            _multiEnterStackBoard = null;
+            _multiEnterSingleBoard = null;
             SelectedWallpapers.CollectionChanged -= SelectedWallpapers_CollectionChanged;
             ViewModel.SuspendSelectedWallpapersCollectionChanged();
 
@@ -2057,13 +2072,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 }
                 if (IsMultiSelectMode)
                 {
-                    // 拖拽滑过 = 连选:只选中(加入集合),不翻转——避免与 PointerPressed 的双重翻转抵消
-                    if (!item.IsSelected)
-                    {
-                        item.IsSelected = true;
-                        if (!SelectedWallpapers.Contains(item))
-                            SelectedWallpapers.Add(item);
-                    }
+                    // 多选下按住左键刷选 = 取反经过的壁纸(划过选中的取消,划过未选中的选中)
+                    item.IsSelected = !item.IsSelected;
+                    if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                        SelectedWallpapers.Add(item);
+                    else if (!item.IsSelected)
+                        SelectedWallpapers.Remove(item);
                     UpdateMultiSelectCount();
                 }
                 return;
@@ -2233,13 +2247,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 }
                 if (IsMultiSelectMode)
                 {
-                    // 拖拽滑过 = 连选:只选中(加入集合),不翻转——避免与 PointerPressed 的双重翻转抵消
-                    if (!item.IsSelected)
-                    {
-                        item.IsSelected = true;
-                        if (!SelectedWallpapers.Contains(item))
-                            SelectedWallpapers.Add(item);
-                    }
+                    // 多选下按住左键刷选 = 取反经过的壁纸(划过选中的取消,划过未选中的选中)
+                    item.IsSelected = !item.IsSelected;
+                    if (item.IsSelected && !SelectedWallpapers.Contains(item))
+                        SelectedWallpapers.Add(item);
+                    else if (!item.IsSelected)
+                        SelectedWallpapers.Remove(item);
                     UpdateMultiSelectCount();
                 }
                 return;
@@ -2491,6 +2504,11 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         Visual imageVisual = ElementCompositionPreview.GetElementVisual(SinglePreviewImage);
         Compositor compositor = imageVisual.Compositor;
 
+        // 复位透明度:上一轮动画若被中断(快速切换/状态变更),Opacity 可能残留为 0,
+        // 导致 preview 全透明但文字正常(用户报告的"图不显示文字正常")
+        imageVisual.StopAnimation("Opacity");
+        imageVisual.Opacity = 1f;
+
         // 设置中心点 (280 / 2 = 140)
         imageVisual.CenterPoint = new Vector3(140f, 140f, 0f);
 
@@ -2501,16 +2519,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         scaleAnim.Duration = TimeSpan.FromMilliseconds(400);
         scaleAnim.Target = "Scale.X";
 
-        // 创建透明度动画
-        var opacityAnim = compositor.CreateScalarKeyFrameAnimation();
-        opacityAnim.InsertKeyFrame(0.0f, 0.0f);
-        opacityAnim.InsertKeyFrame(0.2f, 1.0f); // 快速显现
-        opacityAnim.Duration = TimeSpan.FromMilliseconds(400);
-
-        // 启动动画
+        // 启动动画(只缩放,不做透明度动画——透明度动画被中断会残留透明状态)
         imageVisual.StartAnimation("Scale.X", scaleAnim);
         imageVisual.StartAnimation("Scale.Y", scaleAnim);
-        imageVisual.StartAnimation("Opacity", opacityAnim);
     }
     private void AnimateExtractPanelOpen()
     {
@@ -3162,6 +3173,13 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             item.IsSelected = true;
             SelectedWallpapers.Add(item);
         }
+        // 同步单选壁纸:全选时单选壁纸也进入选中态,避免残留状态错乱
+        if (ViewModel.SelectedWallpaper is { } single && !single.IsSelected)
+        {
+            single.IsSelected = true;
+            if (!SelectedWallpapers.Contains(single))
+                SelectedWallpapers.Add(single);
+        }
 
         ViewModel.ResumeSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;
@@ -3182,11 +3200,21 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             item.IsSelected = !item.IsSelected;
         }
+        // 同步单选壁纸:反选时单选壁纸的选中态也翻转(它可能不在 Wallpapers 筛选列表里)
+        if (ViewModel.SelectedWallpaper is { } single)
+        {
+            single.IsSelected = !single.IsSelected;
+        }
         SelectedWallpapers.Clear();
         foreach (var item in Wallpapers)
         {
             if (item.IsSelected)
                 SelectedWallpapers.Add(item);
+        }
+        // 单选壁纸翻转后若选中,加入集合(可能在 Wallpapers 之外)
+        if (ViewModel.SelectedWallpaper is { } single2 && single2.IsSelected && !SelectedWallpapers.Contains(single2))
+        {
+            SelectedWallpapers.Add(single2);
         }
         ViewModel.ResumeSelectedWallpapersCollectionChanged();
         SelectedWallpapers.CollectionChanged += SelectedWallpapers_CollectionChanged;

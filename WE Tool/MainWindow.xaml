@@ -16,7 +16,7 @@
     </winuiex:WindowEx.SystemBackdrop>
     <Grid Background="Transparent" KeyDown="RootGrid_KeyDown">
         <Grid.RowDefinitions>
-            <RowDefinition Height="47"/>
+            <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid VerticalAlignment="Center" IsHitTestVisible="False">
