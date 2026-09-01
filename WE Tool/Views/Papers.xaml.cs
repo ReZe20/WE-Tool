@@ -193,6 +193,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private int _extractTotalCount;
     private int _extractCompletedCount;
     private HashSet<string> _extractCompletedNames = [];
+
+    /// <summary>导航徽标是否处于失败(红)状态:失败后保持红色,直到下次提取开始才复位。</summary>
+    private bool _navBadgeError;
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
     public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
     public IAsyncRelayCommand ExtractSelectedCommand { get; }
@@ -305,20 +308,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     public string ExtractProgressText => $"{_extractCompletedCount}/{_extractTotalCount}";
 
     private bool _isSingleExtract;
-
-    private string _extractTitleText = "";
-    public string ExtractTitleText
-    {
-        get => _extractTitleText;
-        set
-        {
-            if (_extractTitleText != value)
-            {
-                _extractTitleText = value;
-                OnPropertyChanged();
-            }
-        }
-    }
 
     private string _extractSubText = "";
     public string ExtractSubText
@@ -2898,12 +2887,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         _isSingleExtract = true;
         _extractTotalCount = 1;
         _extractCompletedCount = 0;
-        ExtractTitleText = "正在导入壁纸编辑器";
         ExtractProgress = 0;
         ExtractSubText = "";
         ExtractEntryText = "";
         SetExtractPreviewImage(item.Preview, item.Title ?? item.WorkshopID ?? "壁纸");
-        OnPropertyChanged(nameof(ExtractTitleText));
         OnPropertyChanged(nameof(ExtractProgress));
         OnPropertyChanged(nameof(ExtractProgressText));
         OnPropertyChanged(nameof(ExtractSubText));
@@ -2911,6 +2898,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         OnPropertyChanged(nameof(ExtractEntryVisibility));
         ExtractState = ExtractState.Running;
         IsExtracting = true;
+        TaskbarProgressService.SetProgress(0);
+        // 导航栏徽标:显示本次提取剩余数量(新任务开始,复位失败红标)
+        _navBadgeError = false;
+        NavBadgeService.SetBadge("Papers", 1);
 
         _extractService = new RepkgCliService();
         _extractCts = new CancellationTokenSource();
@@ -2945,6 +2936,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                         {
                             ExtractProgress = pct;
                             OnPropertyChanged(nameof(ExtractProgress));
+                            TaskbarProgressService.SetProgress(pct);
                         }
                         if (action == "完成")
                         {
@@ -2952,6 +2944,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                             ExtractProgress = 100;
                             OnPropertyChanged(nameof(ExtractProgress));
                             OnPropertyChanged(nameof(ExtractProgressText));
+                            TaskbarProgressService.SetProgress(100);
+                            // 导航栏徽标:剩余 0 → 隐藏
+                            NavBadgeService.SetBadge("Papers", null);
                         }
                         ExtractSubText = action == "完成" ? "已完成" : $"{pct:F0}%";
                         OnPropertyChanged(nameof(ExtractSubText));
@@ -2971,6 +2966,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         catch (Exception ex)
         {
             Log.Error(ex, "[导入编辑器] 导入失败: {Name}", item.Title);
+            _navBadgeError = true;
             NotificationService.NotifyIfUnfocused("导入到编辑器失败", $"导入失败:{item.Title}");
         }
         finally
@@ -2978,6 +2974,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             _extractService = null;
             _extractCts = null;
             IsExtracting = false;
+            TaskbarProgressService.Clear();
+            // 导航栏徽标:正常结束(完成/停止)隐藏;失败 → 红色保留(像 InfoBar 错误条)
+            if (_navBadgeError)
+                NavBadgeService.SetBadge("Papers", 1, NavBadgeState.Error);
+            else
+                NavBadgeService.SetBadge("Papers", null);
         }
     }
 
@@ -3270,12 +3272,15 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             ExtractProgressItems.Clear();
             ExtractProgress = 0;
             ExtractStatus = "正在提取...";
+            TaskbarProgressService.SetProgress(0);
+            // 导航栏徽标:显示本次提取剩余数量(新任务开始,复位失败红标)
+            _navBadgeError = false;
+            NavBadgeService.SetBadge("Papers", itemsToExtract.Count);
 
             // 判断单/多模式
             _isSingleExtract = itemsToExtract.Count == 1;
             ExtractWallpaperList.Visibility = _isSingleExtract ? Visibility.Collapsed : Visibility.Visible;
             OnPropertyChanged(nameof(ExtractPreviewVisibility));
-            ExtractTitleText = "正在提取";
             ExtractSubText = _isSingleExtract ? "准备中..." : $"已完成 0/{itemsToExtract.Count} 个壁纸";
             ExtractEntryText = "";
             OnPropertyChanged(nameof(ExtractEntryVisibility));
@@ -3316,20 +3321,25 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                         {
                             ExtractProgress = pct;
                             ExtractSubText = $"正在解析... {pct:F0}%";
+                            TaskbarProgressService.SetProgress(pct);
                         }
                         else if (action == "跳过(已提取)")
                         {
                             ExtractProgress = 100;
                             ExtractSubText = "壁纸已提取，跳过";
+                            TaskbarProgressService.SetProgress(100);
                         }
                         else if (action == "完成")
                         {
                             ExtractProgress = 100;
                             ExtractSubText = "提取完成";
+                            TaskbarProgressService.SetProgress(100);
                             if (_extractCompletedNames.Add(name))
                             {
                                 _extractCompletedCount = 1;
                                 OnPropertyChanged(nameof(ExtractProgressText));
+                                // 导航栏徽标:剩余 0 → 隐藏
+                                NavBadgeService.SetBadge("Papers", null);
                             }
                         }
                         else if (action == "失败")
@@ -3364,6 +3374,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                             ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
                             ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
                             OnPropertyChanged(nameof(ExtractProgressText));
+                            TaskbarProgressService.SetProgress(ExtractProgress);
+                            // 导航栏徽标:剩余 = 总数 - 完成数
+                            NavBadgeService.SetBadge("Papers", _extractTotalCount - _extractCompletedCount);
                         }
                         else if (action == "失败" && _extractProgressByName.Remove(name, out var failedItem))
                         {
@@ -3425,6 +3438,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 ExtractState = ExtractState.Completed;
                 IsExtracting = false;
                 ExtractStatus = "提取完成";
+                TaskbarProgressService.SetProgress(100);
                 if (!_isSingleExtract)
                     ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
                 Log.Information("提取完成: {Count} 个壁纸 → {Output}", itemsToExtract.Count, outputPath);
@@ -3438,6 +3452,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 ExtractState = ExtractState.Completed;
                 IsExtracting = false;
                 ExtractStatus = "提取已停止";
+                TaskbarProgressService.Clear();
                 Log.Information("提取被用户停止");
                 NotificationService.NotifyIfUnfocused("提取已停止", "提取已停止");
             }
@@ -3447,6 +3462,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             ExtractStatus = "提取已停止";
             ExtractState = ExtractState.Completed;
             IsExtracting = false;
+            TaskbarProgressService.Clear();
             Log.Information("提取被用户停止");
             NotificationService.NotifyIfUnfocused("提取已停止", "提取已停止");
         }
@@ -3457,12 +3473,19 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             IsExtracting = false;
             ExtractStatus = "提取失败，请查看日志";
             ExtractProgress = 0;
+            TaskbarProgressService.SetError();
+            _navBadgeError = true;
             NotificationService.NotifyIfUnfocused("提取失败", "提取失败，请查看日志");
         }
 
         // 收尾:清空进度列表(完成/取消/异常三路都经过这里)
         _extractProgressByName = [];
         ExtractProgressItems.Clear();
+        // 导航栏徽标:提取结束(完成/停止)隐藏;失败 → 红色保留剩余数(像 InfoBar 错误条)
+        if (_navBadgeError)
+            NavBadgeService.SetBadge("Papers", Math.Max(1, _extractTotalCount - _extractCompletedCount), NavBadgeState.Error);
+        else
+            NavBadgeService.SetBadge("Papers", null);
     }
 
     private void PauseExtractButton_Click(object sender, RoutedEventArgs e)
@@ -3470,6 +3493,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         _extractService?.Pause();
         ExtractState = ExtractState.Paused;
         ExtractStatus = "已暂停";
+        TaskbarProgressService.SetPaused();
+        // 导航栏徽标:暂停 → 黄色,剩余数不变
+        NavBadgeService.SetBadge("Papers", _extractTotalCount - _extractCompletedCount, NavBadgeState.Paused);
     }
 
     private void ResumeExtractButton_Click(object sender, RoutedEventArgs e)
@@ -3479,6 +3505,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         _extractService?.Resume();
         ExtractState = ExtractState.Running;
         ExtractStatus = "正在提取...";
+        // 恢复为绿色:值沿用当前进度(暂停不丢值,任务栏进度条只在暂停时变黄)
+        TaskbarProgressService.SetProgress(ExtractProgress);
+        // 导航栏徽标:恢复 → 绿色,剩余数不变
+        NavBadgeService.SetBadge("Papers", _extractTotalCount - _extractCompletedCount, NavBadgeState.Running);
     }
 
     private void StopExtractButton_Click(object sender, RoutedEventArgs e)
@@ -3496,6 +3526,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             _extractService?.Stop();
             _isExtracting = false; // 避免动画触发二次关闭
         }
+        TaskbarProgressService.Clear();
         AnimateExtractPanelClose(() =>
         {
             ExtractOverlayVisibility = Visibility.Collapsed;

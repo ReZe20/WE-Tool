@@ -1221,6 +1221,9 @@ project.json 및 미리보기 복사
   <data name="ExtractStop.Text" xml:space="preserve">
     <value>중지</value>
   </data>
+  <data name="ExtractProgressTitle.Text" xml:space="preserve">
+    <value>추출 진행</value>
+  </data>
   <data name="FileStructure.Text" xml:space="preserve">
     <value>파일 구조</value>
   </data>

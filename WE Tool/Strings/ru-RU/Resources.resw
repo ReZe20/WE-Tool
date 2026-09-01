@@ -1221,6 +1221,9 @@
   <data name="ExtractStop.Text" xml:space="preserve">
     <value>Остановить</value>
   </data>
+  <data name="ExtractProgressTitle.Text" xml:space="preserve">
+    <value>Ход извлечения</value>
+  </data>
   <data name="FileStructure.Text" xml:space="preserve">
     <value>Структура файлов</value>
   </data>

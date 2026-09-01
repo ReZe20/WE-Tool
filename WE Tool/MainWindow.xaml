@@ -28,18 +28,27 @@
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8B9;"/>
                     </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge x:Name="PapersBadge" Visibility="Collapsed"/>
+                    </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
 
                 <NavigationViewItem x:Uid="InstalledComponentsPage" Tag="InstalledComponents">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xF4A5;"/>
                     </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge x:Name="InstalledComponentsBadge" Visibility="Collapsed"/>
+                    </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
 
                 <NavigationViewItem x:Uid="ImportWallpapers" Tag="LoadPapers">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8B5;" />
                     </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge x:Name="LoadPapersBadge" Visibility="Collapsed"/>
+                    </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
 
                 <NavigationViewItem x:Uid="CleanupPage" Tag="Cleanup">

@@ -1221,6 +1221,9 @@
   <data name="ExtractStop.Text" xml:space="preserve">
     <value>停止</value>
   </data>
+  <data name="ExtractProgressTitle.Text" xml:space="preserve">
+    <value>提取进度</value>
+  </data>
   <data name="FileStructure.Text" xml:space="preserve">
     <value>文件结构</value>
   </data>
@@ -1568,7 +1571,7 @@
     <value>开始提取</value>
   </data>
   <data name="LoadPapers_Pause.Label" xml:space="preserve">
-    <value>暂停1</value>
+    <value>暂停</value>
   </data>
   <data name="LoadPapers_Stop.Label" xml:space="preserve">
     <value>停止</value>
@@ -1698,7 +1701,8 @@
   </data>
   <data name="WindowBehavior_Restore.Content" xml:space="preserve">
     <value>恢复上一次的窗口大小和位置</value>
-  </data>  <data name="WindowBehavior_RestorePropertiesWindowSize.Content" xml:space="preserve">
+  </data>
+  <data name="WindowBehavior_RestorePropertiesWindowSize.Content" xml:space="preserve">
     <value>属性面板打开时恢复之前的大小</value>
   </data>
   <data name="StartPage_Cleanup.Text" xml:space="preserve">
@@ -1827,7 +1831,6 @@
   <data name="AutoBackup_ModeOnStartup.Content" xml:space="preserve">
     <value>WE Tool 启动时备份</value>
   </data>
-  
   <data name="BackupPage_SortByTime.Text" xml:space="preserve">
     <value>备份时间</value>
   </data>

@@ -1221,6 +1221,9 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
   <data name="ExtractStop.Text" xml:space="preserve">
     <value>Detener</value>
   </data>
+  <data name="ExtractProgressTitle.Text" xml:space="preserve">
+    <value>Progreso de extracción</value>
+  </data>
   <data name="FileStructure.Text" xml:space="preserve">
     <value>Estructura de archivos</value>
   </data>

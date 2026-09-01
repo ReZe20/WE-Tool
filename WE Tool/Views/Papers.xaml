@@ -1142,7 +1142,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <FontIcon Glyph="&#xE118;" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="{x:Bind ExtractTitleText, Mode=OneWay}" Style="{StaticResource TitleTextBlockStyle}" 
+                        <TextBlock x:Uid="ExtractProgressTitle" Style="{StaticResource TitleTextBlockStyle}" 
                                    FontSize="18" VerticalAlignment="Center" Margin="8,0,0,0" Grid.Column="1"/>
                         <Button Grid.Column="2"
                                 x:Name="ExtractCloseButton"

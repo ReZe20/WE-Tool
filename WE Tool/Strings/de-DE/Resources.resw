@@ -1221,6 +1221,9 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="ExtractStop.Text" xml:space="preserve">
     <value>Stoppen</value>
   </data>
+  <data name="ExtractProgressTitle.Text" xml:space="preserve">
+    <value>Extraktionsfortschritt</value>
+  </data>
   <data name="FileStructure.Text" xml:space="preserve">
     <value>Dateistruktur</value>
   </data>

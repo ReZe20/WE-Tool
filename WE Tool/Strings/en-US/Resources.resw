@@ -1221,6 +1221,9 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="ExtractStop.Text" xml:space="preserve">
     <value>Stop</value>
   </data>
+  <data name="ExtractProgressTitle.Text" xml:space="preserve">
+    <value>Extract Progress</value>
+  </data>
   <data name="FileStructure.Text" xml:space="preserve">
     <value>File Structure</value>
   </data>

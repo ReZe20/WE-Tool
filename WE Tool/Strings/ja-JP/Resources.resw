@@ -1221,6 +1221,9 @@ project.json とプレビューをコピー
   <data name="ExtractStop.Text" xml:space="preserve">
     <value>停止</value>
   </data>
+  <data name="ExtractProgressTitle.Text" xml:space="preserve">
+    <value>抽出進度</value>
+  </data>
   <data name="FileStructure.Text" xml:space="preserve">
     <value>ファイル構造</value>
   </data>

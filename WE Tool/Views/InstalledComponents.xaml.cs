@@ -25,6 +25,7 @@ using WE_Tool.Helper;
 using WE_Tool.Controls;
 using WE_Tool.Converters;
 using WE_Tool.Models;
+using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
@@ -43,6 +44,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private bool _isComponentItemTapped;
     private bool _isMultiSelectMode;
     private bool _isBatchUpdating;
+
+    /// <summary>导航徽标是否处于失败(红)状态:失败后保持红色,直到下次提取开始才复位。</summary>
+    private bool _navBadgeError;
     private int _lastStackCount;
     private FrameworkElement? _rightClickedComponentElement;
     private DateTime _lastDrillInAnimationTime;
@@ -1277,9 +1281,13 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             downloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "WE_OutPut");
         }
 
+        // 导航栏徽标:显示本次待提取组件数(新任务开始,复位失败红标)
+        _navBadgeError = false;
+        NavBadgeService.SetBadge("InstalledComponents", items.Count);
+
+        int successCount = 0;
         try
         {
-            int successCount = 0;
             foreach (var item in items)
             {
                 if (string.IsNullOrEmpty(item.FolderPath)) continue;
@@ -1299,6 +1307,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                     File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
                 }
                 successCount++;
+                // 导航栏徽标:剩余 = 总数 - 成功数
+                NavBadgeService.SetBadge("InstalledComponents", items.Count - successCount);
                 Log.Information("组件 {Title} 已提取到 {Path}", item.Title, targetDir);
             }
 
@@ -1309,6 +1319,15 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             await Helper.DialogHelper.ShowMessageAsync("提取失败", ex.Message);
             Log.Error(ex, "提取组件失败");
+            _navBadgeError = true;
+        }
+        finally
+        {
+            // 导航栏徽标:失败 → 红色保留剩余数;正常结束(完成/取消覆盖)隐藏
+            if (_navBadgeError)
+                NavBadgeService.SetBadge("InstalledComponents", Math.Max(1, items.Count - successCount), NavBadgeState.Error);
+            else
+                NavBadgeService.SetBadge("InstalledComponents", null);
         }
     }
 

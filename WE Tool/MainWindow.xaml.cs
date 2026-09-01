@@ -45,6 +45,42 @@ namespace WE_Tool
             // 导航栏 Info 项徽标实时反映 Steamworks 状态(桥接进程事件驱动,不依赖 Info 页轮询)
             SteamWorkshopService.StatusChanged += OnSteamworksStatusChanged;
             UpdateSteamStatusBadge();
+
+            // 导航项数量徽标:页面提取开始/进度/完成时经 NavBadgeService 更新
+            NavBadgeService.BadgeChanged += OnNavBadgeChanged;
+        }
+
+        /// <summary>导航项徽标更新(页面经 NavBadgeService 调用,count 为 null/0 时隐藏;state 决定颜色)。</summary>
+        private void OnNavBadgeChanged(string pageTag, int? count, NavBadgeState state)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                InfoBadge? badge = pageTag switch
+                {
+                    "Papers" => PapersBadge,
+                    "InstalledComponents" => InstalledComponentsBadge,
+                    "LoadPapers" => LoadPapersBadge,
+                    _ => null
+                };
+                if (badge == null) return;
+
+                if (count is null or <= 0 || state == NavBadgeState.None)
+                {
+                    badge.Visibility = Visibility.Collapsed;
+                    return;
+                }
+
+                // 颜色语义同 InfoBar Severity:绿=正常进行,黄=暂停/警告,红=失败
+                badge.Background = state switch
+                {
+                    NavBadgeState.Paused => new SolidColorBrush(Color.FromArgb(255, 249, 168, 37) /* 黄 */),
+                    NavBadgeState.Error => new SolidColorBrush(Color.FromArgb(255, 196, 43, 28) /* 红 */),
+                    _ => new SolidColorBrush(Color.FromArgb(255, 16, 124, 16) /* 绿 */),
+                };
+
+                badge.Value = count.Value;
+                badge.Visibility = Visibility.Visible;
+            });
         }
 
         /// <summary>桥接状态事件可能来自任意线程,统一编组到 UI 线程更新徽标</summary>

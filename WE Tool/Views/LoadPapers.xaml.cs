@@ -37,6 +37,9 @@ namespace WE_Tool
         private bool _isExtracting;
         private bool _isPaused;
 
+        /// <summary>导航徽标是否处于失败(红)状态:失败后保持红色,直到下次提取开始才复位。</summary>
+        private bool _navBadgeError;
+
         /// <summary>进度事件名(壁纸 Title=安全名)→ 队列项。</summary>
         private readonly Dictionary<string, ImportQueueItem> _itemsByName = new(StringComparer.Ordinal);
 
@@ -322,6 +325,10 @@ namespace WE_Tool
             _isExtracting = true;
             _isPaused = false;
             UpdateRunningState();
+            TaskbarProgressService.SetProgress(0);
+            // 导航栏徽标:显示本次待提取数量(新任务开始,复位失败红标)
+            _navBadgeError = false;
+            NavBadgeService.SetBadge("LoadPapers", wallpapers.Count);
 
             try
             {
@@ -330,6 +337,7 @@ namespace WE_Tool
                     OnExtractProgress, _extractCts.Token);
 
                 FinalizeExtraction(settings, outputRoot);
+                TaskbarProgressService.SetProgress(100);
             }
             catch (OperationCanceledException)
             {
@@ -340,12 +348,15 @@ namespace WE_Tool
                 }
                 ShowInfoBar("已停止提取", InfoBarSeverity.Warning);
                 NotificationService.NotifyIfUnfocused("导入解包已停止", "提取已停止");
+                TaskbarProgressService.Clear();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "[导入解包] 提取失败");
                 ShowInfoBar($"提取失败:{ex.Message}", InfoBarSeverity.Error);
                 NotificationService.NotifyIfUnfocused("导入解包失败", $"提取失败:{ex.Message}");
+                TaskbarProgressService.SetError();
+                _navBadgeError = true;
             }
             finally
             {
@@ -354,6 +365,11 @@ namespace WE_Tool
                 _isExtracting = false;
                 _isPaused = false;
                 UpdateRunningState();
+                // 导航栏徽标:失败 → 红色保留剩余数;否则按队列剩余更新(全完成→隐藏,停止→保留剩余)
+                if (_navBadgeError)
+                    NavBadgeService.SetBadge("LoadPapers", Math.Max(1, GetPendingCount()), NavBadgeState.Error);
+                else
+                    NavBadgeService.SetBadge("LoadPapers", GetPendingCount());
             }
         }
 
@@ -368,11 +384,17 @@ namespace WE_Tool
                 _extractCts = new CancellationTokenSource();
                 _extractService?.Resume();
                 _isPaused = false;
+                TaskbarProgressService.SetProgress(GetQueueProgress());
+                // 导航栏徽标:恢复 → 绿色
+                NavBadgeService.SetBadge("LoadPapers", GetPendingCount(), NavBadgeState.Running);
             }
             else
             {
                 _extractService?.Pause();
                 _isPaused = true;
+                TaskbarProgressService.SetPaused();
+                // 导航栏徽标:暂停 → 黄色
+                NavBadgeService.SetBadge("LoadPapers", GetPendingCount(), NavBadgeState.Paused);
             }
             UpdateRunningState();
         }
@@ -381,6 +403,34 @@ namespace WE_Tool
         {
             _extractCts?.Cancel();
             _extractService?.Stop();
+        }
+
+        /// <summary>队列整体进度(0~100):完成/失败项计 100,其余按各自 pct 加权平均。</summary>
+        private double GetQueueProgress()
+        {
+            var items = QueueItems;
+            if (items.Count == 0) return 0;
+            double sum = 0;
+            foreach (var it in items)
+            {
+                if (it.Status is "提取完成" or "提取失败")
+                    sum += 100;
+                else
+                    sum += it.Progress;
+            }
+            return sum / items.Count;
+        }
+
+        /// <summary>队列中尚未"提取完成"的项数(等待/正在提取/失败都算)。</summary>
+        private int GetPendingCount()
+        {
+            int pending = 0;
+            foreach (var item in QueueItems)
+            {
+                if (item.Status != "提取完成")
+                    pending++;
+            }
+            return pending;
         }
 
         /// <summary>batch 进度事件 name|action|pct|entry → 队列项状态/进度(回 UI 线程更新)。</summary>
@@ -403,14 +453,19 @@ namespace WE_Tool
                         // 只前进不回退:batch 同壁纸条目跨 worker 处理,事件顺序理论上单调,
                         // 单调守卫兜底,配合 0.5% 阈值防抖让进度条平滑前进
                         if (pct > item.Progress) item.Progress = pct;
+                        TaskbarProgressService.SetProgress(GetQueueProgress());
                         break;
                     case "完成":
                         item.Progress = 100;
                         item.Status = "提取完成";
+                        TaskbarProgressService.SetProgress(GetQueueProgress());
+                        NavBadgeService.SetBadge("LoadPapers", GetPendingCount());
                         break;
                     case "失败":
                         item.Progress = 100;
                         item.Status = "提取失败";
+                        TaskbarProgressService.SetProgress(GetQueueProgress());
+                        NavBadgeService.SetBadge("LoadPapers", GetPendingCount());
                         break;
                 }
             });
