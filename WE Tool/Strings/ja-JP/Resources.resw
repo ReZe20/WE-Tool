@@ -972,9 +972,6 @@
   <data name="Settings_OutputType_Full.Text" xml:space="preserve">
     <value>フル出力</value>
   </data>
-  <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>メディアのみ</value>
-  </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>カスタム</value>
   </data>
@@ -1378,7 +1375,7 @@ project.json とプレビューをコピー
     <value>ブラウザで表示</value>
   </data>
   <data name="Info_CreditsLine10.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_Contributors.Text" xml:space="preserve">
     <value>貢献者</value>
@@ -1426,7 +1423,7 @@ project.json とプレビューをコピー
     <value>notscuffed/repkg</value>
   </data>
   <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
     <value>WE Tool は repkg_re を壁紙パッケージ抽出バックエンドとして使用しています。ビルド時に external/repkg_Re をコンパイルし、RePKG_Re.exe とサードパーティ表記を同梱し、抽出時にコマンドラインで呼び出します。
@@ -1855,5 +1852,25 @@ project.json とプレビューをコピー
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>元ファイル削除済み</value>
+  </data>
+
+  <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
+    <value>メディアのみ</value>
+  </data>
+
+  <data name="Settings_MediaExportImages.Text" xml:space="preserve">
+    <value>画像/アニメーション</value>
+  </data>
+
+  <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
+    <value>動画</value>
+  </data>
+
+  <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
+    <value>音声</value>
+  </data>
+
+  <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
+    <value>透明画像を除外</value>
   </data>
 </root>

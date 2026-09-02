@@ -351,7 +351,7 @@
                                                         </Button>
                                                     </StackPanel>
                                                     <TeachingTip x:Name="OutputTypeTeachingTip_1" x:Uid="Settings_TeachingTip_Output1" Target="{x:Bind OutputTypeFirstRadio}" Title="{x:Bind OutputTypeFirstRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
-                                                    <TeachingTip x:Name="OutputTypeTeachingTip_2" x:Uid="Settings_TeachingTip_Output2" Target="{x:Bind OutputTypeImageOnlyRadio}" Title="{x:Bind OutputTypeImageOnlyRadio.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                    <TeachingTip x:Name="OutputTypeTeachingTip_2" x:Uid="Settings_TeachingTip_Output2" Target="{x:Bind OutputTypeImageOnlyRadio}" Title="{x:Bind OutputTypeImageOnlyRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
                                                     <TeachingTip x:Name="OutputTypeTeachingTip_3" x:Uid="Settings_TeachingTip_Output3" Target="{x:Bind OutputTypeCustomRadio}" Title="{x:Bind OutputTypeCustomRadioTitle.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
                                                 </StackPanel>
                                             </RadioButtons.Header>
@@ -380,7 +380,31 @@
                                                     </StackPanel>
                                                 </RadioButton.Content>
                                             </RadioButton>
-                                            <RadioButton x:Name="OutputTypeImageOnlyRadio" x:Uid="Settings_OutputType_ImageOnly"/>
+                                            <RadioButton x:Name="OutputTypeImageOnlyRadio">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="OutputTypeImageOnlyRadioTitle" x:Uid="Settings_OutputType_ImageOnly" VerticalAlignment="Top"/>
+                                                        <!-- 媒体类型过滤:勾选要输出的媒体类型;默认全勾 -->
+                                                        <CheckBox x:Name="MediaImagesCheckBox" Margin="0,24,0,0" IsChecked="{x:Bind ViewModel.MediaExportImages, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel>
+                                                                    <TextBlock x:Uid="Settings_MediaExportImages" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                                                                    <!-- 过滤透明图片:仅勾选图片/动图后可勾选;固定按 90% 阈值滤除近全透明的贴图 -->
+                                                                    <CheckBox x:Name="MediaTransparentCheckBox" Margin="0,12,0,0" IsChecked="{x:Bind ViewModel.MediaFilterTransparentImages, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IsMediaFilterTransparentEnabled, Mode=OneWay}">
+                                                                        <TextBlock x:Uid="Settings_MediaFilterTransparent" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                                                                    </CheckBox>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="MediaVideosCheckBox" Margin="0,12,0,0" IsChecked="{x:Bind ViewModel.MediaExportVideos, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}">
+                                                            <TextBlock x:Uid="Settings_MediaExportVideos" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="MediaAudiosCheckBox" Margin="0,12,0,0" IsChecked="{x:Bind ViewModel.MediaExportAudios, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}">
+                                                            <TextBlock x:Uid="Settings_MediaExportAudios" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                                                        </CheckBox>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
                                             <RadioButton x:Name="OutputTypeCustomRadio">
                                                 <RadioButton.Content>
                                                     <StackPanel>

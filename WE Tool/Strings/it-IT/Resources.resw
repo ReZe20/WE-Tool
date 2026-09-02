@@ -972,9 +972,6 @@
   <data name="Settings_OutputType_Full.Text" xml:space="preserve">
     <value>Output completo</value>
   </data>
-  <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Solo media</value>
-  </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Personalizzato</value>
   </data>
@@ -1378,7 +1375,7 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
     <value>Visualizza nel browser</value>
   </data>
   <data name="Info_CreditsLine10.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_Contributors.Text" xml:space="preserve">
     <value>Collaboratori</value>
@@ -1426,7 +1423,7 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
     <value>notscuffed/repkg</value>
   </data>
   <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
     <value>WE Tool usa repkg_re come backend di estrazione pacchetti: compila external/repkg_Re in fase di build, distribuisce RePKG_Re.exe con le note di terze parti e lo invoca da riga di comando durante l'estrazione.
@@ -1855,5 +1852,25 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Origine rimossa</value>
+  </data>
+
+  <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
+    <value>Solo media</value>
+  </data>
+
+  <data name="Settings_MediaExportImages.Text" xml:space="preserve">
+    <value>Immagini/Animazioni</value>
+  </data>
+
+  <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
+    <value>Video</value>
+  </data>
+
+  <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+
+  <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
+    <value>Filtra immagini trasparenti</value>
   </data>
 </root>

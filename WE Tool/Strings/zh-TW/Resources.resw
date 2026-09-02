@@ -972,9 +972,6 @@
   <data name="Settings_OutputType_Full.Text" xml:space="preserve">
     <value>完整輸出</value>
   </data>
-  <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>僅輸出媒體</value>
-  </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>自訂</value>
   </data>
@@ -1378,7 +1375,7 @@
     <value>在瀏覽器中檢視</value>
   </data>
   <data name="Info_CreditsLine10.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_Contributors.Text" xml:space="preserve">
     <value>貢獻者</value>
@@ -1426,7 +1423,7 @@
     <value>notscuffed/repkg</value>
   </data>
   <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
     <value>WE Tool 引用 repkg_re 作為桌布套件擷取後端:建置時自動編譯 external/repkg_Re,將 RePKG_Re.exe 與第三方元件聲明隨包散發,擷取時以命令列方式呼叫。
@@ -1855,5 +1852,25 @@
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>源已刪除</value>
+  </data>
+
+  <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
+    <value>僅輸出媒體</value>
+  </data>
+
+  <data name="Settings_MediaExportImages.Text" xml:space="preserve">
+    <value>圖片/動圖</value>
+  </data>
+
+  <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
+    <value>影片</value>
+  </data>
+
+  <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
+    <value>音訊</value>
+  </data>
+
+  <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
+    <value>過濾透明圖片</value>
   </data>
 </root>

@@ -972,9 +972,6 @@
   <data name="Settings_OutputType_Full.Text" xml:space="preserve">
     <value>Salida completa</value>
   </data>
-  <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Solo medios</value>
-  </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Personalizado</value>
   </data>
@@ -1378,7 +1375,7 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
     <value>Ver en el navegador</value>
   </data>
   <data name="Info_CreditsLine10.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_Contributors.Text" xml:space="preserve">
     <value>Colaboradores</value>
@@ -1426,7 +1423,7 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
     <value>notscuffed/repkg</value>
   </data>
   <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
     <value>WE Tool usa repkg_re como backend de extracción de paquetes: compila external/repkg_Re en la compilación, distribuye RePKG_Re.exe con los avisos de terceros y lo invoca por línea de comandos durante la extracción.
@@ -1855,5 +1852,25 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Origen eliminado</value>
+  </data>
+
+  <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
+    <value>Solo medios</value>
+  </data>
+
+  <data name="Settings_MediaExportImages.Text" xml:space="preserve">
+    <value>Imágenes/Animaciones</value>
+  </data>
+
+  <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
+    <value>Vídeos</value>
+  </data>
+
+  <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+
+  <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
+    <value>Filtrar imágenes transparentes</value>
   </data>
 </root>

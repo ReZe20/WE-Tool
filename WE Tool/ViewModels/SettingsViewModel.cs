@@ -185,6 +185,34 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial bool FilterEffectImagesEnabled { get; set; }
 
+        // === 仅输出媒体文件(OutputMode==1)的媒体类型过滤 ===
+
+        /// <summary>仅输出媒体文件模式:输出图片/动图</summary>
+        [ObservableProperty]
+        public partial bool MediaExportImages { get; set; } = true;
+
+        /// <summary>仅输出媒体文件模式:输出视频</summary>
+        [ObservableProperty]
+        public partial bool MediaExportVideos { get; set; } = true;
+
+        /// <summary>仅输出媒体文件模式:输出音频</summary>
+        [ObservableProperty]
+        public partial bool MediaExportAudios { get; set; } = true;
+
+        /// <summary>仅输出媒体文件模式:过滤透明图片(勾选图片后可用;固定按 90% 阈值滤除近全透明贴图,默认勾选)</summary>
+        [ObservableProperty]
+        public partial bool MediaFilterTransparentImages { get; set; } = true;
+
+        /// <summary>媒体模式下\"过滤透明图片\"是否可勾选:须先勾选图片/动图</summary>
+        public bool IsMediaFilterTransparentEnabled => MediaExportImages;
+
+        partial void OnMediaExportImagesChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsMediaFilterTransparentEnabled));
+            // 图片被取消勾选时,透明过滤随之关闭(它只作用于图片)
+            if (!value) MediaFilterTransparentImages = false;
+        }
+
         // === 性能参数（阶段1） ===
 
         /// <summary>最大并发提取数，1 到 MaxConcurrentMax</summary>
@@ -504,6 +532,10 @@ namespace WE_Tool.ViewModels
             TexExportMode = _settings.Extract.TexExportMode;
             FilterEffectImagesThreshold = _settings.Extract.FilterEffectImagesThreshold;
             FilterEffectImagesEnabled = _settings.Extract.FilterEffectImagesEnabled;
+            MediaExportImages = _settings.Extract.MediaExportImages;
+            MediaExportVideos = _settings.Extract.MediaExportVideos;
+            MediaExportAudios = _settings.Extract.MediaExportAudios;
+            MediaFilterTransparentImages = _settings.Extract.MediaFilterTransparentImages;
 
             MaxConcurrentExtractions = _settings.Extract.MaxConcurrentExtractions;
             ProcessPriority = _settings.Extract.ProcessPriority;
@@ -875,6 +907,10 @@ namespace WE_Tool.ViewModels
                     _settings.Extract.OutputMode = OutputMode;
                     _settings.Extract.FilterEffectImagesThreshold = FilterEffectImagesThreshold;
                     _settings.Extract.FilterEffectImagesEnabled = FilterEffectImagesEnabled;
+                    _settings.Extract.MediaExportImages = MediaExportImages;
+                    _settings.Extract.MediaExportVideos = MediaExportVideos;
+                    _settings.Extract.MediaExportAudios = MediaExportAudios;
+                    _settings.Extract.MediaFilterTransparentImages = MediaFilterTransparentImages;
 
                     _settings.Extract.MaxConcurrentExtractions = MaxConcurrentExtractions;
                     _settings.Extract.ProcessPriority = ProcessPriority;

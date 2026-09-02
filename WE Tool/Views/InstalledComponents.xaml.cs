@@ -1378,12 +1378,13 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         var service = Service.SteamWorkshopService.GetInstance();
 
-        // 创意工坊项:尝试取消订阅
+        // 创意工坊项:逐个取消订阅,收集成功的(失败的不删文件,避免 Steam 重新下载后文件缺失)
+        var unsubscribedWorkshopItems = new List<ComponentInfo>();
         if (workshopItems.Count > 0)
         {
             if (!service.IsAvailable)
             {
-                // Steamworks 不可用:无法取消订阅,弹窗让用户选择
+                // Steamworks 不可用:无法取消订阅,弹窗让用户选择(决策点,需用户确认)
                 bool continueDelete = await Helper.DialogHelper.ShowConfirmDialogAsync(
                     "无法取消订阅",
                     $"Steamworks 不可用,无法取消订阅 {workshopItems.Count} 个创意工坊组件(请确认 Steam 正在运行)。\n\n" +
@@ -1402,24 +1403,18 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 return;
             }
 
-            int success = 0;
             foreach (var item in workshopItems)
             {
                 if (ulong.TryParse(item.WorkshopID, out var wid) && await service.UnsubscribeAsync(wid))
-                    success++;
+                    unsubscribedWorkshopItems.Add(item);
             }
 
-            if (success > 0)
+            if (unsubscribedWorkshopItems.Count == 0 && workshopItems.Count > 0)
             {
-                await Helper.DialogHelper.ShowMessageAsync("取消订阅完成",
-                    $"成功向 Steam 发送取消订阅请求: {success}/{workshopItems.Count} 个组件。\n\n正在同步删除本地组件文件...");
-            }
-            else if (success == 0)
-            {
-                // 全部取消订阅失败:询问是否继续删文件
+                // 全部取消订阅失败:询问是否继续删非创意工坊项(决策点,需用户确认)
                 bool continueDelete = await Helper.DialogHelper.ShowConfirmDialogAsync(
                     "取消订阅失败",
-                    $"向 Steam 发送取消订阅请求失败({success}/{workshopItems.Count} 个组件)。\n\n" +
+                    $"向 Steam 发送取消订阅请求失败(0/{workshopItems.Count} 个组件)。\n\n" +
                     (nonWorkshopItems.Count > 0
                         ? $"是否继续卸载 {nonWorkshopItems.Count} 个非创意工坊组件?"
                         : "是否仍要删除本地文件?"),
@@ -1433,12 +1428,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 }
                 return;
             }
+        }
 
-            // 删除创意工坊组件本地文件(取消订阅成功后)
-            foreach (var item in workshopItems)
-            {
-                await DeleteComponentCoreAsync(item, skipConfirm: true);
-            }
+        // 删除取消订阅成功的创意工坊组件本地文件(成功即自动继续,不再弹模态框打断)
+        foreach (var item in unsubscribedWorkshopItems)
+        {
+            await DeleteComponentCoreAsync(item, skipConfirm: true);
         }
 
         // 非创意工坊项:直接删本地文件

@@ -972,9 +972,6 @@
   <data name="Settings_OutputType_Full.Text" xml:space="preserve">
     <value>Full Output</value>
   </data>
-  <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Media Only</value>
-  </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Custom</value>
   </data>
@@ -1378,7 +1375,7 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
     <value>View in browser</value>
   </data>
   <data name="Info_CreditsLine10.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_Contributors.Text" xml:space="preserve">
     <value>Contributors</value>
@@ -1426,7 +1423,7 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
     <value>notscuffed/repkg</value>
   </data>
   <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
     <value>WE Tool references repkg_re as its wallpaper package extraction backend: it compiles external/repkg_Re at build time, ships RePKG_Re.exe with third-party notices, and invokes it via command line during extraction.
@@ -1854,5 +1851,25 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Source removed</value>
+  </data>
+
+  <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
+    <value>Media Only</value>
+  </data>
+
+  <data name="Settings_MediaExportImages.Text" xml:space="preserve">
+    <value>Images/Animations</value>
+  </data>
+
+  <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
+    <value>Videos</value>
+  </data>
+
+  <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+
+  <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
+    <value>Filter transparent images</value>
   </data>
 </root>

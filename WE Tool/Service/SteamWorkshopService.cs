@@ -129,7 +129,15 @@ public partial class SteamWorkshopService : IDisposable
                 JsonSerializer.Serialize(new BridgeCommand("unsubscribe", workshopId.ToString()), BridgeJsonContext.Default.BridgeCommand),
                 TimeSpan.FromSeconds(20)).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(response);
-            return doc.RootElement.GetProperty("ok").GetBoolean();
+            var root = doc.RootElement;
+            // 桥接可能回 error(如未知 op/处理异常),此时没有 ok 字段,单独提示避免误导性 KeyNotFound
+            if (root.TryGetProperty("error", out _) || !root.TryGetProperty("ok", out var okProp))
+            {
+                string op = root.TryGetProperty("op", out var opProp) ? opProp.GetString() ?? "" : "";
+                Log.Warning("取消订阅收到异常响应: op={Op}, response={Response}", op, TruncateResponse(response));
+                return false;
+            }
+            return okProp.GetBoolean();
         }
         catch (Exception ex)
         {
@@ -137,6 +145,9 @@ public partial class SteamWorkshopService : IDisposable
             return false;
         }
     }
+
+    private static string TruncateResponse(string s, int max = 200)
+        => s.Length <= max ? s : s.Substring(0, max) + "...";
 
     /// <summary>刷新状态(Info 页轮询用):ping 桥接进程,更新用户名</summary>
     public async Task RefreshStatusAsync()

@@ -972,9 +972,6 @@
   <data name="Settings_OutputType_Full.Text" xml:space="preserve">
     <value>Vollständige Ausgabe</value>
   </data>
-  <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Nur Medien</value>
-  </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Benutzerdefiniert</value>
   </data>
@@ -1378,7 +1375,7 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
     <value>Im Browser anzeigen</value>
   </data>
   <data name="Info_CreditsLine10.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_Contributors.Text" xml:space="preserve">
     <value>Mitwirkende</value>
@@ -1426,7 +1423,7 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
     <value>notscuffed/repkg</value>
   </data>
   <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
     <value>WE Tool nutzt repkg_re als Backend zur Paket-Extraktion: Es kompiliert external/repkg_Re beim Build, liefert RePKG_Re.exe samt Drittanbieter-Hinweisen aus und ruft es beim Extrahieren per Befehlszeile auf.
@@ -1855,5 +1852,25 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Quelle entfernt</value>
+  </data>
+
+  <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
+    <value>Nur Medien</value>
+  </data>
+
+  <data name="Settings_MediaExportImages.Text" xml:space="preserve">
+    <value>Bilder/Animationen</value>
+  </data>
+
+  <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
+    <value>Videos</value>
+  </data>
+
+  <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+
+  <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
+    <value>Transparente Bilder filtern</value>
   </data>
 </root>

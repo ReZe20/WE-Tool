@@ -152,6 +152,16 @@ namespace WE_Tool.Models
         /// <summary>效果图剔除开关(自定义模式):勾选后按阈值剔除效果图</summary>
         public bool FilterEffectImagesEnabled { get; set; } = false;
 
+        // 仅输出媒体文件(OutputMode==1)的媒体类型过滤
+        /// <summary>仅输出媒体文件模式:是否输出图片/动图(png/jpg/gif 等)</summary>
+        public bool MediaExportImages { get; set; } = true;
+        /// <summary>仅输出媒体文件模式:是否输出视频(mp4 等)</summary>
+        public bool MediaExportVideos { get; set; } = true;
+        /// <summary>仅输出媒体文件模式:是否输出音频(mp3/ogg/wav 等)</summary>
+        public bool MediaExportAudios { get; set; } = true;
+        /// <summary>仅输出媒体文件模式:勾选图片时,固定按 90% 阈值过滤近全透明的贴图(默认勾选)</summary>
+        public bool MediaFilterTransparentImages { get; set; } = true;
+
         // 性能参数(阶段1)
         /// <summary>batch 最大线程数(单进程 batch 模式,v0.5.0 起语义从"进程数"变为"线程数"),默认 CPU 逻辑核心数</summary>
         public int MaxConcurrentExtractions { get; set; } = Environment.ProcessorCount;

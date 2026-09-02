@@ -44,6 +44,9 @@ internal static class Program
 
         try
         {
+            // 清掉 InitSteamworks 期间原生层(steam_api64)写入 stdin 的调试残留,
+            // 否则父进程第一条命令会与残留拼行被误读(见 DrainStdinResidue 注释)
+            DrainStdinResidue();
             RunLoop();
             return 0;
         }
@@ -97,7 +100,19 @@ internal static class Program
 
                     case "exit":
                         return;
+
+                    default:
+                        // 未知 op:回 error,让父进程明确感知(不静默)
+                        Reply(JsonSerializer.Serialize(new { op = "error", message = $"未知 op: {root.GetProperty("op").GetString()}" }));
+                        break;
                 }
+            }
+            catch (JsonException)
+            {
+                // 非 JSON 脏行:进程启动时原生层(steam_api64)可能向 stdin 写入调试残留,
+                // 或管道缓冲错位。这类行不是任何命令的响应,静默丢弃不 Reply,
+                // 否则父进程会把 error 当成第一条命令的响应(曾导致取消订阅误报 KeyNotFound)。
+                Log($"忽略非 JSON 输入行: {Truncate(line)}");
             }
             catch (Exception ex)
             {
@@ -106,6 +121,52 @@ internal static class Program
             }
         }
     }
+
+    private static string Truncate(string s, int max = 200)
+        => s.Length <= max ? s : s.Substring(0, max) + "...";
+
+    /// <summary>
+    /// 清空 stdin 中已缓冲的无换行残留。根因:SteamClient.Init 时原生层(steam_api64)
+    /// 会向 stdin 写入一段无换行的调试残留(0xE9 开头);若不清掉,父进程发来的第一条命令
+    /// 会与残留拼成一行被 ReadLine 一次读走,导致第一条命令丢失/误报 error。
+    /// PeekNamedPipe 只读"已就绪"字节,不阻塞等待真实命令。
+    /// </summary>
+    private static void DrainStdinResidue()
+    {
+        try
+        {
+            nint handle = GetStdHandle(-10 /* STD_INPUT_HANDLE */);
+            if (handle == nint.Zero || handle == new nint(-1)) return;
+            var buf = new byte[8192];
+            while (true)
+            {
+                if (!PeekNamedPipe(handle, null, 0, out _, out uint available, out _))
+                    break; // 非管道(如调试器直连控制台)或错误,跳过
+                if (available == 0) break;
+                uint toRead = Math.Min(available, (uint)buf.Length);
+                if (!ReadFile(handle, buf, toRead, out uint read, nint.Zero) || read == 0)
+                    break;
+                Log($"清空 stdin 残留: {read} 字节");
+            }
+        }
+        catch
+        {
+            // 清残留失败不影响主循环(残留由 RunLoop 的 Parse 跳过兜底)
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+    private static extern nint GetStdHandle(int nStdHandle);
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool PeekNamedPipe(
+        nint hNamedPipe, byte[]? lpBuffer, uint nBufferSize,
+        out uint lpBytesRead, out uint lpTotalBytesAvail, out uint lpBytesLeftThisMessage);
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool ReadFile(
+        nint hFile, byte[] lpBuffer, uint nNumberOfBytesToRead,
+        out uint lpNumberOfBytesRead, nint lpOverlapped);
 
     private static bool Unsubscribe(string? workshopId)
     {

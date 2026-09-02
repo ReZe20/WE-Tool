@@ -3406,6 +3406,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 OutputMode = ViewModel.OutputMode,
                 FilterEffectImagesThreshold = ViewModel.FilterEffectImagesThreshold,
                 FilterEffectImagesEnabled = ViewModel.FilterEffectImagesEnabled,
+                MediaExportImages = ViewModel.MediaExportImages,
+                MediaExportVideos = ViewModel.MediaExportVideos,
+                MediaExportAudios = ViewModel.MediaExportAudios,
+                MediaFilterTransparentImages = ViewModel.MediaFilterTransparentImages,
                 OnlyPaths = ViewModel.OnlyPaths,
                 OnlyPathsList = ViewModel.OnlyPathsList,
                 IgnorePaths = ViewModel.IgnorePaths,
@@ -3563,12 +3567,13 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     {
         var service = SteamWorkshopService.GetInstance();
 
-        // 创意工坊项:尝试取消订阅
+        // 创意工坊项:逐个取消订阅,收集成功的(失败的不删文件,避免 Steam 重新下载后文件缺失)
+        var unsubscribedWorkshopItems = new List<WallpaperItem>();
         if (workshopItems.Count > 0)
         {
             if (!service.IsAvailable)
             {
-                // Steamworks 不可用:无法取消订阅,弹窗让用户选择
+                // Steamworks 不可用:无法取消订阅,弹窗让用户选择(决策点,需用户确认)
                 bool continueDelete = await DialogHelper.ShowConfirmDialogAsync(
                     "无法取消订阅",
                     $"Steamworks 不可用,无法取消订阅 {workshopItems.Count} 个创意工坊壁纸(请确认 Steam 正在运行)。\n\n" +
@@ -3579,9 +3584,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                     "取消");
                 if (!continueDelete) return;
 
-                // 用户选择继续:跳过创意工坊项,只删非创意工坊项(创意工坊项本地文件也保留?——按需求,无法订阅时不删创意工坊,避免 Steam 重新下载残留)
-                // 需求:无法注册 Steamworks 时无法取消订阅 → 询问是否继续删除其它非创意工坊项目
-                // 即创意工坊项本次不处理,只处理非创意工坊项
+                // 用户选择继续:跳过创意工坊项,只删非创意工坊项
                 foreach (var item in nonWorkshopItems)
                 {
                     await DeleteItemAsync(item, skipConfirm: true);
@@ -3589,27 +3592,21 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 return;
             }
 
-            int success = 0;
             foreach (var item in workshopItems)
             {
                 if (ulong.TryParse(item.WorkshopID, out var wid))
                 {
                     if (await service.UnsubscribeAsync(wid))
-                        success++;
+                        unsubscribedWorkshopItems.Add(item);
                 }
             }
 
-            if (success > 0)
+            if (unsubscribedWorkshopItems.Count == 0 && workshopItems.Count > 0)
             {
-                await DialogHelper.ShowMessageAsync("取消订阅完成",
-                    $"成功向 Steam 发送取消订阅请求: {success}/{workshopItems.Count} 个壁纸。\n\n正在同步删除本地壁纸文件...");
-            }
-            else if (success == 0 && workshopItems.Count > 0)
-            {
-                // 全部取消订阅失败:询问是否继续删文件
+                // 全部取消订阅失败:询问是否继续删非创意工坊项(决策点,需用户确认)
                 bool continueDelete = await DialogHelper.ShowConfirmDialogAsync(
                     "取消订阅失败",
-                    $"向 Steam 发送取消订阅请求失败({success}/{workshopItems.Count} 个壁纸)。\n\n" +
+                    $"向 Steam 发送取消订阅请求失败(0/{workshopItems.Count} 个壁纸)。\n\n" +
                     (nonWorkshopItems.Count > 0
                         ? $"是否继续卸载 {nonWorkshopItems.Count} 个非创意工坊壁纸?"
                         : "是否仍要删除本地文件?"),
@@ -3623,12 +3620,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 }
                 return;
             }
+        }
 
-            // 删除创意工坊壁纸本地文件(取消订阅成功后)
-            foreach (var item in workshopItems)
-            {
-                await DeleteItemAsync(item, skipConfirm: true);
-            }
+        // 删除取消订阅成功的创意工坊壁纸本地文件(成功即自动继续,不再弹模态框打断)
+        foreach (var item in unsubscribedWorkshopItems)
+        {
+            await DeleteItemAsync(item, skipConfirm: true);
         }
 
         // 非创意工坊项:直接删本地文件

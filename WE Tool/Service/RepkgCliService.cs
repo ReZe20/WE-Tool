@@ -563,12 +563,22 @@ public class RepkgCliService
                 o["filterEffectImages"] = settings.FilterEffectImagesThreshold;
         }
 
-        // 媒体模式(OutputMode==1):媒体白名单 + materials/sounds 直接子文件
+        // 媒体模式(OutputMode==1):按勾选的媒体类型拼白名单 + materials/sounds 直接子文件
         if (settings.OutputMode == 1)
         {
-            o["outputOnlyExts"] = CsvToJsonArray(MediaOnlyExtensionsArg.Split(','));
+            var mediaExts = BuildMediaOnlyExtensionsArg(settings);
+            // 防呆:三项全不勾等价于不输出任何媒体,此时退回全媒体(与旧行为一致)避免提取空结果
+            if (string.IsNullOrEmpty(mediaExts))
+            {
+                mediaExts = string.Join(',', MediaExtensions.Select(e => e.TrimStart('.')));
+            }
+            o["outputOnlyExts"] = CsvToJsonArray(mediaExts.Split(','));
             o["onlypaths"] = CsvToJsonArray(new[] { "materials", "sounds" });
             o["pathsDepth"] = 1;
+            // 媒体模式的透明图片过滤:勾选"过滤透明图片"即启用,固定 90% 阈值(滤除近全透明的贴图,
+            // 不与自定义模式的可调阈值 FilterEffectImagesThreshold 混淆)
+            if (settings.MediaFilterTransparentImages)
+                o["filterEffectImages"] = 90;
         }
         else if (settings.TexExportMode == 0)
             o["noTexConvert"] = true;
@@ -709,10 +719,10 @@ public class RepkgCliService
     {
         foreach (var file in sourceDir.EnumerateFiles())
         {
-            // OutputMode==1(仅输出媒体文件):独立模式,只检查媒体扩展名,不受 IgnoreExtension/OnlyExtension 影响
+            // OutputMode==1(仅输出媒体文件):独立模式,按勾选的媒体类型过滤,不受 IgnoreExtension/OnlyExtension 影响
             if (settings.OutputMode == 1)
             {
-                if (!IsMediaExtension(file.Extension)) continue;
+                if (!IsMediaExtension(file.Extension) || !IsMediaTypeEnabled(file.Extension, settings)) continue;
             }
             else
             {
@@ -784,33 +794,60 @@ public class RepkgCliService
         }
     }
 
-    /// <summary>
-    /// 媒体文件扩展名集合(仅输出媒体文件模式使用):图像 + 视频 + 音频。
-    /// 与 RePKG 转换输出格式对齐:TEX 纹理→png/gif 等,视频纹理 TEX→mp4。
-    /// </summary>
+    /// <summary>媒体文件扩展名集合(仅输出媒体文件模式使用):图像 + 视频 + 音频。
+    /// 与 RePKG 转换输出格式对齐:TEX 纹理→png/gif 等,视频纹理 TEX→mp4。</summary>
     private static readonly HashSet<string> MediaExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        // 图像
         ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".ico",
-        // 视频(含 RePKG 视频纹理 TEX 转换输出的 .mp4)
         ".mp4", ".webm", ".mov",
-        // 音频(场景壁纸 sounds/ 目录下的 mp3/ogg/wav 等)
         ".mp3", ".ogg", ".wav", ".flac", ".m4a", ".aac"
     };
 
-    /// <summary>
-    /// 仅输出媒体文件模式(OutputMode==1)传给 RePKG 的 -E 白名单(逗号分隔、无前导点)。
-    /// 与 MediaExtensions 保持一致:RePKG 输出层过滤会按转换后扩展名保留 TEX 转换图/视频,
-    /// 并滤除 raw .tex、.tex-json 及 pkg 内非媒体条目。
-    /// </summary>
-    private static readonly string MediaOnlyExtensionsArg =
-        string.Join(',', MediaExtensions.Select(e => e.TrimStart('.')));
+    /// <summary>图像/动图扩展名(仅输出媒体文件模式的图片勾选项)。</summary>
+    private static readonly string[] MediaImageExtensions =
+    {
+        ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".ico"
+    };
+
+    /// <summary>视频扩展名(仅输出媒体文件模式的视频勾选项;含 RePKG 视频纹理 TEX 转换输出的 .mp4)。</summary>
+    private static readonly string[] MediaVideoExtensions =
+    {
+        ".mp4", ".webm", ".mov"
+    };
+
+    /// <summary>音频扩展名(仅输出媒体文件模式的音频勾选项;场景壁纸 sounds/ 目录下)。</summary>
+    private static readonly string[] MediaAudioExtensions =
+    {
+        ".mp3", ".ogg", ".wav", ".flac", ".m4a", ".aac"
+    };
+
+    /// <summary>按勾选的媒体类型拼 RePKG -E 白名单(逗号分隔、无前导点)。
+    /// 全部不勾时返回空串(调用方需保证至少一项勾选)。</summary>
+    private static string BuildMediaOnlyExtensionsArg(ExtractSettings settings)
+    {
+        var list = new List<string>();
+        if (settings.MediaExportImages) list.AddRange(MediaImageExtensions);
+        if (settings.MediaExportVideos) list.AddRange(MediaVideoExtensions);
+        if (settings.MediaExportAudios) list.AddRange(MediaAudioExtensions);
+        return string.Join(',', list.Select(e => e.TrimStart('.')));
+    }
 
     private static bool IsMediaExtension(string extension)
     {
         if (string.IsNullOrEmpty(extension)) return false;
         var ext = extension.StartsWith('.') ? extension : '.' + extension;
         return MediaExtensions.Contains(ext);
+    }
+
+    /// <summary>按勾选的媒体类型判断扩展名是否允许输出(仅输出媒体文件模式)。</summary>
+    private static bool IsMediaTypeEnabled(string extension, ExtractSettings settings)
+    {
+        if (string.IsNullOrEmpty(extension)) return false;
+        var ext = extension.StartsWith('.') ? extension : '.' + extension;
+        if (MediaImageExtensions.Contains(ext)) return settings.MediaExportImages;
+        if (MediaVideoExtensions.Contains(ext)) return settings.MediaExportVideos;
+        if (MediaAudioExtensions.Contains(ext)) return settings.MediaExportAudios;
+        return false; // 非媒体扩展名(调用方已先经 IsMediaExtension)
     }
 
     private static bool ShouldSkipExtension(string extension, ExtractSettings settings)

@@ -972,9 +972,6 @@
   <data name="Settings_OutputType_Full.Text" xml:space="preserve">
     <value>전체 출력</value>
   </data>
-  <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>미디어만 출력</value>
-  </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>사용자 정의</value>
   </data>
@@ -1378,7 +1375,7 @@ project.json 및 미리보기 복사
     <value>브라우저에서 보기</value>
   </data>
   <data name="Info_CreditsLine10.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_Contributors.Text" xml:space="preserve">
     <value>기여자</value>
@@ -1426,7 +1423,7 @@ project.json 및 미리보기 복사
     <value>notscuffed/repkg</value>
   </data>
   <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
     <value>WE Tool은 repkg_re를 배경화면 패키지 추출 백엔드로 사용합니다. 빌드 시 external/repkg_Re를 컴파일하고 RePKG_Re.exe와 타사 고지를 함께 배포하며, 추출 시 명령줄로 호출합니다.
@@ -1855,5 +1852,25 @@ project.json 및 미리보기 복사
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>원본 삭제됨</value>
+  </data>
+
+  <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
+    <value>미디어만 출력</value>
+  </data>
+
+  <data name="Settings_MediaExportImages.Text" xml:space="preserve">
+    <value>이미지/애니메이션</value>
+  </data>
+
+  <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
+    <value>동영상</value>
+  </data>
+
+  <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
+    <value>오디오</value>
+  </data>
+
+  <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
+    <value>투명 이미지 필터링</value>
   </data>
 </root>

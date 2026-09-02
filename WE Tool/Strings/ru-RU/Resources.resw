@@ -972,9 +972,6 @@
   <data name="Settings_OutputType_Full.Text" xml:space="preserve">
     <value>Полный вывод</value>
   </data>
-  <data name="Settings_OutputType_ImageOnly.Content" xml:space="preserve">
-    <value>Только медиафайлы</value>
-  </data>
   <data name="Settings_OutputType_Custom.Text" xml:space="preserve">
     <value>Пользовательский</value>
   </data>
@@ -1378,7 +1375,7 @@
     <value>Открыть в браузере</value>
   </data>
   <data name="Info_CreditsLine10.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_Contributors.Text" xml:space="preserve">
     <value>Участники</value>
@@ -1426,7 +1423,7 @@
     <value>notscuffed/repkg</value>
   </data>
   <data name="Info_RepkgCreditsLine6.Content" xml:space="preserve">
-    <value>C# 12</value>
+    <value>C# 14</value>
   </data>
   <data name="Info_RepkgReferenceDisclaimer.Text" xml:space="preserve">
     <value>WE Tool использует repkg_re как бэкенд извлечения пакетов: компилирует external/repkg_Re при сборке, поставляет RePKG_Re.exe с уведомлениями о сторонних компонентах и вызывает его из командной строки при извлечении.
@@ -1855,5 +1852,25 @@
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Источник удалён</value>
+  </data>
+
+  <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
+    <value>Только медиафайлы</value>
+  </data>
+
+  <data name="Settings_MediaExportImages.Text" xml:space="preserve">
+    <value>Изображения/Анимации</value>
+  </data>
+
+  <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+
+  <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
+    <value>Аудио</value>
+  </data>
+
+  <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
+    <value>Отфильтровать прозрачные изображения</value>
   </data>
 </root>
