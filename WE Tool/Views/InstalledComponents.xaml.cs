@@ -309,6 +309,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         ViewModel = app?.ViewModel ?? new SettingsViewModel(new Service.ConfigService(), new Service.PickerService());
         // 让角标可见性等 {Binding ... ElementName=PageRoot} 能解析到 ViewModel（照抄 Papers）
         this.DataContext = this;
+        // resw 附加属性经 x:Uid 在 WinUI3 不生效(已知限制),tooltip 需代码显式设置
+        ToolTipService.SetToolTip(SortToolbarButton, LanguageHelper.GetResource("Toolbar_Sort.ToolTipService.ToolTip"));
 
         // 全局跟踪鼠标按下状态，用于拖拽滑过多选
         this.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(Global_PointerPressed), true);
@@ -1131,7 +1133,10 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         finally
         {
             // 动画不依赖复制结果,即使复制抛异常/无选中项也执行
-            await PlayCopyCheckAnimationAsync();
+            // 目标图标:CommandBar 按钮/右键菜单 → ToolbarCopyIcon;详情面板按钮 → DetailCopyIcon
+            var targetIcon = sender is AppBarButton ? ToolbarCopyIcon : DetailCopyIcon;
+            if (targetIcon != null)
+                await PlayCopyCheckAnimationAsync(targetIcon);
         }
     }
 
@@ -1141,7 +1146,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private int _copyCheckAnimationGeneration;
     private Microsoft.UI.Composition.InsetClip? _copyCheckClip; // 勾扫出的 clip
 
-    private async Task PlayCopyCheckAnimationAsync()
+    private async Task PlayCopyCheckAnimationAsync(FontIcon targetIcon)
     {
         int gen = ++_copyCheckAnimationGeneration;
 
@@ -1152,7 +1157,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             if (gen != _copyCheckAnimationGeneration) { tcs.TrySetResult(); return; } // 排队期间已作废
 
-            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
             var compositor = visual.Compositor;
 
             // 复位:可见、无裁剪
@@ -1180,7 +1185,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (gen != _copyCheckAnimationGeneration) return;
 
         // 切为勾
-        ToolbarCopyIcon.Glyph = "\uE73E";
+        targetIcon.Glyph = "\uE73E";
 
         // 勾从左往右扫出(InsetClip RightInset 20→0)
         var tcs2 = new TaskCompletionSource();
@@ -1188,7 +1193,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             if (gen != _copyCheckAnimationGeneration) { tcs2.TrySetResult(); return; }
 
-            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
             var compositor = visual.Compositor;
             visual.Clip = null;
             _copyCheckClip?.StopAnimation("RightInset");
@@ -1214,7 +1219,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         DispatcherQueue.TryEnqueue(() =>
         {
             if (gen != _copyCheckAnimationGeneration) return;
-            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
             var compositor = visual.Compositor;
             visual.Opacity = 0f;
             var fadeIn = compositor.CreateScalarKeyFrameAnimation();
@@ -1234,7 +1239,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         DispatcherQueue.TryEnqueue(() =>
         {
             if (gen != _copyCheckAnimationGeneration) { tcs3.TrySetResult(); return; }
-            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
             var compositor = visual.Compositor;
             visual.StopAnimation("Opacity");
             visual.Opacity = 1f;
@@ -1254,10 +1259,10 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (gen != _copyCheckAnimationGeneration) return;
 
         // 切回复制图标 + 移除裁剪 + 淡入
-        ToolbarCopyIcon.Glyph = "\uE8C8";
+        targetIcon.Glyph = "\uE8C8";
         _copyCheckClip?.StopAnimation("RightInset");
         _copyCheckClip = null;
-        var v = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+        var v = ElementCompositionPreview.GetElementVisual(targetIcon);
         v.StopAnimation("Opacity");
         v.Clip = null;
         v.Opacity = 0f;
@@ -1331,84 +1336,127 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
     }
 
-    private async void UnsubscribeComponent_Click(object sender, RoutedEventArgs e)
+    private async void UninstallComponent_Click(object sender, RoutedEventArgs e)
     {
         // 照抄 Papers：执行前先收起右键菜单，避免菜单停留在确认对话框上方
         try
         {
             HideComponentContextMenu();
 
-            var items = GetTargetItems().Where(i => !string.IsNullOrEmpty(i.WorkshopID)).ToList();
+            var items = GetTargetItems();
             if (items.Count == 0) return;
 
-            bool confirmed = await Helper.DialogHelper.ShowConfirmDialogAsync(
-                "取消订阅",
-                $"确定要取消订阅选中的 {items.Count} 个组件吗？\n\n操作将同步删除本地的组件文件。",
-                "确定",
+            // 拆分创意工坊(有 WorkshopID,需取消订阅)与非创意工坊(直接删文件)
+            var workshopItems = items.Where(i => !string.IsNullOrEmpty(i.WorkshopID)).ToList();
+            var nonWorkshopItems = items.Where(i => string.IsNullOrEmpty(i.WorkshopID)).ToList();
+
+            bool confirmed = await Helper.DialogHelper.ShowConfirmDialogAsync("卸载",
+                $"确定要卸载选中的 {items.Count} 个组件吗？\n\n" +
+                (workshopItems.Count > 0
+                    ? $"创意工坊组件 {workshopItems.Count} 个:将取消订阅并删除本地文件。\n"
+                    : "") +
+                (nonWorkshopItems.Count > 0
+                    ? $"非创意工坊组件 {nonWorkshopItems.Count} 个:将直接删除本地文件。"
+                    : ""),
+                "卸载",
                 "取消");
             if (!confirmed) return;
 
-            var service = Service.SteamWorkshopService.GetInstance();
+            await UninstallComponentsAsync(workshopItems, nonWorkshopItems);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "卸载组件失败");
+        }
+    }
+
+    /// <summary>
+    /// 卸载:创意工坊组件先取消订阅(Steamworks 不可用时弹窗让用户选择是否继续删非创意工坊项),
+    /// 然后删除本地文件并清 acf 键值;非创意工坊组件直接删本地文件。
+    /// </summary>
+    private async Task UninstallComponentsAsync(List<ComponentInfo> workshopItems, List<ComponentInfo> nonWorkshopItems)
+    {
+        var service = Service.SteamWorkshopService.GetInstance();
+
+        // 创意工坊项:尝试取消订阅
+        if (workshopItems.Count > 0)
+        {
             if (!service.IsAvailable)
             {
-                await Helper.DialogHelper.ShowMessageAsync(
-                    "Steamworks 初始化失败",
-                    "无法连接到 Steam，请确认 Steam 已在运行。\n\n如果问题持续，请尝试以管理员身份运行本程序。");
+                // Steamworks 不可用:无法取消订阅,弹窗让用户选择
+                bool continueDelete = await Helper.DialogHelper.ShowConfirmDialogAsync(
+                    "无法取消订阅",
+                    $"Steamworks 不可用,无法取消订阅 {workshopItems.Count} 个创意工坊组件(请确认 Steam 正在运行)。\n\n" +
+                    (nonWorkshopItems.Count > 0
+                        ? $"是否继续卸载 {nonWorkshopItems.Count} 个非创意工坊组件?"
+                        : "是否仍要删除本地文件?"),
+                    nonWorkshopItems.Count > 0 ? "继续卸载其它" : "仍要删除",
+                    "取消");
+                if (!continueDelete) return;
+
+                // 用户选择继续:跳过创意工坊项,只删非创意工坊项
+                foreach (var item in nonWorkshopItems)
+                {
+                    await DeleteComponentCoreAsync(item, skipConfirm: true);
+                }
                 return;
             }
 
             int success = 0;
-            foreach (var item in items)
+            foreach (var item in workshopItems)
             {
                 if (ulong.TryParse(item.WorkshopID, out var wid) && await service.UnsubscribeAsync(wid))
                     success++;
             }
 
-            await Helper.DialogHelper.ShowMessageAsync("取消订阅完成",
-                $"成功向 Steam 发送取消订阅请求: {success}/{items.Count} 个组件。\n\n正在同步删除本地组件文件...");
+            if (success > 0)
+            {
+                await Helper.DialogHelper.ShowMessageAsync("取消订阅完成",
+                    $"成功向 Steam 发送取消订阅请求: {success}/{workshopItems.Count} 个组件。\n\n正在同步删除本地组件文件...");
+            }
+            else if (success == 0)
+            {
+                // 全部取消订阅失败:询问是否继续删文件
+                bool continueDelete = await Helper.DialogHelper.ShowConfirmDialogAsync(
+                    "取消订阅失败",
+                    $"向 Steam 发送取消订阅请求失败({success}/{workshopItems.Count} 个组件)。\n\n" +
+                    (nonWorkshopItems.Count > 0
+                        ? $"是否继续卸载 {nonWorkshopItems.Count} 个非创意工坊组件?"
+                        : "是否仍要删除本地文件?"),
+                    nonWorkshopItems.Count > 0 ? "继续卸载其它" : "仍要删除",
+                    "取消");
+                if (!continueDelete) return;
 
-            foreach (var item in items)
+                foreach (var item in nonWorkshopItems)
+                {
+                    await DeleteComponentCoreAsync(item, skipConfirm: true);
+                }
+                return;
+            }
+
+            // 删除创意工坊组件本地文件(取消订阅成功后)
+            foreach (var item in workshopItems)
             {
                 await DeleteComponentCoreAsync(item, skipConfirm: true);
             }
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "取消订阅组件失败");
-        }
-    }
 
-    private async void DeleteComponent_Click(object sender, RoutedEventArgs e)
-    {
-        try
+        // 非创意工坊项:直接删本地文件
+        foreach (var item in nonWorkshopItems)
         {
-            var items = GetTargetItems();
-            if (items.Count == 0) return;
-
-            bool confirmed = await Helper.DialogHelper.ShowConfirmDialogAsync("删除组件",
-                $"确定要删除选中的 {items.Count} 个组件吗？",
-                "删除",
-                "取消");
-            if (!confirmed) return;
-
-            foreach (var item in items)
-            {
-                await DeleteComponentCoreAsync(item, skipConfirm: items.Count > 1);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "删除组件失败");
+            await DeleteComponentCoreAsync(item, skipConfirm: true);
         }
     }
 
     private async Task DeleteComponentCoreAsync(ComponentInfo item, bool skipConfirm = false)
     {
-        if (item == null || item.WorkshopID == null || item.FolderPath == null) return;
+        if (item == null || item.FolderPath == null) return;
 
         try
         {
-            await ViewModel.PathManagementVM.RemoveWorkshopKeyFromAcfAsync(item.WorkshopID, ViewModel.PathManagementVM.AcfPath);
+            // 创意工坊组件才有 WorkshopID,非创意工坊为 null(RemoveWorkshopKeyFromAcfAsync 内部对空值安全返回)
+            if (!string.IsNullOrEmpty(item.WorkshopID))
+                await ViewModel.PathManagementVM.RemoveWorkshopKeyFromAcfAsync(item.WorkshopID, ViewModel.PathManagementVM.AcfPath);
         }
         catch (Exception ex)
         {
@@ -1629,11 +1677,46 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void InvertSelection_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
         => InvertSelection_Click(sender, null!);
 
-    private void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-        => CopyComponent_Click(sender, null!);
+    private async void Copy_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
+    {
+        try
+        {
+            var items = GetTargetItems();
+            if (items.Count == 0) return;
+
+            var folders = new List<Windows.Storage.StorageFolder>();
+            foreach (var item in items)
+            {
+                if (string.IsNullOrEmpty(item.FolderPath)) continue;
+                try
+                {
+                    folders.Add(await Windows.Storage.StorageFolder.GetFolderFromPathAsync(item.FolderPath));
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "获取组件文件夹失败: {Path}", item.FolderPath);
+                }
+            }
+            if (folders.Count == 0) return;
+
+            var dataPackage = new DataPackage();
+            dataPackage.RequestedOperation = DataPackageOperation.Copy;
+            dataPackage.SetStorageItems(folders);
+            Clipboard.SetContent(dataPackage);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "复制组件文件夹失败");
+        }
+        finally
+        {
+            // 快捷键无点击按钮,动画作用于 CommandBar 复制图标
+            await PlayCopyCheckAnimationAsync(ToolbarCopyIcon);
+        }
+    }
 
     private void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
-        => DeleteComponent_Click(sender, null!);
+        => UninstallComponent_Click(sender, null!);
 
     private void Properties_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {

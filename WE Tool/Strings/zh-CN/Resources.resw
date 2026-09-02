@@ -850,7 +850,7 @@
     <value>刷新</value>
   </data>
   <data name="Toolbar_View.ToolTipService.ToolTip" xml:space="preserve">
-    <value>视图</value>
+    <value>查看</value>
   </data>
   <data name="Toolbar_TagDisplay.ToolTipService.ToolTip" xml:space="preserve">
     <value>标签显示</value>
@@ -1181,6 +1181,18 @@
   </data>
   <data name="Detail_Unsubscribe.Text" xml:space="preserve">
     <value>取消订阅</value>
+  </data>
+  <data name="Detail_Uninstall.Text" xml:space="preserve">
+    <value>卸载</value>
+  </data>
+  <data name="Toolbar_Uninstall.Label" xml:space="preserve">
+    <value>卸载</value>
+  </data>
+  <data name="Toolbar_Uninstall.ToolTipService.ToolTip" xml:space="preserve">
+    <value>卸载</value>
+  </data>
+  <data name="AppBarButton_Uninstall.Label" xml:space="preserve">
+    <value>卸载</value>
   </data>
   <data name="Detail_ImportToEditor.Text" xml:space="preserve">
     <value>导入壁纸编辑器</value>

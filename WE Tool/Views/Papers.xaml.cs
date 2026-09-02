@@ -197,9 +197,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     /// <summary>导航徽标是否处于失败(红)状态:失败后保持红色,直到下次提取开始才复位。</summary>
     private bool _navBadgeError;
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
-    public IAsyncRelayCommand<WallpaperItem?> DeleteSelectedCommand { get; }
+    public IAsyncRelayCommand<WallpaperItem?> UninstallSelectedCommand { get; }
     public IAsyncRelayCommand ExtractSelectedCommand { get; }
-    public IAsyncRelayCommand UnsubscribeSelectedCommand { get; }
     private bool _isWallpaperItemTapped = false;
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
@@ -425,14 +424,14 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     public IAsyncRelayCommand<WallpaperItem> DeleteWallpaperCommand { get; } = null!;
 
-    /// <summary>取消订阅按钮是否可用（单选/多选中包含创意工坊壁纸）</summary>
-    public bool IsUnsubscribeEnabled
+    /// <summary>卸载按钮是否可用(单选/多选中包含任意壁纸)</summary>
+    public bool IsUninstallEnabled
     {
         get
         {
             if (SelectedWallpapers.Count > 0)
-                return SelectedWallpapers.Any(w => w.Source == "workshop");
-            return ViewModel?.SelectedWallpaper?.Source == "workshop";
+                return true;
+            return ViewModel?.SelectedWallpaper != null;
         }
     }
 
@@ -455,6 +454,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
         this.InitializeComponent();
         this.DataContext = this;
+        // resw 附加属性经 x:Uid 在 WinUI3 不生效(已知限制),tooltip 需代码显式设置
+        ToolTipService.SetToolTip(SortToolbarButton, LanguageHelper.GetResource("Toolbar_Sort.ToolTipService.ToolTip"));
         App.ScanCompleted += App_ScanCompleted;
 
         this.Unloaded += (s, e) =>
@@ -494,7 +495,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 if (e.PropertyName == nameof(ViewModel.SelectedWallpaper))
                 {
-                    OnPropertyChanged(nameof(IsUnsubscribeEnabled));
+                    OnPropertyChanged(nameof(IsUninstallEnabled));
                     OnPropertyChanged(nameof(IsImportToEditorEnabled));
                     // 多选模式下详情面板的显示/提示由 ToggleMultiSelectVisuals 全权接管:
                     // 此处不得重新点亮无选择提示(否则勾选引发的 SelectedWallpaper 变动会把提示盖回堆叠视图上)
@@ -586,28 +587,36 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             HideWallpaperContextMenu();
             await ViewModel.PathManagementVM.OpenSelectedWallpapersFoldersAsync();
         });
-        DeleteSelectedCommand = new AsyncRelayCommand<WallpaperItem?>(async item =>
+        UninstallSelectedCommand = new AsyncRelayCommand<WallpaperItem?>(async item =>
         {
             HideWallpaperContextMenu();
 
-            var itemsToDelete = ViewModel.SelectedWallpapers.Count > 0
-            ? SelectedWallpapers.ToList()
-            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
+            var itemsToUninstall = ViewModel.SelectedWallpapers.Count > 0
+                ? SelectedWallpapers.ToList()
+                : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
 
-            if (itemsToDelete.Count == 0) return;
-            bool confirmed = await DialogHelper.ShowConfirmDialogAsync("删除",
-                $"确定要删除选中的 {itemsToDelete.Count} 个壁纸吗？\n\n可在日志中查看已删除标题。",
-                "全部删除",
+            if (itemsToUninstall.Count == 0) return;
+
+            // 拆分创意工坊(需取消订阅)与非创意工坊(直接删文件)
+            var workshopItems = itemsToUninstall.Where(w => w.Source == "workshop").ToList();
+            var nonWorkshopItems = itemsToUninstall.Where(w => w.Source != "workshop").ToList();
+
+            bool confirmed = await DialogHelper.ShowConfirmDialogAsync("卸载",
+                $"确定要卸载选中的 {itemsToUninstall.Count} 个壁纸吗？\n\n" +
+                (workshopItems.Count > 0
+                    ? $"创意工坊壁纸 {workshopItems.Count} 个:将取消订阅并删除本地文件。\n"
+                    : "") +
+                (nonWorkshopItems.Count > 0
+                    ? $"非创意工坊壁纸 {nonWorkshopItems.Count} 个:将直接删除本地文件。"
+                    : ""),
+                "卸载",
                 "取消");
             if (!confirmed) return;
 
-            foreach (var toDelete in itemsToDelete)
-            {
-                await DeleteItemAsync(toDelete, skipConfirm: itemsToDelete.Count > 1);
-            }
+            await UninstallWallpapersAsync(workshopItems, nonWorkshopItems);
 
-            Log.Information("已删除 {Count} 个壁纸: {Titles}", itemsToDelete.Count,
-                string.Join("; ", itemsToDelete.Select(w => w.Title ?? w.WorkshopID ?? "未知")));
+            Log.Information("已卸载 {Count} 个壁纸: {Titles}", itemsToUninstall.Count,
+                string.Join("; ", itemsToUninstall.Select(w => w.Title ?? w.WorkshopID ?? "未知")));
 
             ViewModel.SelectedWallpaper = null;
         });
@@ -618,35 +627,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             await ExtractSelectedWallpapersAsync();
         });
 
-        UnsubscribeSelectedCommand = new AsyncRelayCommand(async () =>
-        {
-            HideWallpaperContextMenu();
-
-            var itemsToUnsubscribe = SelectedWallpapers.Count > 0
-                ? SelectedWallpapers.Where(w => w.Source == "workshop").ToList()
-                : ViewModel.SelectedWallpaper is WallpaperItem wp && wp.Source == "workshop"
-                    ? [wp]
-                    : [];
-
-            if (itemsToUnsubscribe.Count == 0) return;
-
-            bool confirmed = await DialogHelper.ShowConfirmDialogAsync(
-                "取消订阅",
-                $"确定要取消订阅选中的 {itemsToUnsubscribe.Count} 个创意工坊壁纸吗？\n\n操作将同步删除本地的壁纸文件。",
-                "确定",
-                "取消");
-            if (!confirmed) return;
-
-            await UnsubscribeWallpapersAsync(itemsToUnsubscribe);
-        });
-
         _pickerService = new PickerService();
     }
     private void SelectedWallpapers_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         RefreshDisplayedSelectedWallpapers();
         UpdateStackVisuals();
-        OnPropertyChanged(nameof(IsUnsubscribeEnabled));
+        OnPropertyChanged(nameof(IsUninstallEnabled));
     }
     private int _lastStackCount; // 上次布局的卡片数,用于识别"新增了卡片"
 
@@ -2687,8 +2674,8 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         }
         finally
         {
-            // 动画不依赖复制结果,即使复制抛异常/无选中项也执行
-            await PlayCopyCheckAnimationAsync();
+            // 快捷键无点击按钮,动画作用于 CommandBar 复制图标
+            await PlayCopyCheckAnimationAsync(ToolbarCopyIcon);
         }
     }
     private async void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
@@ -2705,7 +2692,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         finally
         {
             // 动画不依赖复制结果,即使复制抛异常/无选中项也执行
-            await PlayCopyCheckAnimationAsync();
+            // 目标图标:CommandBar 按钮 → ToolbarCopyIcon;详情面板按钮 → DetailCopyIcon
+            var targetIcon = sender is AppBarButton ? ToolbarCopyIcon : DetailCopyIcon;
+            if (targetIcon != null)
+                await PlayCopyCheckAnimationAsync(targetIcon);
         }
     }
 
@@ -2713,7 +2703,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     private int _copyCheckAnimationGeneration;
     private Microsoft.UI.Composition.InsetClip? _copyCheckClip; // 勾扫出的 clip
 
-    private async Task PlayCopyCheckAnimationAsync()
+    private async Task PlayCopyCheckAnimationAsync(FontIcon targetIcon)
     {
         int gen = ++_copyCheckAnimationGeneration;
 
@@ -2724,7 +2714,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             if (gen != _copyCheckAnimationGeneration) { tcs.TrySetResult(); return; } // 排队期间已作废
 
-            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
             var compositor = visual.Compositor;
 
             // 复位:可见、无裁剪
@@ -2752,7 +2742,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         if (gen != _copyCheckAnimationGeneration) return;
 
         // 切为勾
-        ToolbarCopyIcon.Glyph = "\uE73E";
+        targetIcon.Glyph = "\uE73E";
 
         // 勾从左往右扫出(InsetClip RightInset 20→0)
         var tcs2 = new TaskCompletionSource();
@@ -2760,7 +2750,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             if (gen != _copyCheckAnimationGeneration) { tcs2.TrySetResult(); return; }
 
-            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
             var compositor = visual.Compositor;
             visual.Clip = null;
             _copyCheckClip?.StopAnimation("RightInset");
@@ -2786,7 +2776,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         DispatcherQueue.TryEnqueue(() =>
         {
             if (gen != _copyCheckAnimationGeneration) return;
-            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
             var compositor = visual.Compositor;
             visual.Opacity = 0f;
             var fadeIn = compositor.CreateScalarKeyFrameAnimation();
@@ -2806,7 +2796,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         DispatcherQueue.TryEnqueue(() =>
         {
             if (gen != _copyCheckAnimationGeneration) { tcs3.TrySetResult(); return; }
-            var visual = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
             var compositor = visual.Compositor;
             visual.StopAnimation("Opacity");
             visual.Opacity = 1f;
@@ -2826,10 +2816,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         if (gen != _copyCheckAnimationGeneration) return;
 
         // 切回复制图标 + 移除裁剪 + 淡入
-        ToolbarCopyIcon.Glyph = "\uE8C8";
+        targetIcon.Glyph = "\uE8C8";
         _copyCheckClip?.StopAnimation("RightInset");
         _copyCheckClip = null;
-        var v = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+        var v = ElementCompositionPreview.GetElementVisual(targetIcon);
         v.StopAnimation("Opacity");
         v.Clip = null;
         v.Opacity = 0f;
@@ -2995,17 +2985,17 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     private async void Delete_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
     {
         // 经 Page_KeyDown_Core 由窗口分发调用,e 参数恒为 null,不可解引用(Handled 由调用方标记)
-        if (DeleteSelectedCommand == null) return;
+        if (UninstallSelectedCommand == null) return;
 
         try
         {
             if (IsMultiSelectMode)
             {
-                await DeleteSelectedCommand.ExecuteAsync(null);
+                await UninstallSelectedCommand.ExecuteAsync(null);
             }
             else
             {
-                await DeleteSelectedCommand.ExecuteAsync(ViewModel.SelectedWallpaper);
+                await UninstallSelectedCommand.ExecuteAsync(ViewModel.SelectedWallpaper);
             }
         }
         catch (Exception ex)
@@ -3536,9 +3526,11 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
     private async Task DeleteItemAsync(WallpaperItem item, bool skipConfirm = false)
     {
-        if (item == null || item.WorkshopID == null || item.FolderPath == null) return;
+        if (item == null || item.FolderPath == null) return;
 
-        await ViewModel.PathManagementVM.RemoveWorkshopKeyFromAcfAsync(item.WorkshopID, ViewModel.PathManagementVM.AcfPath);
+        // 创意工坊项目才有 WorkshopID,非创意工坊项目为 null(RemoveWorkshopKeyFromAcfAsync 内部对空值安全返回)
+        if (!string.IsNullOrEmpty(item.WorkshopID))
+            await ViewModel.PathManagementVM.RemoveWorkshopKeyFromAcfAsync(item.WorkshopID, ViewModel.PathManagementVM.AcfPath);
         bool isFolderDeleted = await _pickerService.DeleteFolderAsync(item.FolderPath);
 
         if (isFolderDeleted)
@@ -3563,32 +3555,84 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             Log.Information($"壁纸 {item.Title} 已从列表和磁盘中彻底移除。");
         }
     }
-    private async Task UnsubscribeWallpapersAsync(List<WallpaperItem> items)
+    /// <summary>
+    /// 卸载:创意工坊壁纸先取消订阅(Steamworks 不可用时弹窗让用户选择是否继续删非创意工坊项),
+    /// 然后删除本地文件并清 acf 键值;非创意工坊壁纸直接删本地文件。
+    /// </summary>
+    private async Task UninstallWallpapersAsync(List<WallpaperItem> workshopItems, List<WallpaperItem> nonWorkshopItems)
     {
         var service = SteamWorkshopService.GetInstance();
-        if (!service.IsAvailable)
-        {
-            await DialogHelper.ShowMessageAsync(
-                "Steamworks 初始化失败",
-                "无法连接到 Steam，请确认 Steam 已在运行。\n\n如果问题持续，请尝试以管理员身份运行本程序。");
-            return;
-        }
 
-        int success = 0;
-        foreach (var item in items)
+        // 创意工坊项:尝试取消订阅
+        if (workshopItems.Count > 0)
         {
-            if (ulong.TryParse(item.WorkshopID, out var wid))
+            if (!service.IsAvailable)
             {
-                if (await service.UnsubscribeAsync(wid))
-                    success++;
+                // Steamworks 不可用:无法取消订阅,弹窗让用户选择
+                bool continueDelete = await DialogHelper.ShowConfirmDialogAsync(
+                    "无法取消订阅",
+                    $"Steamworks 不可用,无法取消订阅 {workshopItems.Count} 个创意工坊壁纸(请确认 Steam 正在运行)。\n\n" +
+                    (nonWorkshopItems.Count > 0
+                        ? $"是否继续卸载 {nonWorkshopItems.Count} 个非创意工坊壁纸?"
+                        : "是否仍要删除本地文件?"),
+                    nonWorkshopItems.Count > 0 ? "继续卸载其它" : "仍要删除",
+                    "取消");
+                if (!continueDelete) return;
+
+                // 用户选择继续:跳过创意工坊项,只删非创意工坊项(创意工坊项本地文件也保留?——按需求,无法订阅时不删创意工坊,避免 Steam 重新下载残留)
+                // 需求:无法注册 Steamworks 时无法取消订阅 → 询问是否继续删除其它非创意工坊项目
+                // 即创意工坊项本次不处理,只处理非创意工坊项
+                foreach (var item in nonWorkshopItems)
+                {
+                    await DeleteItemAsync(item, skipConfirm: true);
+                }
+                return;
+            }
+
+            int success = 0;
+            foreach (var item in workshopItems)
+            {
+                if (ulong.TryParse(item.WorkshopID, out var wid))
+                {
+                    if (await service.UnsubscribeAsync(wid))
+                        success++;
+                }
+            }
+
+            if (success > 0)
+            {
+                await DialogHelper.ShowMessageAsync("取消订阅完成",
+                    $"成功向 Steam 发送取消订阅请求: {success}/{workshopItems.Count} 个壁纸。\n\n正在同步删除本地壁纸文件...");
+            }
+            else if (success == 0 && workshopItems.Count > 0)
+            {
+                // 全部取消订阅失败:询问是否继续删文件
+                bool continueDelete = await DialogHelper.ShowConfirmDialogAsync(
+                    "取消订阅失败",
+                    $"向 Steam 发送取消订阅请求失败({success}/{workshopItems.Count} 个壁纸)。\n\n" +
+                    (nonWorkshopItems.Count > 0
+                        ? $"是否继续卸载 {nonWorkshopItems.Count} 个非创意工坊壁纸?"
+                        : "是否仍要删除本地文件?"),
+                    nonWorkshopItems.Count > 0 ? "继续卸载其它" : "仍要删除",
+                    "取消");
+                if (!continueDelete) return;
+
+                foreach (var item in nonWorkshopItems)
+                {
+                    await DeleteItemAsync(item, skipConfirm: true);
+                }
+                return;
+            }
+
+            // 删除创意工坊壁纸本地文件(取消订阅成功后)
+            foreach (var item in workshopItems)
+            {
+                await DeleteItemAsync(item, skipConfirm: true);
             }
         }
 
-        await DialogHelper.ShowMessageAsync("取消订阅完成",
-            $"成功向 Steam 发送取消订阅请求: {success}/{items.Count} 个壁纸。\n\n正在同步删除本地壁纸文件...");
-
-        // 删除本地文件并清出列表（沿用 DeleteItemAsync 的逻辑）
-        foreach (var item in items)
+        // 非创意工坊项:直接删本地文件
+        foreach (var item in nonWorkshopItems)
         {
             await DeleteItemAsync(item, skipConfirm: true);
         }

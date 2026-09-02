@@ -1182,6 +1182,18 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="Detail_Unsubscribe.Text" xml:space="preserve">
     <value>Annulla iscrizione</value>
   </data>
+  <data name="Detail_Uninstall.Text" xml:space="preserve">
+    <value>Disinstalla</value>
+  </data>
+  <data name="Toolbar_Uninstall.Label" xml:space="preserve">
+    <value>Disinstalla</value>
+  </data>
+  <data name="Toolbar_Uninstall.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Disinstalla</value>
+  </data>
+  <data name="AppBarButton_Uninstall.Label" xml:space="preserve">
+    <value>Disinstalla</value>
+  </data>
   <data name="Detail_ImportToEditor.Text" xml:space="preserve">
     <value>Importa nell'editor sfondi</value>
   </data>

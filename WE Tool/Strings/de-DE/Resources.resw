@@ -1182,6 +1182,18 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="Detail_Unsubscribe.Text" xml:space="preserve">
     <value>Abonnement kündigen</value>
   </data>
+  <data name="Detail_Uninstall.Text" xml:space="preserve">
+    <value>Deinstallieren</value>
+  </data>
+  <data name="Toolbar_Uninstall.Label" xml:space="preserve">
+    <value>Deinstallieren</value>
+  </data>
+  <data name="Toolbar_Uninstall.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Deinstallieren</value>
+  </data>
+  <data name="AppBarButton_Uninstall.Label" xml:space="preserve">
+    <value>Deinstallieren</value>
+  </data>
   <data name="Detail_ImportToEditor.Text" xml:space="preserve">
     <value>In Editor importieren</value>
   </data>

@@ -1182,6 +1182,18 @@
   <data name="Detail_Unsubscribe.Text" xml:space="preserve">
     <value>取消訂閱</value>
   </data>
+  <data name="Detail_Uninstall.Text" xml:space="preserve">
+    <value>卸載</value>
+  </data>
+  <data name="Toolbar_Uninstall.Label" xml:space="preserve">
+    <value>卸載</value>
+  </data>
+  <data name="Toolbar_Uninstall.ToolTipService.ToolTip" xml:space="preserve">
+    <value>卸載</value>
+  </data>
+  <data name="AppBarButton_Uninstall.Label" xml:space="preserve">
+    <value>卸載</value>
+  </data>
   <data name="Detail_ImportToEditor.Text" xml:space="preserve">
     <value>匯入桌布編輯器</value>
   </data>

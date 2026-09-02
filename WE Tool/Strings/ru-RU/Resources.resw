@@ -1182,6 +1182,18 @@
   <data name="Detail_Unsubscribe.Text" xml:space="preserve">
     <value>Отписаться</value>
   </data>
+  <data name="Detail_Uninstall.Text" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Toolbar_Uninstall.Label" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Toolbar_Uninstall.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="AppBarButton_Uninstall.Label" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
   <data name="Detail_ImportToEditor.Text" xml:space="preserve">
     <value>Импортировать в редактор обоев</value>
   </data>

@@ -1182,6 +1182,18 @@ project.json とプレビューをコピー
   <data name="Detail_Unsubscribe.Text" xml:space="preserve">
     <value>サブスクリプションを解除</value>
   </data>
+  <data name="Detail_Uninstall.Text" xml:space="preserve">
+    <value>アンインストール</value>
+  </data>
+  <data name="Toolbar_Uninstall.Label" xml:space="preserve">
+    <value>アンインストール</value>
+  </data>
+  <data name="Toolbar_Uninstall.ToolTipService.ToolTip" xml:space="preserve">
+    <value>アンインストール</value>
+  </data>
+  <data name="AppBarButton_Uninstall.Label" xml:space="preserve">
+    <value>アンインストール</value>
+  </data>
   <data name="Detail_ImportToEditor.Text" xml:space="preserve">
     <value>壁紙エディタにインポート</value>
   </data>

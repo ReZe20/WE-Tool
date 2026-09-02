@@ -1182,6 +1182,18 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Detail_Unsubscribe.Text" xml:space="preserve">
     <value>Unsubscribe</value>
   </data>
+  <data name="Detail_Uninstall.Text" xml:space="preserve">
+    <value>Uninstall</value>
+  </data>
+  <data name="Toolbar_Uninstall.Label" xml:space="preserve">
+    <value>Uninstall</value>
+  </data>
+  <data name="Toolbar_Uninstall.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Uninstall</value>
+  </data>
+  <data name="AppBarButton_Uninstall.Label" xml:space="preserve">
+    <value>Uninstall</value>
+  </data>
   <data name="Detail_ImportToEditor.Text" xml:space="preserve">
     <value>Import to Wallpaper Editor</value>
   </data>

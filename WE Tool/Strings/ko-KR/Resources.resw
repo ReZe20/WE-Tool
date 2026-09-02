@@ -1182,6 +1182,18 @@ project.json 및 미리보기 복사
   <data name="Detail_Unsubscribe.Text" xml:space="preserve">
     <value>구독 취소</value>
   </data>
+  <data name="Detail_Uninstall.Text" xml:space="preserve">
+    <value>제거</value>
+  </data>
+  <data name="Toolbar_Uninstall.Label" xml:space="preserve">
+    <value>제거</value>
+  </data>
+  <data name="Toolbar_Uninstall.ToolTipService.ToolTip" xml:space="preserve">
+    <value>제거</value>
+  </data>
+  <data name="AppBarButton_Uninstall.Label" xml:space="preserve">
+    <value>제거</value>
+  </data>
   <data name="Detail_ImportToEditor.Text" xml:space="preserve">
     <value>배경화면 편집기로 가져오기</value>
   </data>
