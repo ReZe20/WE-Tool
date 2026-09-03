@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- 纯控制台工具(只做 JSON/文件操作),不引用主程序,不需要 Windows TFM / 平台限制。
+         平台相关配置会让 VS 启动项目报"无法启动",对齐 TestBatchRestart 的默认 AnyCPU 写法 -->
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>FakeWorkshopLauncher</RootNamespace>
+    <AssemblyName>FakeWorkshopLauncher</AssemblyName>
+  </PropertyGroup>
+
+</Project>

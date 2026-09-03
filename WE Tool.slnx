@@ -15,4 +15,6 @@
   <Project Path="TestSteamUnsub/TestSteamUnsub.csproj" />
   <Project Path="FakeRePkg/FakeRePkg.csproj" />
   <Project Path="TestBatchRestart/TestBatchRestart.csproj" />
+  <Project Path="FakeWorkshopLauncher/FakeWorkshopLauncher.csproj" />
+  <Project Path="FakeWorkshopGenerator/FakeWorkshopGenerator.csproj" />
 </Solution>

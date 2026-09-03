@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "FakeWorkshopLauncher (启动 WE Tool-假库)": {
+      "commandName": "Project",
+      "commandLineArgs": "launch"
+    },
+    "FakeWorkshopLauncher (prepare-仅切假库配置)": {
+      "commandName": "Project",
+      "commandLineArgs": "prepare"
+    },
+    "FakeWorkshopLauncher (restore-还原真实配置)": {
+      "commandName": "Project",
+      "commandLineArgs": "restore"
+    },
+    "FakeWorkshopLauncher (status-查当前指向)": {
+      "commandName": "Project",
+      "commandLineArgs": "status"
+    }
+  }
+}

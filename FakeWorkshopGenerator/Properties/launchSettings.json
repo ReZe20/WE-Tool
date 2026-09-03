@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "FakeWorkshopGenerator (生成1万条到仓库TestData)": {
+      "commandName": "Project",
+      "commandLineArgs": "--count 10000 --output \"$(SolutionDir)TestData\\FakeWorkshop\" --force",
+      "workingDirectory": "$(SolutionDir)"
+    },
+    "FakeWorkshopGenerator (生成100条到临时目录)": {
+      "commandName": "Project",
+      "commandLineArgs": "--count 100 --output \"%TEMP%\\FakeWorkshopGen_100\" --force",
+      "workingDirectory": "$(SolutionDir)"
+    }
+  }
+}

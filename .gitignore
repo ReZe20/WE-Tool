@@ -366,5 +366,7 @@ FodyWeavers.xsd
 # Reasonix agent workspace files (AI assistant artifacts)
 .reasonix/
 .hermes/
+# 假壁纸测试数据(FakeWorkshopGenerator 生成,勿入库)
+TestData/
 # Inno Setup 安装包编译输出
 installer/bin/
