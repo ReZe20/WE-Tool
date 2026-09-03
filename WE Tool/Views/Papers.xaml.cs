@@ -202,6 +202,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private bool _isWallpaperItemTapped = false;
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
+    // ===== [Shift 区间刷选] 状态字段(图标模式;Shift+拖动从锚点延伸连续区间) =====
+    private WallpaperItem? _shiftAnchorItem;    // Shift 区间锚点(按下处)
+    private bool _shiftDragActive;              // Shift 区间刷选进行中
+    private bool _suppressItemReleased;         // 区间刷选结束抑制 Item 单选释放
     private AppBarButton? _pressedButton; // 当前被按下的 CommandBar 按钮(指针捕获后释放弹回用)
     private Storyboard? _multiEnterStackBoard;   // 进入多选:堆叠图淡入(退出多选时需 Stop,防动画值残留)
     private Storyboard? _multiEnterSingleBoard;  // 进入多选:单图淡出(同上)
@@ -520,17 +524,76 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _ = ApplyFilters();
         };
 
+        // [实验] 图标模式已换 ItemsRepeater(只显示 preview),以下 GridView 容器逻辑暂注释
         // 虚拟化容器每次数据绑定(含回收复用)都触发——弥补 Loaded 在容器复用时不重发导致的模糊层缺失
-        WallpapersGridView.ContainerContentChanging += (s, e) =>
+        //WallpapersGridView.ContainerContentChanging += (s, e) =>
+        //{
+        //    if (e.Item is WallpaperItem changingItem &&
+        //        FindDescendantGrid(e.ItemContainer, "ItemRootGrid") is Grid changingRoot)
+        //    {
+        //        // 先设原图组件(按类型:GIF→Skia,其余→静态图),后应用模糊——模糊会隐藏原图,顺序颠倒会被 UpdateSkiaGif 抵消
+        //        UpdateSkiaGif(changingRoot, changingItem); // 实验分支:Skia 流式播放(GIF 时覆盖 BitmapImage)
+        //        UpdateItemBlur(changingRoot, changingItem);
+        //        UpdateTagBadge(changingRoot, changingItem); // 角标按当前标签模式设置(替代 x:Bind OneTime+重建)
+        //    }
+        //};
+
+        // [实验] ItemsRepeater 容器就绪(绑定到 item 后):设 Image.Source + Skia GIF 切换 + 外观初始化。
+        // 替代原 GridView 的 ContainerContentChanging + ShadowRect_Loaded。元素回收复用也触发。
+        WallpapersRepeater.ElementPrepared += (s, e) =>
         {
-            if (e.Item is WallpaperItem changingItem &&
-                FindDescendantGrid(e.ItemContainer, "ItemRootGrid") is Grid changingRoot)
+            if (e.Element is not Grid root) return;
+            // 用 e.Index 从 ItemsSource 拿 item(不依赖 DataContext 时机;ElementPrepared 时绑定可能未推送)
+            WallpaperItem? item = null;
+            if (root.DataContext is WallpaperItem dcItem) item = dcItem;
+            else if (e.Index >= 0 && e.Index < Wallpapers.Count) item = Wallpapers[e.Index];
+            if (item == null) return;
+            // [外观] ThemeShadow 初始化(原 ShadowRect_Loaded 的阴影部分):ItemRootGrid 投影到 ShadowCastGrid
+            if (root.FindName("ItemRootGrid") is Grid itemRootGrid && itemRootGrid.Shadow is not ThemeShadow)
             {
-                // 先设原图组件(按类型:GIF→Skia,其余→静态图),后应用模糊——模糊会隐藏原图,顺序颠倒会被 UpdateSkiaGif 抵消
-                UpdateSkiaGif(changingRoot, changingItem); // 实验分支:Skia 流式播放(GIF 时覆盖 BitmapImage)
-                UpdateItemBlur(changingRoot, changingItem);
-                UpdateTagBadge(changingRoot, changingItem); // 角标按当前标签模式设置(替代 x:Bind OneTime+重建)
+                var shadow = new ThemeShadow();
+                if (root.FindName("ShadowCastGrid") is Grid shadowCastGrid)
+                    shadow.Receivers.Add(shadowCastGrid);
+                itemRootGrid.Shadow = shadow;
             }
+            // 设静态图源(GIF 的会被 UpdateSkiaGif 隐藏,但先设上无妨;路径为空用占位图)
+            Image? img = root.FindName("ItemPreviewImage") as Image;
+            if (img != null)
+            {
+                var src = string.IsNullOrEmpty(item.Preview)
+                    ? "ms-appx:///Assets/NoPreview.png"
+                    : item.Preview;
+                // Preview 是本地文件路径(非 URI),须转 file:///;ms-appx 等 URI 原样
+                img.Source = new BitmapImage(new Uri(
+                    src.StartsWith("ms-appx", StringComparison.OrdinalIgnoreCase)
+                        ? src
+                        : "file:///" + src.Replace('\\', '/')));
+            }
+            // GIF → Skia 播放,其余 → 静态图
+            if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
+            {
+                bool isGif = !string.IsNullOrEmpty(item.Preview)
+                    && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+                if (isGif)
+                {
+                    skia.Visibility = Visibility.Visible;
+                    if (img != null) img.Visibility = Visibility.Collapsed;
+                    skia.Start(item.Preview!);
+                }
+                else
+                {
+                    skia.Stop();
+                    skia.Visibility = Visibility.Collapsed;
+                    if (img != null) img.Visibility = Visibility.Visible;
+                }
+            }
+        };
+        // 元素移出(回收/滚动走远):停 GIF(复用原 UpdateSkiaGif 的 Stop 语义;ElementPrepared 重绑会重启)
+        WallpapersRepeater.ElementClearing += (s, e) =>
+        {
+            if (e.Element is not Grid root) return;
+            if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
+                skia.Stop();
         };
         ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) =>
         {
@@ -549,6 +612,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 // 小/中/大档位变化:列宽公式随档位值联动重算(切换档位立即生效,不等窗口 resize)
                 UpdateAllGridItemWidths();
+                UpdateExpUniformLayoutMinWidth(); // [实验] ItemsRepeater 的 UniformGridLayout 同步钳制
                 return;
             }
             if (e.PropertyName is nameof(WallpaperDisplayViewModel.BlurEveryone)
@@ -575,6 +639,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             // GridView 首次布局后重算自适应列宽
             UpdateAllGridItemWidths();
+            UpdateExpUniformLayoutMinWidth(); // [实验] ItemsRepeater 首帧钳制 MinItemWidth(防崩)
 
             // 补位移动动画(Composition 隐式 Offset):列表项重排时平滑滑到新位置
             var reorderDuration = TimeSpan.FromMilliseconds(100);
@@ -682,21 +747,23 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         DispatcherQueue.TryEnqueue(() => RestartVisibleGifPlayback());
     }
 
-    /// <summary>遍历可见容器重启 GIF 播放+角标(页面缓存切回时;容器未就绪/无项时无害)</summary>
+    /// <summary>遍历可见容器重启 GIF 播放+角标(页面缓存切回时;容器未就绪/无项时无害)。
+    /// [实验] 图标模式已换 ItemsRepeater,此逻辑(基于 GridViewItem 容器)暂禁用,方法体留空。</summary>
     private void RestartVisibleGifPlayback()
     {
+        // [实验] 图标 GridView 已移除,原 ItemsPanelRoot 遍历逻辑暂注释
         // 非反射(AOT 兼容):ItemsPanelRoot 返回类型是 Panel(基类),Children 是 Panel 属性,直接访问即可,不强转 ItemsWrapGrid
-        if (WallpapersGridView.ItemsPanelRoot is not { } panelRoot) return;
-        foreach (var child in panelRoot.Children)
-        {
-            if (child is not GridViewItem container) continue;
-            if (container.ContentTemplateRoot is not Grid root) continue;
-            if (WallpapersGridView.ItemFromContainer(container) is WallpaperItem item)
-            {
-                UpdateSkiaGif(root, item);
-                UpdateTagBadge(root, item);
-            }
-        }
+        //if (WallpapersGridView.ItemsPanelRoot is not { } panelRoot) return;
+        //foreach (var child in panelRoot.Children)
+        //{
+        //    if (child is not GridViewItem container) continue;
+        //    if (container.ContentTemplateRoot is not Grid root) continue;
+        //    if (WallpapersGridView.ItemFromContainer(container) is WallpaperItem item)
+        //    {
+        //        UpdateSkiaGif(root, item);
+        //        UpdateTagBadge(root, item);
+        //    }
+        //}
     }
 
     private void StackedImage_Loaded(object sender, RoutedEventArgs e)
@@ -742,6 +809,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     }
     private void Global_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        // 每次新按下复位抑制标志(区间刷选结束的释放会触发 Item 释放/Tapped,需区分)
+        _suppressItemReleased = false;
+
         var props = e.GetCurrentPoint(null).Properties;
         if (props.IsLeftButtonPressed)
         {
@@ -761,6 +831,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void Global_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         _isLeftMouseButtonPressed = false;
+        _shiftDragActive = false; // [Shift 区间刷选] 释放结束区间模式
+
         // 弹回按下的按钮(指针捕获保证即使移开后释放也触发)
         if (_pressedButton is { } pressedBtn)
         {
@@ -1086,6 +1158,53 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             IsMultiSelectMode = false;
         }
+    }
+
+    // ===== [Shift 区间刷选 2026-09] 图标模式:Shift+拖动从锚点延伸连续区间(替换选择) =====
+
+    /// <summary>选中 [anchor, end] 区间(含两端)并替换当前选择。按 Wallpapers(当前筛选列表)索引计算。</summary>
+    private void SelectShiftRange(WallpaperItem anchor, WallpaperItem end)
+    {
+        int a = Wallpapers.IndexOf(anchor);
+        int b = Wallpapers.IndexOf(end);
+        if (a < 0 || b < 0) return; // 不在当前列表(筛选/虚拟化边界),不处理
+        int lo = Math.Min(a, b);
+        int hi = Math.Max(a, b);
+
+        // 清空现有选择(只清当前列表内已选的,避免破坏列表外多选)
+        foreach (var sel in SelectedWallpapers.ToList())
+        {
+            if (Wallpapers.Contains(sel))
+            {
+                sel.IsSelected = false;
+                SelectedWallpapers.Remove(sel);
+            }
+        }
+        // 选中区间
+        for (int i = lo; i <= hi; i++)
+        {
+            var item = Wallpapers[i];
+            if (!item.IsSelected)
+            {
+                item.IsSelected = true;
+                SelectedWallpapers.Add(item);
+            }
+        }
+        UpdateMultiSelectCount();
+        if (SelectedWallpapers.Count > 1 && !IsMultiSelectMode)
+        {
+            IsMultiSelectMode = true;
+        }
+        // 详情面板/堆叠视觉同步(区间>1 走堆叠,=1 走单选详情)
+        RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+        DispatcherQueue.TryEnqueue(() => UpdateStackVisuals());
+    }
+
+    /// <summary>Shift+拖动经过 current:锚点不动,实时向 current 延伸区间。</summary>
+    private void ExtendShiftRange(WallpaperItem current)
+    {
+        if (_shiftAnchorItem == null) { _shiftAnchorItem = current; }
+        SelectShiftRange(_shiftAnchorItem, current);
     }
 
     public async Task RefreshWallpaperList()
@@ -1437,12 +1556,41 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
     // ============= GridView 列表辅助(自适应列宽/滚动条/回顶) =============
 
-    /// <summary>三个壁纸 GridView(图标/内容/列表模式)</summary>
-    private GridView[] AllWallpaperGridViews => new[] { WallpapersGridView, WallpapersContentGridView, WallpapersListGridView };
+    /// <summary>壁纸 GridView 数组(图标模式已换 ItemsRepeater,故只含内容/列表两个 GridView)。
+    /// [实验] 原含 WallpapersGridView,已随图标模式换 ItemsRepeater 移除。</summary>
+    private GridView[] AllWallpaperGridViews => new[] { WallpapersContentGridView, WallpapersListGridView };
 
     /// <summary>窗口尺寸变化:实时重算 ItemWidth(布局脏标记同帧合并,138 项毫秒级;拖动中列数与拉伸同步更新)</summary>
     private void WallpaperGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         => UpdateAllGridItemWidths();
+
+    // ============ [实验] ItemsRepeater UniformGridLayout 防崩钳制 ============
+
+    /// <summary>ScrollView 尺寸变化:钳制 UniformGridLayout.MinItemWidth ≤ 可用宽,
+    /// 否则可用宽 &lt; MinItemWidth 时 itemsPerLine=0 除零崩溃(WinUI #10539,微软未修)。
+    /// ItemsRepeater 图标模式专用(实验)。</summary>
+    private void WallpapersScrollViewExp_SizeChanged(object sender, SizeChangedEventArgs e)
+        => UpdateExpUniformLayoutMinWidth();
+
+    /// <summary>读用户档位(180/240/300),钳到可用宽内写回 UniformGridLayout.MinItemWidth。
+    /// 可用宽 = ScrollView 内容宽 - 左右 Margin(4+4);ScrollView 未布局时兜底只钳下限。</summary>
+    private void UpdateExpUniformLayoutMinWidth()
+    {
+        if (WallpapersUniformLayoutExp is not UniformGridLayout layout) return;
+        double viewport = WallpapersScrollViewExp.ActualWidth;
+        int desired = ViewModel.WallpaperDisplayVM.WallpaperListMinWidth;
+        if (viewport > 0)
+        {
+            // 防崩核心:MinItemWidth 必须 ≤ 可用宽(margin 8)
+            double effective = Math.Max(1, Math.Min(desired, viewport - 8));
+            if (Math.Abs(layout.MinItemWidth - effective) > 0.5)
+                layout.MinItemWidth = effective;
+        }
+        else if (layout.MinItemWidth <= 0)
+        {
+            layout.MinItemWidth = desired; // 未布局首帧:先给档位值,等 SizeChanged 再钳
+        }
+    }
 
     // ============ 预览内容过滤(高斯模糊) ============
 
@@ -1574,14 +1722,15 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     /// <summary>年龄段设置变化:遍历当前页所有可见卡片刷新模糊层</summary>
     private void RefreshAllItemBlurs()
     {
-        foreach (var item in Wallpapers)
-        {
-            if (WallpapersGridView.ContainerFromItem(item) is FrameworkElement container)
-            {
-                var itemRootGrid = FindDescendantGrid(container, "ItemRootGrid");
-                if (itemRootGrid != null) UpdateItemBlur(itemRootGrid, item);
-            }
-        }
+        // [实验] 图标模式已换 ItemsRepeater(无 ContainerFromItem),原图标 GridView 遍历暂注释
+        //foreach (var item in Wallpapers)
+        //{
+        //    if (WallpapersGridView.ContainerFromItem(item) is FrameworkElement container)
+        //    {
+        //        var itemRootGrid = FindDescendantGrid(container, "ItemRootGrid");
+        //        if (itemRootGrid != null) UpdateItemBlur(itemRootGrid, item);
+        //    }
+        //}
 
         // 多选堆叠视图同步:逐张重算模糊层
         for (int i = 0; i < DisplayedSelectedWallpapers.Count; i++)
@@ -1673,11 +1822,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         return null;
     }
 
-    /// <summary>按各模式档位重算 ItemWidth,复刻 UniformGridLayout 的"拉伸填满行尾"</summary>
+    /// <summary>按各模式档位重算 ItemWidth,复刻 UniformGridLayout 的"拉伸填满行尾"。
+    /// [实验] 图标模式已换 ItemsRepeater(UniformGridLayout 声明式 MinItemWidth 自适应),
+    /// 不再手动 SetValue,故此处只处理列表/内容两个 GridView。</summary>
     private void UpdateAllGridItemWidths()
     {
         // 间距来自容器 Margin(ItemContainerStyle 左右各 5,共 10),在槽位内部;槽位宽 = available/列数 填满整行,行尾零留白
-        UpdateGridItemWidth(WallpapersGridView, ViewModel.WallpaperDisplayVM.WallpaperListMinWidth, 10);
         UpdateGridItemWidth(WallpapersListGridView, 400, 10);
         UpdateGridItemWidth(WallpapersContentGridView, 0, 10); // 内容模式单列
     }
@@ -2003,6 +2153,8 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             _isWallpaperItemTapped = false;
             return;
         }
+        // [Shift 区间刷选] 区间刷选结束的释放可能触发 Tapped,抑制清空(选择已由区间定)
+        if (_suppressItemReleased) return;
 
         ViewModel.SelectedWallpaper = null;
     }
@@ -2188,34 +2340,17 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             var checkBox = FindCheckBoxInGrid(grid);
             if (checkBox != null) checkBox.Opacity = 1;
 
-            Visual visual = ElementCompositionPreview.GetElementVisual(grid);
-            Compositor compositor = visual.Compositor;
-
-            visual.CenterPoint = new System.Numerics.Vector3(
-            (float)grid.ActualWidth / 2,
-            (float)grid.ActualHeight / 2,
-            0f);
-
-            var parent = VisualTreeHelper.GetParent(grid) as UIElement;
-            if (parent != null)
-            {
-                Canvas.SetZIndex(parent, 10000);
-            }
-
-            // 真正置顶:GridView 的绘制顺序由 GridViewItem 容器的 Canvas.ZIndex 决定(设 ItemContainer 不生效)
-            DependencyObject topContainer = grid;
-            while (topContainer != null && topContainer is not GridViewItem)
-            {
-                topContainer = VisualTreeHelper.GetParent(topContainer);
-            }
-            if (topContainer is GridViewItem gridViewItem)
-            {
-                Canvas.SetZIndex(gridViewItem, 10000);
-            }
-
+            // 按下拖动经过:左键按住 + 移动经过本卡片(仅选择逻辑,无视觉置顶/放大)
             if (_isLeftMouseButtonPressed && grid.DataContext is WallpaperItem item)
             {
-                Item_PointerPressed(sender,e);
+                // [Shift 区间刷选 2026-09] Shift+拖动:从锚点向当前卡片延伸连续区间(替换选择)
+                if (_shiftDragActive)
+                {
+                    ExtendShiftRange(item);
+                    return;
+                }
+                // 普通拖动:多选刷选(取反)或单选滑动预览
+                Item_PointerPressed(sender, e);
                 if (!_isMultiSelectMode)
                 {
                     // 拖拽滑过时更新预览图和标题，但不播放钻入动画避免卡顿
@@ -2234,37 +2369,53 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 return;
             }
 
+            // [悬停视觉 2026-09] 置顶+放大只在"鼠标在卡片上动画"设置开启时执行;
+            // 关闭时悬停零视觉变化(阴影/绘制序/放大全不动),只有 checkbox 随 IsHovered 显示
             if (ViewModel.WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled)
             {
+                Visual visual = ElementCompositionPreview.GetElementVisual(grid);
+                Compositor compositor = visual.Compositor;
+
+                visual.CenterPoint = new System.Numerics.Vector3(
+                    (float)grid.ActualWidth / 2,
+                    (float)grid.ActualHeight / 2,
+                    0f);
+
+                var parent = VisualTreeHelper.GetParent(grid) as UIElement;
+                if (parent != null)
+                {
+                    Canvas.SetZIndex(parent, 10000);
+                }
+                // 置顶:向上到 ItemsRepeater 止(最多 6 层)设 ZIndex,让放大卡片盖过相邻卡片
+                {
+                    DependencyObject topContainer = grid;
+                    int hops = 0;
+                    while (topContainer != null && topContainer is not ItemsRepeater && hops < 6)
+                    {
+                        topContainer = VisualTreeHelper.GetParent(topContainer);
+                        hops++;
+                    }
+                    if (topContainer is UIElement uiEl)
+                    {
+                        Canvas.SetZIndex(uiEl, 10000);
+                    }
+                }
+
                 var scaleAnimation = compositor.CreateSpringVector3Animation();
                 scaleAnimation.Target = "Scale";
                 scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
                 scaleAnimation.DampingRatio = 0.6f;
                 scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
                 visual.StartAnimation("Scale", scaleAnimation);
+                // [悬停阴影 2026-09] 不添加悬停阴影层:ElementPrepared 常驻阴影一层,
+                // 悬停只做 Scale 放大(阴影随卡片放大自然增强),避免两层阴影叠加
 
-                // Enable ThemeShadow on hover
-                if (grid.Shadow is not ThemeShadow)
+                Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
+                if (itemVisual?.Parent is ContainerVisual parentVisual)
                 {
-                    var themeShadow = new ThemeShadow();
-                    if (VisualTreeHelper.GetParent(grid) is Grid parentContainer)
-                    {
-                        var receiverGrid = parentContainer.FindName("ShadowCastGrid") as Grid;
-                        if (receiverGrid != null)
-                        {
-                            themeShadow.Receivers.Add(receiverGrid);
-                        }
-                    }
-                    grid.Shadow = themeShadow;
+                    parentVisual.Children.Remove(itemVisual);
+                    parentVisual.Children.InsertAtTop(itemVisual);
                 }
-            }
-
-
-            Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
-            if (itemVisual?.Parent is ContainerVisual parentVisual)
-            {
-                parentVisual.Children.Remove(itemVisual);
-                parentVisual.Children.InsertAtTop(itemVisual);
             }
         }
     }
@@ -2278,7 +2429,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             ApplyScaleAnimation(grid, 1.0f);
             UpdateItemCheckBoxOpacity(grid, item);
 
-            grid.Shadow = null;
+            // [阴影常驻] 不再移除阴影(ElementPrepared 常驻创建;鼠标经过浮起效果保留阴影观感)
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -2291,11 +2442,13 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
             var capturedParent = VisualTreeHelper.GetParent(grid) as UIElement;
 
-            // 捕获 GridViewItem 容器用于复位置顶
+            // 捕获容器用于复位置顶([ItemsRepeater 适配] 无 GridViewItem,向上到 ItemsRepeater 止,最多 6 层)
             DependencyObject capturedContainer = grid;
-            while (capturedContainer != null && capturedContainer is not GridViewItem)
+            int exitHops = 0;
+            while (capturedContainer != null && capturedContainer is not ItemsRepeater && exitHops < 6)
             {
                 capturedContainer = VisualTreeHelper.GetParent(capturedContainer);
+                exitHops++;
             }
 
             visual.StartAnimation("Scale", scaleAnimation);
@@ -2309,9 +2462,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 {
                     Canvas.SetZIndex(capturedParent, 0);
                 }
-                if (capturedContainer is GridViewItem capturedGridViewItem)
+                if (capturedContainer is UIElement capturedUiElement)
                 {
-                    Canvas.SetZIndex(capturedGridViewItem, 0);
+                    Canvas.SetZIndex(capturedUiElement, 0);
                 }
                 grid.Translation = new System.Numerics.Vector3(0f, 0f, 64f);
             });
@@ -2350,7 +2503,8 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
             {
-                if (!_isMultiSelectMode)
+                // [Shift 区间刷选] 区间刷选结束的释放抑制单选(区间结果已由 SelectShiftRange 定)
+                if (!_isMultiSelectMode && !_suppressItemReleased)
                 {
                     if (ViewModel.SelectedWallpaper != item)
                     {
@@ -2368,6 +2522,21 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         if (sender is Grid grid)
         {
             _isWallpaperItemTapped = true;
+
+            // [Shift 区间刷选 2026-09] Shift+按下 = 开始区间刷选:记锚点,等待拖动延伸
+            if (sender is FrameworkElement shiftElement && shiftElement.DataContext is WallpaperItem shiftItem)
+            {
+                var shiftHeld = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Shift); // Pointer 事件用 KeyModifiers
+                if (shiftHeld)
+                {
+                    _shiftAnchorItem = shiftItem;
+                    _shiftDragActive = true;
+                    _suppressItemReleased = true; // 区间刷选期间抑制释放单选
+                    // 立即选中锚点(区间起点),后续拖动延伸
+                    SelectShiftRange(shiftItem, shiftItem);
+                    return; // 不进入常规选择逻辑
+                }
+            }
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -3122,16 +3291,17 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     private async void OnTagDisplayChanged(object sender, RoutedEventArgs e)
         {
             HideWallpaperContextMenu();
+            // [实验] 图标模式已换 ItemsRepeater(无 ItemsPanelRoot 容器遍历),原图标角标刷新暂注释
             // 优化:不再重置 ItemsSource 重建全列表——只遍历可见容器手动刷新角标(滚动位置保留、无容器 churn)
             // 非反射(AOT 兼容):ItemsPanelRoot 返回类型是 Panel(基类),Children 是 Panel 属性,直接访问即可,不强转 ItemsWrapGrid
-            if (WallpapersGridView.ItemsPanelRoot is not { } panelRoot) return;
-            foreach (var child in panelRoot.Children)
-            {
-                if (child is not GridViewItem container) continue;
-                if (container.ContentTemplateRoot is not Grid root) continue;
-                if (WallpapersGridView.ItemFromContainer(container) is WallpaperItem item)
-                    UpdateTagBadge(root, item);
-            }
+            //if (WallpapersGridView.ItemsPanelRoot is not { } panelRoot) return;
+            //foreach (var child in panelRoot.Children)
+            //{
+            //    if (child is not GridViewItem container) continue;
+            //    if (container.ContentTemplateRoot is not Grid root) continue;
+            //    if (WallpapersGridView.ItemFromContainer(container) is WallpaperItem item)
+            //        UpdateTagBadge(root, item);
+            //}
         }
 
         /// <summary>更新卡片右上角标签(按当前标签模式;容器绑定时也调用,滚动回来的新容器自动正确)</summary>

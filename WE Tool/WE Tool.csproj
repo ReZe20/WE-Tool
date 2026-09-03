@@ -68,7 +68,7 @@
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260804001" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.0" />
     <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SkiaSharp" Version="4.151.1" />
@@ -409,6 +409,19 @@
            此 dll 仅是 NuGet 附带的原生库,不再需要(2026-08-24 实测)。
            注:SkiaSharp.Views.WinUI.Native.dll 保留(激活服务器不做融入) -->
       <_PublishUnneeded Include="$(PublishDir)**\libSkiaSharp.dll" />
+      <!-- [2.x 升级] 剔除 WindowsAppSDK 2.x 元包新拖入的 AI/ML/Search/Widgets 全家桶:
+           项目源码零引用(2026-09-03 grep 验证),纯体积负担
+           (onnxruntime 21MB + DirectML 18MB + AI Projection 系列 + 其它,合计 ~44MB) -->
+      <_PublishUnneeded Include="$(PublishDir)**\DirectML.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\onnxruntime.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.ML.OnnxRuntime.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.AI*.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.Search*.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.Widgets*.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Security.Authentication.OAuth.Projection.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.Management.Deployment.Projection.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.Media.Capture.Projection.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\System.Numerics.Tensors.dll" />
     </ItemGroup>
     <Delete Files="@(_PublishUnneeded)" />
     <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (AOT 主程序,无 launcher) (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />

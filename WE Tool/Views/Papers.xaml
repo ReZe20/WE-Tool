@@ -740,18 +740,32 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
-                                    <GridView x:Name="WallpapersGridView"
-                                              ItemsSource="{x:Bind Wallpapers}"
-                                              Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IconModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
-                                              Tapped="WallpaperList_Tapped"
-                                              SelectionMode="None"
-                                              SizeChanged="WallpaperGrid_SizeChanged"
-                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}"
-                                              HorizontalAlignment="Stretch"
-                                              Margin="4,0,4,0">
-                                        <GridView.ItemTemplate>
+                                    <!-- [实验] WallpapersGridView → ScrollView+ItemsRepeater:只显示 preview,验证万条 resize 卡顿 -->
+                                    <ScrollView x:Name="WallpapersScrollViewExp"
+                                                Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IconModeVisibility, Mode=OneWay}"
+                                                VerticalScrollBarVisibility="Auto"
+                                                VerticalScrollMode="Auto"
+                                                HorizontalScrollBarVisibility="Hidden"
+                                                HorizontalScrollMode="Disabled"
+                                                SizeChanged="WallpapersScrollViewExp_SizeChanged"
+                                                Tapped="WallpaperList_Tapped"
+                                                Margin="4,0,4,0">
+                                        <ItemsRepeater x:Name="WallpapersRepeater"
+                                                       ItemsSource="{x:Bind Wallpapers}"
+                                                       Margin="0,0,10,0">
+                                            <ItemsRepeater.Layout>
+                                                <!-- [防崩] MinItemWidth 由代码钳制(见 WallpapersScrollViewExp_SizeChanged):
+                                                     可用宽 < MinItemWidth → UniformGridLayout itemsPerLine=0 除零崩溃(#10539) -->
+                                                <UniformGridLayout x:Name="WallpapersUniformLayoutExp"
+                                                    MinColumnSpacing="10"
+                                                    MinRowSpacing="10"
+                                                    ItemsStretch="Fill"
+                                                    Orientation="Horizontal"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
+                                                    <!-- [外观还原] 与 GridView 时代一致:阴影层+圆角8卡片+图+title 条+角标+checkbox(视觉)。
+                                                         交互事件暂不挂(阶段 1 只还原外观) -->
                                                     <Grid x:Name="ItemContainer">
                                                         <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
                                                         <Grid CornerRadius="8"
@@ -767,21 +781,18 @@
                                                               Loaded="ShadowRect_Loaded"
                                                               ContextFlyout="{StaticResource WallpaperContextMenu}"
                                                               RightTapped="WallpaperItem_RightTapped">
+                                                            <!-- 布局撑高:UniformGridLayout 拉伸填满,Viewbox 占位保比例(与原 GridView 卡片同构) -->
                                                             <Viewbox Stretch="Uniform" VerticalAlignment="Top">
                                                                 <Canvas Width="100" Height="100"/>
                                                             </Viewbox>
 
-                                                            <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
-                                                                <Image.Source>
-                                                                    <BitmapImage UriSource="{x:Bind Preview}" AutoPlay="False"/>
-                                                                </Image.Source>
-                                                            </Image>
-                                                            <!-- 实验分支(feature/skia-gif):Skia 流式 GIF 播放,覆盖 BitmapImage 直播;GIF 时显示,其余隐藏 -->
+                                                            <Image x:Name="ItemPreviewImage" Stretch="UniformToFill"/>
+                                                            <!-- Skia 流式 GIF 播放(GIF 时显示覆盖,ElementPrepared 里 Start/Stop) -->
                                                             <skia:SkiaGifView x:Name="SkiaGifCanvas" Visibility="Collapsed"/>
                                                             <!-- 内容过滤模糊层:露骨壁纸按年龄段设置显示高斯模糊位图,平时隐藏 -->
                                                             <Image x:Name="ItemBlurOverlay" Stretch="UniformToFill" Visibility="Collapsed"/>
 
-                                                        <Grid VerticalAlignment="Bottom" Height="45" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+                                                            <Grid VerticalAlignment="Bottom" Height="45" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*"/>
                                                                     <ColumnDefinition Width="Auto"/>
@@ -809,22 +820,22 @@
                                                                     </StackPanel>
                                                                 </Border>
                                                             </Grid>
-                                                        <Border HorizontalAlignment="Right"
-                                                                    VerticalAlignment="Top"
-                                                                    BorderBrush="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                                    CornerRadius="0,0,0,10"
-                                                                    MinWidth="50"
-                                                                    MinHeight="20"
-                                                                    Padding="4"
-                                                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                                                    Visibility="Collapsed"
-                                                                    x:Name="TagDisplayBorder">
-                                                            <!-- 文本/可见性由 UpdateTagBadge 代码设置(替代 x:Bind OneTime+列表重建) -->
-                                                            <TextBlock Text=""
+                                                            <Border HorizontalAlignment="Right"
+                                                                        VerticalAlignment="Top"
+                                                                        BorderBrush="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                                        CornerRadius="0,0,0,10"
+                                                                        MinWidth="50"
+                                                                        MinHeight="20"
+                                                                        Padding="4"
+                                                                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                                        Visibility="Collapsed"
+                                                                        x:Name="TagDisplayBorder">
+                                                                <!-- 文本/可见性由 UpdateTagBadge 代码设置(替代 x:Bind OneTime+列表重建) -->
+                                                                <TextBlock Text=""
                                                                            HorizontalAlignment="Center"
                                                                            FontSize="12"
                                                                            VerticalAlignment="Center"/>
-                                                        </Border>
+                                                            </Border>
                                                             <CheckBox x:Name="SelectionCheckBox"
                                                                       IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
                                                                       Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
@@ -850,8 +861,9 @@
                                                         </Grid>
                                                     </Grid>
                                                 </DataTemplate>
-                                        </GridView.ItemTemplate>
-                                    </GridView>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </ScrollView>
 
                                     <GridView x:Name="WallpapersContentGridView"
                                               ItemsSource="{x:Bind Wallpapers}"
