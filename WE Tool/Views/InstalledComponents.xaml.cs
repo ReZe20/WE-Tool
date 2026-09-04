@@ -28,6 +28,7 @@ using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
 
@@ -40,6 +41,13 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private bool _isUpdating;
     private bool _isFirstLoad = true;
     private bool _isLeftMouseButtonPressed;
+    // ===== [Shift 区间刷选,同步 Papers] 图标模式;Shift+拖动从锚点延伸连续区间 =====
+    private ComponentInfo? _shiftAnchorItem;   // Shift 区间锚点(按下处)
+    private bool _shiftDragActive;             // Shift 区间刷选进行中
+    private bool _suppressItemReleased;        // 区间刷选结束抑制 Item 单选释放
+    // ===== [右键释放检测,同步 Papers] 右键按下→松开手动弹菜单(绕开系统"右键带移动抑制"手势判定) =====
+    private bool _isRightButtonPressed;       // 右键是否按下(按下置位,松开检测消费)
+    private bool _rightMenuShownThisGesture;  // 本次右键手势是否已弹菜单(防双弹)
     private AppBarButton? _pressedButton; // 当前被按下的 CommandBar 按钮(指针捕获后释放弹回用)
     private bool _isComponentItemTapped;
     private bool _isMultiSelectMode;
@@ -197,17 +205,16 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     // ============= GridView 列表辅助(自适应列宽/回顶,照抄 Papers) =============
 
-    /// <summary>三个组件 GridView(图标/内容/列表模式)</summary>
-    private GridView[] AllComponentGridViews => new[] { ComponentsGridView, ComponentsContentGridView, ComponentsListGridView };
+    /// <summary>组件 GridView 数组(图标模式已换 ItemsRepeater,故只含内容/列表两个 GridView)</summary>
+    private GridView[] AllComponentGridViews => new[] { ComponentsContentGridView, ComponentsListGridView };
 
-    /// <summary>窗口尺寸变化:实时重算 ItemWidth</summary>
+    /// <summary>窗口尺寸变化:实时重算 ItemWidth(图标模式由 ScrollView 钳制接管)</summary>
     private void ComponentGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         => UpdateAllComponentGridItemWidths();
 
     /// <summary>按各模式档位重算 ItemWidth(照抄 Papers:ItemWidth = 槽位步长,容器 = ItemWidth - 10,留 2px 余量)</summary>
     private void UpdateAllComponentGridItemWidths()
     {
-        UpdateGridItemWidth(ComponentsGridView, ViewModel.ComponentsDisplayVM.ComponentListMinWidth, 10);
         UpdateGridItemWidth(ComponentsListGridView, 400, 10);
         UpdateGridItemWidth(ComponentsContentGridView, 0, 10); // 内容模式单列
     }
@@ -232,6 +239,62 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         // 换行判断为严格比较,ItemWidth = available/cols 会因浮点误差恰好放不下最后一列(空一列),
         // 故留 2px/列余量;卡片 = available/cols - 12,行尾余量 cols×2px 不可见
         panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available / cols - 2);
+    }
+
+    // ============ [同步 Papers] ItemsRepeater UniformGridLayout 防崩钳制 ============
+
+    /// <summary>ScrollView 尺寸变化:钳制 UniformGridLayout.MinItemWidth ≤ 可用宽,
+    /// 否则可用宽 &lt; MinItemWidth 时 itemsPerLine=0 除零崩溃(WinUI #10539)。图标模式专用。</summary>
+    private void ComponentsScrollViewExp_SizeChanged(object sender, SizeChangedEventArgs e)
+        => UpdateComponentsUniformLayoutMinWidth();
+
+    /// <summary>读用户档位(ComponentListMinWidth),钳到可用宽内写回 UniformGridLayout.MinItemWidth。
+    /// 可用宽 = ScrollView 内容宽 - 左右 Margin(4+4);ScrollView 未布局时兜底只钳下限。</summary>
+    private void UpdateComponentsUniformLayoutMinWidth()
+    {
+        if (ComponentsUniformLayoutExp is not UniformGridLayout layout) return;
+        double viewport = ComponentsScrollViewExp.ActualWidth;
+        int desired = ViewModel.ComponentsDisplayVM.ComponentListMinWidth;
+        if (viewport > 0)
+        {
+            // 防崩核心:MinItemWidth 必须 ≤ 可用宽(margin 8)
+            double effective = Math.Max(1, Math.Min(desired, viewport - 8));
+            if (Math.Abs(layout.MinItemWidth - effective) > 0.5)
+                layout.MinItemWidth = effective;
+        }
+        else if (layout.MinItemWidth <= 0)
+        {
+            layout.MinItemWidth = desired; // 未布局首帧:先给档位值,等 SizeChanged 再钳
+        }
+    }
+
+    // ===== [Ctrl+滚轮,同步 Papers] =====
+    // ScrollView(新控件)原生把 Ctrl+滚轮当"缩放"消费(ZoomMode=Disabled 也吞事件,官方设计:
+    // "pressing Ctrl while scrolling mouse wheel" = zoom),导致 Ctrl+滚轮不滚动。
+    // 方案:拦截点放内层 ItemsRepeater(滚轮冒泡先经它,后到 ScrollView 原生处理):
+    //   Ctrl+滚轮(未按左键)      = 循环切换图标尺寸档位 + Handled(不缩放下传)
+    //   Ctrl+左键按住+滚轮         = 手动滚动(此时左键拖动语义被滚轮替代)
+    //   无修饰键滚轮              = 不 Handled,放行给 ScrollView 原生平滑滚动
+    private void ComponentsRepeater_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        int delta = e.GetCurrentPoint(sender as UIElement).Properties.MouseWheelDelta;
+        if (delta == 0) return;
+
+        bool ctrlHeld = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Control); // Pointer 事件用 KeyModifiers
+        bool leftPressed = _isLeftMouseButtonPressed;
+
+        // Ctrl 且未按左键:切换图标档位
+        if (ctrlHeld && !leftPressed)
+        {
+            var vm = ViewModel.ComponentsDisplayVM;
+            int cur = vm.ComponentViewIndex;
+            int next = delta > 0 ? (cur + 1) % 3 : (cur + 2) % 3; // 上滚升档,下滚降档,循环 0..2
+            vm.ComponentViewIndex = next;
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+左键按住:手动垂直滚动(CtrlAwareScrollView 子类已接管,此处兜底;不 Handled 让子类处理)
     }
 
     /// <summary>当前可见的 GridView(滚动回顶用)</summary>
@@ -361,6 +424,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             {
                 // 小/中/大档位变化:列宽公式随档位值联动重算(照抄 Papers)
                 UpdateAllComponentGridItemWidths();
+                UpdateComponentsUniformLayoutMinWidth(); // [同步 Papers] 图标 UniformGridLayout 同步钳制
             }
         };
 
@@ -368,22 +432,69 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         this.Loaded += (s, e) =>
         {
             UpdateAllComponentGridItemWidths();
+            UpdateComponentsUniformLayoutMinWidth(); // [同步 Papers] ItemsRepeater 首帧钳制(防崩)
             var reorderDuration = TimeSpan.FromMilliseconds(100);
             foreach (var gv in AllComponentGridViews)
                 ItemsReorderAnimation.SetDuration(gv, reorderDuration);
         };
 
-        // Skia 流式播放 + 角标:容器绑定时刷新。订阅放构造函数(页面有导航缓存,
-        // Loaded 每次切回都重发,放里面会造成订阅数随访问次数翻倍,容器实化时处理 N 遍)
-        ComponentsGridView.ContainerContentChanging += (s2, e2) =>
+        // [同步 Papers] ItemsRepeater 容器就绪:设 Image.Source + Skia GIF 切换 + 阴影/角标初始化。
+        // 替代原 GridView 的 ContainerContentChanging。元素回收复用也触发。
+        ComponentsRepeater.ElementPrepared += (s, e) =>
         {
-            if (e2.InRecycleQueue) return;
-            if (e2.Item is ComponentInfo cItem &&
-                e2.ItemContainer.ContentTemplateRoot is Grid cRoot)
+            if (e.Element is not Grid root) return;
+            // 用 e.Index 从 ItemsSource 拿 item(不依赖 DataContext 时机;ElementPrepared 时绑定可能未推送)
+            ComponentInfo? item = null;
+            if (root.DataContext is ComponentInfo dcItem) item = dcItem;
+            else if (e.Index >= 0 && e.Index < FilteredComponents.Count) item = FilteredComponents[e.Index];
+            if (item == null) return;
+            // [外观] ThemeShadow 初始化(原 ShadowRect_Loaded 的阴影部分):ItemRootGrid 投影到 ShadowCastGrid
+            if (root.FindName("ItemRootGrid") is Grid itemRootGrid && itemRootGrid.Shadow is not ThemeShadow)
             {
-                UpdateSkiaGif(cRoot, cItem);
-                UpdateTagBadge(cRoot, cItem);
+                var shadow = new ThemeShadow();
+                if (root.FindName("ShadowCastGrid") is Grid shadowCastGrid)
+                    shadow.Receivers.Add(shadowCastGrid);
+                itemRootGrid.Shadow = shadow;
             }
+            // 设静态图源(GIF 的会被 UpdateSkiaGif 隐藏,但先设上无妨;路径为空用占位图)
+            Image? img = root.FindName("ItemPreviewImage") as Image;
+            if (img != null)
+            {
+                var src = string.IsNullOrEmpty(item.Preview)
+                    ? "ms-appx:///Assets/NoPreview.png"
+                    : item.Preview;
+                // Preview 是本地文件路径(非 URI),须转 file:///;ms-appx 等 URI 原样
+                img.Source = new BitmapImage(new Uri(
+                    src.StartsWith("ms-appx", StringComparison.OrdinalIgnoreCase)
+                        ? src
+                        : "file:///" + src.Replace('\\', '/')));
+            }
+            // GIF → Skia 播放,其余 → 静态图(原 UpdateSkiaGif 语义)
+            if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
+            {
+                bool isGif = !string.IsNullOrEmpty(item.Preview)
+                    && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+                if (isGif)
+                {
+                    skia.Visibility = Visibility.Visible;
+                    if (img != null) img.Visibility = Visibility.Collapsed;
+                    skia.Start(item.Preview!);
+                }
+                else
+                {
+                    skia.Stop();
+                    skia.Visibility = Visibility.Collapsed;
+                    if (img != null) img.Visibility = Visibility.Visible;
+                }
+            }
+            UpdateTagBadge(root, item); // 角标按当前标签模式设置
+        };
+        // 元素移出(回收/滚动走远):停 GIF
+        ComponentsRepeater.ElementClearing += (s, e) =>
+        {
+            if (e.Element is not Grid root) return;
+            if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
+                skia.Stop();
         };
 
         // 多选集合变化时刷新计数、堆叠图与面板（批量操作时抑制，避免逐项触发）
@@ -400,10 +511,20 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // ===================== 全局鼠标状态 =====================
     private void Global_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        var props = e.GetCurrentPoint(null).Properties;
+        // 每次新按下复位抑制标志(区间刷选结束的释放会触发 Item 释放/Tapped,需区分)
+        _suppressItemReleased = false;
+
+        var pt = e.GetCurrentPoint(null);
+        var props = pt.Properties;
         if (props.IsLeftButtonPressed)
         {
             _isLeftMouseButtonPressed = true;
+        }
+        // [右键释放检测,同步 Papers] 右键按下:置标志(松开时手动弹菜单,绕开系统移动抑制)
+        if (props.PointerUpdateKind is Microsoft.UI.Input.PointerUpdateKind.RightButtonPressed)
+        {
+            _isRightButtonPressed = true;
+            _rightMenuShownThisGesture = false;
         }
         // CommandBar 内按钮按下反馈:按钮缩小(AddHandler handledEventsToo:true 能收到 Button 内部的 handled 事件)
         if (e.OriginalSource is FrameworkElement fe && IsDescendantOf(fe, ToolbarCommands))
@@ -420,6 +541,17 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void Global_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         _isLeftMouseButtonPressed = false;
+        _shiftDragActive = false; // [Shift 区间刷选,同步 Papers] 释放结束区间模式
+
+        // [右键释放检测,同步 Papers] 右键松开:命中测试找卡片 → 手动弹菜单
+        var relPt = e.GetCurrentPoint(null);
+        if (relPt.Properties.PointerUpdateKind is Microsoft.UI.Input.PointerUpdateKind.RightButtonReleased
+            && _isRightButtonPressed)
+        {
+            _isRightButtonPressed = false;
+            HandleRightReleaseOpenMenu(relPt.Position);
+        }
+
         // 弹回按下的按钮(指针捕获保证即使移开后释放也触发)
         if (_pressedButton is { } pressedBtn)
         {
@@ -535,15 +667,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         /// <summary>遍历可见容器重启 GIF 播放(页面缓存切回时;容器未就绪/无项时无害)</summary>
         private void RestartVisibleGifPlayback()
         {
-            // 非反射(AOT 兼容):ItemsPanelRoot 返回类型是 Panel(基类),Children 是 Panel 属性,直接访问即可,不强转 ItemsWrapGrid
-            if (ComponentsGridView.ItemsPanelRoot is not { } panelRoot) return;
-            foreach (var child in panelRoot.Children)
-            {
-                if (child is not GridViewItem container) continue;
-                if (container.ContentTemplateRoot is not Grid root) continue;
-                if (ComponentsGridView.ItemFromContainer(container) is ComponentInfo item)
-                    UpdateSkiaGif(root, item);
-            }
+            // [同步 Papers] 图标模式已换 ItemsRepeater(无 ItemsPanelRoot 容器遍历),
+            // 原图标 GridView 遍历逻辑暂禁用;内容/列表 GridView 无 GIF 卡片(组件列表卡非图卡)
         }
 
     protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
@@ -1574,16 +1699,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private void OnTagDisplayChanged(object sender, RoutedEventArgs e)
     {
-        // 优化:不再重置 ItemsSource 重建全列表——只遍历可见容器手动刷新角标(照 Papers)
-        // 非反射(AOT 兼容):ItemsPanelRoot 返回类型是 Panel(基类),Children 是 Panel 属性,直接访问即可,不强转 ItemsWrapGrid
-        if (ComponentsGridView.ItemsPanelRoot is not { } panelRoot) return;
-        foreach (var child in panelRoot.Children)
-        {
-            if (child is not GridViewItem container) continue;
-            if (container.ContentTemplateRoot is not Grid root) continue;
-            if (ComponentsGridView.ItemFromContainer(container) is ComponentInfo item)
-                UpdateTagBadge(root, item);
-        }
+        // [同步 Papers] 图标模式已换 ItemsRepeater(无 ItemsPanelRoot 容器遍历),
+        // 原图标 GridView 角标刷新暂注释(ElementPrepared 已按当前标签模式刷新;滚动回收会重新实化)
     }
 
     /// <summary>更新卡片右上角标签(按当前标签模式;容器绑定时也调用,照 Papers)</summary>
@@ -1786,6 +1903,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             _isComponentItemTapped = false;
             return;
         }
+        // [Shift 区间刷选,同步 Papers] 区间刷选结束的释放可能触发 Tapped,抑制清空(选择已由区间定)
+        if (_suppressItemReleased) return;
 
         SelectedComponent = null;
     }
@@ -2004,22 +2123,29 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             var checkBox = FindCheckBoxInGrid(grid);
             if (checkBox != null) checkBox.Opacity = 1;
 
-            Visual visual = ElementCompositionPreview.GetElementVisual(grid);
-            Compositor compositor = visual.Compositor;
-
-            visual.CenterPoint = new Vector3(
-                (float)grid.ActualWidth / 2,
-                (float)grid.ActualHeight / 2,
-                0f);
-
-            var parent = VisualTreeHelper.GetParent(grid) as UIElement;
-            if (parent != null)
-            {
-                Canvas.SetZIndex(parent, 10000);
-            }
-
+            // 按下拖动经过:左键按住 + 移动经过本卡片(仅选择逻辑,无视觉置顶/放大)
             if (_isLeftMouseButtonPressed && grid.DataContext is ComponentInfo item)
             {
+                // [Shift 区间刷选,同步 Papers] Shift+拖动:从锚点向当前卡片延伸连续区间(替换选择)
+                if (_shiftDragActive)
+                {
+                    ExtendShiftRange(item);
+                    return;
+                }
+                // [Ctrl 刷选,同步 Papers] Ctrl+拖动:划过 = 直接设为选中(加选,不取反)
+                var ctrlHeld = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Control); // Pointer 事件用 KeyModifiers
+                if (ctrlHeld)
+                {
+                    if (!item.IsSelected)
+                    {
+                        item.IsSelected = true;
+                        if (!SelectedComponents.Contains(item))
+                            SelectedComponents.Add(item);
+                    }
+                    UpdateMultiSelectCount();
+                    return;
+                }
+                // 普通拖动:多选刷选(取反)或单选滑动预览
                 Item_PointerPressed(sender, e);
                 if (!_isMultiSelectMode)
                 {
@@ -2039,36 +2165,52 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 return;
             }
 
+            // [悬停视觉,同步 Papers] 置顶+放大只在"鼠标在卡片上动画"设置开启时执行;
+            // 关闭时悬停零视觉变化(阴影/绘制序/放大全不动),只有 checkbox 随 IsHovered 显示
             if (ViewModel.ComponentsDisplayVM.IsComponentEnterAnimationEnabled)
             {
+                Visual visual = ElementCompositionPreview.GetElementVisual(grid);
+                Compositor compositor = visual.Compositor;
+
+                visual.CenterPoint = new Vector3(
+                    (float)grid.ActualWidth / 2,
+                    (float)grid.ActualHeight / 2,
+                    0f);
+
+                var parent = VisualTreeHelper.GetParent(grid) as UIElement;
+                if (parent != null)
+                {
+                    Canvas.SetZIndex(parent, 10000);
+                }
+                // 置顶:向上到 ItemsRepeater 止(最多 6 层)设 ZIndex,让放大卡片盖过相邻卡片
+                {
+                    DependencyObject topContainer = grid;
+                    int hops = 0;
+                    while (topContainer != null && topContainer is not ItemsRepeater && hops < 6)
+                    {
+                        topContainer = VisualTreeHelper.GetParent(topContainer);
+                        hops++;
+                    }
+                    if (topContainer is UIElement uiEl)
+                    {
+                        Canvas.SetZIndex(uiEl, 10000);
+                    }
+                }
+
                 var scaleAnimation = compositor.CreateSpringVector3Animation();
                 scaleAnimation.Target = "Scale";
                 scaleAnimation.FinalValue = new Vector3(1.15f, 1.15f, 1.15f);
                 scaleAnimation.DampingRatio = 0.6f;
                 scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
                 visual.StartAnimation("Scale", scaleAnimation);
+                // [悬停阴影,同步 Papers] 不添加悬停阴影层:ElementPrepared 常驻阴影一层
 
-                // Enable ThemeShadow on hover
-                if (grid.Shadow is not ThemeShadow)
+                Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
+                if (itemVisual?.Parent is ContainerVisual parentVisual)
                 {
-                    var themeShadow = new ThemeShadow();
-                    if (VisualTreeHelper.GetParent(grid) is Grid parentContainer)
-                    {
-                        var receiverGrid = parentContainer.FindName("ShadowCastGrid") as Grid;
-                        if (receiverGrid != null)
-                        {
-                            themeShadow.Receivers.Add(receiverGrid);
-                        }
-                    }
-                    grid.Shadow = themeShadow;
+                    parentVisual.Children.Remove(itemVisual);
+                    parentVisual.Children.InsertAtTop(itemVisual);
                 }
-            }
-
-            Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
-            if (itemVisual?.Parent is ContainerVisual parentVisual)
-            {
-                parentVisual.Children.Remove(itemVisual);
-                parentVisual.Children.InsertAtTop(itemVisual);
             }
         }
     }
@@ -2083,7 +2225,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             ApplyScaleAnimation(grid, 1.0f);
             UpdateItemCheckBoxOpacity(grid, item);
 
-            grid.Shadow = null;
+            // [阴影常驻,同步 Papers] 不再移除阴影(ElementPrepared 常驻创建)
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -2096,6 +2238,15 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
             var capturedParent = VisualTreeHelper.GetParent(grid) as UIElement;
 
+            // 捕获容器用于复位置顶([同步 Papers] 无 GridViewItem,向上到 ItemsRepeater 止,最多 6 层)
+            DependencyObject capturedContainer = grid;
+            int exitHops = 0;
+            while (capturedContainer != null && capturedContainer is not ItemsRepeater && exitHops < 6)
+            {
+                capturedContainer = VisualTreeHelper.GetParent(capturedContainer);
+                exitHops++;
+            }
+
             visual.StartAnimation("Scale", scaleAnimation);
 
             DispatcherQueue.TryEnqueue(async () =>
@@ -2106,6 +2257,10 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 if (capturedParent != null)
                 {
                     Canvas.SetZIndex(capturedParent, 0);
+                }
+                if (capturedContainer is UIElement capturedUiElement)
+                {
+                    Canvas.SetZIndex(capturedUiElement, 0);
                 }
                 grid.Translation = new Vector3(0f, 0f, 64f);
             });
@@ -2142,7 +2297,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             if (sender is FrameworkElement element && element.DataContext is ComponentInfo item)
             {
-                if (!_isMultiSelectMode)
+                // [Shift 区间刷选,同步 Papers] 区间刷选结束的释放抑制单选(区间结果已由 SelectShiftRange 定)
+                if (!_isMultiSelectMode && !_suppressItemReleased)
                 {
                     if (SelectedComponent != item)
                     {
@@ -2160,6 +2316,21 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (sender is Grid grid)
         {
             _isComponentItemTapped = true;
+
+            // [Shift 区间刷选,同步 Papers] Shift+按下 = 开始区间刷选:记锚点,等待拖动延伸
+            if (sender is FrameworkElement shiftElement && shiftElement.DataContext is ComponentInfo shiftItem)
+            {
+                var shiftHeld = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Shift); // Pointer 事件用 KeyModifiers
+                if (shiftHeld)
+                {
+                    _shiftAnchorItem = shiftItem;
+                    _shiftDragActive = true;
+                    _suppressItemReleased = true; // 区间刷选期间抑制释放单选
+                    // 立即选中锚点(区间起点),后续拖动延伸
+                    SelectShiftRange(shiftItem, shiftItem);
+                    return; // 不进入常规选择逻辑
+                }
+            }
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -2235,6 +2406,64 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             }
             _rightClickedComponentElement = element;
         }
+    }
+
+    // [右键释放检测,同步 Papers] 松开点命中图标卡片 → 选中 + 手动弹菜单。
+    // 只处理图标模式(ItemsRepeater);内容/列表 GridView 卡片仍走各自 ContextFlyout。
+    private void HandleRightReleaseOpenMenu(Point releasePagePoint)
+    {
+        if (_rightMenuShownThisGesture) return; // 已弹过,防双弹
+
+        // 仅图标模式可见时命中图标卡片
+        if (ComponentsScrollViewExp.Visibility != Visibility.Visible
+            || ComponentsScrollViewExp.ActualWidth <= 0) return;
+
+        FrameworkElement? card = FindComponentCardAt(releasePagePoint);
+        // 只认松开点命中的卡片:拖出卡片/列表外松开不弹(符合常理)
+        if (card == null) return;
+        if (card is not FrameworkElement fe || fe.DataContext is not ComponentInfo item) return;
+
+        // 与右键菜单语义一致:选中逻辑(多选模式不切单选指针)
+        if (!_isMultiSelectMode)
+        {
+            if (SelectedComponent != item)
+            {
+                SelectedComponent = item;
+                PlayDrillInAnimation();
+            }
+        }
+        if (!_isMultiSelectMode)
+            SelectedComponent = item;
+        _rightClickedComponentElement = fe;
+
+        _rightMenuShownThisGesture = true;
+        // 在松开位置弹菜单(相对卡片定位)
+        var posInCard = fe.TransformToVisual(null).TransformPoint(new Point(0, 0));
+        var menuPos = new Point(releasePagePoint.X - posInCard.X, releasePagePoint.Y - posInCard.Y);
+        ComponentContextMenuFlyout.ShowAt(fe, new FlyoutShowOptions
+        {
+            Position = menuPos,
+            ShowMode = FlyoutShowMode.Standard
+        });
+    }
+
+    /// <summary>命中测试:页面坐标处命中的元素里,向上找 DataContext 是 ComponentInfo 的卡片根。</summary>
+    private FrameworkElement? FindComponentCardAt(Point pagePoint)
+    {
+        var hits = VisualTreeHelper.FindElementsInHostCoordinates(pagePoint, ComponentsScrollViewExp);
+        foreach (var hit in hits)
+        {
+            DependencyObject cur = hit;
+            int hops = 0;
+            while (cur != null && hops < 10)
+            {
+                if (cur is FrameworkElement fel && fel.DataContext is ComponentInfo)
+                    return fel;
+                cur = VisualTreeHelper.GetParent(cur);
+                hops++;
+            }
+        }
+        return null;
     }
 
     // ===================== 辅助方法 =====================
@@ -2365,6 +2594,53 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
         UpdateDetailPanel();
         OnPropertyChanged(nameof(IsComponentButtonEnabled));
+    }
+
+    // ===== [Shift 区间刷选,同步 Papers] 图标模式:Shift+拖动从锚点延伸连续区间(替换选择) =====
+
+    /// <summary>选中 [anchor, end] 区间(含两端)并替换当前选择。按 FilteredComponents(当前筛选列表)索引计算。</summary>
+    private void SelectShiftRange(ComponentInfo anchor, ComponentInfo end)
+    {
+        int a = FilteredComponents.IndexOf(anchor);
+        int b = FilteredComponents.IndexOf(end);
+        if (a < 0 || b < 0) return; // 不在当前列表(筛选/虚拟化边界),不处理
+        int lo = Math.Min(a, b);
+        int hi = Math.Max(a, b);
+
+        // 清空现有选择(只清当前列表内已选的,避免破坏列表外多选)
+        foreach (var sel in SelectedComponents.ToList())
+        {
+            if (FilteredComponents.Contains(sel))
+            {
+                sel.IsSelected = false;
+                SelectedComponents.Remove(sel);
+            }
+        }
+        // 选中区间
+        for (int i = lo; i <= hi; i++)
+        {
+            var item = FilteredComponents[i];
+            if (!item.IsSelected)
+            {
+                item.IsSelected = true;
+                SelectedComponents.Add(item);
+            }
+        }
+        UpdateMultiSelectCount();
+        if (SelectedComponents.Count > 1 && !IsMultiSelectMode)
+        {
+            IsMultiSelectMode = true;
+        }
+        // 详情面板/堆叠视觉同步(区间>1 走堆叠,=1 走单选详情)
+        RefreshDisplayedSelectedComponents(forceRebuild: true);
+        DispatcherQueue.TryEnqueue(() => UpdateStackVisuals());
+    }
+
+    /// <summary>Shift+拖动经过 current:锚点不动,实时向 current 延伸区间。</summary>
+    private void ExtendShiftRange(ComponentInfo current)
+    {
+        if (_shiftAnchorItem == null) { _shiftAnchorItem = current; }
+        SelectShiftRange(_shiftAnchorItem, current);
     }
 
     // ===================== 多选堆叠图（照抄 Papers） =====================

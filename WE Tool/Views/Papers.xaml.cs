@@ -202,6 +202,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private bool _isWallpaperItemTapped = false;
     private string _searchText = string.Empty;
     private bool _isLeftMouseButtonPressed = false;
+    // ===== [右键释放检测 2026-09] 右键按下→松开手动弹菜单(绕开系统"右键带移动抑制"手势判定) =====
+    private bool _isRightButtonPressed;       // 右键是否按下(按下置位,松开检测消费)
+    private bool _rightMenuShownThisGesture;  // 本次右键手势是否已弹菜单(防双弹)
     // ===== [Shift 区间刷选] 状态字段(图标模式;Shift+拖动从锚点延伸连续区间) =====
     private WallpaperItem? _shiftAnchorItem;    // Shift 区间锚点(按下处)
     private bool _shiftDragActive;              // Shift 区间刷选进行中
@@ -812,10 +815,17 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         // 每次新按下复位抑制标志(区间刷选结束的释放会触发 Item 释放/Tapped,需区分)
         _suppressItemReleased = false;
 
-        var props = e.GetCurrentPoint(null).Properties;
+        var pt = e.GetCurrentPoint(null);
+        var props = pt.Properties;
         if (props.IsLeftButtonPressed)
         {
             _isLeftMouseButtonPressed = true;
+        }
+        // [右键释放检测 2026-09] 右键按下:置标志(松开时手动弹菜单,绕开系统移动抑制)
+        if (pt.Properties.PointerUpdateKind is Microsoft.UI.Input.PointerUpdateKind.RightButtonPressed)
+        {
+            _isRightButtonPressed = true;
+            _rightMenuShownThisGesture = false;
         }
         // CommandBar 内按钮按下反馈:按钮缩小(AddHandler handledEventsToo:true 能收到 Button 内部的 handled 事件)
         if (e.OriginalSource is FrameworkElement fe && IsDescendantOf(fe, ToolbarCommands))
@@ -832,6 +842,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         _isLeftMouseButtonPressed = false;
         _shiftDragActive = false; // [Shift 区间刷选] 释放结束区间模式
+
+        // [右键释放检测 2026-09] 右键松开:命中测试找卡片 → 手动弹菜单(绕开系统"移动抑制")
+        var relPt = e.GetCurrentPoint(null);
+        if (relPt.Properties.PointerUpdateKind is Microsoft.UI.Input.PointerUpdateKind.RightButtonReleased
+            && _isRightButtonPressed)
+        {
+            _isRightButtonPressed = false;
+            HandleRightReleaseOpenMenu(relPt.Position);
+        }
 
         // 弹回按下的按钮(指针捕获保证即使移开后释放也触发)
         if (_pressedButton is { } pressedBtn)
@@ -1592,6 +1611,36 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         }
     }
 
+    // ===== [Ctrl+滚轮 2026-09] =====
+    // ScrollView(新控件)原生把 Ctrl+滚轮当"缩放"消费(ZoomMode=Disabled 也吞事件,官方设计:
+    // "pressing Ctrl while scrolling mouse wheel" = zoom),导致 Ctrl+滚轮不滚动。
+    // 方案:拦截点放内层 ItemsRepeater(滚轮冒泡先经它,后到 ScrollView 原生处理):
+    //   Ctrl+滚轮(未按左键)      = 循环切换图标尺寸档位 + Handled(不缩放下传)
+    //   Ctrl+左键按住+滚轮         = 手动滚动(此时左键拖动语义被滚轮替代)
+    //   无修饰键滚轮              = 不 Handled,放行给 ScrollView 原生平滑滚动(手感完整保留)
+    private void WallpapersRepeater_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        int delta = e.GetCurrentPoint(sender as UIElement).Properties.MouseWheelDelta;
+        if (delta == 0) return;
+
+        bool ctrlHeld = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Control); // Pointer 事件用 KeyModifiers
+        bool leftPressed = _isLeftMouseButtonPressed;
+
+        // Ctrl 且未按左键:切换图标档位
+        if (ctrlHeld && !leftPressed)
+        {
+            var vm = ViewModel.WallpaperDisplayVM;
+            int cur = vm.WallpaperViewIndex;
+            int next = delta > 0 ? (cur + 1) % 3 : (cur + 2) % 3; // 上滚升档,下滚降档,循环 0..2
+            vm.WallpaperViewIndex = next;
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+左键按住:不 Handled,放行给 ScrollView 原生滚轮——验证 ZoomMode=Disabled 下
+        // 官方是否本就会滚动(若会,则拿到官方手感;若仍吞,再考虑子类化/手动)
+    }
+
     // ============ 预览内容过滤(高斯模糊) ============
 
     /// <summary>模糊位图缓存(按预览路径,GPU 生成一次复用;138 张中仅露骨壁纸会进缓存)</summary>
@@ -2349,6 +2398,19 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                     ExtendShiftRange(item);
                     return;
                 }
+                // [Ctrl 刷选 2026-09] Ctrl+拖动:划过 = 直接设为选中(加选,不取反)——同文件管理器 Ctrl 语义
+                var ctrlHeld = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Control); // Pointer 事件用 KeyModifiers
+                if (ctrlHeld)
+                {
+                    if (!item.IsSelected)
+                    {
+                        item.IsSelected = true;
+                        if (!SelectedWallpapers.Contains(item))
+                            SelectedWallpapers.Add(item);
+                    }
+                    UpdateMultiSelectCount();
+                    return;
+                }
                 // 普通拖动:多选刷选(取反)或单选滑动预览
                 Item_PointerPressed(sender, e);
                 if (!_isMultiSelectMode)
@@ -2598,6 +2660,69 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         }
     }
 
+    /// <summary>[右键菜单 2026-09] ContextRequested 手动弹菜单——替代 ContextFlyout 系统弹出。
+    /// 系统 ContextFlyout/RightTapped 在右键按下与松开间鼠标移动(哪怕 1px)时会被 Windows 输入层
+    /// 抑制(判定为潜在拖拽);ContextRequested 是"请求上下文"底层事件,不受该移动检测限制。</summary>
+    // [右键释放检测 2026-09] 松开点命中图标卡片 → 选中 + 手动弹菜单。
+    // 只处理图标模式(ItemsRepeater);内容/列表模式仍走各自 ContextFlyout。
+    private void HandleRightReleaseOpenMenu(Point releasePagePoint)
+    {
+        if (_rightMenuShownThisGesture) return; // 已弹过(如 ContextFlyout 兜底触发),防双弹
+
+        // 仅图标模式可见时命中图标卡片
+        if (WallpapersScrollViewExp.Visibility != Visibility.Visible
+            || WallpapersScrollViewExp.ActualWidth <= 0) return;
+
+        FrameworkElement? card = FindWallpaperCardAt(releasePagePoint);
+        // 只认松开点命中的卡片:拖出卡片/列表外松开不弹(符合常理)
+        if (card == null) return;
+        if (card is not FrameworkElement fe || fe.DataContext is not WallpaperItem item) return;
+
+        // 与右键菜单语义一致:选中逻辑(多选模式不切单选指针)
+        if (!_isMultiSelectMode)
+        {
+            if (ViewModel.SelectedWallpaper != item)
+            {
+                ViewModel.SelectedWallpaper = item;
+                PlayDrillInAnimation();
+            }
+        }
+        RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+        UpdateMultiSelectCount();
+        if (!_isMultiSelectMode)
+            ViewModel.SelectedWallpaper = item;
+        _rightClickedWallpaperElement = fe;
+
+        _rightMenuShownThisGesture = true;
+        // 在松开位置弹菜单(相对卡片定位更稳:用卡片坐标换算)
+        var posInCard = fe.TransformToVisual(null).TransformPoint(new Point(0, 0));
+        var menuPos = new Point(releasePagePoint.X - posInCard.X, releasePagePoint.Y - posInCard.Y);
+        WallpaperContextMenu.ShowAt(fe, new FlyoutShowOptions
+        {
+            Position = menuPos,
+            ShowMode = FlyoutShowMode.Standard
+        });
+    }
+
+    /// <summary>命中测试:页面坐标处命中的元素里,向上找 DataContext 是 WallpaperItem 的卡片根。
+    /// 用 FindElementsInHostCoordinates 取该点所有命中元素(含被覆盖的),逐个查祖先链。</summary>
+    private FrameworkElement? FindWallpaperCardAt(Point pagePoint)
+    {
+        var hits = VisualTreeHelper.FindElementsInHostCoordinates(pagePoint, WallpapersScrollViewExp);
+        foreach (var hit in hits)
+        {
+            DependencyObject cur = hit;
+            int hops = 0;
+            while (cur != null && hops < 10)
+            {
+                if (cur is FrameworkElement fel && fel.DataContext is WallpaperItem)
+                    return fel;
+                cur = VisualTreeHelper.GetParent(cur);
+                hops++;
+            }
+        }
+        return null;
+    }
     private void WallpaperItem_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)

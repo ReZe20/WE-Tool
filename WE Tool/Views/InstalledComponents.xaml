@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:wetool="using:WE_Tool.Controls"
     xmlns:skia="using:WE_Tool.Controls"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:models="using:WE_Tool.Models"
@@ -690,17 +691,32 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
-                                    <GridView x:Name="ComponentsGridView"
-                                              ItemsSource="{x:Bind FilteredComponents}"
-                                              Margin="4,0,4,0"
-                                              Visibility="{x:Bind ViewModel.ComponentsDisplayVM.IconModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
-                                              Tapped="ComponentsList_Tapped"
-                                              SelectionMode="None"
-                                              SizeChanged="ComponentGrid_SizeChanged"
-                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
-                                        <GridView.ItemTemplate>
-<DataTemplate x:DataType="models:ComponentInfo">
+                                    <!-- [同步 Papers] 图标模式:GridView → CtrlAwareScrollView+ItemsRepeater(万条 resize 流畅) -->
+                                    <wetool:CtrlAwareScrollView x:Name="ComponentsScrollViewExp"
+                                                Visibility="{x:Bind ViewModel.ComponentsDisplayVM.IconModeVisibility, Mode=OneWay}"
+                                                VerticalScrollBarVisibility="Auto"
+                                                VerticalScrollMode="Auto"
+                                                HorizontalScrollBarVisibility="Hidden"
+                                                HorizontalScrollMode="Disabled"
+                                                SizeChanged="ComponentsScrollViewExp_SizeChanged"
+                                                Tapped="ComponentsList_Tapped"
+                                                Margin="4,0,4,0">
+                                        <ItemsRepeater x:Name="ComponentsRepeater"
+                                                       ItemsSource="{x:Bind FilteredComponents}"
+                                                       PointerWheelChanged="ComponentsRepeater_PointerWheelChanged"
+                                                       Margin="0,0,10,0">
+                                            <ItemsRepeater.Layout>
+                                                <!-- [防崩] MinItemWidth 由代码钳制(见 ComponentsScrollViewExp_SizeChanged):
+                                                     可用宽 < MinItemWidth → UniformGridLayout itemsPerLine=0 除零崩溃(#10539) -->
+                                                <UniformGridLayout x:Name="ComponentsUniformLayoutExp"
+                                                    MinColumnSpacing="10"
+                                                    MinRowSpacing="10"
+                                                    ItemsStretch="Fill"
+                                                    Orientation="Horizontal"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="models:ComponentInfo">
+                                                    <!-- 与 Papers 图标卡片一致:阴影层+圆角8卡片+图+title 条+角标+checkbox -->
                                                     <Grid x:Name="ItemContainer">
                                                         <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
                                                         <Grid CornerRadius="8"
@@ -714,17 +730,13 @@
                                                               DataContext="{x:Bind}"
                                                               Translation="0,0,64"
                                                               Loaded="ShadowRect_Loaded"
-                                                              ContextFlyout="{StaticResource ComponentContextMenuFlyout}"
                                                               RightTapped="ComponentItem_RightTapped">
+                                                            <!-- 布局撑高:UniformGridLayout 拉伸填满,Viewbox 占位保比例 -->
                                                             <Viewbox Stretch="Uniform" VerticalAlignment="Top">
                                                                 <Canvas Width="100" Height="100"/>
                                                             </Viewbox>
 
-                                                            <Image x:Name="ItemPreviewImage" Stretch="UniformToFill">
-                                                                <Image.Source>
-                                                                    <BitmapImage UriSource="{x:Bind Preview}" AutoPlay="False"/>
-                                                                </Image.Source>
-                                                            </Image>
+                                                            <Image x:Name="ItemPreviewImage" Stretch="UniformToFill"/>
                                                             <skia:SkiaGifView x:Name="SkiaGifCanvas" Visibility="Collapsed"/>
 
                                                             <Grid VerticalAlignment="Bottom" Height="45" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
@@ -747,7 +759,7 @@
                                                                     Background="{ThemeResource LayerFillColorDefaultBrush}"
                                                                     Visibility="Collapsed"
                                                                     x:Name="TagDisplayBorder">
-                                                                <!-- 文本/可见性由 UpdateTagBadge 代码设置(替代 x:Bind OneTime+列表重建) -->
+                                                                <!-- 文本/可见性由 UpdateTagBadge 代码设置 -->
                                                                 <TextBlock Text=""
                                                                            HorizontalAlignment="Center"
                                                                            FontSize="12"
@@ -778,8 +790,9 @@
                                                         </Grid>
                                                     </Grid>
                                                 </DataTemplate>
-                                        </GridView.ItemTemplate>
-                                    </GridView>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </wetool:CtrlAwareScrollView>
 
                                     <GridView x:Name="ComponentsContentGridView"
                                               ItemsSource="{x:Bind FilteredComponents}"

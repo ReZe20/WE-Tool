@@ -11,6 +11,7 @@
     xmlns:converters="using:WE_Tool.Converters"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:wetool="using:WE_Tool.Controls"
     xmlns:skia="using:WE_Tool.Controls"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     x:Name="PageRoot"
@@ -741,7 +742,7 @@
                                     </Grid.RowDefinitions>
 
                                     <!-- [实验] WallpapersGridView → ScrollView+ItemsRepeater:只显示 preview,验证万条 resize 卡顿 -->
-                                    <ScrollView x:Name="WallpapersScrollViewExp"
+                                    <wetool:CtrlAwareScrollView x:Name="WallpapersScrollViewExp"
                                                 Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IconModeVisibility, Mode=OneWay}"
                                                 VerticalScrollBarVisibility="Auto"
                                                 VerticalScrollMode="Auto"
@@ -752,6 +753,7 @@
                                                 Margin="4,0,4,0">
                                         <ItemsRepeater x:Name="WallpapersRepeater"
                                                        ItemsSource="{x:Bind Wallpapers}"
+                                                       PointerWheelChanged="WallpapersRepeater_PointerWheelChanged"
                                                        Margin="0,0,10,0">
                                             <ItemsRepeater.Layout>
                                                 <!-- [防崩] MinItemWidth 由代码钳制(见 WallpapersScrollViewExp_SizeChanged):
@@ -779,7 +781,6 @@
                                                               DataContext="{x:Bind}"
                                                               Translation="0,0,64"
                                                               Loaded="ShadowRect_Loaded"
-                                                              ContextFlyout="{StaticResource WallpaperContextMenu}"
                                                               RightTapped="WallpaperItem_RightTapped">
                                                             <!-- 布局撑高:UniformGridLayout 拉伸填满,Viewbox 占位保比例(与原 GridView 卡片同构) -->
                                                             <Viewbox Stretch="Uniform" VerticalAlignment="Top">
@@ -863,7 +864,7 @@
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>
                                         </ItemsRepeater>
-                                    </ScrollView>
+                                    </wetool:CtrlAwareScrollView>
 
                                     <GridView x:Name="WallpapersContentGridView"
                                               ItemsSource="{x:Bind Wallpapers}"
