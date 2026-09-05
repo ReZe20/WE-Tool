@@ -203,42 +203,34 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         return source.Skip(skip).Take(size).ToList();
     }
 
-    // ============= GridView 列表辅助(自适应列宽/回顶,照抄 Papers) =============
+    // ============= ItemsRepeater 列宽钳制(全迁;GridView 全部移除) =============
 
-    /// <summary>组件 GridView 数组(图标模式已换 ItemsRepeater,故只含内容/列表两个 GridView)</summary>
-    private GridView[] AllComponentGridViews => new[] { ComponentsContentGridView, ComponentsListGridView };
+    /// <summary>[全迁] 列表模式 UniformGridLayout 钳制(400 档位):MinItemWidth ≤ 可用宽,
+    /// 否则 itemsPerLine=0 除零崩溃(WinUI #10539)。</summary>
+    private void ComponentsListScrollViewExp_SizeChanged(object sender, SizeChangedEventArgs e)
+        => UpdateComponentsListLayoutMinWidth();
 
-    /// <summary>窗口尺寸变化:实时重算 ItemWidth(图标模式由 ScrollView 钳制接管)</summary>
-    private void ComponentGrid_SizeChanged(object sender, SizeChangedEventArgs e)
-        => UpdateAllComponentGridItemWidths();
-
-    /// <summary>按各模式档位重算 ItemWidth(照抄 Papers:ItemWidth = 槽位步长,容器 = ItemWidth - 10,留 2px 余量)</summary>
-    private void UpdateAllComponentGridItemWidths()
+    /// <summary>内容模式 ScrollView 尺寸变化(单列 StackLayout 无 MinItemWidth,无需钳制;占位)</summary>
+    private void ComponentsContentScrollViewExp_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        UpdateGridItemWidth(ComponentsListGridView, 400, 10);
-        UpdateGridItemWidth(ComponentsContentGridView, 0, 10); // 内容模式单列
     }
 
-    /// <param name="itemMarginTotal">容器左右 Margin 总和(判断列数用)</param>
-    private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
+    /// <summary>列表模式 UniformGridLayout 钳制:MinItemWidth = Min(400, 可用宽-8)。</summary>
+    private void UpdateComponentsListLayoutMinWidth()
     {
-        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid。
-        // AOT 裁剪下 is/强转都可能失败(类型元数据缺失/类型被投影),用 DP SetValue 直接灌值,
-        // 走 WinUI 原生 DP 系统,不经过 C# 类型匹配,最稳。
-        if (gridView?.ItemsPanelRoot is not { } panelRoot) return;
-        panelRoot.SetValue(ItemsWrapGrid.CacheLengthProperty, 0); // 不预渲染(仅实化可见项;滚动时即时实化,Skia 流式打开快)
-        double available = gridView.ActualWidth;
-        if (available <= 0) return;
-        if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10
+        if (ComponentsListUniformLayoutExp is not UniformGridLayout layout) return;
+        double viewport = ComponentsListScrollViewExp.ActualWidth;
+        int desired = 400; // 列表模式档位固定 400
+        if (viewport > 0)
         {
-            panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available);
-            return;
+            double effective = Math.Max(1, Math.Min(desired, viewport - 8));
+            if (Math.Abs(layout.MinItemWidth - effective) > 0.5)
+                layout.MinItemWidth = effective;
         }
-        int cols = Math.Max(1, (int)(available / (minItemWidth + itemMarginTotal)));
-        // ItemsWrapGrid 语义(已实测):ItemWidth = 槽位步长(含容器 Margin),容器实际宽 = ItemWidth - 10;
-        // 换行判断为严格比较,ItemWidth = available/cols 会因浮点误差恰好放不下最后一列(空一列),
-        // 故留 2px/列余量;卡片 = available/cols - 12,行尾余量 cols×2px 不可见
-        panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available / cols - 2);
+        else if (layout.MinItemWidth <= 0)
+        {
+            layout.MinItemWidth = desired;
+        }
     }
 
     // ============ [同步 Papers] ItemsRepeater UniformGridLayout 防崩钳制 ============
@@ -297,31 +289,19 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         // Ctrl+左键按住:手动垂直滚动(CtrlAwareScrollView 子类已接管,此处兜底;不 Handled 让子类处理)
     }
 
-    /// <summary>当前可见的 GridView(滚动回顶用)</summary>
-    private GridView? GetVisibleComponentGridView()
+    /// <summary>当前可见的组件滚动容器(滚动回顶用;三个模式都已迁 ScrollView)</summary>
+    private ScrollView? GetVisibleComponentScrollView()
     {
-        foreach (var gv in AllComponentGridViews)
-            if (gv.Visibility == Visibility.Visible)
-                return gv;
+        if (ComponentsScrollViewExp.Visibility == Visibility.Visible) return ComponentsScrollViewExp;
+        if (ComponentsContentScrollViewExp.Visibility == Visibility.Visible) return ComponentsContentScrollViewExp;
+        if (ComponentsListScrollViewExp.Visibility == Visibility.Visible) return ComponentsListScrollViewExp;
         return null;
     }
 
-    /// <summary>可见 GridView 滚动回顶(分页/刷新后)</summary>
+    /// <summary>可见模式滚动回顶(分页/刷新后)</summary>
     private void ScrollVisibleComponentGridToTop()
     {
-        if (GetVisibleComponentGridView() is GridView gv && FindScrollViewer(gv) is ScrollViewer sv)
-            sv.ChangeView(0, 0, null);
-    }
-
-    private static ScrollViewer? FindScrollViewer(DependencyObject root)
-    {
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
-        {
-            var child = VisualTreeHelper.GetChild(root, i);
-            if (child is ScrollViewer sv) return sv;
-            if (FindScrollViewer(child) is ScrollViewer found) return found;
-        }
-        return null;
+        GetVisibleComponentScrollView()?.ScrollTo(0, 0);
     }
 
     private ComponentInfo? _selectedComponent;
@@ -359,7 +339,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 }
                 UpdateStackVisuals();
                 ToggleMultiSelectVisuals(_isMultiSelectMode);
-                UpdateAllVisibleCheckBoxes();
             }
         }
     }
@@ -422,20 +401,17 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             }
             else if (e.PropertyName == nameof(ComponentsDisplayViewModel.ComponentListMinWidth))
             {
-                // 小/中/大档位变化:列宽公式随档位值联动重算(照抄 Papers)
-                UpdateAllComponentGridItemWidths();
-                UpdateComponentsUniformLayoutMinWidth(); // [同步 Papers] 图标 UniformGridLayout 同步钳制
+                // 小/中/大档位变化:UniformGridLayout 随档位值联动钳制(照抄 Papers)
+                UpdateComponentsUniformLayoutMinWidth(); // 图标模式
+                UpdateComponentsListLayoutMinWidth();   // [全迁] 列表模式
             }
         };
 
-        // 首次布局后重算列宽 + 挂补位移动动画(照抄 Papers)
+        // 首次布局后钳制列宽(防崩;GridView 已全迁 ItemsRepeater)
         this.Loaded += (s, e) =>
         {
-            UpdateAllComponentGridItemWidths();
-            UpdateComponentsUniformLayoutMinWidth(); // [同步 Papers] ItemsRepeater 首帧钳制(防崩)
-            var reorderDuration = TimeSpan.FromMilliseconds(100);
-            foreach (var gv in AllComponentGridViews)
-                ItemsReorderAnimation.SetDuration(gv, reorderDuration);
+            UpdateComponentsUniformLayoutMinWidth(); // 图标模式首帧钳制(防崩)
+            UpdateComponentsListLayoutMinWidth();    // [全迁] 列表模式首帧钳制
         };
 
         // [同步 Papers] ItemsRepeater 容器就绪:设 Image.Source + Skia GIF 切换 + 阴影/角标初始化。
@@ -664,11 +640,35 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             DispatcherQueue.TryEnqueue(() => RestartVisibleGifPlayback());
         }
 
-        /// <summary>遍历可见容器重启 GIF 播放(页面缓存切回时;容器未就绪/无项时无害)</summary>
+        /// <summary>遍历可见容器重启 GIF 播放(页面缓存切回时;容器未就绪/无项时无害)
+        /// [同步 Papers 修复] ItemsRepeater 无 ItemsPanelRoot 遍历,改为可视树遍历:找可见的
+        /// SkiaGifView,用其 DataContext(ComponentInfo)的 Preview 重启(切走时 Unloaded 已停)</summary>
         private void RestartVisibleGifPlayback()
         {
-            // [同步 Papers] 图标模式已换 ItemsRepeater(无 ItemsPanelRoot 容器遍历),
-            // 原图标 GridView 遍历逻辑暂禁用;内容/列表 GridView 无 GIF 卡片(组件列表卡非图卡)
+            RestartVisibleSkiaGifs(this);
+        }
+
+        private static void RestartVisibleSkiaGifs(DependencyObject root)
+        {
+            int count = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(root, i);
+                if (child is SkiaGifView skia && skia.Visibility == Visibility.Visible)
+                {
+                    // 从 DataContext 取 GIF 路径重启(与 ElementPrepared 的启动条件一致)
+                    if (skia.DataContext is ComponentInfo gifItem
+                        && !string.IsNullOrEmpty(gifItem.Preview)
+                        && gifItem.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
+                    {
+                        skia.Start(gifItem.Preview);
+                    }
+                }
+                else
+                {
+                    RestartVisibleSkiaGifs(child);
+                }
+            }
         }
 
     protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
@@ -678,6 +678,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private async Task LoadComponents()
     {
+        ShowScanProgress(true); // [同步 Papers 2026-09] 扫描/刷新期间显示列表区中央转圈
         try
         {
             // 等待初始扫描链路完成（读配置 → 启动扫描 → 扫描完成），确保 LastComponents 已填充。
@@ -727,6 +728,23 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             Log.Error(ex, "加载组件失败");
         }
+        finally
+        {
+            ShowScanProgress(false); // 扫描/刷新结束,隐藏转圈
+        }
+    }
+
+    /// <summary>[同步 Papers 2026-09] 列表区中央转圈显隐(可被非 UI 线程调用)</summary>
+    private void ShowScanProgress(bool show)
+    {
+        if (ScanProgressRing == null) return;
+        var action = () =>
+        {
+            ScanProgressRing.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            ScanProgressRing.IsActive = show;
+        };
+        if (DispatcherQueue.HasThreadAccess) action();
+        else DispatcherQueue.TryEnqueue(() => action());
     }
 
     private void ApplyPaneState()
@@ -1174,6 +1192,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         RefreshButton.IsEnabled = false;
         var pressTime = DateTime.Now; // 记录按下时刻(旋转动画 2 秒)
         HideComponentContextMenu();
+        ShowScanProgress(true); // [2026-09] 按下立即显示转圈(扫描在 await ScanTask 期间,等 LoadComponents 才显示就晚了)
 
         // 先清空列表再扫描：旧数据先撤下，扫描完成后由 LoadComponents 回填。
         // 注意不能复用 LoadComponents 里的清理——那边刻意不清显示列表（切页缓存优化，见其 497 行注释），
@@ -1213,6 +1232,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         finally
         {
             _isRefreshing = false;
+            ShowScanProgress(false); // 兜底隐藏(正常路径 LoadComponents 已隐藏;异常路径防转圈卡死)
             // 等旋转动画播完(按下后 2 秒)再启用按钮,保证动画完整播放
             var elapsed = (DateTime.Now - pressTime).TotalMilliseconds;
             if (elapsed < 2000)
@@ -1712,7 +1732,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         border.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         if (!visible) return;
         if (border.Child is TextBlock tb)
-            tb.Text = new ComponentsTagContentChoose().Convert(item, null, "", "") as string ?? "";
+            tb.Text = new ComponentsTagContentChoose().Convert(item, typeof(string), "", "") as string ?? "";
     }
 
     /// <summary>Skia 流式 GIF 播放(GIF 时覆盖 BitmapImage,照 Papers)</summary>
@@ -2568,21 +2588,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             current = VisualTreeHelper.GetParent(current) as DependencyObject;
         }
         return false;
-    }
-
-    private void UpdateAllVisibleCheckBoxes()
-    {
-        foreach (var gv in AllComponentGridViews)
-        {
-            if (gv == null) continue;
-            for (int i = 0; i < gv.Items.Count; i++)
-            {
-                if (gv.ContainerFromIndex(i) is not GridViewItem container) continue;
-                // 容器 Content = DataTemplate 根(Grid,DataContext = ComponentInfo)
-                if (container.Content is Grid grid && grid.DataContext is ComponentInfo item)
-                    UpdateItemCheckBoxOpacity(grid, item);
-            }
-        }
     }
 
     private void UpdateMultiSelectCount()

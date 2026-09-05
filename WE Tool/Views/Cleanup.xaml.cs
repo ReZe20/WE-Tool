@@ -37,8 +37,6 @@ public sealed partial class Cleanup : Page
 
     private readonly HashSet<string> _whitelist = new(StringComparer.OrdinalIgnoreCase);
     private WhitelistWindow? _whitelistWin;
-    private bool _isResizing;
-    private DispatcherTimer? _resizeEndTimer;
     private bool _initialScanDone;
 
     public ObservableCollection<CleanupCardViewModel> Cards { get; } = new();
@@ -46,7 +44,7 @@ public sealed partial class Cleanup : Page
     public Cleanup()
     {
         InitializeComponent();
-        ResultGridView.ItemsSource = Cards;
+        ResultRepeater.ItemsSource = Cards;
         LoadWhitelist();
         UpdateSortLabel();
     }
@@ -57,7 +55,7 @@ public sealed partial class Cleanup : Page
         if (!_initialScanDone)
         {
             _initialScanDone = true;
-            ScanButton_Click(null, null);
+            _ = PerformScan();
         }
     }
 
@@ -94,7 +92,9 @@ public sealed partial class Cleanup : Page
 
     // ---------- 扫描 ----------
 
-    private async void ScanButton_Click(object sender, RoutedEventArgs e)
+    private async void ScanButton_Click(object sender, RoutedEventArgs e) => await PerformScan();
+
+    private async Task PerformScan()
     {
         SetScanning(true);
         Cards.Clear();
@@ -109,17 +109,24 @@ public sealed partial class Cleanup : Page
             ApplySort();
 
             bool has = Cards.Count > 0;
-            ResultGridView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+            ResultScrollView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
             EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
             ActionBar.Visibility = Visibility.Visible;
-            if (has) { UpdateWrapGridItemWidth(); UpdateSummary(); }
+            if (has) { UpdateResultLayoutMinWidth(); UpdateSummary(); }
+            else
+            {
+                // [2026-09] 扫描完成无残留:显示"未发现残留"提示(此前此场景无文案,空态空白)
+                EmptyStateText.Text = L("Cleanup_NoResidue");
+                EmptyStateDesc.Visibility = Visibility.Visible;
+            }
         }
         catch (Exception ex)
         {
             EmptyState.Visibility = Visibility.Visible;
-            ResultGridView.Visibility = Visibility.Collapsed;
+            ResultScrollView.Visibility = Visibility.Collapsed;
             ActionBar.Visibility = Visibility.Collapsed;
             EmptyStateText.Text = L("Cleanup_ScanFailed", ex.Message);
+            EmptyStateDesc.Visibility = Visibility.Collapsed; // 失败≠无残留,隐藏副描述
         }
         finally
         {
@@ -130,69 +137,34 @@ public sealed partial class Cleanup : Page
     private void SetScanning(bool scanning)
     {
         ScanProgress.IsActive = scanning;
-        ResultGridView.IsEnabled = !scanning;
+        ResultScrollView.IsEnabled = !scanning;
         ActionBar.IsEnabled = !scanning;
     }
 
 
-    private void ResultGridView_SizeChanged(object sender, SizeChangedEventArgs e)
+    // [全迁 ItemsRepeater] resize 不再全量重排(虚拟化),原淡入淡出遮羞动画/防抖删除;
+    // SizeChanged 只钳制 UniformGridLayout.MinItemWidth(防除零崩溃 #10539)
+    private void ResultScrollView_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (ResultGridView.Visibility != Visibility.Visible) return;
-        // 首次触发:卡片内容淡出动画
-        if (!_isResizing)
-        {
-            _isResizing = true;
-            AnimateCardContent(false);
-        }
-        // 列宽实时更新(不阻塞)
-        UpdateWrapGridItemWidth();
+        UpdateResultLayoutMinWidth();
         UpdateSummary();
-        // 重置计时器;停止 500ms 后淡入
-        _resizeEndTimer?.Stop();
-        _resizeEndTimer ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        _resizeEndTimer.Tick -= OnResizeEndTick;
-        _resizeEndTimer.Tick += OnResizeEndTick;
-        _resizeEndTimer.Start();
     }
 
-    private void OnResizeEndTick(object? sender, object e)
+    private void UpdateResultLayoutMinWidth()
     {
-        _resizeEndTimer?.Stop();
-        _isResizing = false;
-        AnimateCardContent(true); // 卡片内容淡入动画
-    }
-
-    /// <summary>对所有可见卡片的 CardRootGrid 执行淡入/淡出动画。</summary>
-    private void AnimateCardContent(bool fadeIn)
-    {
-        for (int i = 0; i < ResultGridView.Items.Count; i++)
+        if (ResultUniformLayout is not UniformGridLayout layout) return;
+        double viewport = ResultScrollView.ActualWidth;
+        int desired = 270; // 卡片档位
+        if (viewport > 0)
         {
-            if (ResultGridView.ContainerFromIndex(i) is GridViewItem gvi
-                && gvi.ContentTemplateRoot is Border border
-                && border.Child is FrameworkElement child)
-            {
-                var anim = fadeIn
-                    ? (Timeline)new FadeInThemeAnimation()
-                    : new FadeOutThemeAnimation();
-                anim.Duration = TimeSpan.FromMilliseconds(300);
-                var sb = new Storyboard();
-                sb.Children.Add(anim);
-                Storyboard.SetTarget(anim, child);
-                sb.Begin();
-            }
+            double effective = Math.Max(1, Math.Min(desired, viewport - 8));
+            if (Math.Abs(layout.MinItemWidth - effective) > 0.5)
+                layout.MinItemWidth = effective;
         }
-    }
-
-    /// <summary>复刻 Papers:布局脏标记同帧合并,拖动中列宽实时更新。</summary>
-    private void UpdateWrapGridItemWidth()
-    {
-        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid,用 DP SetValue 直接灌值,不走 C# 类型匹配
-        if (ResultGridView.ItemsPanelRoot is not { } panelRoot) return;
-        panelRoot.SetValue(ItemsWrapGrid.CacheLengthProperty, 0);
-        double available = ResultGridView.ActualWidth;
-        if (available <= 0) return;
-        int cols = Math.Max(1, (int)(available / (270 + 10)));
-        panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available / cols - 2);
+        else if (layout.MinItemWidth <= 0)
+        {
+            layout.MinItemWidth = desired;
+        }
     }
 
     private List<CleanupCardViewModel> Scan()
@@ -315,10 +287,10 @@ public sealed partial class Cleanup : Page
 
         Cards.Add(card);
         ApplySort();
-        ResultGridView.Visibility = Visibility.Visible;
+        ResultScrollView.Visibility = Visibility.Visible;
         EmptyState.Visibility = Visibility.Collapsed;
         ActionBar.Visibility = Visibility.Visible;
-        UpdateWrapGridItemWidth();
+        UpdateResultLayoutMinWidth();
     }
 
     private HashSet<string> GetStdFiles(string dir)
@@ -572,9 +544,10 @@ public sealed partial class Cleanup : Page
         }
 
         bool has = Cards.Count > 0;
-        ResultGridView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+        ResultScrollView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
         EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
         EmptyStateText.Text = L("Cleanup_CleanedComplete", ok);
+        EmptyStateDesc.Visibility = Visibility.Collapsed; // 清理完成场景不显示"未发现残留"副描述
         if (!has) ActionBar.Visibility = Visibility.Collapsed;
         UpdateSummary();
 
@@ -609,9 +582,15 @@ public sealed partial class Cleanup : Page
     {
         Cards.Remove(card);
         bool has = Cards.Count > 0;
-        ResultGridView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+        ResultScrollView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
         EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
-        if (!has) ActionBar.Visibility = Visibility.Collapsed;
+        if (!has)
+        {
+            ActionBar.Visibility = Visibility.Collapsed;
+            // [2026-09] 卡被移空(白名单/单卡清理后):回到"无残留"空态文案
+            EmptyStateText.Text = L("Cleanup_NoResidue");
+            EmptyStateDesc.Visibility = Visibility.Visible;
+        }
         UpdateSummary();
     }
 

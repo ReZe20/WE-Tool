@@ -426,7 +426,7 @@
                           BorderThickness="1,0,0,0">
                         <StackPanel Spacing="15">
                             <!-- 预览图 -->
-                            <Grid x:Name="PreviewImageContainer" Height="280" Width="280" HorizontalAlignment="Center">
+                            <Grid x:Name="PreviewImageContainer" Height="290" Width="280" HorizontalAlignment="Center">
                                 <Border x:Name="SinglePreviewBorder"
                                         Width="280" Height="280"
                                         HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -691,6 +691,15 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
+                                    <!-- [同步 Papers 2026-09] 扫描/刷新时列表区中央转圈(不确定进度) -->
+                                    <ProgressRing x:Name="ScanProgressRing"
+                                                  IsActive="False"
+                                                  Visibility="Collapsed"
+                                                  Width="48" Height="48"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Grid.Row="0"/>
+
                                     <!-- [同步 Papers] 图标模式:GridView → CtrlAwareScrollView+ItemsRepeater(万条 resize 流畅) -->
                                     <wetool:CtrlAwareScrollView x:Name="ComponentsScrollViewExp"
                                                 Visibility="{x:Bind ViewModel.ComponentsDisplayVM.IconModeVisibility, Mode=OneWay}"
@@ -794,16 +803,22 @@
                                         </ItemsRepeater>
                                     </wetool:CtrlAwareScrollView>
 
-                                    <GridView x:Name="ComponentsContentGridView"
-                                              ItemsSource="{x:Bind FilteredComponents}"
-                                              Margin="4,0,4,0"
-                                              Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ContentModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
-                                              Tapped="ComponentsList_Tapped"
-                                              SelectionMode="None"
-                                              SizeChanged="ComponentGrid_SizeChanged"
-                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
-                                        <GridView.ItemTemplate>
+                                    <!-- [全迁 ItemsRepeater] 内容模式(单列行卡) -->
+                                    <wetool:CtrlAwareScrollView x:Name="ComponentsContentScrollViewExp"
+                                                Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ContentModeVisibility, Mode=OneWay}"
+                                                VerticalScrollBarVisibility="Auto"
+                                                VerticalScrollMode="Auto"
+                                                HorizontalScrollBarVisibility="Hidden"
+                                                HorizontalScrollMode="Disabled"
+                                                SizeChanged="ComponentsContentScrollViewExp_SizeChanged"
+                                                Tapped="ComponentsList_Tapped"
+                                                Margin="4,0,4,0">
+                                        <ItemsRepeater x:Name="ComponentsContentRepeater"
+                                                       ItemsSource="{x:Bind FilteredComponents}">
+                                            <ItemsRepeater.Layout>
+                                                <StackLayout Spacing="0" Orientation="Vertical"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
 <DataTemplate x:DataType="models:ComponentInfo">
                                                     <Grid x:Name="ContentItemContainer"
                                                           Height="86"
@@ -908,19 +923,31 @@
                                                                    TextTrimming="CharacterEllipsis"/>
                                                     </Grid>
                                                 </DataTemplate>
-                                        </GridView.ItemTemplate>
-                                    </GridView>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </wetool:CtrlAwareScrollView>
 
-                                    <GridView x:Name="ComponentsListGridView"
-                                              ItemsSource="{x:Bind FilteredComponents}"
-                                              Margin="4,0,4,0"
-                                              Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ListModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
-                                              Tapped="ComponentsList_Tapped"
-                                              SelectionMode="None"
-                                              SizeChanged="ComponentGrid_SizeChanged"
-                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
-                                        <GridView.ItemTemplate>
+                                    <!-- [全迁 ItemsRepeater] 列表模式(多列行卡) -->
+                                    <wetool:CtrlAwareScrollView x:Name="ComponentsListScrollViewExp"
+                                                Visibility="{x:Bind ViewModel.ComponentsDisplayVM.ListModeVisibility, Mode=OneWay}"
+                                                VerticalScrollBarVisibility="Auto"
+                                                VerticalScrollMode="Auto"
+                                                HorizontalScrollBarVisibility="Hidden"
+                                                HorizontalScrollMode="Disabled"
+                                                SizeChanged="ComponentsListScrollViewExp_SizeChanged"
+                                                Tapped="ComponentsList_Tapped"
+                                                Margin="4,0,4,0">
+                                        <ItemsRepeater x:Name="ComponentsListRepeater"
+                                                       ItemsSource="{x:Bind FilteredComponents}"
+                                                       Margin="0,0,10,0">
+                                            <ItemsRepeater.Layout>
+                                                <UniformGridLayout x:Name="ComponentsListUniformLayoutExp"
+                                                    MinColumnSpacing="10"
+                                                    MinRowSpacing="4"
+                                                    ItemsStretch="Fill"
+                                                    Orientation="Horizontal"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
 <DataTemplate x:DataType="models:ComponentInfo">
                                                     <Grid x:Name="ListItemContainer"
                                                           Height="36"
@@ -957,8 +984,9 @@
                                                         </StackPanel>
                                                     </Grid>
                                                 </DataTemplate>
-                                        </GridView.ItemTemplate>
-                                    </GridView>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </wetool:CtrlAwareScrollView>
 
 <StackPanel x:Name="NoScanResultTip" Visibility="Collapsed" Margin="0,100,0,0" HorizontalAlignment="Center">
                                             <TextBlock x:Uid="NoScanResultTip_Components"

@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:winuiex="using:WinUIEx"
     xmlns:models="using:WE_Tool.ViewModels"
+    xmlns:wetool="using:WE_Tool.Controls"
     Title=""
     Width="900" Height="600"
     MinWidth="600" MinHeight="400">
@@ -36,110 +37,106 @@
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextAlignment="Center"/>
         </StackPanel>
 
-        <!-- 卡片列表 -->
-        <GridView x:Name="CardGridView" Grid.Row="1"
+        <!-- 卡片列表([全迁 ItemsRepeater] GridView → ScrollView+ItemsRepeater+UniformGridLayout) -->
+        <wetool:CtrlAwareScrollView x:Name="CardScrollView" Grid.Row="1"
                   Visibility="Collapsed"
-                  SelectionMode="None"
-                  SizeChanged="CardGridView_SizeChanged">
-            <GridView.ItemContainerTransitions>
-                <TransitionCollection>
-                    <RepositionThemeTransition/>
-                    <AddDeleteThemeTransition/>
-                </TransitionCollection>
-            </GridView.ItemContainerTransitions>
-            <GridView.ItemContainerStyle>
-                <Style TargetType="GridViewItem">
-                    <Setter Property="Margin" Value="5"/>
-                    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </GridView.ItemContainerStyle>
-            <GridView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <ItemsWrapGrid Orientation="Horizontal" ItemHeight="300" ItemWidth="300"/>
-                </ItemsPanelTemplate>
-            </GridView.ItemsPanel>
-            <GridView.ItemTemplate>
-                <DataTemplate x:DataType="models:CleanupCardViewModel">
-                    <Border CornerRadius="8"
-                            Background="{ThemeResource ControlFillColorDefaultBrush}"
-                            Padding="14">
-                        <Grid RowSpacing="8">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                  VerticalScrollBarVisibility="Auto"
+                  VerticalScrollMode="Auto"
+                  HorizontalScrollBarVisibility="Hidden"
+                  HorizontalScrollMode="Disabled"
+                  SizeChanged="CardScrollView_SizeChanged">
+            <ItemsRepeater x:Name="CardRepeater" Margin="0,0,10,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout x:Name="CardUniformLayout"
+                        MinItemWidth="270"
+                        MinColumnSpacing="10"
+                        MinRowSpacing="10"
+                        ItemsStretch="Fill"
+                        Orientation="Horizontal"/>
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:CleanupCardViewModel">
+                        <Border CornerRadius="8"
+                                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                                Padding="14"
+                                Height="230"><!-- [固定高 2026-09] 与残留清理页卡片统一:文件列表区超出部分卡片内滚动 -->
+                            <Grid RowSpacing="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                            <!-- 标题行:类型标签 + ID -->
-                            <Grid ColumnSpacing="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Bind FolderId}" FontWeight="SemiBold"
-                                           TextTrimming="CharacterEllipsis"
-                                           ToolTipService.ToolTip="{x:Bind FullPath}"/>
-                                <Border Grid.Column="1" CornerRadius="4"
-                                        Background="{ThemeResource AccentFillColorDefaultBrush}">
-                                    <TextBlock Text="{x:Bind TypeLabel}" FontSize="11"
-                                               Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Margin="6,2"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
+                                <!-- 标题行:类型标签 + ID -->
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{x:Bind FolderId}" FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTipService.ToolTip="{x:Bind FullPath}"/>
+                                    <Border Grid.Column="1" CornerRadius="4"
+                                            Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                        <TextBlock Text="{x:Bind TypeLabel}" FontSize="11"
+                                                   Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Margin="6,2"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+
+                                <!-- 统计 -->
+                                <TextBlock Grid.Row="1" Text="{x:Bind StatsText}" FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                                <!-- 文件列表 -->
+                                <ScrollView Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{x:Bind Files}" Margin="0,0,8,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="models:CleanupFileItem">
+                                                <Grid ColumnSpacing="8" Padding="0,3">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{x:Bind Name}" FontSize="12"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTipService.ToolTip="{x:Bind Name}"/>
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind SizeText}"
+                                                               FontSize="12"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollView>
+
+                                <!-- 底部行:左边 CheckBox + 右边操作按钮 -->
+                                <Grid Grid.Row="3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox MinWidth="0"
+                                              VerticalAlignment="Center"
+                                              IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                              Click="SelectCheckBox_Click"
+                                              Tag="{x:Bind}"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                                HorizontalAlignment="Right" Spacing="8">
+                                        <Button x:Uid="WhitelistWindow_OpenFolder" Click="OpenFolder_Click"
+                                                CommandParameter="{x:Bind}"/>
+                                        <Button x:Uid="WhitelistWindow_Remove" Click="RemoveFromWhitelist_Click"
+                                                CommandParameter="{x:Bind}"
+                                                Style="{StaticResource AccentButtonStyle}"/>
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
-
-                            <!-- 统计 -->
-                            <TextBlock Grid.Row="1" Text="{x:Bind StatsText}" FontSize="12"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-
-                            <!-- 文件列表 -->
-                            <ScrollView Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{x:Bind Files}" Margin="0,0,8,0">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="models:CleanupFileItem">
-                                            <Grid ColumnSpacing="8" Padding="0,3">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{x:Bind Name}" FontSize="12"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           ToolTipService.ToolTip="{x:Bind Name}"/>
-                                                <TextBlock Grid.Column="1" Text="{x:Bind SizeText}"
-                                                           FontSize="12"
-                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollView>
-
-                            <!-- 底部行:左边 CheckBox + 右边操作按钮 -->
-                            <Grid Grid.Row="3">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <CheckBox MinWidth="0"
-                                          VerticalAlignment="Center"
-                                          IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
-                                          Click="SelectCheckBox_Click"
-                                          Tag="{x:Bind}"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal"
-                                            HorizontalAlignment="Right" Spacing="8">
-                                    <Button x:Uid="WhitelistWindow_OpenFolder" Click="OpenFolder_Click"
-                                            CommandParameter="{x:Bind}"/>
-                                    <Button x:Uid="WhitelistWindow_Remove" Click="RemoveFromWhitelist_Click"
-                                            CommandParameter="{x:Bind}"
-                                            Style="{StaticResource AccentButtonStyle}"/>
-                                </StackPanel>
-                            </Grid>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </wetool:CtrlAwareScrollView>
 
         <!-- 底部 CommandBar -->
         <CommandBar x:Name="ActionBar" Grid.Row="2"

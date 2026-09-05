@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:WE_Tool.ViewModels"
+    xmlns:wetool="using:WE_Tool.Controls"
     xmlns:skia="using:WE_Tool.Controls"
     xmlns:animations="using:CommunityToolkit.WinUI.Animations"
     x:Name="PageRoot"
@@ -163,86 +164,88 @@
         <ProgressRing x:Name="ScanProgress" Grid.Row="1" IsActive="False"
                       Width="48" Height="48" VerticalAlignment="Center" HorizontalAlignment="Center"/>
 
-        <!-- 备份卡片网格 -->
-        <GridView x:Name="BackupGridView" Grid.Row="1" Visibility="Collapsed"
-                  SelectionMode="None" SizeChanged="BackupGridView_SizeChanged"
-                  ContainerContentChanging="BackupGridView_ContainerContentChanging"
-                  animations:ItemsReorderAnimation.Duration="0:0:0.1">
-            <GridView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <ItemsWrapGrid x:Name="BackupWrapGrid" Orientation="Horizontal"
-                                   CacheLength="0"/>
-                </ItemsPanelTemplate>
-            </GridView.ItemsPanel>
-            <GridView.ItemContainerStyle>
-                <Style TargetType="GridViewItem">
-                    <Setter Property="Margin" Value="5"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </GridView.ItemContainerStyle>
-            <GridView.ItemTemplate>
-                <DataTemplate x:DataType="models:BackupItemViewModel">
-                    <Grid Height="140" Padding="12" CornerRadius="8"
-                          HorizontalAlignment="Stretch"
-                          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <!-- 源已删除角标:取消订阅/下架后仅剩备份时显示(跨全列,右上角) -->
-                        <Border x:Name="SourceMissingBadge"
-                                Grid.ColumnSpan="3"
-                                Background="#E8A33D" CornerRadius="8" Padding="8,3"
-                                HorizontalAlignment="Right" VerticalAlignment="Top"
-                                Margin="0,-2,-2,0"
-                                Visibility="{x:Bind SourceMissingVisibility, Mode=OneWay}">
-                            <TextBlock x:Uid="BackupPage_SourceMissing" FontSize="11"
-                                       Foreground="Black" FontWeight="SemiBold"/>
-                        </Border>
-                        <Grid Grid.Column="0" Width="100" Height="100">
-                            <!-- 与 Papers 一致:BitmapImage.UriSource 驱动;无预览图时用占位图(非 null/空串) -->
-                            <Image x:Name="PreviewImage" Stretch="UniformToFill"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Image.Source>
-                                    <BitmapImage UriSource="{x:Bind PreviewPath, Mode=OneWay}"/>
-                                </Image.Source>
-                            </Image>
-                            <!-- GIF 动图用 Skia 流式播放(与 Papers 一致),隐藏静态 Image -->
-                            <skia:SkiaGifView x:Name="PreviewSkiaGif" Visibility="Collapsed"
-                                              Width="100" Height="100"
-                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <!-- 备份卡片网格([全迁 ItemsRepeater] GridView → ScrollView+ItemsRepeater+UniformGridLayout) -->
+        <wetool:CtrlAwareScrollView x:Name="BackupScrollView" Grid.Row="1" Visibility="Collapsed"
+                  VerticalScrollBarVisibility="Auto"
+                  VerticalScrollMode="Auto"
+                  HorizontalScrollBarVisibility="Hidden"
+                  HorizontalScrollMode="Disabled"
+                  SizeChanged="BackupScrollView_SizeChanged">
+            <ItemsRepeater x:Name="BackupRepeater" Margin="0,0,10,0"
+                           ElementPrepared="BackupRepeater_ElementPrepared"
+                           ElementClearing="BackupRepeater_ElementClearing">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout x:Name="BackupUniformLayout"
+                        MinItemWidth="320"
+                        MinColumnSpacing="10"
+                        MinRowSpacing="10"
+                        ItemsStretch="Fill"
+                        Orientation="Horizontal"/>
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:BackupItemViewModel">
+                        <Grid Height="140" Padding="12" CornerRadius="8"
+                              HorizontalAlignment="Stretch"
+                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- 源已删除角标:取消订阅/下架后仅剩备份时显示(跨全列,右上角) -->
+                            <Border x:Name="SourceMissingBadge"
+                                    Grid.ColumnSpan="3"
+                                    Background="#E8A33D" CornerRadius="8" Padding="8,3"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Margin="0,-2,-2,0"
+                                    Visibility="{x:Bind SourceMissingVisibility, Mode=OneWay}">
+                                <TextBlock x:Uid="BackupPage_SourceMissing" FontSize="11"
+                                           Foreground="Black" FontWeight="SemiBold"/>
+                            </Border>
+                            <Grid Grid.Column="0" Width="100" Height="100">
+                                <!-- 与 Papers 一致:BitmapImage.UriSource 驱动;无预览图时用占位图(非 null/空串) -->
+                                <Image x:Name="PreviewImage" Stretch="UniformToFill"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Image.Source>
+                                        <BitmapImage UriSource="{x:Bind PreviewPath, Mode=OneWay}"/>
+                                    </Image.Source>
+                                </Image>
+                                <!-- GIF 动图用 Skia 流式播放(与 Papers 一致),隐藏静态 Image -->
+                                <skia:SkiaGifView x:Name="PreviewSkiaGif" Visibility="Collapsed"
+                                                  Width="100" Height="100"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0"
+                                        VerticalAlignment="Center" Spacing="4">
+                                <TextBlock Text="{x:Bind Title, Mode=OneWay}"
+                                           FontSize="16" FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis" MaxLines="2"/>
+                                <TextBlock Text="{x:Bind WorkshopId, Mode=OneWay}"
+                                           FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{x:Bind SizeText, Mode=OneWay}"
+                                           FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{x:Bind BackupTimeText, Mode=OneWay}"
+                                           FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
+                                <Button CommandParameter="{x:Bind}"
+                                        Click="DeleteBackup_Click"
+                                        Background="Transparent"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                                </Button>
+                                <Button CommandParameter="{x:Bind}"
+                                        Click="OpenBackupFolder_Click"
+                                        Background="Transparent"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                    <FontIcon Glyph="&#xE838;" FontSize="16"/>
+                                </Button>
+                            </StackPanel>
                         </Grid>
-                        <StackPanel Grid.Column="1" Margin="12,0,0,0"
-                                    VerticalAlignment="Center" Spacing="4">
-                            <TextBlock Text="{x:Bind Title, Mode=OneWay}"
-                                       FontSize="16" FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis" MaxLines="2"/>
-                            <TextBlock Text="{x:Bind WorkshopId, Mode=OneWay}"
-                                       FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{x:Bind SizeText, Mode=OneWay}"
-                                       FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{x:Bind BackupTimeText, Mode=OneWay}"
-                                       FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
-                            <Button CommandParameter="{x:Bind}"
-                                    Click="DeleteBackup_Click"
-                                    Background="Transparent"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                                <FontIcon Glyph="&#xE74D;" FontSize="16"/>
-                            </Button>
-                            <Button CommandParameter="{x:Bind}"
-                                    Click="OpenBackupFolder_Click"
-                                    Background="Transparent"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                                <FontIcon Glyph="&#xE838;" FontSize="16"/>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </wetool:CtrlAwareScrollView>
 
         <!-- 底部操作栏 -->
         <CommandBar Grid.Row="2" DefaultLabelPosition="Right">

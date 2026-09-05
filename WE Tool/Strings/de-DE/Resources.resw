@@ -1873,4 +1873,13 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>Transparente Bilder filtern</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>Scan abgeschlossen — nichts zu bereinigen</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>Keine Restdateien gefunden</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>Das Laufwerk mit der Workshop-Bibliothek ist nicht NTFS. Die automatische Sicherung (Hardlinks) funktioniert auf diesem Laufwerk nicht und wurde daher nicht installiert.</value>
+  </data>
 </root>

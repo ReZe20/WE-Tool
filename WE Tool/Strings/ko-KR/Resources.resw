@@ -1873,4 +1873,13 @@ project.json 및 미리보기 복사
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>투명 이미지 필터링</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>스캔 완료, 정리가 필요한 잔여물이 없습니다</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>잔여 파일을 찾지 못했습니다</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>워크샵 라이브러리 드라이브가 NTFS가 아닙니다. 자동 백업(하드 링크)은 이 드라이브에서 작동할 수 없으므로 설치되지 않았습니다.</value>
+  </data>
 </root>

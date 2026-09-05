@@ -1873,4 +1873,13 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>Filtrar imagens transparentes</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>Verificação concluída — nada para limpar</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>Nenhum arquivo residual encontrado</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>A unidade que contém a biblioteca do Workshop não é NTFS. O backup automático (links físicos) não funciona nesta unidade, portanto não foi instalado.</value>
+  </data>
 </root>

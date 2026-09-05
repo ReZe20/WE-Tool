@@ -29,7 +29,6 @@ public sealed partial class WhitelistWindow : WindowEx
     private readonly HashSet<string> _whitelist;
     private readonly string _workshopPath;
     private ObservableCollection<CleanupCardViewModel> _cards = new();
-    private bool _isResizing;
 
     /// <summary>白名单发生变化时触发(参数=被移除的 ID)。</summary>
     public event Action<string>? WhitelistItemRemoved;
@@ -52,7 +51,7 @@ public sealed partial class WhitelistWindow : WindowEx
         {
             thisRoot.RequestedTheme = et;
         }
-        CardGridView.ItemsSource = _cards;
+        CardRepeater.ItemsSource = _cards;
         LoadWhitelistCards();
     }
 
@@ -98,13 +97,13 @@ public sealed partial class WhitelistWindow : WindowEx
     private void UpdateVisibility()
     {
         bool has = _cards.Count > 0;
-        CardGridView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+        CardScrollView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
         EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
         if (has)
         {
             long total = _cards.Sum(c => c.Files.Sum(f => f.Size));
             SubtitleText.Text = L("WhitelistWindow_Subtitle", _cards.Count, FormatSize(total));
-            UpdateItemWidth();
+            UpdateCardLayoutMinWidth();
         }
         else
         {
@@ -113,52 +112,28 @@ public sealed partial class WhitelistWindow : WindowEx
     }
 
 
-    private void CardGridView_SizeChanged(object sender, SizeChangedEventArgs e)
+    // [全迁 ItemsRepeater] resize 不再全量重排(虚拟化),原淡入淡出遮羞动画删除;
+    // SizeChanged 只钳制 UniformGridLayout.MinItemWidth(防除零崩溃 #10539)
+    private void CardScrollView_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (CardGridView.Visibility != Visibility.Visible) return;
-        if (!_isResizing)
+        UpdateCardLayoutMinWidth();
+    }
+
+    private void UpdateCardLayoutMinWidth()
+    {
+        if (CardUniformLayout is not UniformGridLayout layout) return;
+        double viewport = CardScrollView.ActualWidth;
+        int desired = 350; // 卡片档位(原 350 分列)
+        if (viewport > 0)
         {
-            _isResizing = true;
-            AnimateCardContent(false);
+            double effective = Math.Max(1, Math.Min(desired, viewport - 8));
+            if (Math.Abs(layout.MinItemWidth - effective) > 0.5)
+                layout.MinItemWidth = effective;
         }
-        UpdateItemWidth();
-        // 500ms 后恢复
-        _ = ResetAnimationAsync();
-    }
-
-    private async System.Threading.Tasks.Task ResetAnimationAsync()
-    {
-        await System.Threading.Tasks.Task.Delay(500);
-        _isResizing = false;
-        AnimateCardContent(true);
-    }
-
-    private void AnimateCardContent(bool fadeIn)
-    {
-        for (int i = 0; i < CardGridView.Items.Count; i++)
+        else if (layout.MinItemWidth <= 0)
         {
-            if (CardGridView.ContainerFromIndex(i) is GridViewItem gvi
-                && gvi.ContentTemplateRoot is Border border
-                && border.Child is FrameworkElement child)
-            {
-                var anim = fadeIn ? (Timeline)new FadeInThemeAnimation() : new FadeOutThemeAnimation();
-                anim.Duration = TimeSpan.FromMilliseconds(300);
-                var sb = new Storyboard();
-                sb.Children.Add(anim);
-                Storyboard.SetTarget(anim, child);
-                sb.Begin();
-            }
+            layout.MinItemWidth = desired;
         }
-    }
-
-    private void UpdateItemWidth()
-    {
-        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid,用 DP SetValue 直接灌值,不走 C# 类型匹配
-        if (CardGridView.ItemsPanelRoot is not { } panelRoot) return;
-        double available = CardGridView.ActualWidth;
-        if (available <= 0) return;
-        int cols = Math.Max(1, (int)(available / 350));
-        panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available / cols - 2);
     }
 
     private CleanupCardViewModel? MakeCard(string dir, string id)

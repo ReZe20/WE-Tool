@@ -1873,4 +1873,13 @@
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>過濾透明圖片</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>掃描完成，沒有發現需要清理的殘留</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>未發現殘留檔案</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>創意工坊庫所在磁碟不是 NTFS 格式，自動備份（硬連結）無法在該磁碟上運作，因此未安裝。</value>
+  </data>
 </root>

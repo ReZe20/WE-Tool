@@ -212,7 +212,7 @@ namespace WE_Tool
         /// Flyout/MenuFlyout/CommandBarFlyout Opened 事件通用处理:对弹层显式应用当前主题。
         /// XAML 里挂 Opened="FlyoutThemeRefresh_Opened"(code-behind 一行转发到本方法)。
         /// </summary>
-        public static void ApplyFlyoutTheme(object sender, object e)
+        public static void ApplyFlyoutTheme(object? sender, object e)
         {
             switch (sender)
             {

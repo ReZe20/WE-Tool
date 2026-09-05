@@ -741,6 +741,15 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
+                                    <!-- [扫描进度 2026-09] 首次加载/刷新扫描时覆盖列表区中央的转圈指示(不确定进度) -->
+                                    <ProgressRing x:Name="ScanProgressRing"
+                                                  IsActive="False"
+                                                  Visibility="Collapsed"
+                                                  Width="48" Height="48"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Grid.Row="0"/>
+
                                     <!-- [实验] WallpapersGridView → ScrollView+ItemsRepeater:只显示 preview,验证万条 resize 卡顿 -->
                                     <wetool:CtrlAwareScrollView x:Name="WallpapersScrollViewExp"
                                                 Visibility="{x:Bind ViewModel.WallpaperDisplayVM.IconModeVisibility, Mode=OneWay}"
@@ -866,16 +875,23 @@
                                         </ItemsRepeater>
                                     </wetool:CtrlAwareScrollView>
 
-                                    <GridView x:Name="WallpapersContentGridView"
-                                              ItemsSource="{x:Bind Wallpapers}"
-                                              Margin="4,0,4,0"
-                                              Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ContentModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
-                                              Tapped="WallpaperList_Tapped"
-                                              SelectionMode="None"
-                                              SizeChanged="WallpaperGrid_SizeChanged"
-                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
-                                        <GridView.ItemTemplate>
+                                    <!-- [全迁 ItemsRepeater] 内容模式(单列行卡):GridView → CtrlAwareScrollView+ItemsRepeater+StackLayout -->
+                                    <wetool:CtrlAwareScrollView x:Name="WallpapersContentScrollViewExp"
+                                                Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ContentModeVisibility, Mode=OneWay}"
+                                                VerticalScrollBarVisibility="Auto"
+                                                VerticalScrollMode="Auto"
+                                                HorizontalScrollBarVisibility="Hidden"
+                                                HorizontalScrollMode="Disabled"
+                                                SizeChanged="WallpapersContentScrollViewExp_SizeChanged"
+                                                Tapped="WallpaperList_Tapped"
+                                                Margin="4,0,4,0">
+                                        <ItemsRepeater x:Name="WallpapersContentRepeater"
+                                                       ItemsSource="{x:Bind Wallpapers}">
+                                            <ItemsRepeater.Layout>
+                                                <!-- 内容模式单列:StackLayout 垂直列表 -->
+                                                <StackLayout Spacing="0" Orientation="Vertical"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ContentItemContainer"
                                                           Height="86"
@@ -917,7 +933,7 @@
                                                                   Content="{x:Null}" 
                                                                   HorizontalContentAlignment="Center"
                                                                   VerticalContentAlignment="Center"/>
-                                                        <!-- 缩略图 -->
+                                                        <!-- 缩略图(内容模式 GIF 仍用 BitmapImage AutoPlay 播放,与迁移前一致) -->
                                                         <Grid Grid.Column="1" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                                                             <Image Stretch="UniformToFill" Width="80" Height="80">
                                                                 <Image.Source>
@@ -978,19 +994,32 @@
                                                                    TextAlignment="Right"/>
                                                     </Grid>
                                                 </DataTemplate>
-                                        </GridView.ItemTemplate>
-                                    </GridView>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </wetool:CtrlAwareScrollView>
 
-                                    <GridView x:Name="WallpapersListGridView"
-                                              ItemsSource="{x:Bind Wallpapers}"
-                                              Margin="4,0,4,0"
-                                              Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ListModeVisibility, Mode=OneWay}"
-                                              ContextFlyout="{StaticResource ScrollViewBackgroundMenu}"
-                                              Tapped="WallpaperList_Tapped"
-                                              SelectionMode="None"
-                                              SizeChanged="WallpaperGrid_SizeChanged"
-                                              ItemContainerStyle="{StaticResource TransparentGridViewItemStyle}">
-                                        <GridView.ItemTemplate>
+                                    <!-- [全迁 ItemsRepeater] 列表模式(多列行卡):GridView → CtrlAwareScrollView+ItemsRepeater+UniformGridLayout -->
+                                    <wetool:CtrlAwareScrollView x:Name="WallpapersListScrollViewExp"
+                                                Visibility="{x:Bind ViewModel.WallpaperDisplayVM.ListModeVisibility, Mode=OneWay}"
+                                                VerticalScrollBarVisibility="Auto"
+                                                VerticalScrollMode="Auto"
+                                                HorizontalScrollBarVisibility="Hidden"
+                                                HorizontalScrollMode="Disabled"
+                                                SizeChanged="WallpapersListScrollViewExp_SizeChanged"
+                                                Tapped="WallpaperList_Tapped"
+                                                Margin="4,0,4,0">
+                                        <ItemsRepeater x:Name="WallpapersListRepeater"
+                                                       ItemsSource="{x:Bind Wallpapers}"
+                                                       Margin="0,0,10,0">
+                                            <ItemsRepeater.Layout>
+                                                <!-- 列表模式多列(400 档位):MinItemWidth 由代码钳制 -->
+                                                <UniformGridLayout x:Name="WallpapersListUniformLayoutExp"
+                                                    MinColumnSpacing="10"
+                                                    MinRowSpacing="4"
+                                                    ItemsStretch="Fill"
+                                                    Orientation="Horizontal"/>
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
                                                     <Grid x:Name="ListItemContainer"
                                                           Height="36"
@@ -1027,8 +1056,9 @@
                                                         </StackPanel>
                                                     </Grid>
                                                 </DataTemplate>
-                                        </GridView.ItemTemplate>
-                                    </GridView>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </wetool:CtrlAwareScrollView>
 
                                         <StackPanel x:Name="NoScanResultTip" Visibility="Collapsed" Margin="0,100,0,0" HorizontalAlignment="Center">
                                             <TextBlock x:Uid="NoScanResultTip"

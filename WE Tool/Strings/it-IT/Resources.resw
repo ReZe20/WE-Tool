@@ -1873,4 +1873,13 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>Filtra immagini trasparenti</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>Scansione completata: nulla da pulire</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>Nessun file residuo trovato</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>L'unità che contiene la libreria Workshop non è NTFS. Il backup automatico (hard link) non funziona su questa unità, quindi non è stato installato.</value>
+  </data>
 </root>

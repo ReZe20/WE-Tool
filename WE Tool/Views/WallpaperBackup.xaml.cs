@@ -10,6 +10,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Serilog;
 using WE_Tool.Controls;
 using WE_Tool.Helper;
@@ -36,8 +37,8 @@ public sealed partial class WallpaperBackup : Page
     public WallpaperBackup()
     {
         InitializeComponent();
-        BackupGridView.ItemsSource = BackupItems;
-        Loaded += (s, e) => InitializeAutoBackupSettingsAsync();
+        BackupRepeater.ItemsSource = BackupItems;
+        Loaded += (s, e) => _ = InitializeAutoBackupSettingsAsync();
         UpdateSortLabel();
     }
 
@@ -53,24 +54,31 @@ public sealed partial class WallpaperBackup : Page
         DispatcherQueue.TryEnqueue(RestartVisibleGifPlayback);
     }
 
-    /// <summary>遍历可见容器重启 GIF 播放(页面缓存切回时;容器未就绪/无项时无害)。</summary>
+    /// <summary>遍历可见容器重启 GIF 播放(页面缓存切回时;容器未就绪/无项时无害)。
+    /// [全迁 ItemsRepeater] 改为可视树遍历:找可见 SkiaGifView,用其 DataContext 重启。</summary>
     private void RestartVisibleGifPlayback()
     {
-        // 非反射(AOT 兼容):ItemsPanelRoot 返回类型是 Panel(基类),Children 是 Panel 属性,直接访问即可,不强转 ItemsWrapGrid
-        if (BackupGridView.ItemsPanelRoot is not { } panelRoot) return;
-        foreach (var child in panelRoot.Children)
+        RestartVisibleSkiaGifs(this);
+    }
+
+    private static void RestartVisibleSkiaGifs(DependencyObject root)
+    {
+        int count = VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < count; i++)
         {
-            if (child is not GridViewItem container) continue;
-            if (container.ContentTemplateRoot is not FrameworkElement content) continue;
-            if (BackupGridView.ItemFromContainer(container) is not BackupItemViewModel vm) continue;
-            if (!string.IsNullOrEmpty(vm.PreviewPath)
-                && vm.PreviewPath.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is SkiaGifView skia && skia.Visibility == Visibility.Visible)
             {
-                if (content.FindName("PreviewSkiaGif") is SkiaGifView skia
-                    && skia.Visibility == Visibility.Visible)
+                if (skia.DataContext is BackupItemViewModel vm
+                    && !string.IsNullOrEmpty(vm.PreviewPath)
+                    && vm.PreviewPath.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
                 {
                     skia.Start(vm.PreviewPath);
                 }
+            }
+            else
+            {
+                RestartVisibleSkiaGifs(child);
             }
         }
     }
@@ -81,7 +89,7 @@ public sealed partial class WallpaperBackup : Page
     {
         EmptyState.Visibility = Visibility.Collapsed;
         ScanProgress.IsActive = true;
-        BackupGridView.Visibility = Visibility.Collapsed;
+        BackupScrollView.Visibility = Visibility.Collapsed;
 
         // 代次号:本次扫描的代;期间若有删除等变更,回填时按代丢弃旧结果
         int gen = ++_scanGeneration;
@@ -103,7 +111,7 @@ public sealed partial class WallpaperBackup : Page
                     ScanProgress.IsActive = false;
                     EmptyState.Visibility = Visibility.Visible;
                     EmptyStateText.Text = L("BackupPage_ScanFailed.Text");
-                    BackupGridView.Visibility = Visibility.Collapsed;
+                    BackupScrollView.Visibility = Visibility.Collapsed;
                 });
             }
             return;
@@ -128,9 +136,9 @@ public sealed partial class WallpaperBackup : Page
             ApplyFilterAndSort();
 
             ScanProgress.IsActive = false;
-            BackupGridView.Visibility = BackupItems.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            BackupScrollView.Visibility = BackupItems.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             // 强制刷新一次卡片宽度(Visibility 变化触发的 SizeChanged 时序不可靠)
-            UpdateCardWidths();
+            UpdateBackupLayoutMinWidth();
         });
     }
 
@@ -217,7 +225,7 @@ public sealed partial class WallpaperBackup : Page
         ScanProgress.IsActive = false;
         EmptyState.Visibility = Visibility.Visible;
         EmptyStateText.Text = L("BackupPage_Empty.Text");
-        BackupGridView.Visibility = Visibility.Collapsed;
+        BackupScrollView.Visibility = Visibility.Collapsed;
     }
 
     private async void DeleteBackup_Click(object sender, RoutedEventArgs e)
@@ -243,7 +251,7 @@ public sealed partial class WallpaperBackup : Page
                 // 可见列表被删空但全量还有项 → 筛选空态(按 ApplyFilterAndSort 语义补齐;全空由下方尾部 ShowEmpty 兜底)
                 if (BackupItems.Count == 0 && _allItems.Count > 0)
                 {
-                    BackupGridView.Visibility = Visibility.Collapsed;
+                    BackupScrollView.Visibility = Visibility.Collapsed;
                     EmptyState.Visibility = Visibility.Visible;
                     EmptyStateText.Text = L("BackupPage_FilterEmpty.Text");
                 }
@@ -321,18 +329,12 @@ public sealed partial class WallpaperBackup : Page
                 : $"成功删除 {success} 个备份。");
     }
 
-    private void BackupGridView_SizeChanged(object sender, SizeChangedEventArgs e)
-        => UpdateCardWidths();
-
-    /// <summary>卡片容器生成/复用时:仅切换可见性;GIF 启动延迟到下一帧(避免滚动时同步解码大量 GIF 卡死 UI 线程)。</summary>
-    private void BackupGridView_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    // [全迁 ItemsRepeater] 元素容器就绪:Skia GIF 切换(替代 GridView ContainerContentChanging);
+    // GIF 启动延迟到下一帧(避免滚动时同步解码大量 GIF 卡死 UI 线程)
+    private void BackupRepeater_ElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs args)
     {
-        if (args.Item is not BackupItemViewModel vm) return;
-        if (args.Phase != 0) return;
-
-        var container = args.ItemContainer as GridViewItem;
-        var content = container?.ContentTemplateRoot as FrameworkElement;
-        if (content == null) return;
+        if (args.Element is not FrameworkElement content) return;
+        if (content.DataContext is not BackupItemViewModel vm) return;
 
         var img = content.FindName("PreviewImage") as Image;
         var skia = content.FindName("PreviewSkiaGif") as SkiaGifView;
@@ -344,7 +346,6 @@ public sealed partial class WallpaperBackup : Page
         {
             skia.Visibility = Visibility.Visible;
             img.Visibility = Visibility.Collapsed;
-            // 延迟到下一帧再启动:滚动时容器大量进出,同步 Start 会批量解码 GIF 阻塞 UI 线程
             var path = vm.PreviewPath;
             DispatcherQueue.TryEnqueue(() =>
             {
@@ -361,22 +362,34 @@ public sealed partial class WallpaperBackup : Page
         }
     }
 
-    /// <summary>按 GridView 实际宽度计算列数,设置 ItemsWrapGrid.ItemWidth(原生排布,无布局循环)。</summary>
-    private void UpdateCardWidths()
+    // 元素移出(回收/滚动走远):停 GIF
+    private void BackupRepeater_ElementClearing(ItemsRepeater sender, ItemsRepeaterElementClearingEventArgs args)
     {
-        if (BackupGridView.ActualWidth <= 0 || BackupItems.Count == 0) return;
-        // 间距来自 GridViewItem Margin="5"(左右共 10),列宽公式与 Papers 一致
-        int cols = Math.Max(1, (int)(BackupGridView.ActualWidth / 320));
-        double itemWidth = BackupGridView.ActualWidth / cols - 2;
-        // 宽度未变时跳过,避免 SizeChanged 递归
-        if (Math.Abs(itemWidth - _lastCardWidth) < 0.5) return;
-        _lastCardWidth = itemWidth;
-        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid,用 DP SetValue 直接灌值,不走 C# 类型匹配
-        if (BackupGridView.ItemsPanelRoot is { } panelRoot)
-            panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, itemWidth);
+        if (args.Element is FrameworkElement content
+            && content.FindName("PreviewSkiaGif") is SkiaGifView skia)
+            skia.Stop();
     }
 
-    private double _lastCardWidth;
+    /// <summary>ScrollView 尺寸变化:钳制 UniformGridLayout.MinItemWidth(防除零崩溃)。</summary>
+    private void BackupScrollView_SizeChanged(object sender, SizeChangedEventArgs e)
+        => UpdateBackupLayoutMinWidth();
+
+    private void UpdateBackupLayoutMinWidth()
+    {
+        if (BackupUniformLayout is not UniformGridLayout layout) return;
+        double viewport = BackupScrollView.ActualWidth;
+        int desired = 320;
+        if (viewport > 0)
+        {
+            double effective = Math.Max(1, Math.Min(desired, viewport - 8));
+            if (Math.Abs(layout.MinItemWidth - effective) > 0.5)
+                layout.MinItemWidth = effective;
+        }
+        else if (layout.MinItemWidth <= 0)
+        {
+            layout.MinItemWidth = desired;
+        }
+    }
 
     // ====================== 排序与筛选 ======================
 
@@ -429,7 +442,7 @@ public sealed partial class WallpaperBackup : Page
         {
             if (_allItems.Count > 0)
             {
-                BackupGridView.Visibility = Visibility.Collapsed;
+                BackupScrollView.Visibility = Visibility.Collapsed;
                 EmptyState.Visibility = Visibility.Visible;
                 EmptyStateText.Text = L("BackupPage_FilterEmpty.Text");
             }
@@ -440,7 +453,7 @@ public sealed partial class WallpaperBackup : Page
         }
         else
         {
-            BackupGridView.Visibility = Visibility.Visible;
+            BackupScrollView.Visibility = Visibility.Visible;
             EmptyState.Visibility = Visibility.Collapsed;
         }
     }
@@ -644,6 +657,12 @@ public sealed partial class WallpaperBackup : Page
         switch ((string)btn.Tag)
         {
             case "install":
+                // [2026-09] 硬链接备份依赖 NTFS:库盘非 NTFS(或 ReFS)时阻止安装,避免装上空壳服务
+                if (!IsWorkshopDriveHardLinkSupported())
+                {
+                    error = L("AutoBackup_NotNtfs");
+                    break;
+                }
                 error = _serviceManager.Install();
                 if (error == null && _autoCfg != null)
                 {
@@ -669,12 +688,37 @@ public sealed partial class WallpaperBackup : Page
         }
         RefreshServicePanel();
         if (error != null)
-            await DialogHelper.ShowMessageAsync(L("AutoBackup_OperationFailed"), error);
+            await DialogHelper.ShowMessageAsync(L("AutoBackup_OperationFailed.Text"), error);
+    }
+
+    /// <summary>
+    /// [2026-09] 创意工坊库所在盘是否支持硬链接备份:硬链接(CreateHardLink)是 NTFS/ReFS 特性,
+    /// FAT32/exFAT 不支持。库路径不存在/无法判定时返回 true(不误伤——服务安装后启动自检兜底)。
+    /// </summary>
+    private static bool IsWorkshopDriveHardLinkSupported()
+    {
+        try
+        {
+            var vm = ((App)Application.Current).ViewModel;
+            string workshop = vm.PathManagementVM.WorkshopPath;
+            if (string.IsNullOrWhiteSpace(workshop) || !Directory.Exists(workshop))
+                return true; // 路径未配置/不存在:不阻止,交给服务运行时兜底
+            var root = Path.GetPathRoot(workshop);
+            if (string.IsNullOrEmpty(root)) return true;
+            string fs = new DriveInfo(root).DriveFormat;
+            return string.Equals(fs, "NTFS", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fs, "ReFS", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "检查创意工坊库盘文件系统失败,放行安装");
+            return true; // 判定失败不阻止(宁可装后由服务兜底,不误伤正常场景)
+        }
     }
 
     private void AutoBackupButton_Click(object sender, RoutedEventArgs e)
     {
-        InitializeAutoBackupSettingsAsync();
+        _ = InitializeAutoBackupSettingsAsync();
         AutoBackupFlyout.ShowAt(sender as FrameworkElement);
     }
 }

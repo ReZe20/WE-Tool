@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- NativeAOT 裁剪保留:LinkPart 属性段数据由 ItemsControl + DataTemplate 渲染,
-     x:Bind 需要其属性元数据(Text/Url/TextVisibility/LinkVisibility)。 -->
+<!-- NativeAOT 裁剪保留:
+     1. LinkPart 属性段数据由 ItemsControl + DataTemplate 渲染,x:Bind 需要其属性元数据。
+     2. CtrlAwareScrollView(自定义 ScrollView 子类)在 XAML 中被 5 个页面引用,
+        缺失元数据会导致 NativeAOT 下启动即崩(combase E_NOINTERFACE / 0xc000027b)。
+     assembly 名必须是实际程序集 WE_Tool(曾误写 "WE Tool" 含空格导致 IL2007 且保留不生效)。 -->
 <linker>
-  <assembly fullname="WE Tool">
+  <assembly fullname="WE_Tool">
     <type fullname="WE_Tool.Models.LinkPart" preserve="all" />
+    <type fullname="WE_Tool.Controls.CtrlAwareScrollView" preserve="all" />
   </assembly>
 </linker>

@@ -1873,4 +1873,13 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>Filtrer les images transparentes</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>Analyse terminée — rien à nettoyer</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>Aucun fichier résiduel trouvé</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>Le lecteur contenant la bibliothèque Workshop n'est pas en NTFS. La sauvegarde automatique (liens physiques) ne fonctionne pas sur ce lecteur ; elle n'a donc pas été installée.</value>
+  </data>
 </root>

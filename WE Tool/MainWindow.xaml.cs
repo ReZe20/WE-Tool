@@ -37,7 +37,11 @@ namespace WE_Tool
             ViewModel = app?.ViewModel ?? new SettingsViewModel(new ConfigService(), new PickerService());
             InitializeComponent();
             this.ExtendsContentIntoTitleBar = true;
+            // [2026-09] Tall 标题栏:按钮与内容条同高。跨 DPI 拖动窗口时系统按钮高度(物理px)与
+            // XAML 内容条(DIP)可能差 1-2px——见 SyncTitleBarRowToCaptionButtons(DPI 变化时校准)。
             AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
+            // DPI 变化(跨屏拖动/系统缩放变更)时校准标题栏内容行高度——注意 XamlRoot 构造时未就绪,
+            // Changed 订阅放到 MainWindow_Activated(首次激活后 XamlRoot 可用)里
             this.Activated += MainWindow_Activated;
             // 焦点跟踪:提取等后台事件仅在主窗口无焦点时弹系统通知(常驻,区别于一次性启动导航的 MainWindow_Activated)
             this.Activated += MainWindow_FocusChanged;
@@ -137,6 +141,10 @@ namespace WE_Tool
         private async void MainWindow_Activated(object? sender, WindowActivatedEventArgs e)
         {
             this.Activated -= MainWindow_Activated;
+            // XamlRoot 此时已就绪:订阅 DPI 变化(跨屏拖动/缩放变更)校准 + 首次校准
+            if (this.Content?.XamlRoot != null)
+                this.Content.XamlRoot.Changed += OnXamlRootChanged;
+            SyncTitleBarRowToCaptionButtons(); // [2026-09] 首次布局后校准标题栏行高(此时 TitleBar.Height 已可用)
             try
             {
                 var settings = await _configService.LoadAsync();
@@ -280,6 +288,36 @@ namespace WE_Tool
             contentFrame.Navigate(pageType, null);
             contentFrame.CacheSize = originalCacheSize;
 
+        }
+
+        private void OnXamlRootChanged(XamlRoot sender, XamlRootChangedEventArgs args)
+        {
+            // DPI 缩放变化(跨屏拖动/系统缩放变更)→ 重新校准标题栏内容行高度
+            SyncTitleBarRowToCaptionButtons();
+        }
+
+        /// <summary>
+        /// [2026-09] 让标题栏内容行(Row0)高度与系统标题栏/窗口按钮区精确对齐:
+        /// 系统按物理像素算高度(TitleBar.Height),XAML 按 DIP——不同 DPI 下固定值会差 1-2px,
+        /// 导致内容条与那三个窗口按钮高度不一致。运行时读 TitleBar.Height ÷ RasterizationScale 换算成 DIP 设给 Row。
+        /// </summary>
+        private void SyncTitleBarRowToCaptionButtons()
+        {
+            try
+            {
+                if (TitleBarRow == null || this.Content?.XamlRoot == null) return;
+                double scale = this.Content.XamlRoot.RasterizationScale;
+                if (scale <= 0) return;
+                double titleBarDip = AppWindow.TitleBar.Height / scale;
+                if (titleBarDip < 20) return; // 异常值保护(极小说明标题栏未初始化)
+                double target = Math.Ceiling(titleBarDip); // 向上取整,避免内容条矮于按钮区导致底部露白
+                if (Math.Abs(TitleBarRow.ActualHeight - target) > 1)
+                    TitleBarRow.Height = new GridLength(target);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "同步标题栏高度失败");
+            }
         }
 
         private async void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)

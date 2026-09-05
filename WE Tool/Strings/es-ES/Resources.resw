@@ -1873,4 +1873,13 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>Filtrar imágenes transparentes</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>Escaneo completado: no hay nada que limpiar</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>No se encontraron archivos residuales</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>La unidad que contiene la biblioteca del Workshop no es NTFS. La copia de seguridad automática (vínculos físicos) no funciona en esta unidad, por lo que no se instaló.</value>
+  </data>
 </root>

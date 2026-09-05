@@ -15,7 +15,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>0.7.1</Version>
+    <Version>0.8.0</Version>
     <!-- Release 下 WinUI 默认禁用反射序列化,导致 config.json 读写失败(实测:设置全部丢失);显式开启 -->
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <Authors>ReZe20</Authors>
@@ -395,6 +395,7 @@
          运行(2026-08-23 用户验证)。若未来某运行时功能异常,可加回 -->
     <ItemGroup>
       <_PublishUnneeded Include="$(PublishDir)**\*.pdb" />
+      <_PublishUnneeded Include="$(PublishDir)**\*.bak-official" />
       <_PublishUnneeded Include="$(PublishDir)**\libEGL.dll" />
       <_PublishUnneeded Include="$(PublishDir)**\libGLESv2.dll" />
       <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Web.WebView2.Core.dll" />

@@ -14,12 +14,12 @@
     <winuiex:WindowEx.SystemBackdrop>
         <DesktopAcrylicBackdrop/>
     </winuiex:WindowEx.SystemBackdrop>
-    <Grid Background="Transparent" KeyDown="RootGrid_KeyDown">
+    <Grid Background="Transparent" KeyDown="RootGrid_KeyDown" x:Name="RootLayout">
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
+            <RowDefinition x:Name="TitleBarRow" Height="48"/><!-- [2026-09] 与 Tall 标题栏按钮同高;跨 DPI 由 SyncTitleBarRowToCaptionButtons 校准 -->
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid VerticalAlignment="Center" IsHitTestVisible="False">
+        <Grid x:Name="AppTitleBar" VerticalAlignment="Center" IsHitTestVisible="False">
             <TextBlock Text="WE Tool" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
         <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="NvSample_ItemInvoked" IsSettingsVisible="True" IsBackButtonVisible="Collapsed" IsPaneOpen="False">

@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -15,32 +16,32 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Serilog;
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Frozen;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using WE_Tool.Helper;
 using WE_Tool.Controls;
 using WE_Tool.Converters;
+using WE_Tool.Helper;
 using WE_Tool.Models;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.System;
 using Windows.Storage;
+using Windows.System;
 using Windows.UI.Core;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -133,15 +134,19 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             if (page < 0)
             {
-                // 省略号分隔
-                PageNumbersPanel.Children.Add(new TextBlock
+                // 省略号按钮:点击弹 Flyout 手动输入页数跳转(2026-09)
+                var ellipsisBtn = new Button
                 {
-                    Text = "…",
-                    VerticalAlignment = VerticalAlignment.Center,
+                    Content = "…",
+                    Tag = total, // 传入总页数供跳转面板用
+                    Width = 32,
+                    Height = 32,
+                    Padding = new Thickness(0),
                     FontSize = 14,
-                    Foreground = Application.Current.Resources["TextFillColorSecondaryBrush"] as Brush
-                                 ?? new SolidColorBrush(Microsoft.UI.Colors.Gray)
-                });
+                    Style = subtle
+                };
+                ellipsisBtn.Click += EllipsisButton_Click;
+                PageNumbersPanel.Children.Add(ellipsisBtn);
                 continue;
             }
 
@@ -185,6 +190,60 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             GoToPage(page);
         }
+    }
+
+    // ===== [分页省略号跳转 2026-09] 省略号按钮 → Flyout 输入面板手动跳页 =====
+
+    /// <summary>省略号按钮点击:弹 Flyout,内含输入框 + 跳转按钮,输入页数直接跳转。</summary>
+    private void EllipsisButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn) return;
+        int totalPages = btn.Tag is int t ? t : ComputeTotalPages(_filteredWallpapers.Count);
+
+        // ---- 构建 Flyout 内容(纯代码,与分页栏代码建按钮风格一致) ----
+        var input = new NumberBox
+        {
+            Minimum = 1,
+            Maximum = totalPages,
+            Value = CurrentPage,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Inline, // 带上下微调
+            SmallChange = 1,
+            Width = 200,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var goBtn = new Button
+        {
+            Content = "跳转",
+            Margin = new Thickness(8, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var panel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 0,
+            Padding = new Thickness(4)
+        };
+        panel.Children.Add(input);
+        panel.Children.Add(goBtn);
+
+        var flyout = new Flyout { Content = panel };
+        // 跳转:取 NumberBox 值并 GoToPage(范围由 NumberBox Minimum/Maximum + GoToPage clamp 保证)
+        void DoJump()
+        {
+            if (!double.IsNaN(input.Value))
+            {
+                GoToPage((int)input.Value);
+            }
+            flyout.Hide();
+        }
+        goBtn.Click += (_, _) => DoJump();
+        input.KeyDown += (_, args) =>
+        {
+            if (args.Key == Windows.System.VirtualKey.Enter) DoJump();
+        };
+        // 打开后自动聚焦输入框,方便直接打字(NumberBox 聚焦后输入即替换当前值)
+        flyout.Opened += (_, _) => input.Focus(FocusState.Programmatic);
+        flyout.ShowAt(btn);
     }
     private static readonly Windows.Globalization.Collation.CharacterGroupings _zhGroupings = new Windows.Globalization.Collation.CharacterGroupings("zh-CN");
     private CancellationTokenSource? _filterCts;
@@ -425,7 +484,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 }
                 UpdateStackVisuals();
                 ToggleMultiSelectVisuals(_isMultiSelectMode);
-                UpdateAllVisibleCheckBoxes();
             }
         }
     }
@@ -614,8 +672,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (e.PropertyName == nameof(WallpaperDisplayViewModel.WallpaperListMinWidth))
             {
                 // 小/中/大档位变化:列宽公式随档位值联动重算(切换档位立即生效,不等窗口 resize)
-                UpdateAllGridItemWidths();
-                UpdateExpUniformLayoutMinWidth(); // [实验] ItemsRepeater 的 UniformGridLayout 同步钳制
+                UpdateExpUniformLayoutMinWidth(); // [实验] 图标模式 UniformGridLayout 钳制
+                UpdateWallpapersListLayoutMinWidth(); // [全迁] 列表模式 UniformGridLayout 钳制
                 return;
             }
             if (e.PropertyName is nameof(WallpaperDisplayViewModel.BlurEveryone)
@@ -640,14 +698,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 await RefreshWallpaperList();
             }
 
-            // GridView 首次布局后重算自适应列宽
-            UpdateAllGridItemWidths();
-            UpdateExpUniformLayoutMinWidth(); // [实验] ItemsRepeater 首帧钳制 MinItemWidth(防崩)
-
-            // 补位移动动画(Composition 隐式 Offset):列表项重排时平滑滑到新位置
-            var reorderDuration = TimeSpan.FromMilliseconds(100);
-            foreach (var gv in AllWallpaperGridViews)
-                ItemsReorderAnimation.SetDuration(gv, reorderDuration);
+            // ItemsRepeater 首次布局后钳制列宽(防崩;GridView 已全迁 ItemsRepeater)
+            UpdateExpUniformLayoutMinWidth(); // [实验] 图标模式首帧钳制 MinItemWidth(防崩)
+            UpdateWallpapersListLayoutMinWidth(); // [全迁] 列表模式首帧钳制
         };
 
         OpenSelectedFoldersCommand = new AsyncRelayCommand(async () =>
@@ -1226,8 +1279,13 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         SelectShiftRange(_shiftAnchorItem, current);
     }
 
+    private bool _refreshInFlight; // [性能 2026-09] 刷新防重入:Loaded 首载 + ScanCompleted 几乎同时触发,避免并发两次全量过滤
     public async Task RefreshWallpaperList()
     {
+        // 已在刷新(等扫描/过滤)则跳过——同一次扫描的重复触发数据相同,并发只会浪费一次全量过滤
+        if (_refreshInFlight) return;
+        _refreshInFlight = true;
+        ShowScanProgress(true); // [扫描进度 2026-09] 扫描/刷新期间显示列表区中央转圈
         try
         {
             // 等待初始扫描链路完成（读配置 → 启动扫描 → 扫描完成），确保 GlobalAllWallpapers 已填充。
@@ -1251,13 +1309,31 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             IsMultiSelectMode = false;
             ViewModel.SelectedWallpaper = null;
 
-            await ApplyFilters();
+            await ApplyFilters(skipDebounce: true);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             Log.Error(ex,"筛选结果时出现异常。");
         }
+        finally
+        {
+            _refreshInFlight = false;
+            ShowScanProgress(false); // 扫描/刷新结束,隐藏转圈
+        }
+    }
+
+    /// <summary>[扫描进度 2026-09] 列表区中央转圈显隐(可被非 UI 线程调用)</summary>
+    private void ShowScanProgress(bool show)
+    {
+        if (ScanProgressRing == null) return;
+        var action = () =>
+        {
+            ScanProgressRing.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            ScanProgressRing.IsActive = show;
+        };
+        if (DispatcherQueue.HasThreadAccess) action();
+        else DispatcherQueue.EnqueueAsync(action);
     }
 
     private static bool IsListEqual(IReadOnlyList<WallpaperItem> current, IReadOnlyList<WallpaperItem> next)
@@ -1318,7 +1394,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         sender.ItemsSource = suggestions;
     }
 
-    private async Task ApplyFilters()
+    private async Task ApplyFilters(bool skipDebounce = false)
     {
         // ApplyFilters 可能被后台线程触发(VM PropertyChanged 事件),但分页状态通知、
         // x:Bind 推送(IsEnabled 等)和列表重建都要求 UI 线程——非 UI 线程会抛
@@ -1339,7 +1415,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
         try
         {
-            await Task.Delay(ViewModel.WallpaperDisplayVM.FilterResultResponseDelay, token);
+            // 防抖延迟:用户连续操作(打字搜索/切筛选)时合并请求;首载/刷新列表是单次全量操作,
+            // 跳过防抖直接算——否则每次进页面白等 1 秒(FilterResultResponseDelay 默认 1000ms)
+            if (!skipDebounce)
+                await Task.Delay(ViewModel.WallpaperDisplayVM.FilterResultResponseDelay, token);
 
             var selectedTags = GetSelectedTags();
             int sortIndex = ViewModel.WallpaperDisplayVM.SortOrder;
@@ -1429,8 +1508,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
             if (!token.IsCancellationRequested)
             {
-                // 翻页(页码变化)整页替换:Reset 无动画;同页筛选:增量 diff,动画只作用于真实变化的项
-                bool pageChanged = CurrentPage != pageBefore;
+                // 翻页(页码变化)或列表为空(首载)整页替换:Reset 无动画;同页筛选:增量 diff,动画只作用于真实变化的项
+                // [性能 2026-09] 空集合首载必须走整页替换——ApplyListDiff 对 N 条是 O(N²)(内层线性查找 + 逐条 Move/Insert),
+                // 万条分页关闭时白屏卡死数秒的元凶;diff 仅用于已填充列表的小增量刷新
+                bool pageChanged = CurrentPage != pageBefore || Wallpapers.Count == 0;
 
                 DispatcherQueue.TryEnqueue(() =>
                 {
@@ -1573,15 +1654,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         ScrollVisibleGridToTop();
     }
 
-    // ============= GridView 列表辅助(自适应列宽/滚动条/回顶) =============
-
-    /// <summary>壁纸 GridView 数组(图标模式已换 ItemsRepeater,故只含内容/列表两个 GridView)。
-    /// [实验] 原含 WallpapersGridView,已随图标模式换 ItemsRepeater 移除。</summary>
-    private GridView[] AllWallpaperGridViews => new[] { WallpapersContentGridView, WallpapersListGridView };
-
-    /// <summary>窗口尺寸变化:实时重算 ItemWidth(布局脏标记同帧合并,138 项毫秒级;拖动中列数与拉伸同步更新)</summary>
-    private void WallpaperGrid_SizeChanged(object sender, SizeChangedEventArgs e)
-        => UpdateAllGridItemWidths();
+    // ============= ItemsRepeater 列宽钳制(全迁;GridView 全部移除) =============
 
     // ============ [实验] ItemsRepeater UniformGridLayout 防崩钳制 ============
 
@@ -1608,6 +1681,36 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         else if (layout.MinItemWidth <= 0)
         {
             layout.MinItemWidth = desired; // 未布局首帧:先给档位值,等 SizeChanged 再钳
+        }
+    }
+
+    // ===== [全迁 ItemsRepeater] 列表模式 UniformGridLayout 钳制(400 档位) =====
+
+    /// <summary>列表模式 ScrollView 尺寸变化 → 钳制 MinItemWidth(防 itemsPerLine=0 除零崩溃)</summary>
+    private void WallpapersListScrollViewExp_SizeChanged(object sender, SizeChangedEventArgs e)
+        => UpdateWallpapersListLayoutMinWidth();
+
+    /// <summary>内容模式 ScrollView 尺寸变化(单列 StackLayout 无 MinItemWidth,无需钳制;占位)</summary>
+    private void WallpapersContentScrollViewExp_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+    }
+
+    /// <summary>列表模式 UniformGridLayout 钳制:MinItemWidth = Min(400 档位, 可用宽-8)。
+    /// 可用宽 = ScrollView 内容宽 - 左右 Margin(4+4);未布局首帧给档位值。</summary>
+    private void UpdateWallpapersListLayoutMinWidth()
+    {
+        if (WallpapersListUniformLayoutExp is not UniformGridLayout layout) return;
+        double viewport = WallpapersListScrollViewExp.ActualWidth;
+        int desired = 400; // 列表模式档位固定 400
+        if (viewport > 0)
+        {
+            double effective = Math.Max(1, Math.Min(desired, viewport - 8));
+            if (Math.Abs(layout.MinItemWidth - effective) > 0.5)
+                layout.MinItemWidth = effective;
+        }
+        else if (layout.MinItemWidth <= 0)
+        {
+            layout.MinItemWidth = desired;
         }
     }
 
@@ -1871,63 +1974,19 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         return null;
     }
 
-    /// <summary>按各模式档位重算 ItemWidth,复刻 UniformGridLayout 的"拉伸填满行尾"。
-    /// [实验] 图标模式已换 ItemsRepeater(UniformGridLayout 声明式 MinItemWidth 自适应),
-    /// 不再手动 SetValue,故此处只处理列表/内容两个 GridView。</summary>
-    private void UpdateAllGridItemWidths()
+    /// <summary>当前可见的壁纸滚动容器(滚动回顶用;三个模式都已迁 ScrollView)</summary>
+    private ScrollView? GetVisibleWallpaperScrollView()
     {
-        // 间距来自容器 Margin(ItemContainerStyle 左右各 5,共 10),在槽位内部;槽位宽 = available/列数 填满整行,行尾零留白
-        UpdateGridItemWidth(WallpapersListGridView, 400, 10);
-        UpdateGridItemWidth(WallpapersContentGridView, 0, 10); // 内容模式单列
-    }
-
-    /// <param name="itemMarginTotal">容器左右 Margin 总和(判断列数用;ItemWidth 不扣除,卡片占满槽位)</param>
-    private static void UpdateGridItemWidth(GridView gridView, int minItemWidth, int itemMarginTotal)
-    {
-        // 非反射(AOT 兼容):ItemsPanelRoot 在 ItemsWrapGrid 面板下必定是 ItemsWrapGrid。
-        // AOT 裁剪下 is/强转都可能失败(类型元数据缺失/类型被投影),用 DP SetValue 直接灌值,
-        // 走 WinUI 原生 DP 系统,不经过 C# 类型匹配,最稳。
-        if (gridView?.ItemsPanelRoot is not { } panelRoot) return;
-        panelRoot.SetValue(ItemsWrapGrid.CacheLengthProperty, 0); // 不预渲染(仅实化可见项;滚动时即时实化,Skia 流式打开快)
-        double available = gridView.ActualWidth;
-        if (available <= 0) return;
-        if (minItemWidth <= 0) // 单列(内容模式):槽位 = 可用宽,卡片 = 可用宽 - 10
-        {
-            panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available);
-            return;
-        }
-        int cols = Math.Max(1, (int)(available / (minItemWidth + itemMarginTotal)));
-        // ItemsWrapGrid 语义(已实测):ItemWidth = 槽位步长(含容器 Margin),容器实际宽 = ItemWidth - 10;
-        // 换行判断为严格比较,ItemWidth = available/cols 会因浮点误差恰好放不下最后一列(空一列),
-        // 故留 1px/列余量;卡片 = available/cols - 11,行尾余量 cols×1px 不可见
-        panelRoot.SetValue(ItemsWrapGrid.ItemWidthProperty, available / cols - 2);
-    }
-
-    /// <summary>当前可见的 GridView(滚动回顶用)</summary>
-    private GridView? GetVisibleGridView()
-    {
-        foreach (var gv in AllWallpaperGridViews)
-            if (gv.Visibility == Visibility.Visible)
-                return gv;
+        if (WallpapersScrollViewExp.Visibility == Visibility.Visible) return WallpapersScrollViewExp;
+        if (WallpapersContentScrollViewExp.Visibility == Visibility.Visible) return WallpapersContentScrollViewExp;
+        if (WallpapersListScrollViewExp.Visibility == Visibility.Visible) return WallpapersListScrollViewExp;
         return null;
     }
 
-    /// <summary>可见 GridView 滚动回顶(分页/刷新后)</summary>
+    /// <summary>可见模式滚动回顶(分页/刷新后)</summary>
     private void ScrollVisibleGridToTop()
     {
-        if (GetVisibleGridView() is GridView gv && FindScrollViewer(gv) is ScrollViewer sv)
-            sv.ChangeView(0, 0, null);
-    }
-
-    private static ScrollViewer? FindScrollViewer(DependencyObject root)
-    {
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
-        {
-            var child = VisualTreeHelper.GetChild(root, i);
-            if (child is ScrollViewer sv) return sv;
-            if (FindScrollViewer(child) is ScrollViewer found) return found;
-        }
-        return null;
+        GetVisibleWallpaperScrollView()?.ScrollTo(0, 0);
     }
 
     /// <summary>取当前页应显示的壁纸；分页关闭时返回完整列表</summary>
@@ -2181,20 +2240,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         return false;
     }
 
-    private void UpdateAllVisibleCheckBoxes()
-    {
-        foreach (var gv in AllWallpaperGridViews)
-        {
-            if (gv == null) continue;
-            for (int i = 0; i < gv.Items.Count; i++)
-            {
-                if (gv.ContainerFromIndex(i) is not GridViewItem container) continue;
-                // 容器 Content = DataTemplate 根(Grid,DataContext = WallpaperItem)
-                if (container.Content is Grid grid && grid.DataContext is WallpaperItem item)
-                    UpdateItemCheckBoxOpacity(grid, item);
-            }
-        }
-    }
     private void WallpaperList_Tapped(object sender, TappedRoutedEventArgs e)
     {
         if (_isWallpaperItemTapped == true)
@@ -3328,6 +3373,18 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         RefreshButton.IsEnabled = false;
         var pressTime = DateTime.Now; // 记录按下时刻(旋转动画 2 秒)
 
+        // [2026-09] 按下立即清列表 + 显示扫描转圈(不等扫描完成——旧数据先撤下,避免刷新期间还显示过期列表)
+        ShowScanProgress(true);
+        Wallpapers.Clear();
+        SelectedWallpapers.Clear();
+        IsMultiSelectMode = false;
+        ViewModel.SelectedWallpaper = null;
+        _filteredWallpapers = [];
+        CurrentPage = 1;
+        NotifyPagerStateChanged();
+        ShowTip(NoScanResultTip, false);
+        ShowTip(NoResultTip, false);
+
         try
         {
             App.StartBackgroundScan(ViewModel.PathManagementVM.WorkshopPath, ViewModel.PathManagementVM.OfficialPath, ViewModel.PathManagementVM.ProjectPath, ViewModel.PathManagementVM.AcfPath, ViewModel.PathManagementVM.VdfPath, ViewModel.AppSettingsVM.ScanCacheEnabled == "1");
@@ -3438,7 +3495,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             border.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
             if (!visible) return;
             if (border.Child is TextBlock tb)
-                tb.Text = new PapersTagContentChoose().Convert(item, null, "", "") as string ?? "";
+                tb.Text = new PapersTagContentChoose().Convert(item, typeof(string), "", "") as string ?? "";
         }
     private void CancelMultiSelect_Click(object sender, RoutedEventArgs e)
     {

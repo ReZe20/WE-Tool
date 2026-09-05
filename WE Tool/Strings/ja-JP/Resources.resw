@@ -1873,4 +1873,13 @@ project.json とプレビューをコピー
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>透明画像を除外</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>スキャン完了、クリーンアップが必要な残存はありません</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>残存ファイルは見つかりません</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>ワークショップライブラリのドライブが NTFS ではありません。自動バックアップ（ハードリンク）はこのドライブでは動作しないため、インストールされませんでした。</value>
+  </data>
 </root>

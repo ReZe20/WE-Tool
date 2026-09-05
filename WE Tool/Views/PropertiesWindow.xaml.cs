@@ -769,7 +769,7 @@ namespace WE_Tool
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         // 弹层(菜单/Flyout)不自动继承窗口运行时主题,打开时显式应用(公共逻辑见 App.ApplyFlyoutTheme)
-        private void FlyoutThemeRefresh_Opened(object sender, object e) => App.ApplyFlyoutTheme(sender, e);
+        private void FlyoutThemeRefresh_Opened(object? sender, object e) => App.ApplyFlyoutTheme(sender!, e);
 
         private void ApplyTheme()
         {

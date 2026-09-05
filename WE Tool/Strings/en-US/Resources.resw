@@ -1872,4 +1872,13 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>Filter transparent images</value>
   </data>
+  <data name="Cleanup_EmptyDesc.Text" xml:space="preserve">
+    <value>Scan complete — nothing needs cleanup</value>
+  </data>
+  <data name="Cleanup_NoResidue" xml:space="preserve">
+    <value>No leftover files found</value>
+  </data>
+  <data name="AutoBackup_NotNtfs" xml:space="preserve">
+    <value>The drive containing the workshop library is not NTFS. Auto-backup (hard links) cannot work on this drive, so it was not installed.</value>
+  </data>
 </root>
