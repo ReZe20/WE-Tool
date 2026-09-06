@@ -112,12 +112,16 @@ namespace WE_Tool
                     ApplyTheme();
             };
 
+            // [2026-09] Papers 页"预览模糊"开关切换时实时刷新本窗口预览行(模糊/原图跟随)
+            ViewModel.WallpaperDisplayVM.PropertyChanged += OnWallpaperDisplayVM_PropertyChanged;
+
             // 尺寸防抖保存:窗口尺寸变化(手动拖拽/最大化)后 500ms 落盘,只存最后一次(照抄 MainWindow 模式)
             AppWindow.Changed += OnAppWindowChanged;
 
             Closed += (s, e) =>
             {
                 _openWindows.Remove(this);
+                ViewModel.WallpaperDisplayVM.PropertyChanged -= OnWallpaperDisplayVM_PropertyChanged;
                 AppWindow.Changed -= OnAppWindowChanged;
                 SavePropertiesWindowSize(); // 关闭时兜底保存一次(防抖可能未触发)
             };
@@ -212,7 +216,7 @@ namespace WE_Tool
             Selected = wallpaper;
             if (!ShowPropsPage)
                 WallpaperPropsNavItem.Visibility = Visibility.Collapsed;
-            BuildFileInfoRows(wallpaper);
+            _ = BuildFileInfoRows(wallpaper); // 内部有 await(预览模糊异步),fire-and-forget
             _ = RefreshFileTreeAsync();
             if (ShowPropsPage)
                 _ = LoadPropertiesAsync(wallpaper);
@@ -234,7 +238,7 @@ namespace WE_Tool
 
         /// <summary>构建文件属性页虚拟化行(标签用 LanguageHelper 取:MRT Core 键是 '/' 层级形式,
         /// ResourceLoader.GetString 直接传 'X.Y.Text' 会抛 0x80073B17;LanguageHelper 内部 '.'→'/' + 缓存)</summary>
-        private void BuildFileInfoRows(WallpaperItem? wallpaper)
+        private async Task BuildFileInfoRows(WallpaperItem? wallpaper)
         {
             var rows = new List<FileInfoRow>();
 
@@ -271,6 +275,63 @@ namespace WE_Tool
 
             if (ContentRoot.Content is ItemsRepeater repeater)
                 repeater.ItemsSource = rows;
+
+            // [2026-09] 预览模糊跟随:Papers 页"预览模糊"开关命中该壁纸分级时,预览图换高斯模糊版
+            await RefreshPreviewBlurAsync(wallpaper);
+        }
+
+        /// <summary>
+        /// [2026-09] 按当前"预览模糊"开关刷新本窗口预览行:命中分级 → 换高斯模糊图;未命中 → 恢复原图。
+        /// 供 BuildFileInfoRows(打开时)与 Papers 页开关切换订阅(实时跟随)共用。
+        /// </summary>
+        private async Task RefreshPreviewBlurAsync(WallpaperItem? wallpaper)
+        {
+            try
+            {
+                if (wallpaper == null || ContentRoot.Content is not ItemsRepeater rep) return;
+                if (rep.ItemsSource is not IReadOnlyList<FileInfoRow> rows || rows.Count == 0) return;
+                int previewIdx = -1;
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    if (rows[i].Kind == FileInfoRowKind.Preview) { previewIdx = i; break; }
+                }
+                if (previewIdx < 0) return;
+
+                bool shouldBlur = BlurPreviewService.ShouldBlur(wallpaper.ContentRating,
+                    ViewModel.WallpaperDisplayVM.BlurEveryone,
+                    ViewModel.WallpaperDisplayVM.BlurTeen,
+                    ViewModel.WallpaperDisplayVM.BlurAdult);
+
+                Microsoft.UI.Xaml.Media.ImageSource? newSource;
+                if (shouldBlur)
+                {
+                    newSource = await BlurPreviewService.GetBlurredPreviewAsync(wallpaper.Preview ?? "");
+                }
+                else
+                {
+                    // 未命中模糊:恢复原图(复用路径转 ImageSource 逻辑——经 Preview 工厂再取 PreviewImageSource)
+                    newSource = FileInfoRow.Preview(wallpaper.Preview).PreviewImageSource;
+                }
+                if (newSource == null) return;
+
+                var newRows = new List<FileInfoRow>(rows);
+                newRows[previewIdx] = FileInfoRow.Preview(newSource); // 换源(其余行不变)
+                rep.ItemsSource = newRows;
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "刷新属性窗口预览模糊失败");
+            }
+        }
+
+        /// <summary>[2026-09] 预览模糊开关(BlurEveryone/BlurTeen/BlurAdult)切换 → 实时刷新本窗口预览行</summary>
+        private void OnWallpaperDisplayVM_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is not (nameof(WallpaperDisplayViewModel.BlurEveryone)
+                    or nameof(WallpaperDisplayViewModel.BlurTeen)
+                    or nameof(WallpaperDisplayViewModel.BlurAdult))) return;
+            if (Selected == null) return;
+            _ = RefreshPreviewBlurAsync(Selected);
         }
 
         // ========== 壁纸属性页:快照壁纸的 project.json 属性(懒加载/增量填充/代次号,模式同 SettingsViewModel) ==========
@@ -1043,7 +1104,7 @@ namespace WE_Tool
 
         public static FileInfoRow Preview(object? imageSource) => new(
             FileInfoRowKind.Preview,
-            value: imageSource,
+            value: null, // Value 只供文本行用;预览图走 PreviewImageSource(存 Value 会让 TextBlock.Text 绑定时 cast 崩)
             previewSource: imageSource is string path && !string.IsNullOrEmpty(path)
                 ? PathToImageSource(path)
                 : imageSource as Microsoft.UI.Xaml.Media.ImageSource);

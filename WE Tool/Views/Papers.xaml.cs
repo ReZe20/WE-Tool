@@ -648,13 +648,26 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     if (img != null) img.Visibility = Visibility.Visible;
                 }
             }
+            // [修复 2026-09] 容器复用(ElementPrepared 每次重绑都触发):按当前 item 重算模糊层。
+            // ShadowRect_Loaded(模板根 Loaded)在容器回收复用时不再触发,模糊状态只在这里收敛:
+            // 该模糊的补上、不该模糊的清除残留(此前的残留来自 ElementClearing 未清理)。
+            if (root.FindName("ItemRootGrid") is Grid blurRootGrid)
+                UpdateItemBlur(blurRootGrid, item);
         };
-        // 元素移出(回收/滚动走远):停 GIF(复用原 UpdateSkiaGif 的 Stop 语义;ElementPrepared 重绑会重启)
+        // 元素移出(回收/滚动走远):停 GIF + 清除模糊层残留,保证容器回池时是干净状态
+        // [修复 2026-09] 原实现只停 GIF;模糊层不清理,卡片带着模糊层回池 → 重绑到不需模糊的新 item 时残留模糊
         WallpapersRepeater.ElementClearing += (s, e) =>
         {
             if (e.Element is not Grid root) return;
             if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
                 skia.Stop();
+            // 隐藏并清空模糊层;原图可见性由下一次 ElementPrepared 按新 item 重设,不在此处理
+            if (root.FindName("ItemBlurOverlay") is Image blurOv)
+            {
+                blurOv.Visibility = Visibility.Collapsed;
+                blurOv.Source = null;
+                _blurOverlayOwner.Remove(blurOv); // [修复] 同步清归属,防回收复用后旧归属误放行
+            }
         };
         ViewModel.WallpaperDisplayVM.PropertyChanged += (s, e) =>
         {
@@ -1746,20 +1759,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
     // ============ 预览内容过滤(高斯模糊) ============
 
-    /// <summary>模糊位图缓存(按预览路径,GPU 生成一次复用;138 张中仅露骨壁纸会进缓存)</summary>
-    private readonly Dictionary<string, BitmapImage> _blurCache = [];
-
     /// <summary>该壁纸在当前预览模糊开关下是否需要模糊:勾选哪个年龄段,该年龄段分级的壁纸就模糊</summary>
     private bool ShouldBlurPreview(WallpaperItem item)
-    {
-        return item.ContentRating?.ToLower() switch
-        {
-            "everyone" => ViewModel.WallpaperDisplayVM.BlurEveryone,
-            "questionable" => ViewModel.WallpaperDisplayVM.BlurTeen,
-            "mature" => ViewModel.WallpaperDisplayVM.BlurAdult,
-            _ => false
-        };
-    }
+        => BlurPreviewService.ShouldBlur(item.ContentRating,
+            ViewModel.WallpaperDisplayVM.BlurEveryone,
+            ViewModel.WallpaperDisplayVM.BlurTeen,
+            ViewModel.WallpaperDisplayVM.BlurAdult);
 
     /// <summary>按当前年龄段设置切换单个卡片的模糊叠加层</summary>
     private void UpdateItemBlur(Grid itemRootGrid, WallpaperItem item)
@@ -1775,6 +1780,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             blurOverlay.Visibility = Visibility.Collapsed;
             blurOverlay.Source = null;
+            _blurOverlayOwner.Remove(blurOverlay); // 同步清归属,防过期 await 误上屏
             UpdateSkiaGif(itemRootGrid, item); // 恢复原图显示(按类型:GIF → Skia 播放,其余 → 静态图)
         }
     }
@@ -1790,6 +1796,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         }
     }
 
+    // [修复 2026-09] 模糊层宿主(Image)当前归属的壁纸预览路径:防异步竞态——旧壁纸的模糊位图
+    // await 完成后覆盖到已被回收复用成新壁纸的同一 Image 上(在错误的项上加模糊的直接来源)。
+    private static readonly Dictionary<Image, string> _blurOverlayOwner = [];
+
     private async Task ShowBlurOverlayAsync(Image blurOverlay, WallpaperItem item, Action restoreRawPreviews)
     {
         try
@@ -1799,7 +1809,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 restoreRawPreviews();
                 return;
             }
-            var blurred = await GetBlurredPreviewAsync(item.Preview);
+            // 记录本次归属:仅当此 Image 仍归属此预览路径时,模糊结果才允许上屏
+            _blurOverlayOwner[blurOverlay] = item.Preview;
+            var blurred = await BlurPreviewService.GetBlurredPreviewAsync(item.Preview);
             if (blurred == null)
             {
                 restoreRawPreviews();
@@ -1811,6 +1823,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 restoreRawPreviews(); // 模糊层不上屏时恢复原图,避免卡片空白
                 return;
             }
+            // [修复 2026-09] 归属校验:await 期间容器可能已被回收复用成别的壁纸(ElementClearing/ElementPrepared
+            // 会清空/重设 Source)。此时此 Image 的归属已不是发起时的 item,丢弃过期结果,不覆盖新壁纸。
+            if (!_blurOverlayOwner.TryGetValue(blurOverlay, out var owner) || owner != item.Preview)
+            {
+                return; // 过期结果:卡片已换绑,静默丢弃(新归属的模糊流程会自行上屏)
+            }
             blurOverlay.Source = blurred;
             blurOverlay.Visibility = Visibility.Visible;
         }
@@ -1821,68 +1839,15 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         }
     }
 
-    /// <summary>Win2D GPU 高斯模糊:加载原图 → 降采样到 480 内 → GaussianBlurEffect → PNG 流 → BitmapImage(缓存复用)</summary>
-    private async Task<BitmapImage?> GetBlurredPreviewAsync(string previewPath)
-    {
-        if (_blurCache.TryGetValue(previewPath, out var cached)) return cached;
-
-        var device = Microsoft.Graphics.Canvas.CanvasDevice.GetSharedDevice();
-        using var canvasBitmap = await Microsoft.Graphics.Canvas.CanvasBitmap.LoadAsync(device, previewPath);
-
-        // 先缩放到 480 内再模糊:模糊半径按目标分辨率折算(在原图上模糊 18px 相对 1920 宽几乎不可见)
-        var src = canvasBitmap.SizeInPixels;
-        float scale = Math.Min(1f, 480f / Math.Max(src.Width, src.Height));
-        int w = Math.Max(1, (int)(src.Width * scale));
-        int h = Math.Max(1, (int)(src.Height * scale));
-
-        var scaleEffect = new Microsoft.Graphics.Canvas.Effects.Transform2DEffect
-        {
-            Source = canvasBitmap,
-            TransformMatrix = System.Numerics.Matrix3x2.CreateScale(scale)
-        };
-        // BorderEffect(clamp)让模糊在图像边缘也能采样到延伸像素,避免"中心糊边缘清晰"的不均匀
-        var borderEffect = new Microsoft.Graphics.Canvas.Effects.BorderEffect
-        {
-            Source = scaleEffect,
-            ExtendX = Microsoft.Graphics.Canvas.CanvasEdgeBehavior.Clamp,
-            ExtendY = Microsoft.Graphics.Canvas.CanvasEdgeBehavior.Clamp
-        };
-        var blurEffect = new Microsoft.Graphics.Canvas.Effects.GaussianBlurEffect
-        {
-            BlurAmount = 26f,
-            BorderMode = Microsoft.Graphics.Canvas.Effects.EffectBorderMode.Hard,
-            Optimization = Microsoft.Graphics.Canvas.Effects.EffectOptimization.Speed,
-            Source = borderEffect
-        };
-
-        using var target = new Microsoft.Graphics.Canvas.CanvasRenderTarget(device, w, h, 96);
-        using (var ds = target.CreateDrawingSession())
-        {
-            ds.Clear(Microsoft.UI.Colors.Transparent);
-            ds.DrawImage(blurEffect);
-        }
-
-        using var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
-        await target.SaveAsync(stream, Microsoft.Graphics.Canvas.CanvasBitmapFileFormat.Png);
-        stream.Seek(0);
-        var bmp = new BitmapImage();
-        await bmp.SetSourceAsync(stream);
-        _blurCache[previewPath] = bmp;
-        return bmp;
-    }
-
     /// <summary>年龄段设置变化:遍历当前页所有可见卡片刷新模糊层</summary>
     private void RefreshAllItemBlurs()
     {
-        // [实验] 图标模式已换 ItemsRepeater(无 ContainerFromItem),原图标 GridView 遍历暂注释
-        //foreach (var item in Wallpapers)
-        //{
-        //    if (WallpapersGridView.ContainerFromItem(item) is FrameworkElement container)
-        //    {
-        //        var itemRootGrid = FindDescendantGrid(container, "ItemRootGrid");
-        //        if (itemRootGrid != null) UpdateItemBlur(itemRootGrid, item);
-        //    }
-        //}
+        // [修复 2026-09] 图标 GridView → ItemsRepeater 后无 ContainerFromItem,改可视树遍历:
+        // 从三个模式滚动容器深搜找模板根 Grid(ItemRootGrid/ContentItemContainer/ListItemContainer),
+        // 对已实化的卡片按当前开关刷新模糊层(勾选开关立即生效,不再只对新实化卡片生效)
+        RefreshRepeaterBlur(WallpapersScrollViewExp, "ItemRootGrid");
+        RefreshRepeaterBlur(WallpapersContentScrollViewExp, "ContentItemContainer");
+        RefreshRepeaterBlur(WallpapersListScrollViewExp, "ListItemContainer");
 
         // 多选堆叠视图同步:逐张重算模糊层
         for (int i = 0; i < DisplayedSelectedWallpapers.Count; i++)
@@ -1892,6 +1857,30 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             {
                 UpdateStackItemBlur(stackContainer, stackItem);
             }
+        }
+    }
+
+    /// <summary>[2026-09] 可视树遍历某滚动容器内所有已实化的卡片根 Grid,刷新模糊层。</summary>
+    private void RefreshRepeaterBlur(DependencyObject? root, string rootName)
+    {
+        if (root == null) return;
+        foreach (var cardRoot in FindDescendantGrids(root, rootName))
+        {
+            if (cardRoot.DataContext is WallpaperItem item)
+                UpdateItemBlur(cardRoot, item);
+        }
+    }
+
+    /// <summary>[2026-09] 深搜全部指定名 Grid(ItemsRepeater 实化多卡,FindDescendantGrid 只返回首个不够)。</summary>
+    private static IEnumerable<Grid> FindDescendantGrids(DependencyObject root, string name)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is Grid g && g.Name == name)
+                yield return g;
+            foreach (var found in FindDescendantGrids(child, name))
+                yield return found;
         }
     }
 
@@ -1909,6 +1898,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             blurOverlay.Visibility = Visibility.Collapsed;
             blurOverlay.Source = null;
+            _blurOverlayOwner.Remove(blurOverlay);
             SinglePreviewImage.Visibility = Visibility.Visible;
         }
     }
@@ -1932,6 +1922,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             blurOverlay.Visibility = Visibility.Collapsed;
             blurOverlay.Source = null;
+            _blurOverlayOwner.Remove(blurOverlay);
             RestoreStackBackground(cardBorder, item);
         }
     }

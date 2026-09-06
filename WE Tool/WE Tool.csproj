@@ -345,7 +345,10 @@
          仅 Release AOT 发布生效;Debug 日常调试不受影响(仍走 NuGet 的 dll)。
          注意:.def 严禁出现 LIBRARY 行(会把 exe 烙成 DLL 格式,Windows 拒载)。
          注:SkiaSharp.Views.WinUI.Native.dll 保留官方原版不融入(2026-08-24 用户决定) -->
-    <ItemGroup Condition="'$(PublishAot)' == 'true' And '$(Configuration)' != 'Debug'">
+    <ItemGroup Condition="'$(PublishAot)' == 'true' And '$(Configuration)' != 'Debug' And Exists('$(SkiaStaticLibDir)skia.lib')">
+      <!-- [CI 兼容 2026-09] 加 Exists 条件:静态库(本机 skia-engine 产物)不存在时(如 GitHub Actions runner)
+           不传 .def/不链库 → 链接器不再报几百个 LNK2001,自动退回"发布目录带 libSkiaSharp.dll"(由下方
+           438 行兜底替换成仓库内精简版)。本地 lib 存在 → 行为不变(静态链接焊入 exe)。 -->
       <LinkerArg Include="/DEF:&quot;$(ProjectDir)..\native\skia-min-gif\libSkiaSharp.def&quot;" />
       <NativeLibrary Include="$(SkiaStaticLibDir)SkiaSharp.lib" Condition="Exists('$(SkiaStaticLibDir)SkiaSharp.lib')" />
       <NativeLibrary Include="$(SkiaStaticLibDir)skia.lib" Condition="Exists('$(SkiaStaticLibDir)skia.lib')" />
@@ -360,8 +363,9 @@
           </ItemGroup>
 
           <!-- [路线二] Debug/非 AOT 调试时排除 SkiaStaticLink.cs:resolver 会把 P/Invoke 指到无导出表的 exe,
-               导致版本检查读不到原生版本(TypeInitializationException)。仅 AOT 发布时才编译该文件。 -->
-          <ItemGroup Condition="'$(PublishAot)' != 'true' Or '$(Configuration)' == 'Debug'">
+               导致版本检查读不到原生版本(TypeInitializationException)。仅 AOT 发布且静态库存在(本机)才编译该文件;
+               CI(无静态库)不带它——exe 无 sk_* 符号,resolver 会指空崩溃,须走官方 dll。 -->
+          <ItemGroup Condition="'$(PublishAot)' != 'true' Or '$(Configuration)' == 'Debug' Or !Exists('$(SkiaStaticLibDir)skia.lib')">
             <Compile Remove="SkiaStaticLink.cs" />
           </ItemGroup>
 
@@ -408,8 +412,9 @@
       <!-- [路线二] 剔除 libSkiaSharp.dll:静态链接后 937 个 sk_* 符号焊进 exe 本体,
            运行时经 SkiaStaticLink.cs 的 DllImportResolver 重定向到进程自身;
            此 dll 仅是 NuGet 附带的原生库,不再需要(2026-08-24 实测)。
+           [CI 兼容 2026-09] 仅静态库存在(本机)才剔;CI 无静态库时保留 dll(走 438 行 ReplaceSkiaDll 兜底)。
            注:SkiaSharp.Views.WinUI.Native.dll 保留(激活服务器不做融入) -->
-      <_PublishUnneeded Include="$(PublishDir)**\libSkiaSharp.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\libSkiaSharp.dll" Condition="Exists('$(SkiaStaticLibDir)skia.lib')" />
       <!-- [2.x 升级] 剔除 WindowsAppSDK 2.x 元包新拖入的 AI/ML/Search/Widgets 全家桶:
            项目源码零引用(2026-09-03 grep 验证),纯体积负担
            (onnxruntime 21MB + DirectML 18MB + AI Projection 系列 + 其它,合计 ~44MB) -->
