@@ -23,10 +23,16 @@
   <!-- Facepunch.Steamworks 2.3.3 的原生库 steam_api64.dll 位于 NuGet 包的 content/ 目录,
        PackageReference 模式不会自动复制 content/ 下的文件(仅 contentFiles/ 才会),
        缺它桥接启动即失败(0x8007007E, 见 logs/steamworks-bridge.log)。
-       NuGetPackageRoot 指向本机包缓存(CI 用 dotnet 自带缓存路径,restore 后必存在);
+       [CI 修复 2026-09] NuGetPackageRoot 只在 restore 阶段可靠(CI 上 CopySteamworksBridge 内联
+       MSBuild Restore 后该属性可能为空,展开成项目相对路径导致 MSB3030);显式兜底到用户缓存:
+       优先 NuGetPackageRoot,空则用 USERPROFILE\.nuget\packages(与 dotnet restore 默认一致)。
        Link 展平到输出根目录,随 WE Tool 的 CopySteamworksBridge 一并进入发布包。 -->
-  <ItemGroup>
-    <None Include="$(NuGetPackageRoot)facepunch.steamworks\2.3.3\content\steam_api64.dll"
+  <PropertyGroup>
+    <_FpRoot Condition="'$(NuGetPackageRoot)' != '' And Exists('$(NuGetPackageRoot)facepunch.steamworks\2.3.3\content\steam_api64.dll')">$(NuGetPackageRoot)</_FpRoot>
+    <_FpRoot Condition="'$(_FpRoot)' == ''">$(USERPROFILE)\.nuget\packages\</_FpRoot>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(_FpRoot)facepunch.steamworks\2.3.3\content\steam_api64.dll')">
+    <None Include="$(_FpRoot)facepunch.steamworks\2.3.3\content\steam_api64.dll"
           Link="steam_api64.dll"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
