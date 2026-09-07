@@ -425,7 +425,10 @@ namespace WE_Tool
 
             bool ratingOk = rating switch
             {
-                "g" => cfg.RatingG,
+                "everyone" => cfg.RatingG,
+                "questionable" => cfg.RatingPg,
+                "mature" => cfg.RatingR,
+                "g" => cfg.RatingG,       // 兼容历史/第三方写入的短码
                 "pg" => cfg.RatingPg,
                 "r" => cfg.RatingR,
                 _ => true, // 未知分级默认放行(与服务端 AutoBackupFilter 一致)
