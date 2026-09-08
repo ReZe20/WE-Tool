@@ -120,6 +120,7 @@ namespace WE_Tool
 
             _window.Activate();
             LoadTheme();
+            LoadNavigationMode();
         }
         /// <summary>UI 线程未处理异常:记录日志;Steamworks 相关的标记为已处理,避免关闭 Steam 时应用崩溃</summary>
         private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
@@ -188,6 +189,21 @@ namespace WE_Tool
             catch (Exception ex)
             {
                 Log.Error(ex, "应用主题时发生异常。");
+            }
+        }
+
+        /// <summary>应用主窗口导航栏模式(设置页即时切换与启动时共用)。</summary>
+        public void LoadNavigationMode()
+        {
+            try
+            {
+                string mode = ViewModel.AppSettingsVM.NavigationMode ?? "Left";
+                if (MainWindowInstance is MainWindow mainWindow)
+                    mainWindow.ApplyNavigationMode(mode);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "应用导航模式时发生异常。");
             }
         }
 

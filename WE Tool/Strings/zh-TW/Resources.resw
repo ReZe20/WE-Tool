@@ -633,6 +633,19 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>深色</value>
   </data>
+
+  <data name="NavigationMode.Header" xml:space="preserve">
+    <value>導覽模式</value>
+  </data>
+  <data name="NavigationMode.Description" xml:space="preserve">
+    <value>選擇導覽列的顯示方式</value>
+  </data>
+  <data name="NavigationMode_Left.Content" xml:space="preserve">
+    <value>左側導覽列</value>
+  </data>
+  <data name="NavigationMode_Top.Content" xml:space="preserve">
+    <value>頂部導覽列</value>
+  </data>
   <data name="ScanCache.Header" xml:space="preserve">
     <value>掃描快取</value>
   </data>

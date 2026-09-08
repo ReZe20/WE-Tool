@@ -173,6 +173,16 @@
                     </ComboBox>
                 </controls:SettingsCard>
 
+                <controls:SettingsCard x:Uid="NavigationMode" Margin="0,0,0,10">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE700;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <ComboBox SelectedValue="{x:Bind ViewModel.AppSettingsVM.NavigationMode, Mode=TwoWay}" SelectedValuePath="Tag" MinWidth="150">
+                        <ComboBoxItem Tag="Left" x:Uid="NavigationMode_Left"/>
+                        <ComboBoxItem Tag="Top" x:Uid="NavigationMode_Top"/>
+                    </ComboBox>
+                </controls:SettingsCard>
+
                 <controls:SettingsCard x:Uid="ScanCache" Margin="0,0,0,10">
                     <controls:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xEE94;"/>

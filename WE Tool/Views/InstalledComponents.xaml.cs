@@ -1699,6 +1699,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         Title = c.Title,
         Preview = c.Preview,
+        // 组件类型(图层/脚本/特效)是组件语义,不在壁纸类型字典(scene/video/web...);
+        // 属性窗口组件模式(ShowPropsPage=false)直显本字段,不查 TypeConv 字典,与详情面板 ComponentTypeToDisplay 同款
         Type = c.ComponentType switch
         {
             ComponentType.Layer => "图层",
@@ -1706,6 +1708,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             ComponentType.Effect => "特效",
             _ => "未知"
         },
+        // 组件扫描仅 workshop 源:来源与壁纸 workshop 条目同路径,SourceConv 命中 Source_Workshop 显示"创意工坊"
+        Source = "workshop",
         ContentRating = c.ContentRating,
         Tags = c.Tags,
         Description = c.Description,

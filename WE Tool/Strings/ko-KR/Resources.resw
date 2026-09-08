@@ -633,6 +633,19 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>다크</value>
   </data>
+
+  <data name="NavigationMode.Header" xml:space="preserve">
+    <value>탐색 모드</value>
+  </data>
+  <data name="NavigationMode.Description" xml:space="preserve">
+    <value>탐색 모음 표시 방식을 선택합니다</value>
+  </data>
+  <data name="NavigationMode_Left.Content" xml:space="preserve">
+    <value>왼쪽 탐색 모음</value>
+  </data>
+  <data name="NavigationMode_Top.Content" xml:space="preserve">
+    <value>위쪽 탐색 모음</value>
+  </data>
   <data name="ScanCache.Header" xml:space="preserve">
     <value>스캔 캐시</value>
   </data>

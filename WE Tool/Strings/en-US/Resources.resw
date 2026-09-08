@@ -633,6 +633,19 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>Dark</value>
   </data>
+
+  <data name="NavigationMode.Header" xml:space="preserve">
+    <value>Navigation mode</value>
+  </data>
+  <data name="NavigationMode.Description" xml:space="preserve">
+    <value>Select how the navigation bar is displayed</value>
+  </data>
+  <data name="NavigationMode_Left.Content" xml:space="preserve">
+    <value>Left sidebar</value>
+  </data>
+  <data name="NavigationMode_Top.Content" xml:space="preserve">
+    <value>Top navigation</value>
+  </data>
   <data name="ScanCache.Header" xml:space="preserve">
     <value>Scan Cache</value>
   </data>

@@ -14,6 +14,10 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial string Theme { get; set; } = null!;
 
+        /// <summary>主窗口导航栏模式:"Left"=左侧导航栏, "Top"=顶部导航栏。</summary>
+        [ObservableProperty]
+        public partial string NavigationMode { get; set; } = "Left";
+
         /// <summary>扫描缓存开关："0"=关闭, "1"=启用</summary>
         [ObservableProperty]
         public partial string ScanCacheEnabled { get; set; } = "1";

@@ -1,3 +1,4 @@
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -145,6 +146,7 @@ namespace WE_Tool
             if (this.Content?.XamlRoot != null)
                 this.Content.XamlRoot.Changed += OnXamlRootChanged;
             SyncTitleBarRowToCaptionButtons(); // [2026-09] 首次布局后校准标题栏行高(此时 TitleBar.Height 已可用)
+            UpdateTopNavInputRegions(); // Top 模式启动:首次布局后划分顶栏可点区/窗口拖区
             try
             {
                 var settings = await _configService.LoadAsync();
@@ -275,10 +277,202 @@ namespace WE_Tool
             contentFrame.Navigate(pageType, null);
         }
 
+        /// <summary>应用导航栏模式(App.LoadNavigationMode 调用):"Top"=顶部导航栏(隐藏自绘标题栏,顶栏贴顶兼作标题栏行),其余(默认 "Left")=左侧导航栏。</summary>
+        internal void ApplyNavigationMode(string mode)
+        {
+            bool top = mode == "Top";
+            _isTopNavMode = top;
+
+            nvSample.PaneDisplayMode = top
+                ? NavigationViewPaneDisplayMode.Top
+                : NavigationViewPaneDisplayMode.Left;
+
+            if (top)
+            {
+                // 顶栏贴近窗口顶部(消除 NavigationView 因扩展标题栏自动加的顶部留白,否则又变两层)
+                nvSample.IsTitleBarAutoPaddingEnabled = false;
+                // 隐藏自绘标题栏行(行高归零;恢复 Left 时由 SyncTitleBarRowToCaptionButtons 重新校准)
+                TitleBarRow.Height = new GridLength(0);
+                // Top 模式系统"设置"齿轮与 FooterMenuItems 被固定在顶栏最右端,而窗口右上角
+                // 悬浮着系统按钮(最小化/最大化/关闭)——NavigationView 感知不到 caption 按钮
+                // (microsoft-ui-xaml #6108),三者必然重叠 → 隐藏内置齿轮,日志/关于/设置
+                // 全部改挂 MenuItems 末尾(与主菜单同从左排布,超宽时自动折叠进溢出菜单)
+                nvSample.IsSettingsVisible = false;
+                EnsureTopPaneTitle(visible: true); // 程序名放到顶栏最左端(PaneHeader 位)
+                MoveFooterItemsToMenu(toMenu: true);
+                EnsureTopSettingsItem(visible: true);
+            }
+            else
+            {
+                nvSample.IsTitleBarAutoPaddingEnabled = true;
+                SyncTitleBarRowToCaptionButtons();
+                EnsureTopPaneTitle(visible: false); // 摘除 PaneHeader,恢复原居中标题栏行
+                EnsureTopSettingsItem(visible: false);
+                MoveFooterItemsToMenu(toMenu: false); // 日志/关于还原到 FooterMenuItems 底部区
+                nvSample.IsSettingsVisible = true;
+            }
+
+            UpdateTopNavInputRegions();
+        }
+
+        private bool _isTopNavMode;
+
+        /// <summary>Top 模式下显示于顶栏最左端的程序名(NavigationView.PaneHeader 位,Left 模式摘除恢复原居中标题栏)。</summary>
+        private TextBlock? _topPaneTitle;
+
+        /// <summary>Top 模式把程序名 "WE Tool" 挂到顶栏 PaneHeader(最左端,菜单项之前);Left 模式移除。</summary>
+        private void EnsureTopPaneTitle(bool visible)
+        {
+            if (visible)
+            {
+                if (_topPaneTitle != null)
+                {
+                    nvSample.PaneHeader = _topPaneTitle;
+                    return;
+                }
+                _topPaneTitle = new TextBlock
+                {
+                    Text = "WE Tool",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    IsHitTestVisible = false, // 文字不挡鼠标:所在区域保留为窗口拖区
+                    Margin = new Thickness(20, 0, 20, 0),
+                };
+                nvSample.PaneHeader = _topPaneTitle;
+            }
+            else if (nvSample.PaneHeader != null)
+            {
+                nvSample.PaneHeader = null;
+            }
+        }
+
+        /// <summary>
+        /// Top 模式下把 FooterMenuItems(日志/关于)临时搬进 MenuItems 末尾:Top 排布时
+        /// FooterMenuItems 固定在顶栏最右端,会被右上角系统按钮盖住;与主菜单同排后右端空出。
+        /// Left 模式移回 FooterMenuItems(保持 日志→关于 的原有顺序)。
+        /// </summary>
+        private void MoveFooterItemsToMenu(bool toMenu)
+        {
+            var logs = FindNavItemByTag(nvSample.MenuItems, "Logs") ?? FindNavItemByTag(nvSample.FooterMenuItems, "Logs");
+            var info = FindNavItemByTag(nvSample.MenuItems, "Info") ?? FindNavItemByTag(nvSample.FooterMenuItems, "Info");
+            if (logs is null || info is null) return;
+
+            if (toMenu)
+            {
+                if (nvSample.FooterMenuItems.Contains(logs))
+                {
+                    nvSample.FooterMenuItems.Remove(logs);
+                    if (!nvSample.MenuItems.Contains(logs))
+                        nvSample.MenuItems.Add(logs);
+                }
+                if (nvSample.FooterMenuItems.Contains(info))
+                {
+                    nvSample.FooterMenuItems.Remove(info);
+                    if (!nvSample.MenuItems.Contains(info))
+                        nvSample.MenuItems.Add(info);
+                }
+            }
+            else
+            {
+                if (nvSample.MenuItems.Contains(logs))
+                {
+                    nvSample.MenuItems.Remove(logs);
+                    if (!nvSample.FooterMenuItems.Contains(logs))
+                        nvSample.FooterMenuItems.Add(logs);
+                }
+                if (nvSample.MenuItems.Contains(info))
+                {
+                    nvSample.MenuItems.Remove(info);
+                    if (!nvSample.FooterMenuItems.Contains(info))
+                        nvSample.FooterMenuItems.Add(info);
+                }
+            }
+        }
+
+        private NavigationViewItem? _topSettingsItem;
+
+        /// <summary>Top 模式把"设置"作为普通菜单项挂到末尾(齿轮被系统按钮遮挡不可用);Left 模式移除,恢复内置齿轮。</summary>
+        private void EnsureTopSettingsItem(bool visible)
+        {
+            if (visible)
+            {
+                if (_topSettingsItem != null)
+                {
+                    if (!nvSample.MenuItems.Contains(_topSettingsItem))
+                        nvSample.MenuItems.Add(_topSettingsItem);
+                    return;
+                }
+                var item = new NavigationViewItem
+                {
+                    Tag = "Settings",
+                    Content = LanguageHelper.GetResource("Settings.Text"),
+                    Icon = new FontIcon { Glyph = "\uE713" } // Setting 齿轮
+                };
+                _topSettingsItem = item;
+                nvSample.MenuItems.Add(item);
+            }
+            else if (_topSettingsItem != null)
+            {
+                nvSample.MenuItems.Remove(_topSettingsItem);
+            }
+        }
+
+        /// <summary>
+        /// Top 模式(NavigationView 顶栏进入系统标题栏区域)输入区域划分:
+        /// 顶栏左侧大部分(菜单可点区)设为 Passthrough,让点击落到 NavigationView;
+        /// 右侧系统按钮区 + 其左侧拖条保留为系统标题栏(可拖动窗口)。
+        /// Left 模式(标题栏行在 NavigationView 之上)无需划分,清空。
+        /// </summary>
+        private void UpdateTopNavInputRegions()
+        {
+            try
+            {
+                var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+                if (!_isTopNavMode || this.Content?.XamlRoot is not { } root)
+                {
+                    source.ClearRegionRects(NonClientRegionKind.Passthrough);
+                    return;
+                }
+
+                double scale = root.RasterizationScale;
+                if (scale <= 0) return;
+                double titleBarDip = AppWindow.TitleBar.Height / scale;   // 标题栏(顶栏)高,物理 px → DIP
+                if (titleBarDip < 20) return;
+                double insetDip = AppWindow.TitleBar.RightInset / scale;  // 系统按钮区宽
+                double contentDip = root.Size.Width;                       // 内容区宽(DIP)
+                const double dragBandDip = 110;                            // 系统按钮左侧保留的窗口拖条宽
+
+                // 顶栏左端的程序名(PaneHeader)区域保留为窗口拖区,其右侧(菜单可点区)才设 Passthrough。
+                // 注意 DesiredSize 不含 TextBlock 自身 Margin(左右各 20),拖区宽须把 Margin 一并计入。
+                double titleDip = 0;
+                if (_topPaneTitle is { } title)
+                {
+                    title.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+                    double w = title.DesiredSize.Width;
+                    if (w > 0)
+                        titleDip = Math.Ceiling(w) + title.Margin.Left + title.Margin.Right + 8;
+                }
+                double passX = titleDip;
+                double passW = Math.Max(0, contentDip - insetDip - dragBandDip - titleDip);
+
+                source.SetRegionRects(NonClientRegionKind.Passthrough,
+                [
+                    new RectInt32((int)Math.Ceiling(passX * scale), 0, (int)Math.Ceiling(passW * scale), (int)Math.Ceiling(titleBarDip * scale))
+                ]);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "更新顶部导航输入区域失败");
+            }
+        }
+
         internal void RefreshUILanguage()
         {
             // 重新加载语言资源，使 SortText 等更新
             LanguageHelper.ReloadResources();
+
+            // Top 模式的动态"设置"菜单项是代码创建的(x:Uid 不生效),语言切换后手动刷新文本
+            if (_topSettingsItem != null)
+                _topSettingsItem.Content = LanguageHelper.GetResource("Settings.Text");
 
             // 重建当前 Page（x:Uid 重新从 .resw 加载）
             var pageType = MapTagToPageType(CurrentPageTag);
@@ -294,6 +488,8 @@ namespace WE_Tool
         {
             // DPI 缩放变化(跨屏拖动/系统缩放变更)→ 重新校准标题栏内容行高度
             SyncTitleBarRowToCaptionButtons();
+            // 缩放变化会改变物理像素换算,Top 模式的输入区域需重算
+            UpdateTopNavInputRegions();
         }
 
         /// <summary>
@@ -305,6 +501,8 @@ namespace WE_Tool
         {
             try
             {
+                // Top 模式标题栏行恒为 0(顶栏兼作标题栏),不做高度校准
+                if (_isTopNavMode) return;
                 if (TitleBarRow == null || this.Content?.XamlRoot == null) return;
                 double scale = this.Content.XamlRoot.RasterizationScale;
                 if (scale <= 0) return;
@@ -323,6 +521,9 @@ namespace WE_Tool
         private async void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
         {
             if (!args.DidPositionChange && !args.DidSizeChange && !args.DidPresenterChange) return;
+
+            // Top 模式:窗口尺寸变化(拖宽/最大化)会改变顶栏可点区宽度,即时重算输入区域
+            UpdateTopNavInputRegions();
 
             // 防抖：用户拖拽过程中会连续触发，只取最后一次停止后 500ms 写入
             _positionSaveCts?.Cancel();

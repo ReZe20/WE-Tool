@@ -248,7 +248,12 @@ namespace WE_Tool
                 rows.Add(FileInfoRow.Title(wallpaper.Title));
 
                 rows.Add(FileInfoRow.Section(LanguageHelper.GetResource("PropertiesPanel_BasicInfo.Text")));
-                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_TypeLabel.Text"), Format(TypeConv, wallpaper.Type)));
+                // 类型行:壁纸走 TypeConv 查壁纸类型字典(scene/video...);组件(ShowPropsPage=false)的 Type
+                // 是组件类型文本(图层/脚本/特效),不在壁纸类型字典,直显不查字典(查 Type_图层 缺失键会抛 COMException)
+                string typeValue = ShowPropsPage
+                    ? Format(TypeConv, wallpaper.Type)
+                    : wallpaper.Type ?? "-";
+                rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_TypeLabel.Text"), typeValue));
                 rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_SourceLabel.Text"), Format(SourceConv, wallpaper.Source)));
                 rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_RatingLabel.Text"), Format(RatingConv, wallpaper.ContentRating)));
                 rows.Add(FileInfoRow.Info(LanguageHelper.GetResource("PropertiesPanel_TagLabel.Text"), Format(TagConv, wallpaper.Tags), wrap: true));

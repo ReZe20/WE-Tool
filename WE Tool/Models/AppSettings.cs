@@ -10,6 +10,8 @@ namespace WE_Tool.Models
         public string AppLanguage { get; set; } = "default";
         public string StartPageTag { get; set; } = "Papers";
         public string Theme { get; set; } = "Default";
+        /// <summary>主窗口导航栏模式:"Left"=左侧导航栏, "Top"=顶部导航栏。</summary>
+        public string NavigationMode { get; set; } = "Left";
         public string LogLevel { get; set; } = "Off";
         public int WindowX { get; set; } = -1;
         public int WindowY { get; set; } = -1;
