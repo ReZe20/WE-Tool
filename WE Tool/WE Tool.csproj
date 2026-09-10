@@ -369,11 +369,22 @@
             <Compile Remove="SkiaStaticLink.cs" />
           </ItemGroup>
 
-    <!-- Publish repkg-Re（单文件 exe + THIRD-PARTY-NOTICES.txt）并复制到 repkg/ 供 CLI 调用 -->
+    <!-- Publish repkg-Re 并复制到 repkg/ 供 CLI 调用。
+         Release(打包/发版) 且 repkg_Re 已具备 AotWinX64 profile 时 = NativeAOT 自包含单 exe(免运行时,
+         产物 bin/publish-aot/,ILC 约 2-3 分钟);其余情况(Debug 迭代 / repkg_Re 尚未合入 AOT profile 的过渡期)
+         = FolderProfile 普通发布(快,产物 bin/publish/)。 -->
+  <PropertyGroup>
+    <RepkgUseAot Condition="'$(Configuration)' == 'Release' And Exists('$(ProjectDir)..\external\repkg_Re\RePKG_Re\Properties\PublishProfiles\AotWinX64.pubxml')">true</RepkgUseAot>
+    <RepkgPublishDir Condition="'$(RepkgUseAot)' == 'true'">$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\publish-aot</RepkgPublishDir>
+    <RepkgPublishDir Condition="'$(RepkgUseAot)' != 'true'">$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\publish</RepkgPublishDir>
+  </PropertyGroup>
   <Target Name="BuildRepkg" BeforeTargets="BeforeBuild">
-    <Exec Command="dotnet publish &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj&quot; -c $(Configuration) -p:PublishProfile=FolderProfile" />
+    <Exec Condition="'$(RepkgUseAot)' == 'true'"
+          Command="dotnet publish &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj&quot; -c Release -p:PublishProfile=AotWinX64" />
+    <Exec Condition="'$(RepkgUseAot)' != 'true'"
+          Command="dotnet publish &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj&quot; -c $(Configuration) -p:PublishProfile=FolderProfile" />
     <ItemGroup>
-      <RepkgOutput Include="$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\publish\*" />
+      <RepkgOutput Include="$(RepkgPublishDir)\*" />
       <!-- 同时声明为 Content，使 repkg 进入 publish 产物（publish 只发布清单内文件） -->
       <Content Include="@(RepkgOutput)">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
