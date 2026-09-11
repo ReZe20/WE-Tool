@@ -76,6 +76,23 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private readonly IPickerService _pickerService;
     private List<WallpaperItem> _allWallpapers = [];
     private bool _isFirstLoad = true;
+
+    // [性能 2026-09] 图标卡片静态预览的解码宽度上限(物理像素)。
+    // 卡片档位最大 300 DIP,高 DPI(150%)下约 450 物理像素,取 480 覆盖并留余量。
+    // 库里有 1024×1024 的 preview.jpg(全尺寸解码约 4MB/张),按卡片实际尺寸解码可大幅降低实化开销与内存。
+    // 注意:DecodePixelWidth 必须在 UriSource 赋值之前设置才生效。
+    private const int IconPreviewDecodeWidth = 480;
+
+    // [性能 2026-09] ItemsRepeater 预渲染缓冲(视口倍数),三套模式列表统一设置。
+    // 背景:v0.8.0"全页面列表迁移 ItemsRepeater"时丢掉了迁移前 GridView 的 CacheLength=0 设置
+    // (原文:`panelRoot.SetValue(ItemsWrapGrid.CacheLengthProperty, 0); // 不预渲染`),之后一直走
+    // 系统默认(约 4 屏)→ 每次实化/回收的容器数翻数倍。窗口化时列少、内容极高(321 项 4 列 ≈ 80 行
+    // ≈ 40 屏),同一段滚动的实化次数是全屏(13 列 ≈ 25 行 ≈ 3~4 屏)的十倍量级 ——
+    // knife1~4 已排除解码与重绘,矛头正指向这笔固定开销。
+    // 取值:0 太激进(滚动时现造容器),沿用 GridView 时代定稿的"备货 1 屏"(当时 0.5 实测会卡)。
+    private const double RepeaterCacheLength = 1;
+
+    private bool _repeaterCacheApplied;
     public SettingsViewModel ViewModel { get; }
     public ObservableCollection<WallpaperItem> Wallpapers { get; set; } = [];
     public ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
@@ -617,24 +634,39 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     shadow.Receivers.Add(shadowCastGrid);
                 itemRootGrid.Shadow = shadow;
             }
-            // 设静态图源(GIF 的会被 UpdateSkiaGif 隐藏,但先设上无妨;路径为空用占位图)
+            // [性能 2026-09] 先判类型再决定走哪条图路:Skia 接管的 GIF 不再建 BitmapImage。
+            // 原实现无条件 new BitmapImage 解一遍、紧接着又 Collapsed 把它藏起来 —— 库里 247 张 GIF
+            // 每次实化都白解一次(WIC 解码 + 驻留),纯浪费。
+            bool isGif = !string.IsNullOrEmpty(item.Preview)
+                && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+
+            // 设静态图源:仅 Skia 未接管时建(路径为空用占位图)
             Image? img = root.FindName("ItemPreviewImage") as Image;
             if (img != null)
             {
-                var src = string.IsNullOrEmpty(item.Preview)
-                    ? "ms-appx:///Assets/NoPreview.png"
-                    : item.Preview;
-                // Preview 是本地文件路径(非 URI),须转 file:///;ms-appx 等 URI 原样
-                img.Source = new BitmapImage(new Uri(
-                    src.StartsWith("ms-appx", StringComparison.OrdinalIgnoreCase)
-                        ? src
-                        : "file:///" + src.Replace('\\', '/')));
+                if (isGif)
+                {
+                    // Skia 接管:不建 BitmapImage(避免白解一遍);顺带释放容器上次复用残留的解码
+                    img.Source = null;
+                }
+                else
+                {
+                    var src = string.IsNullOrEmpty(item.Preview)
+                        ? "ms-appx:///Assets/NoPreview.png"
+                        : item.Preview;
+                    // Preview 是本地文件路径(非 URI),须转 file:///;ms-appx 等 URI 原样
+                    // [性能 2026-09] 按卡片实际尺寸解码(DecodePixelWidth 须在 UriSource 之前设才生效)
+                    var bmp = new BitmapImage { DecodePixelWidth = IconPreviewDecodeWidth };
+                    bmp.UriSource = new Uri(
+                        src.StartsWith("ms-appx", StringComparison.OrdinalIgnoreCase)
+                            ? src
+                            : "file:///" + src.Replace('\\', '/'));
+                    img.Source = bmp;
+                }
             }
             // GIF → Skia 播放,其余 → 静态图
             if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
             {
-                bool isGif = !string.IsNullOrEmpty(item.Preview)
-                    && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
                 if (isGif)
                 {
                     skia.Visibility = Visibility.Visible;
@@ -711,6 +743,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 await RefreshWallpaperList();
             }
 
+            // [性能 2026-09] 先设预渲染缓冲(减少实化/回收容器数),再钳列宽
+            ApplyRepeaterCacheLength();
             // ItemsRepeater 首次布局后钳制列宽(防崩;GridView 已全迁 ItemsRepeater)
             UpdateExpUniformLayoutMinWidth(); // [实验] 图标模式首帧钳制 MinItemWidth(防崩)
             UpdateWallpapersListLayoutMinWidth(); // [全迁] 列表模式首帧钳制
@@ -1695,6 +1729,22 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             layout.MinItemWidth = desired; // 未布局首帧:先给档位值,等 SizeChanged 再钳
         }
+    }
+
+    /// <summary>[性能 2026-09] 给三套模式列表设置预渲染缓冲(一次性)。
+    /// v0.8.0 迁移 ItemsRepeater 时丢掉了迁移前 GridView 的 CacheLength 设置,一直走系统默认(约 4 屏),
+    /// 每次实化/回收的容器数翻数倍;窗口化(列少 → 内容高约 40 屏)时这笔固定开销被放大成可见掉帧。
+    /// 三个 repeater 均为纵向滚动,故设 VerticalCacheLength。</summary>
+    private void ApplyRepeaterCacheLength()
+    {
+        if (_repeaterCacheApplied) return;
+        // 控件未挂载时先不设(Loaded 内调用,正常都已就绪);未设成则下次 Loaded 再试
+        if (WallpapersRepeater == null || WallpapersContentRepeater == null || WallpapersListRepeater == null)
+            return;
+        WallpapersRepeater.VerticalCacheLength = RepeaterCacheLength;        // 图标模式(UniformGridLayout)
+        WallpapersContentRepeater.VerticalCacheLength = RepeaterCacheLength; // 内容模式(StackLayout 单列)
+        WallpapersListRepeater.VerticalCacheLength = RepeaterCacheLength;    // 列表模式(UniformGridLayout)
+        _repeaterCacheApplied = true;
     }
 
     // ===== [全迁 ItemsRepeater] 列表模式 UniformGridLayout 钳制(400 档位) =====

@@ -6,19 +6,29 @@ using SkiaSharp.Views.Windows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace WE_Tool.Controls;
 
 /// <summary>Skia 流式 GIF 播放控件:
 /// SKCodec(Skia 引擎,与 Flutter 同源)按帧延迟流式解码 + SKXamlCanvas 绘制。
 /// 帧不驻留(仅当前帧 SKBitmap ~0.3MB),内存远小于批量解码;解码在共享时钟 Tick 内(UI 线程,小图 ~1ms/帧)。
-/// 共享 DispatcherQueueTimer 驱动所有实例(按各自帧延迟推进),避免每卡片一个定时器。</summary>
+/// 共享 DispatcherQueueTimer 驱动所有实例(按各自帧延迟推进),避免每卡片一个定时器。
+/// [性能 2026-09] 开文件(SKCodec.Create)移出 UI 线程:实测它是"反复拉动滚动条掉帧"的主因 ——
+/// 每次容器实化都要开一次文件(读全文件 + 建全帧索引),而 ElementClearing → Stop() 立即 Dispose,
+/// 滚回来再开一次;窗口化时同一段滚动经手的容器数是全屏的十倍量级,把这笔开销放大成可见掉帧。
+/// 剥离顺序实测(临时开关逐项摘除):①逐帧解码 → 明显好转(正常运行时的主开销);
+/// ②首帧解码 → 无改善;③每帧重绘 → 仍掉帧;④开文件 → 完全流畅(滚动实化时的主开销)。</summary>
 public sealed partial class SkiaGifView : SKXamlCanvas
 {
     private SKCodec? _codec;
     private SKBitmap? _frame;
     private int _frameIndex;
     private long _nextTickMs;
+
+    /// <summary>加载代次令牌:Stop/重新 Start 时自增,用于作废在途的后台开文件结果
+    /// (等待期间容器可能已被回收复用,不校验就会把旧 GIF 装到新卡片上)。</summary>
+    private int _loadToken;
 
     /// <summary>是否正在播放(幂等 Start 判断用)</summary>
     public bool IsPlaying { get; private set; }
@@ -36,25 +46,52 @@ public sealed partial class SkiaGifView : SKXamlCanvas
         Unloaded += (_, _) => Stop(); // 容器销毁/回收:自停,防共享时钟空转
     }
 
-    /// <summary>打开 GIF 并开始播放(替换 BitmapImage 直播路径);同 path 正在播则忽略</summary>
+    /// <summary>打开 GIF 并开始播放(替换 BitmapImage 直播路径);同 path 正在播则忽略。
+    /// [性能 2026-09] 开文件转后台线程,UI 线程零阻塞;完成后回到 UI 线程装 codec 并解首帧。</summary>
     public void Start(string path)
     {
         if (IsPlaying && CurrentPath == path) return;
         Stop();
-        _codec = SKCodec.Create(path);
-        if (_codec == null)
+        _loadToken++;
+        int token = _loadToken;
+        IsPlaying = true;   // 先占位:防同一容器重复发起加载(Tick 在 codec 就绪前空转)
+        CurrentPath = path;
+        _instances.Add(this);
+        EnsureTimer();
+        _ = LoadCodecAsync(path, token);
+    }
+
+    /// <summary>[性能 2026-09] 后台打开 GIF(读全文件 + 建全帧索引),完成后回 UI 线程装载。
+    /// 归属校验:等待期间容器可能已被回收/换绑(Stop 会令 token 自增),此时丢弃结果并释放 codec。</summary>
+    private async Task LoadCodecAsync(string path, int token)
+    {
+        SKCodec? codec = null;
+        try
         {
-            Log.Warning("[Skia][Start] SKCodec 打开失败: {Path}", path);
+            codec = await Task.Run(() => SKCodec.Create(path));
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[Skia][Start] 后台打开失败: {Path}", path);
+        }
+
+        // 过期结果:容器已回收/换绑(或已被 Stop) —— 静默丢弃,不覆盖新卡片的画面
+        if (token != _loadToken || !IsPlaying)
+        {
+            codec?.Dispose();
             return;
         }
+        if (codec == null)
+        {
+            Log.Warning("[Skia][Start] SKCodec 打开失败: {Path}", path);
+            Stop();
+            return;
+        }
+        _codec = codec;
         _frame = new SKBitmap(new SKImageInfo(_codec.Info.Width, _codec.Info.Height,
             SKColorType.Bgra8888, SKAlphaType.Premul));
         _frameIndex = 0;
         _nextTickMs = 0;
-        IsPlaying = true;
-        CurrentPath = path;
-        _instances.Add(this);
-        EnsureTimer();
         DecodeFrame();
         Invalidate();
     }
@@ -62,6 +99,7 @@ public sealed partial class SkiaGifView : SKXamlCanvas
     /// <summary>停止并释放(滚出视口/换绑/软挂起时调用)</summary>
     public void Stop()
     {
+        _loadToken++; // [性能 2026-09] 作废在途的后台开文件(其完成回调会 Dispose 结果,不装载)
         if (_instances.Remove(this) && _instances.Count == 0)
         {
             _timer?.Stop();
@@ -98,7 +136,7 @@ public sealed partial class SkiaGifView : SKXamlCanvas
 
     private void Tick(long now)
     {
-        if (_codec == null || _frame == null) return;
+        if (_codec == null || _frame == null) return; // codec 就绪前空转(后台开文件中)
         if (now < _nextTickMs) return;
         var info = _codec.FrameInfo;
         if (_frameIndex >= _codec.FrameCount) _frameIndex = 0;
