@@ -283,9 +283,23 @@ namespace WE_Tool
             bool top = mode == "Top";
             _isTopNavMode = top;
 
-            nvSample.PaneDisplayMode = top
-                ? NavigationViewPaneDisplayMode.Top
-                : NavigationViewPaneDisplayMode.Left;
+            // 程序性设置窗格/模式不代表用户偏好:期间抑制 PaneOpening/PaneClosing 回写
+            // (切到 Top 模式时 NavigationView 内部会收起窗格,否则会把已保存的偏好覆盖成 false)
+            _suppressNavPaneStateSave = true;
+            try
+            {
+                nvSample.PaneDisplayMode = top
+                    ? NavigationViewPaneDisplayMode.Top
+                    : NavigationViewPaneDisplayMode.Left;
+
+                // 恢复上次的窗格展开状态(Top 模式没有窗格概念,故只在 Left 模式应用)
+                if (!top)
+                    nvSample.IsPaneOpen = ViewModel.AppSettingsVM.NavPaneOpen;
+            }
+            finally
+            {
+                _suppressNavPaneStateSave = false;
+            }
 
             if (top)
             {
@@ -316,6 +330,28 @@ namespace WE_Tool
         }
 
         private bool _isTopNavMode;
+
+        /// <summary>窗格状态回写抑制标记(ApplyNavigationMode 程序性设置 IsPaneOpen/PaneDisplayMode 期间为 true)。</summary>
+        private bool _suppressNavPaneStateSave;
+
+        private void NvSample_PaneOpening(NavigationView sender, object args) => SetNavPaneOpen(true);
+
+        private void NvSample_PaneClosing(NavigationView sender, NavigationViewPaneClosingEventArgs args) => SetNavPaneOpen(false);
+
+        /// <summary>记录左侧导航栏展开状态(NavPaneOpen,经 SettingsViewModel 防抖落盘)。</summary>
+        private void SetNavPaneOpen(bool open)
+        {
+            if (_suppressNavPaneStateSave || _isTopNavMode) return;
+
+            try
+            {
+                ViewModel.AppSettingsVM.NavPaneOpen = open;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "保存导航栏展开状态失败");
+            }
+        }
 
         /// <summary>Top 模式下显示于顶栏最左端的程序名(NavigationView.PaneHeader 位,Left 模式摘除恢复原居中标题栏)。</summary>
         private TextBlock? _topPaneTitle;

@@ -18,6 +18,10 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial string NavigationMode { get; set; } = "Left";
 
+        /// <summary>左侧导航栏展开状态(仅 Left 模式有意义;Top 模式不写回此值):true=展开。</summary>
+        [ObservableProperty]
+        public partial bool NavPaneOpen { get; set; } = false;
+
         /// <summary>扫描缓存开关："0"=关闭, "1"=启用</summary>
         [ObservableProperty]
         public partial string ScanCacheEnabled { get; set; } = "1";

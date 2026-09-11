@@ -394,6 +394,7 @@ namespace WE_Tool.ViewModels
             AppSettingsVM.StartPageTag = string.IsNullOrEmpty(_settings.StartPageTag) ? "Papers" : _settings.StartPageTag;
             AppSettingsVM.Theme = _settings.Theme;
             AppSettingsVM.NavigationMode = string.IsNullOrEmpty(_settings.NavigationMode) ? "Left" : _settings.NavigationMode;
+            AppSettingsVM.NavPaneOpen = _settings.NavPaneOpen;
             AppSettingsVM.ScanCacheEnabled = _settings.ScanCacheEnabled;
             AppSettingsVM.RestoreWindowGeometry = _settings.RestoreWindowGeometry;
             AppSettingsVM.RestorePropertiesWindowSize = _settings.RestorePropertiesWindowSize;
@@ -780,6 +781,7 @@ namespace WE_Tool.ViewModels
                     _settings.StartPageTag = AppSettingsVM.StartPageTag;
                     _settings.Theme = AppSettingsVM.Theme;
                     _settings.NavigationMode = AppSettingsVM.NavigationMode;
+                    _settings.NavPaneOpen = AppSettingsVM.NavPaneOpen;
                     _settings.ScanCacheEnabled = AppSettingsVM.ScanCacheEnabled;
                     _settings.RestoreWindowGeometry = AppSettingsVM.RestoreWindowGeometry;
                     _settings.RestorePropertiesWindowSize = AppSettingsVM.RestorePropertiesWindowSize;

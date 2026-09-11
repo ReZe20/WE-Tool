@@ -22,7 +22,7 @@
         <Grid x:Name="AppTitleBar" VerticalAlignment="Center" IsHitTestVisible="False">
             <TextBlock Text="WE Tool" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
-        <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="NvSample_ItemInvoked" IsSettingsVisible="True" IsBackButtonVisible="Collapsed" IsPaneOpen="False">
+        <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="NvSample_ItemInvoked" IsSettingsVisible="True" IsBackButtonVisible="Collapsed" IsPaneOpen="False" PaneOpening="NvSample_PaneOpening" PaneClosing="NvSample_PaneClosing">
             <NavigationView.MenuItems>
                 <NavigationViewItem x:Uid="InstalledWallpapers" Tag="Papers">
                     <NavigationViewItem.Icon>
