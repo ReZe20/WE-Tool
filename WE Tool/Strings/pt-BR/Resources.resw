@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>Selecionar tudo</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>Fazer backup ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>Remover backup ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>Exibir</value>
   </data>
@@ -875,10 +881,16 @@
     <value>Direção de classificação</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Configurações de saída</value>
+    <value>Configurações de saída de Papéis de parede instalados</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>Aplica-se a todos os tipos de papel de parede</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>Configurações de saída de Importar e extrair</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>Aplica-se apenas à extração na página Importar e extrair</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>Tratamento de conflitos de arquivo</value>
@@ -944,7 +956,7 @@
     <value>Desempenho</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Extrações simultâneas, prioridade do processo, controle de memória</value>
+    <value>Extrações simultâneas, prioridade do processo</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>Máx. extrações simultâneas</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>Auto</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Carregamento em partes（ler um por um, reduzir uso de memória）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>Todos os arquivos na pasta de saída, sem subpastas</value>
@@ -1839,7 +1848,10 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
     <value>Falha na operação</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>Backup automático</value>
+    <value>Configurações de backup</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>Fazer backup agora</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>Escolha o modo de backup automático e quais tipos e classificações de wallpaper incluir</value>

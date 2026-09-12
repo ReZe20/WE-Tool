@@ -307,18 +307,15 @@ namespace WE_Tool
                 return;
             }
 
-            // 与"导入到编辑器"同款设置:输出项目文件夹,供 WE 编辑器/壁纸库直接使用
-            var extractSettings = new ExtractSettings
-            {
-                OutputMode = 0,
-                TexExportMode = 2,
-                OutProjectJSON = true,
-                UseProjectName = true,
-                OneFolder = 0,
-                CoverAllFiles = true,
-                KeepSubfolderStructure = 0,
-                LazyLoad = true,
-            };
+            // 导出配方来自设置页「导入解包页面输出设置」(独立于 Papers 的「已安装壁纸页面输出设置」,
+            // 见 AppSettings.ImportExtract)。该分区的默认值 = 原先这里写死的"编辑器同款"
+            // (全量输出 / TEX 转成图片 / 写 project.json / 每包一个文件夹 / 覆盖同名 / 保持源目录结构),
+            // 所以用户不动设置时,本页产物与改动前完全一致。
+            var extractSettings = settings.ImportExtract.Clone();
+            // 全局「性能」区同步生效:并发线程数与进程优先级从 AppSettings.Extract(设置页「性能」区)取,
+            // 导入解包页不为这两项另设开关(单一来源)。先克隆再覆盖,避免写回共享的配置对象。
+            extractSettings.MaxConcurrentExtractions = settings.Extract.MaxConcurrentExtractions;
+            extractSettings.ProcessPriority = settings.Extract.ProcessPriority;
 
             _extractService = new RepkgCliService();
             _extractCts = new CancellationTokenSource();
@@ -329,6 +326,10 @@ namespace WE_Tool
             // 导航栏徽标:显示本次待提取数量(新任务开始,复位失败红标)
             _navBadgeError = false;
             NavBadgeService.SetBadge("LoadPapers", wallpapers.Count);
+
+            // 进程优先级是 RepkgCliService 的静态量(启动每个 repkg 子进程时套用),Papers 侧同样在启动前设置;
+            // 不设的话会用上一次的值或默认 Normal —— 所以每次开始提取都按设置页「性能」区刷新一遍。
+            RepkgCliService.SetProcessPriorityLevel(settings.Extract.ProcessPriority);
 
             try
             {

@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>すべて選択</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>バックアップ ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>バックアップを解除 ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>表示</value>
   </data>
@@ -875,10 +881,16 @@
     <value>並び順</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>出力設定</value>
+    <value>インストール済み壁紙ページの出力設定</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>すべての壁紙タイプに適用</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>インポートと解凍ページの出力設定</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>インポートと解凍ページの抽出にのみ適用</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>ファイル競合の処理</value>
@@ -944,7 +956,7 @@
     <value>パフォーマンス</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>同時抽出数、プロセス優先度、メモリ制御</value>
+    <value>同時抽出数、プロセス優先度</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>最大同時抽出数</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>自動</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>分割読み込み（1つずつ読み込み、メモリ使用量を削減）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>全てのファイルを出力フォルダに配置、サブフォルダ不使用</value>
@@ -1839,7 +1848,10 @@ project.json とプレビューをコピー
     <value>操作に失敗しました</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>自動バックアップ</value>
+    <value>バックアップ設定</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>今すぐバックアップ</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>自動バックアップの方法と、バックアップする壁紙の種類・年齢区分を選択します</value>

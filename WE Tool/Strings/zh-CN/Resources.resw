@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>全选</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>备份 ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>取消备份 ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>查看</value>
   </data>
@@ -875,10 +881,16 @@
     <value>排序方向</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>输出设置</value>
+    <value>已安装壁纸页面输出设置</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>对所有壁纸类型生效</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>导入解包页面输出设置</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>只对导入解包页的提取生效</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>文件冲突处理</value>
@@ -944,7 +956,7 @@
     <value>性能</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>并发提取数、进程优先级、内存控制</value>
+    <value>并发提取数、进程优先级</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>最大并发提取数</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>自动</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>分块解析（逐条读取，减少内存占用）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>所有文件放在输出文件夹，不用子文件夹</value>
@@ -1839,7 +1848,10 @@
     <value>操作失败</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>自动备份</value>
+    <value>备份设置</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>立即备份</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>选择自动备份方式，并指定要自动备份的壁纸类型与分级</value>

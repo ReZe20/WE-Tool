@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>모두 선택</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>백업 ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>백업 취소 ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>보기</value>
   </data>
@@ -875,10 +881,16 @@
     <value>정렬 방향</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>출력 설정</value>
+    <value>설치된 배경화면 페이지 출력 설정</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>모든 배경화면 유형에 적용</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>가져오기 및 압축 풀기 페이지 출력 설정</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>가져오기 및 압축 풀기 페이지의 추출에만 적용</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>파일 충돌 처리</value>
@@ -944,7 +956,7 @@
     <value>성능</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>동시 추출 수, 프로세스 우선순위, 메모리 제어</value>
+    <value>동시 추출 수, 프로세스 우선순위</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>최대 동시 추출 수</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>자동</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>청크 로딩（하나씩 읽어 메모리 사용량 감소）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>모든 파일을 출력 폴더에 저장, 하위 폴더 사용 안 함</value>
@@ -1839,7 +1848,10 @@ project.json 및 미리보기 복사
     <value>작업 실패</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>자동 백업</value>
+    <value>백업 설정</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>지금 백업</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>자동 백업 방식을 선택하고 백업할 배경화면 유형과 등급을 지정하세요</value>

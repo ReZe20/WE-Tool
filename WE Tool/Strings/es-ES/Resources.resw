@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>Seleccionar todo</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>Crear copia de seguridad ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>Eliminar copia de seguridad ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>Ver</value>
   </data>
@@ -875,10 +881,16 @@
     <value>Dirección de ordenación</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Ajustes de salida</value>
+    <value>Ajustes de salida de Fondos instalados</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>Se aplica a todos los tipos de fondos</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>Ajustes de salida de Importar y descomprimir</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>Solo se aplica a la extracción en la página Importar y descomprimir</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>Gestión de conflictos de archivos</value>
@@ -944,7 +956,7 @@
     <value>Rendimiento</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Extracciones simultáneas, prioridad del proceso, control de memoria</value>
+    <value>Extracciones simultáneas, prioridad del proceso</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>Máx. extracciones simultáneas</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>Auto</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Carga por fragmentos（leer uno por uno, reducir uso de memoria）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>Todos los archivos en la carpeta de salida, sin subcarpetas</value>
@@ -1839,7 +1848,10 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
     <value>La operación falló</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>Copia de seguridad automática</value>
+    <value>Configuración de copia de seguridad</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>Copia de seguridad ahora</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>Elija el modo de copia de seguridad automática y los tipos y clasificaciones de fondos que desea respaldar.</value>

@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>Select All</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>Back up ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>Remove backup ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>View</value>
   </data>
@@ -875,10 +881,16 @@
     <value>Sort Direction</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Output Settings</value>
+    <value>Installed Wallpapers Page Output Settings</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>Applies to all wallpaper types</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>Import &amp; Unpack Page Output Settings</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>Applies only to extraction on the Import &amp; Unpack page</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>File Conflict Handling</value>
@@ -944,7 +956,7 @@
     <value>Performance</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Concurrent extractions, process priority, memory control</value>
+    <value>Concurrent extractions, process priority</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>Max Concurrent Extractions</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>Auto</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Chunked parsing (read one by one, reduce memory usage)</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>All files in output folder, no subfolders</value>
@@ -1838,7 +1847,10 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
     <value>Operation Failed</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>Auto Backup</value>
+    <value>Backup Settings</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>Back up now</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>Choose the auto-backup mode and which wallpaper types/ratings to back up</value>

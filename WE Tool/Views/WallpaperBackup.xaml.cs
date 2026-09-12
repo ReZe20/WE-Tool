@@ -28,6 +28,7 @@ public sealed partial class WallpaperBackup : Page
     private bool _initialScanDone;
     private readonly AutoBackupServiceManager _serviceManager = new();
     private bool _isApplyingUi;   // 避免 UI 初始化时的 Checked 事件触发保存
+    private bool _isBackingUp;    // 「立即备份」进行中(防重入)
     private CancellationTokenSource? _saveDebounceCts; // 配置变更防抖:500ms 只写最后一次
 
     /// <summary>自动备份配置(页面持有副本,变化时回写 config.json)。</summary>
@@ -720,5 +721,61 @@ public sealed partial class WallpaperBackup : Page
     {
         _ = InitializeAutoBackupSettingsAsync();
         AutoBackupFlyout.ShowAt(sender as FrameworkElement);
+    }
+
+    // ====================== 立即备份 ======================
+
+    /// <summary>[立即备份 2026-09] 手动触发一次补齐备份:沿用自动备份的类型/分级筛选,对工坊里
+    /// 「未备份且命中筛选」的壁纸各建一次硬链接。复用 BackupService.BackupAllMissing(与「启动时备份」
+    /// 同一实现),完成后刷新列表把刚补上的备份显示出来。只删副本不动源文件,故无破坏性提示。</summary>
+    private async void BackupNow_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isBackingUp) return;
+        _isBackingUp = true;
+        BackupNowButton.IsEnabled = false;
+        ScanProgress.IsActive = true;
+        try
+        {
+            var cfg = _autoCfg;
+            if (cfg is null || !cfg.Enabled)
+            {
+                await DialogHelper.ShowMessageAsync("立即备份",
+                    "自动备份尚未启用。请先点左边的「自动备份」选择备份方式（后台服务或 WE Tool 启动时备份），并确认创意工坊路径。");
+                return;
+            }
+
+            var workshopPath = WorkshopPath;
+            if (string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
+            {
+                await DialogHelper.ShowMessageAsync("立即备份",
+                    "创意工坊目录不存在，请先在设置中检查路径是否有效。");
+                return;
+            }
+
+            // 补齐可能涉及几百个壁纸:回调里每 10 项刷一次汇总文本(免得看着像卡住),完成后由 LoadBackupsAsync 重写
+            int backed = await Task.Run(() => BackupService.BackupAllMissing(workshopPath, cfg, (done, total) =>
+            {
+                if (done == total || done % 10 == 0)
+                    DispatcherQueue.TryEnqueue(() => SummaryText.Text = $"立即备份中 {done}/{total}…");
+            }));
+
+            await LoadBackupsAsync(); // 刷新列表(把刚补上的备份显示出来)
+
+            await DialogHelper.ShowMessageAsync("立即备份",
+                backed > 0
+                    ? $"立即备份完成：新增 {backed} 个备份。"
+                    : "没有需要备份的壁纸（都已经有备份，或没有命中当前的类型/分级筛选）。");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[备份] 立即备份失败");
+            await DialogHelper.ShowMessageAsync("立即备份失败", ex.Message);
+        }
+        finally
+        {
+            ScanProgress.IsActive = false;
+            BackupNowButton.IsEnabled = true;
+            _isBackingUp = false;
+        }
     }
 }

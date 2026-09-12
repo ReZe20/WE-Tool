@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Serilog;
 
 namespace WE_Tool.Helper;
@@ -223,4 +224,87 @@ public static class BackupService
             CloseHandle(handle);
         }
     }
+
+    /// <summary>[立即备份 2026-09] 一次性补齐备份:遍历工坊 content 目录,对「未备份 + 命中自动备份筛选」的
+    /// 壁纸各建一次硬链接备份。原逻辑内联在 MainWindow 的「启动时备份」,现抽到这里供两处共用
+    /// (MainWindow 启动补齐 + 备份页「立即备份」按钮)。
+    /// onProgress(已完成数, 总数) 可选,供 UI 显示进度;返回成功新增的备份数。</summary>
+    public static int BackupAllMissing(string workshopContentPath, Models.AutoBackupConfig cfg, Action<int, int>? onProgress = null)
+    {
+        if (string.IsNullOrEmpty(workshopContentPath) || !Directory.Exists(workshopContentPath))
+            return 0;
+
+        // 先收集待备份清单(一次枚举 + 读元数据 + 筛类型/分级),算出总数以便 UI 报进度
+        var targets = new List<(string Dir, string Id)>();
+        try
+        {
+            foreach (var dir in Directory.EnumerateDirectories(workshopContentPath))
+            {
+                var id = Path.GetFileName(dir);
+                if (id == BackupRootName) continue;                // 备份根自身(隐藏目录)
+                if (IsBackedUp(workshopContentPath, id)) continue; // 已备份
+                var projPath = Path.Combine(dir, "project.json");
+                if (!File.Exists(projPath)) continue;              // 不是壁纸目录
+
+                Models.ProjectMetadata? meta;
+                try
+                {
+                    meta = JsonSerializer.Deserialize(File.ReadAllBytes(projPath), Json.JsonContext.Default.ProjectMetadata);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "读取 project.json 失败,跳过: {Path}", projPath);
+                    continue;
+                }
+                if (!MatchesAutoBackupFilter(cfg, meta)) continue; // 类型 + 分级筛选
+                targets.Add((dir, id));
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "枚举工坊目录失败: {Path}", workshopContentPath);
+            return 0;
+        }
+
+        int total = targets.Count, done = 0, backed = 0;
+        foreach (var (dir, id) in targets)
+        {
+            var result = BackupWallpaperFolder(dir, workshopContentPath, id);
+            if (result.Error is null) backed++;
+            else Log.Warning("补齐备份失败 {Id}: {Err}", id, result.Error);
+            onProgress?.Invoke(++done, total);
+        }
+        return backed;
+    }
+
+    /// <summary>project.json 元数据是否命中自动备份筛选(类型 + 分级);未知分级默认放行(与服务端一致)。</summary>
+    internal static bool MatchesAutoBackupFilter(Models.AutoBackupConfig cfg, Models.ProjectMetadata? meta)
+    {
+        if (meta == null) return false;
+        var type = meta.Type?.ToLowerInvariant() ?? "";
+        var rating = meta.Contentrating?.ToLowerInvariant() ?? "";
+
+        bool typeOk = type switch
+        {
+            "scene" => cfg.TypeScene,
+            "video" => cfg.TypeVideo,
+            "web" => cfg.TypeWeb,
+            "application" => cfg.TypeApplication,
+            "preset" => cfg.TypePreset,
+            _ => cfg.TypeUnknown,
+        };
+        if (!typeOk) return false;
+
+        return rating switch
+        {
+            "everyone" => cfg.RatingG,
+            "questionable" => cfg.RatingPg,
+            "mature" => cfg.RatingR,
+            "g" => cfg.RatingG,       // 兼容历史/第三方写入的短码
+            "pg" => cfg.RatingPg,
+            "r" => cfg.RatingR,
+            _ => true,                // 未知分级默认放行
+        };
+    }
+
 }

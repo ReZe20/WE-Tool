@@ -343,9 +343,9 @@
                 <!-- 提取设置 -->
                 <TextBlock x:Uid="Extract" Margin="5,10,0,10"/>
                 <StackPanel>
-                    <controls:SettingsExpander x:Uid="Settings_Output" Header="输出设置" Description="对所有壁纸类型生效" Margin="0,0,0,10">
+                    <controls:SettingsExpander x:Uid="Settings_Output" Header="已安装壁纸页面输出设置" Description="对所有壁纸类型生效" Margin="0,0,0,10">
                         <controls:SettingsExpander.HeaderIcon>
-                            <FontIcon Glyph="&#xEDE1;"/>
+                            <FontIcon Glyph="&#xE8B9;"/>
                         </controls:SettingsExpander.HeaderIcon>
                         <controls:SettingsExpander.Items>
                             <controls:SettingsCard>
@@ -548,8 +548,213 @@
                             </controls:SettingsCard>
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
+                    <!-- [导入解包输出设置 2026-09] 与上面「已安装壁纸页面输出设置」同构的独立一套:只对导入解包页(导入 .pkg 解包)的提取生效,读写 AppSettings.ImportExtract;默认值 = 该页原先写死的"编辑器同款"配方 -->
+                    <controls:SettingsExpander x:Uid="Settings_ImportOutput" Header="导入解包页面输出设置" Description="只对导入解包页的提取生效" Margin="0,0,0,10">
+                        <controls:SettingsExpander.HeaderIcon>
+                            <FontIcon Glyph="&#xE8B5;"/>
+                        </controls:SettingsExpander.HeaderIcon>
+                        <controls:SettingsExpander.Items>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel>
+                                        <RadioButtons MaxColumns="3" SelectedIndex="{x:Bind ViewModel.ImportExtractVM.OutputMode, Mode=TwoWay}">
+                                            <RadioButtons.Header>
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock x:Uid="Settings_OutputType" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                        <Button x:Name="OutputTypeHelpButton_Import" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="OutputTypeHelpButton_Import_Click">
+                                                            <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                                        </Button>
+                                                    </StackPanel>
+                                                    <TeachingTip x:Name="OutputTypeTeachingTip_1_Import" x:Uid="Settings_TeachingTip_Output1" Target="{x:Bind OutputTypeFirstRadio_Import}" Title="{x:Bind OutputTypeFirstRadioTitle_Import.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                    <TeachingTip x:Name="OutputTypeTeachingTip_2_Import" x:Uid="Settings_TeachingTip_Output2" Target="{x:Bind OutputTypeImageOnlyRadio_Import}" Title="{x:Bind OutputTypeImageOnlyRadioTitle_Import.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                    <TeachingTip x:Name="OutputTypeTeachingTip_3_Import" x:Uid="Settings_TeachingTip_Output3" Target="{x:Bind OutputTypeCustomRadio_Import}" Title="{x:Bind OutputTypeCustomRadioTitle_Import.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                </StackPanel>
+                                            </RadioButtons.Header>
+                                            <RadioButton x:Name="OutputTypeFirstRadio_Import">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock x:Name="OutputTypeFirstRadioTitle_Import" x:Uid="Settings_OutputType_Full" VerticalAlignment="Top"/>
+                                                            <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
+                                                                          Visibility="{x:Bind ViewModel.ImportExtractVM.IsConflictMode, Mode=OneWay}"
+                                                                          VerticalAlignment="Center">
+                                                                <ToolTipService.ToolTip>
+                                                                    <ToolTip x:Uid="Settings_ConflictWarning_Output"/>
+                                                                </ToolTipService.ToolTip>
+                                                            </FontIcon>
+                                                        </StackPanel>
+                                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.ImportExtractVM.TexExportMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=0, Mode=OneWay}" Margin="0,24,0,0">
+                                                            <RadioButtons.Header>
+                                                                <TextBlock x:Uid="Settings_TexMode" Margin="28,0,12,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                            </RadioButtons.Header>
+                                                            <RadioButton x:Uid="Settings_TexExportRaw"/>
+                                                            <RadioButton x:Uid="Settings_TexExportConvert"/>
+                                                            <RadioButton x:Uid="Settings_TexExportOnlyImage"/>
+                                                        </RadioButtons>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                            <RadioButton x:Name="OutputTypeImageOnlyRadio_Import">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="OutputTypeImageOnlyRadioTitle_Import" x:Uid="Settings_OutputType_ImageOnly" VerticalAlignment="Top"/>
+                                                        <!-- 媒体类型过滤:勾选要输出的媒体类型;默认全勾 -->
+                                                        <CheckBox x:Name="MediaImagesCheckBox_Import" Margin="0,24,0,0" IsChecked="{x:Bind ViewModel.ImportExtractVM.MediaExportImages, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel>
+                                                                    <TextBlock x:Uid="Settings_MediaExportImages" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                                                                    <!-- 过滤透明图片:仅勾选图片/动图后可勾选;固定按 90% 阈值滤除近全透明的贴图 -->
+                                                                    <CheckBox x:Name="MediaTransparentCheckBox_Import" Margin="0,12,0,0" IsChecked="{x:Bind ViewModel.ImportExtractVM.MediaFilterTransparentImages, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.IsMediaFilterTransparentEnabled, Mode=OneWay}">
+                                                                        <TextBlock x:Uid="Settings_MediaFilterTransparent" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                                                                    </CheckBox>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="MediaVideosCheckBox_Import" Margin="0,12,0,0" IsChecked="{x:Bind ViewModel.ImportExtractVM.MediaExportVideos, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}">
+                                                            <TextBlock x:Uid="Settings_MediaExportVideos" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="MediaAudiosCheckBox_Import" Margin="0,12,0,0" IsChecked="{x:Bind ViewModel.ImportExtractVM.MediaExportAudios, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=1, Mode=OneWay}">
+                                                            <TextBlock x:Uid="Settings_MediaExportAudios" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                                                        </CheckBox>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                            <RadioButton x:Name="OutputTypeCustomRadio_Import">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="OutputTypeCustomRadioTitle_Import" x:Uid="Settings_OutputType_Custom"/>
+                                                        <CheckBox x:Name="IgnoreExtension_Import" Margin="0,24,0,0" IsChecked="{x:Bind ViewModel.ImportExtractVM.IgnoreExtension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock x:Uid="Settings_Output_IgnoreExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                    <TextBox x:Uid="Settings_IgnoreExtList" HorizontalAlignment="Stretch" Margin="8,0,0,0" Text="{x:Bind ViewModel.ImportExtractVM.IgnoreExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.IgnoreExtension, Mode=OneWay}"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="OnlyExtension_Import" IsChecked="{x:Bind ViewModel.ImportExtractVM.OnlyExtension, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock x:Uid="Settings_Output_OnlyExtText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                    <TextBox x:Uid="Settings_OnlyExtList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.ImportExtractVM.OnlyExtensionList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OnlyExtension, Mode=OneWay}" Margin="8,0,0,0"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="OnlyPaths_Import" IsChecked="{x:Bind ViewModel.ImportExtractVM.OnlyPaths, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}" Margin="0,12,0,0">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock x:Uid="Settings_Output_OnlyPathsText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                    <TextBox x:Uid="Settings_OnlyPathsList" HorizontalAlignment="Stretch" Margin="8,0,0,0" Text="{x:Bind ViewModel.ImportExtractVM.OnlyPathsList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.IsOnlyPathsTextBoxEnabled, Mode=OneWay}"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="IgnorePaths_Import" IsChecked="{x:Bind ViewModel.ImportExtractVM.IgnorePaths, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock x:Uid="Settings_Output_IgnorePathsText" Margin="0,4,0,0" VerticalAlignment="Top"/>
+                                                                    <TextBox x:Uid="Settings_IgnorePathsList" HorizontalAlignment="Stretch" Text="{x:Bind ViewModel.ImportExtractVM.IgnorePathsList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.IsIgnorePathsTextBoxEnabled, Mode=OneWay}" Margin="8,0,0,0"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                        <CheckBox x:Name="EffectImagesCheckBox_Import" IsChecked="{x:Bind ViewModel.ImportExtractVM.FilterEffectImagesEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.OutputMode, Converter={StaticResource EqualityConverter}, ConverterParameter=2, Mode=OneWay}">
+                                                            <CheckBox.Content>
+                                                                <StackPanel>
+                                                                    <TextBlock x:Uid="Settings_Output_EffectImagesText" Margin="0,12,0,8" VerticalAlignment="Bottom" IsHitTestVisible="False" TextWrapping="Wrap"/>
+                                                                    <NumberBox Minimum="0" Maximum="100" SmallChange="5" SpinButtonPlacementMode="Compact"
+                                                                               Value="{x:Bind ViewModel.ImportExtractVM.FilterEffectImagesThreshold, Mode=TwoWay}" Margin="8,0,0,0"
+                                                                               IsEnabled="{x:Bind ViewModel.ImportExtractVM.FilterEffectImagesEnabled, Mode=OneWay}"/>
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                        </RadioButtons>
 
-                    <controls:SettingsExpander x:Uid="Settings_CpuParallel" Header="性能" Description="并发提取数、进程优先级、内存控制" Margin="0,0,0,10">
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Uid="Settings_FolderStructure" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                            <Button x:Name="FolderStructureHelpButton_Import" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="FolderStructureHelpButton_Import_Click">
+                                                <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                            </Button>
+                                        </StackPanel>
+                                        <TeachingTip x:Name="FolderStructureTeachingTip_1_Import" x:Uid="Settings_TeachingTip_Folder1" Target="{x:Bind FolderStructureFirstRadio_Import}" Title="{x:Bind FolderStructureFirstRadioTitle_Import.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                        <TeachingTip x:Name="FolderStructureTeachingTip_2_Import" x:Uid="Settings_TeachingTip_Folder2" Target="{x:Bind FolderStructureFlatRadio_Import}" Title="{x:Bind FolderStructureFlatRadioTitle_Import.Text}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.ImportExtractVM.OneFolder, Mode=TwoWay}" MaxColumns="2">
+                                            <RadioButton x:Name="FolderStructureFirstRadio_Import">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="FolderStructureFirstRadioTitle_Import" x:Uid="Settings_SubfolderOutput_Header"/>
+                                                        <RadioButtons SelectedIndex="{x:Bind ViewModel.ImportExtractVM.OverwriteMode, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.ImportExtractVM.IsSubfolderModeContentEnabled, Mode=OneWay}">
+                                                            <RadioButtons.Header>
+                                                                <TextBlock x:Uid="Settings_FileConflict" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                            </RadioButtons.Header>
+                                                            <RadioButton x:Uid="Settings_OverwriteFiles"/>
+                                                            <RadioButton x:Uid="Settings_SkipExtracted"/>
+                                                        </RadioButtons>
+                                                        <CheckBox x:Uid="Settings_Subfolder_ByName"
+                                                                      IsChecked="{x:Bind ViewModel.ImportExtractVM.UseProjectName, Mode=TwoWay}"
+                                                                      IsEnabled="{x:Bind ViewModel.ImportExtractVM.IsSubfolderModeContentEnabled, Mode=OneWay}" Margin="0,12,0,0"/>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                            <RadioButton x:Name="FolderStructureFlatRadio_Import">
+                                                <RadioButton.Content>
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock x:Name="FolderStructureFlatRadioTitle_Import" x:Uid="Settings_FlatOutput_Header"/>
+                                                            <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="Red" Margin="8,0,0,0"
+                                                                          Visibility="{x:Bind ViewModel.ImportExtractVM.IsConflictMode, Mode=OneWay}"
+                                                                          VerticalAlignment="Center">
+                                                                <ToolTipService.ToolTip>
+                                                                    <ToolTip x:Uid="Settings_ConflictWarning_Flat"/>
+                                                                </ToolTipService.ToolTip>
+                                                            </FontIcon>
+                                                        </StackPanel>
+                                                        <RadioButtons IsEnabled="{x:Bind ViewModel.ImportExtractVM.IsFlatModeContentEnabled, Mode=OneWay}" SelectedIndex="{x:Bind ViewModel.ImportExtractVM.FlatFileNamingMode, Mode=TwoWay}">
+                                                            <RadioButtons.Header>
+                                                                <TextBlock x:Uid="Settings_FlatFileNaming" FontWeight="SemiBold" Margin="28,24,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                                            </RadioButtons.Header>
+                                                            <RadioButton x:Uid="Settings_FlatOutput_KeepName"/>
+                                                            <RadioButton x:Uid="Settings_FlatOutput_ByName"/>
+                                                        </RadioButtons>
+                                                    </StackPanel>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                        </RadioButtons>
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <RadioButtons SelectedIndex="{x:Bind ViewModel.ImportExtractVM.KeepSubfolderStructure, Mode=TwoWay}" MaxColumns="2">
+                                        <RadioButtons.Header>
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock x:Uid="Settings_SceneHeader" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                    <Button x:Name="SceneWallpaperHelpButton_Import" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center" Click="SceneWallpaperHelpButton_Import_Click">
+                                                        <FontIcon Glyph="&#xE9CE;" FontSize="12"/>
+                                                    </Button>
+                                                </StackPanel>
+                                                <TeachingTip x:Name="SceneWallpaperTeachingTip_1_Import" x:Uid="Settings_TeachingTip_Scene1" Target="{x:Bind SceneWallpaperFirstRadio_Import}" Title="{x:Bind SceneWallpaperFirstRadio_Import.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                                <TeachingTip x:Name="SceneWallpaperTeachingTip_2_Import" x:Uid="Settings_TeachingTip_Scene2" Target="{x:Bind SceneWallpaperFlattenRadio_Import}" Title="{x:Bind SceneWallpaperFlattenRadio_Import.Content}" ActionButtonClick="TeachingTip_ActionButtonClick" CloseButtonClick="TeachingTip_CloseButtonClick"/>
+                                            </StackPanel>
+                                        </RadioButtons.Header>
+                                        <RadioButton x:Name="SceneWallpaperFirstRadio_Import" x:Uid="Settings_KeepStructure"/>
+                                        <RadioButton x:Name="SceneWallpaperFlattenRadio_Import" x:Uid="Settings_FlattenStructure"/>
+                                    </RadioButtons>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                        </controls:SettingsExpander.Items>
+                    </controls:SettingsExpander>
+
+                    <controls:SettingsExpander x:Uid="Settings_CpuParallel" Header="性能" Description="并发提取数、进程优先级" Margin="0,0,0,10">
                         <controls:SettingsExpander.HeaderIcon>
                             <FontIcon Glyph="&#xE950;"/>
                         </controls:SettingsExpander.HeaderIcon>
@@ -572,11 +777,6 @@
                                             <ComboBoxItem x:Uid="Settings_PriorityIdle"/>
                                         </ComboBox>
                                     </StackPanel>
-                                </controls:SettingsCard.Header>
-                            </controls:SettingsCard>
-                            <controls:SettingsCard>
-                                <controls:SettingsCard.Header>
-                                    <CheckBox x:Uid="Settings_LazyLoad" IsChecked="{x:Bind ViewModel.LazyLoad, Mode=TwoWay}"/>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
                         </controls:SettingsExpander.Items>

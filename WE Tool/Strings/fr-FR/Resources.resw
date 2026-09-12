@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>Tout sélectionner</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>Sauvegarder ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>Supprimer la sauvegarde ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>Affichage</value>
   </data>
@@ -875,10 +881,16 @@
     <value>Ordre de tri</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Paramètres de sortie</value>
+    <value>Paramètres de sortie de Fonds d'écran installés</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>S'applique à tous les types de fonds d'écran</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>Paramètres de sortie d'Importer et décompresser</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>S'applique uniquement à l'extraction sur la page Importer et décompresser</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>Gestion des conflits de fichiers</value>
@@ -944,7 +956,7 @@
     <value>Performances</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Extractions simultanées, priorité du processus, contrôle mémoire</value>
+    <value>Extractions simultanées, priorité du processus</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>Nombre max d'extractions simultanées</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>Auto</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Chargement par fragments（lire un par un, réduire l'utilisation mémoire）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>Tous les fichiers dans le dossier de sortie, sans sous-dossiers</value>
@@ -1839,7 +1848,10 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
     <value>Échec de l'opération</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>Sauvegarde automatique</value>
+    <value>Paramètres de sauvegarde</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>Sauvegarder maintenant</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>Choisissez le mode de sauvegarde automatique et précisez les types de fonds d'écran et classifications à sauvegarder</value>

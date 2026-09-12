@@ -254,6 +254,11 @@
                           Click="AutoBackupButton_Click">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE74E;"/></AppBarButton.Icon>
             </AppBarButton>
+            <!-- [立即备份 2026-09] 手动补一次:沿用自动备份的类型/分级筛选,只补未备份的 -->
+            <AppBarButton x:Name="BackupNowButton" x:Uid="AutoBackup_BackupNow"
+                          Click="BackupNow_Click">
+                <AppBarButton.Icon><FontIcon Glyph="&#xE895;"/></AppBarButton.Icon>
+            </AppBarButton>
             <AppBarSeparator/>
             <AppBarButton x:Name="RefreshButton" x:Uid="BackupPage_Refresh"
                           Click="ScanButton_Click">

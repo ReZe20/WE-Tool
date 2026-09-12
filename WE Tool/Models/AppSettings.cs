@@ -23,6 +23,19 @@ namespace WE_Tool.Models
         public ComponentsConfig Components { get; set; } = new ComponentsConfig();
         public PathConfig Path { get; set; } = new PathConfig();
         public ExtractSettings Extract { get; set; } = new ExtractSettings();
+        /// <summary>[导入解包输出设置 2026-09] 导入解包页的导出配方,与 Extract(已安装壁纸页面输出设置)同构但互不影响。
+        /// 默认值 = 该页原先写死的"编辑器同款":全量输出 + TEX 转成图片 + 写 project.json + 每包一目录 + 覆盖同名 + 保持源目录结构。</summary>
+        public ExtractSettings ImportExtract { get; set; } = new ExtractSettings
+        {
+            OutputMode = 0,               // 全量输出
+            TexExportMode = 2,            // 只导出 TEX 转换后的图片
+            OutProjectJSON = true,        // 写 project.json
+            UseProjectName = true,        // 子目录名取 project.json 里的名称
+            OneFolder = 0,                // 每个包一个子文件夹
+            CoverAllFiles = true,         // 覆盖同名文件
+            KeepSubfolderStructure = 0,   // 场景壁纸保持源目录结构
+            LazyLoad = true,              // 分块解析
+        };
         public AutoBackupConfig AutoBackup { get; set; } = new AutoBackupConfig();
         public string ScanCacheEnabled { get; set; } = "1";
         public bool RestoreWindowGeometry { get; set; } = true;
@@ -174,8 +187,14 @@ namespace WE_Tool.Models
 
         /// <summary>如果输出目录已存在且非空，跳过该壁纸</summary>
         public bool SkipExistingOutput { get; set; } = false;
-        /// <summary>分块解析模式，逐条读取减少内存占用</summary>
+        /// <summary>[2026-09 备注] 分块解析模式:历史上对应 repkg 单包命令的 --lazy。batch 路径本身即按需逐条
+        /// 读取,且 RePKG_Re 在 batch 清单里固定 Lazy=false(batch 有自己的按需读取循环),故此值当前无人消费;
+        /// 字段保留以兼容旧配置与后续预留(设置页已不再提供该开关)。</summary>
         public bool LazyLoad { get; set; } = true;
+
+        /// <summary>浅拷贝:字段全是值类型或字符串,等价于深拷贝。供页面在全局值基础上生成一份自己的配方
+        /// (例如导入解包页把全局「性能」区的并发数/优先级叠加到自己的输出配方上,而不改共享的配置对象)。</summary>
+        public ExtractSettings Clone() => (ExtractSettings)MemberwiseClone();
 
     }
 

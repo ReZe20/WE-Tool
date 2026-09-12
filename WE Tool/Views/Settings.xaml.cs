@@ -53,6 +53,14 @@ public sealed partial class Settings : Page
             { FolderStructureTeachingTip_2, null! },
             { SceneWallpaperTeachingTip_1, SceneWallpaperTeachingTip_2 },
             { SceneWallpaperTeachingTip_2, null! },
+            // [导入解包输出设置 2026-09] 新增分区的教学提示(与上面那组共用同一套文案与处理器)
+            { OutputTypeTeachingTip_1_Import, OutputTypeTeachingTip_2_Import },
+            { OutputTypeTeachingTip_2_Import, OutputTypeTeachingTip_3_Import },
+            { OutputTypeTeachingTip_3_Import, null! },
+            { FolderStructureTeachingTip_1_Import, FolderStructureTeachingTip_2_Import },
+            { FolderStructureTeachingTip_2_Import, null! },
+            { SceneWallpaperTeachingTip_1_Import, SceneWallpaperTeachingTip_2_Import },
+            { SceneWallpaperTeachingTip_2_Import, null! },
         };
 
         // TeachingTip 没有 Opened 事件,改为监听 IsOpen 依赖属性变化——打开瞬间应用主题
@@ -134,6 +142,22 @@ public sealed partial class Settings : Page
     private void SceneWallpaperHelpButton_Click(object sender, RoutedEventArgs e)
     {
         SceneWallpaperTeachingTip_1.IsOpen = true;
+    }
+
+    // [导入解包输出设置 2026-09] 新分区三个帮助按钮:开各自的第一条教学提示(链式推进沿用 TeachingTip_ActionButtonClick)
+    private void OutputTypeHelpButton_Import_Click(object sender, RoutedEventArgs e)
+    {
+        OutputTypeTeachingTip_1_Import.IsOpen = true;
+    }
+
+    private void FolderStructureHelpButton_Import_Click(object sender, RoutedEventArgs e)
+    {
+        FolderStructureTeachingTip_1_Import.IsOpen = true;
+    }
+
+    private void SceneWallpaperHelpButton_Import_Click(object sender, RoutedEventArgs e)
+    {
+        SceneWallpaperTeachingTip_1_Import.IsOpen = true;
     }
 
     private void TeachingTip_ActionButtonClick(TeachingTip sender, object args)

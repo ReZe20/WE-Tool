@@ -40,6 +40,25 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private string _searchText = "";
     private bool _isUpdating;
     private bool _isFirstLoad = true;
+
+    // [同步 Papers 2026-09] 图标卡片静态预览的解码宽度上限(物理像素)。
+    // 卡片档位最大 300 DIP,高 DPI(150%)下约 450 物理像素,取 480 覆盖并留余量。
+    // 库里有 1024×1024 的 preview.jpg(全尺寸解码约 4MB/张),按卡片实际尺寸解码可大幅降低实化开销与内存。
+    // 注意:DecodePixelWidth 必须在 UriSource 赋值之前设置才生效。
+    private const int IconPreviewDecodeWidth = 480;
+
+    // [内容模式走 Skia 2026-09] 内容模式缩略图(80×80 DIP)静态图的解码宽度上限。
+    // 80 DIP 在 150% DPI 下约 120 物理像素、200% 下约 160;取 200 覆盖并留余量。
+    // 内容模式一屏可见行数多,全尺寸解码(库里有 1024×1024 的 preview.jpg)收益比图标模式更明显。
+    private const int ContentPreviewDecodeWidth = 200;
+
+    // [同步 Papers 2026-09] ItemsRepeater 预渲染缓冲(视口倍数),三套模式列表统一设置。
+    // 背景:Papers 侧迁移 ItemsRepeater 时丢掉了 GridView 时代的 CacheLength 设置,一直走系统默认(约 4 屏),
+    // 每次实化/回收的容器数翻数倍;窗口化(列少 → 内容极高)时这笔固定开销会被放大成可见掉帧。
+    // 取值:0 太激进(滚动时现造容器),沿用定稿的"备货 1 屏"。
+    private const double RepeaterCacheLength = 1;
+
+    private bool _componentsCacheApplied;
     private bool _isLeftMouseButtonPressed;
     // ===== [Shift 区间刷选,同步 Papers] 图标模式;Shift+拖动从锚点延伸连续区间 =====
     private ComponentInfo? _shiftAnchorItem;   // Shift 区间锚点(按下处)
@@ -201,6 +220,22 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (size <= 0) size = 30;
         int skip = (CurrentPage - 1) * size;
         return source.Skip(skip).Take(size).ToList();
+    }
+
+    /// <summary>[同步 Papers 2026-09] 给三套模式列表设置预渲染缓冲(一次性)。
+    /// 迁移 ItemsRepeater 时丢掉 GridView 时代的 CacheLength 设置,一直走系统默认(约 4 屏)——
+    /// 每次实化/回收的容器数翻数倍;窗口化(列少 → 内容极高)时这笔固定开销被放大成可见掉帧。
+    /// 三个 repeater 均为纵向滚动,故设 VerticalCacheLength(单位 = 视口倍数)。</summary>
+    private void ApplyComponentsRepeaterCacheLength()
+    {
+        if (_componentsCacheApplied) return;
+        // 控件未挂载时先不设(Loaded 内调用,正常都已就绪);未设成则下次 Loaded 再试
+        if (ComponentsRepeater == null || ComponentsContentRepeater == null || ComponentsListRepeater == null)
+            return;
+        ComponentsRepeater.VerticalCacheLength = RepeaterCacheLength;        // 图标模式(UniformGridLayout)
+        ComponentsContentRepeater.VerticalCacheLength = RepeaterCacheLength; // 内容模式(StackLayout 单列)
+        ComponentsListRepeater.VerticalCacheLength = RepeaterCacheLength;    // 列表模式(UniformGridLayout)
+        _componentsCacheApplied = true;
     }
 
     // ============= ItemsRepeater 列宽钳制(全迁;GridView 全部移除) =============
@@ -410,6 +445,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         // 首次布局后钳制列宽(防崩;GridView 已全迁 ItemsRepeater)
         this.Loaded += (s, e) =>
         {
+            ApplyComponentsRepeaterCacheLength();    // [同步 Papers 2026-09] 先设预渲染缓冲(减少实化/回收容器数)
             UpdateComponentsUniformLayoutMinWidth(); // 图标模式首帧钳制(防崩)
             UpdateComponentsListLayoutMinWidth();    // [全迁] 列表模式首帧钳制
         };
@@ -432,41 +468,34 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                     shadow.Receivers.Add(shadowCastGrid);
                 itemRootGrid.Shadow = shadow;
             }
-            // 设静态图源(GIF 的会被 UpdateSkiaGif 隐藏,但先设上无妨;路径为空用占位图)
-            Image? img = root.FindName("ItemPreviewImage") as Image;
-            if (img != null)
-            {
-                var src = string.IsNullOrEmpty(item.Preview)
-                    ? "ms-appx:///Assets/NoPreview.png"
-                    : item.Preview;
-                // Preview 是本地文件路径(非 URI),须转 file:///;ms-appx 等 URI 原样
-                img.Source = new BitmapImage(new Uri(
-                    src.StartsWith("ms-appx", StringComparison.OrdinalIgnoreCase)
-                        ? src
-                        : "file:///" + src.Replace('\\', '/')));
-            }
-            // GIF → Skia 播放,其余 → 静态图(原 UpdateSkiaGif 语义)
-            if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
-            {
-                bool isGif = !string.IsNullOrEmpty(item.Preview)
-                    && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
-                if (isGif)
-                {
-                    skia.Visibility = Visibility.Visible;
-                    if (img != null) img.Visibility = Visibility.Collapsed;
-                    skia.Start(item.Preview!);
-                }
-                else
-                {
-                    skia.Stop();
-                    skia.Visibility = Visibility.Collapsed;
-                    if (img != null) img.Visibility = Visibility.Visible;
-                }
-            }
+            // [同步 Papers 2026-09] 卡片图源统一装载(GIF → Skia 流式播放,静态图 → 按卡片尺寸解码);
+            // 图标模式与内容模式走同一实现,仅解码宽度不同。
+            ApplyComponentPreview(root, item, IconPreviewDecodeWidth);
             UpdateTagBadge(root, item); // 角标按当前标签模式设置
         };
         // 元素移出(回收/滚动走远):停 GIF
         ComponentsRepeater.ElementClearing += (s, e) =>
+        {
+            if (e.Element is not Grid root) return;
+            if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
+                skia.Stop();
+        };
+
+        // [内容模式走 Skia 2026-09] 内容模式缩略图(单列行卡左侧 80×80)改用与图标模式同一套图源逻辑:
+        // GIF → Skia 流式播放(不再走 BitmapImage AutoPlay 那条 WIC 全帧解码重路径),
+        // 静态图 → 按缩略图尺寸解码。回收/复用同样在此收敛(模板不再自带 Image.Source 绑定)。
+        ComponentsContentRepeater.ElementPrepared += (s, e) =>
+        {
+            if (e.Element is not Grid root) return;
+            // 用 e.Index 从 ItemsSource 拿 item(与图标模式一致,不依赖 DataContext 时机)
+            ComponentInfo? item = null;
+            if (root.DataContext is ComponentInfo dcItem) item = dcItem;
+            else if (e.Index >= 0 && e.Index < FilteredComponents.Count) item = FilteredComponents[e.Index];
+            if (item == null) return;
+            ApplyComponentPreview(root, item, ContentPreviewDecodeWidth);
+        };
+        // 元素移出(回收/滚动走远):停 GIF(与图标模式一致)
+        ComponentsContentRepeater.ElementClearing += (s, e) =>
         {
             if (e.Element is not Grid root) return;
             if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
@@ -1739,23 +1768,54 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             tb.Text = new ComponentsTagContentChoose().Convert(item, typeof(string), "", "") as string ?? "";
     }
 
-    /// <summary>Skia 流式 GIF 播放(GIF 时覆盖 BitmapImage,照 Papers)</summary>
-    private static void UpdateSkiaGif(Grid root, ComponentInfo item)
+    /// <summary>[同步 Papers 2026-09 + 内容模式走 Skia 2026-09] 卡片图源统一装载:图标模式与内容模式共用。
+    /// GIF → Skia 流式播放(不建 BitmapImage,消掉"白解一遍"的 WIC 全帧解码);
+    /// 静态图 → 按卡片实际显示尺寸解码(decodeWidth 上限;路径为空用占位图)。
+    /// 原图标模式私有的 Skia 装载私有方法只切换可见性、不设图源,现并入本方法(容器复用也在此收敛)。</summary>
+    private static void ApplyComponentPreview(Grid root, ComponentInfo item, int decodeWidth)
     {
-        if (root.FindName("ItemPreviewImage") is not Image img) return;
-        if (root.FindName("SkiaGifCanvas") is not SkiaGifView skia) return;
-        bool isGif = !string.IsNullOrEmpty(item.Preview) && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
-        if (isGif)
+        bool isGif = !string.IsNullOrEmpty(item.Preview)
+            && item.Preview.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+
+        // 设静态图源:仅 Skia 未接管时建
+        Image? img = root.FindName("ItemPreviewImage") as Image;
+        if (img != null)
         {
-            skia.Visibility = Visibility.Visible;
-            img.Visibility = Visibility.Collapsed; // 隐藏 BitmapImage,避免双解码
-            skia.Start(item.Preview!);
+            if (isGif)
+            {
+                // Skia 接管:不建 BitmapImage(避免白解一遍);顺带释放容器上次复用残留的解码
+                img.Source = null;
+            }
+            else
+            {
+                var src = string.IsNullOrEmpty(item.Preview)
+                    ? "ms-appx:///Assets/NoPreview.png"
+                    : item.Preview;
+                // Preview 是本地文件路径(非 URI),须转 file:///;ms-appx 等 URI 原样
+                // [同步 Papers 2026-09] 按卡片实际尺寸解码(DecodePixelWidth 须在 UriSource 之前设才生效)
+                var bmp = new BitmapImage { DecodePixelWidth = decodeWidth };
+                bmp.UriSource = new Uri(
+                    src.StartsWith("ms-appx", StringComparison.OrdinalIgnoreCase)
+                        ? src
+                        : "file:///" + src.Replace('\\', '/'));
+                img.Source = bmp;
+            }
         }
-        else
+        // GIF → Skia 播放,其余 → 静态图
+        if (root.FindName("SkiaGifCanvas") is SkiaGifView skia)
         {
-            skia.Stop();
-            skia.Visibility = Visibility.Collapsed;
-            img.Visibility = Visibility.Visible;
+            if (isGif)
+            {
+                skia.Visibility = Visibility.Visible;
+                if (img != null) img.Visibility = Visibility.Collapsed;
+                skia.Start(item.Preview!);
+            }
+            else
+            {
+                skia.Stop();
+                skia.Visibility = Visibility.Collapsed;
+                if (img != null) img.Visibility = Visibility.Visible;
+            }
         }
     }
 

@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>Выбрать все</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>Создать резервную копию ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>Удалить резервную копию ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>Вид</value>
   </data>
@@ -875,10 +881,16 @@
     <value>Направление сортировки</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Параметры вывода</value>
+    <value>Параметры вывода для установленных обоев</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>Применяется ко всем типам обоев</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>Параметры вывода для импорта и распаковки</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>Применяется только к извлечению на странице импорта и распаковки</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>Обработка конфликтов файлов</value>
@@ -944,7 +956,7 @@
     <value>Производительность</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Одновременные извлечения, приоритет процесса, управление памятью</value>
+    <value>Одновременные извлечения, приоритет процесса</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>Макс. одновременных извлечений</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>Авто</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Чтение по частям（по одному, снижение использования памяти）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>Все файлы в выходную папку, без подпапок</value>
@@ -1839,7 +1848,10 @@
     <value>Сбой операции</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>Авторезервирование</value>
+    <value>Настройки резервирования</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>Создать копию сейчас</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>Выберите режим авторезервирования и укажите типы и рейтинги обоев для резервирования</value>

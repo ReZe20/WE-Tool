@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>Alle auswählen</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>Sichern ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>Sicherung entfernen ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>Ansicht</value>
   </data>
@@ -875,10 +881,16 @@
     <value>Sortierrichtung</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Ausgabeeinstellungen</value>
+    <value>Ausgabeeinstellungen für installierte Hintergrundbilder</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>Gilt für alle Hintergrundbildtypen</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>Ausgabeeinstellungen für Importieren &amp; Entpacken</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>Gilt nur für die Extraktion auf der Seite Importieren &amp; Entpacken</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>Dateikonfliktbehandlung</value>
@@ -944,7 +956,7 @@
     <value>Leistung</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Gleichzeitige Extraktionen, Prozesspriorität, Speichersteuerung</value>
+    <value>Gleichzeitige Extraktionen, Prozesspriorität</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>Max. gleichzeitige Extraktionen</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>Auto</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Chunkweises Laden（einzeln lesen, Speicherverbrauch reduzieren）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>Alle Dateien im Ausgabeordner, keine Unterordner</value>
@@ -1839,7 +1848,10 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
     <value>Vorgang fehlgeschlagen</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>Automatische Sicherung</value>
+    <value>Sicherungseinstellungen</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>Jetzt sichern</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>Modus der automatischen Sicherung wählen und festlegen, welche Hintergrundbildtypen und Altersfreigaben gesichert werden sollen</value>

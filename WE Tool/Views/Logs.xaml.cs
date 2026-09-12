@@ -84,14 +84,17 @@ public sealed partial class Logs : Page
         }
     }
 
-    /// <summary>通用增量轮询:首读只取尾部 64KB;文件被截断/重建时清空重读;文件暂时被占用时跳过本次。</summary>
+    /// <summary>通用增量轮询:首读只取尾部 64KB 且强制落到最新;文件被截断/重建时清空重读;文件暂时被占用时跳过本次。</summary>
     private void PollLog(string? path, ref long position, ref bool atBottom,
                          TextBlock target, ScrollViewer scrollViewer)
     {
         if (path == null || !File.Exists(path)) return;
         try
         {
-            if (position == 0 && target.Inlines.Count == 0)
+            // 首读(本会话第一次读这个文件)只取尾部 64KB,并一律按"用户要看最新"处理——
+            // 面板刚打开/标签页刚切过来时的预期固定是看最新,不该受期间布局事件影响。
+            var firstRead = position == 0 && target.Inlines.Count == 0;
+            if (firstRead)
                 position = Math.Max(0, new FileInfo(path).Length - 64 * 1024);
 
             using var fs = new FileStream(path, FileMode.Open, FileAccess.Read,
@@ -100,6 +103,7 @@ public sealed partial class Logs : Page
             {
                 position = 0;
                 target.Inlines.Clear();
+                firstRead = true;      // 文件被截断重建(如 repkg 每批重写日志)= 从头再读,同样落到最新
             }
             if (fs.Length == position) return;
 
@@ -109,12 +113,21 @@ public sealed partial class Logs : Page
             position = fs.Position;
             if (chunk.Length == 0) return;
 
+            // 追加内容会改变滚动范围并触发 ViewChanged,那不是用户滚动,却会被判成"不在底部"从而把 atBottom
+            // 冲成 false(标签页刚切过来、面板尚未完成首次测量时尤其容易:offset 还是 0、范围已变大),
+            // 此后每个 tick 都不再跟随,面板就停在最早那一行。故先快照用户意图,追加完成后再恢复。
+            var follow = firstRead || atBottom;
             AppendLogChunk(chunk, target);
-            if (atBottom)
+            atBottom = follow;
+            if (follow)
             {
                 // 先强制布局再滚动:直接 ChangeView 时 ScrollableHeight 可能尚未更新,首次加载会停在顶部
                 scrollViewer.UpdateLayout();
                 scrollViewer.ChangeView(null, double.MaxValue, null, true);
+                // 布局还可能再跑一轮并把上面这次滚动顶掉(标签页切换时的首次测量),排到 dispatcher 低优先级
+                // 补滚一次,保证最终停在最新一行;已经到底时重复滚到同一位置无副作用。
+                DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low,
+                    () => scrollViewer.ChangeView(null, double.MaxValue, null, true));
             }
         }
         catch

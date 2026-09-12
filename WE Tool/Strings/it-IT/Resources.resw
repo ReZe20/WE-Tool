@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>Seleziona tutto</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>Esegui backup ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>Rimuovi backup ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>Visualizza</value>
   </data>
@@ -875,10 +881,16 @@
     <value>Direzione ordinamento</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>Impostazioni di output</value>
+    <value>Impostazioni di output di Sfondi installati</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>Si applica a tutti i tipi di sfondo</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>Impostazioni di output di Importa ed estrai</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>Si applica solo all'estrazione nella pagina Importa ed estrai</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>Gestione conflitti file</value>
@@ -944,7 +956,7 @@
     <value>Prestazioni</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>Estrazioni simultanee, priorità processo, controllo memoria</value>
+    <value>Estrazioni simultanee, priorità processo</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>Max estrazioni simultanee</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>Auto</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>Caricamento a blocchi（leggi uno per uno, riduci uso memoria）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>Tutti i file nella cartella di output, senza sottocartelle</value>
@@ -1839,7 +1848,10 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
     <value>Operazione non riuscita</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>Backup automatico</value>
+    <value>Impostazioni di backup</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>Esegui backup ora</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>Scegli la modalità di backup automatico e i tipi/classificazioni di sfondi da salvare</value>

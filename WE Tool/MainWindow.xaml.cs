@@ -600,7 +600,8 @@ namespace WE_Tool
             }
         }
 
-        /// <summary>启动时备份模式:遍历 content 目录,对未备份+命中筛选的壁纸做硬链接备份(后台,不阻塞窗口)。</summary>
+        /// <summary>启动时备份模式:一次补齐所有「未备份 + 命中筛选」的工坊壁纸(后台,不阻塞窗口)。
+        /// [立即备份 2026-09] 补齐实现已抽到 BackupService.BackupAllMissing,与备份页「立即备份」按钮共用。</summary>
         private static void RunStartupBackupAsync(Models.AutoBackupConfig cfg)
         {
             try
@@ -613,26 +614,7 @@ namespace WE_Tool
                     return;
                 }
 
-                int backed = 0;
-                foreach (var dir in Directory.EnumerateDirectories(workshopPath))
-                {
-                    var id = Path.GetFileName(dir);
-                    if (id == ".we_backup") continue;
-                    if (BackupService.IsBackedUp(workshopPath, id)) continue;
-
-                    var projPath = Path.Combine(dir, "project.json");
-                    if (!File.Exists(projPath)) continue;
-
-                    // 筛选:类型 + 分级
-                    var meta = JsonSerializer.Deserialize(File.ReadAllBytes(projPath), JsonContext.Default.ProjectMetadata);
-                    if (!MatchesFilter(cfg, meta)) continue;
-
-                    var result = BackupService.BackupWallpaperFolder(dir, workshopPath, id);
-                    if (result.Error is null)
-                        backed++;
-                    else
-                        Log.Warning("启动时备份失败 {Id}: {Err}", id, result.Error);
-                }
+                int backed = BackupService.BackupAllMissing(workshopPath, cfg);
                 if (backed > 0)
                     Log.Information("启动时备份完成: 新增备份 {Count} 个", backed);
             }
@@ -640,37 +622,6 @@ namespace WE_Tool
             {
                 Log.Warning(ex, "启动时备份异常");
             }
-        }
-
-        /// <summary>project.json 元数据命中自动备份筛选(类型+分级)。</summary>
-        private static bool MatchesFilter(Models.AutoBackupConfig cfg, Models.ProjectMetadata? meta)
-        {
-            if (meta == null) return false;
-            var type = meta.Type?.ToLowerInvariant() ?? "";
-            var rating = meta.Contentrating?.ToLowerInvariant() ?? "";
-
-            bool typeOk = type switch
-            {
-                "scene" => cfg.TypeScene,
-                "video" => cfg.TypeVideo,
-                "web" => cfg.TypeWeb,
-                "application" => cfg.TypeApplication,
-                "preset" => cfg.TypePreset,
-                _ => cfg.TypeUnknown,
-            };
-            if (!typeOk) return false;
-
-            bool ratingOk = rating switch
-            {
-                "everyone" => cfg.RatingG,
-                "questionable" => cfg.RatingPg,
-                "mature" => cfg.RatingR,
-                "g" => cfg.RatingG,       // 兼容历史/第三方写入的短码
-                "pg" => cfg.RatingPg,
-                "r" => cfg.RatingR,
-                _ => true, // 未知分级默认放行(与服务端 AutoBackupFilter 一致)
-            };
-            return ratingOk;
         }
     }
 }

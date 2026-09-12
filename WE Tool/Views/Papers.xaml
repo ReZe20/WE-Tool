@@ -78,11 +78,22 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="BackupWallpaperButton"
-                              x:Uid="AppBarButton_Backup"
-                              Click="BackupWallpaper_Click_ByCommandBarFlyout">
+                              x:Uid="AppBarButton_Backup">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE7B8;"/>
                     </AppBarButton.Icon>
+                    <!-- [备份/取消备份 2026-09] 子菜单:两条命令各自带数量与可用性(混合选中时两条都可用);
+                         父按钮不再直接执行动作(原 Click 拆到两条命令),避免"混合态只能表达一半" -->
+                    <AppBarButton.Flyout>
+                        <MenuFlyout x:Name="BackupSubMenu" Opening="BackupSubMenu_Opening">
+                            <MenuFlyoutItem x:Name="BackupSelectedMenuItem"
+                                            x:Uid="MenuFlyoutItem_BackupSelected"
+                                            Click="BackupSelected_Click"/>
+                            <MenuFlyoutItem x:Name="UnbackupSelectedMenuItem"
+                                            x:Uid="MenuFlyoutItem_UnbackupSelected"
+                                            Click="UnbackupSelected_Click"/>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_ImportToEditor"
@@ -637,7 +648,8 @@
                 <Grid>
                     <SplitView x:Name="LeftSplitView" PanePlacement="Left" OpenPaneLength="210" DisplayMode="Inline" PaneBackground="Transparent" IsPaneOpen="{x:Bind ViewModel.WallpaperDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}">
                         <SplitView.Pane>
-                            <Grid BorderBrush="#E0E0E0" BorderThickness="0,0,0,0">
+                            <!-- [分割线 2026-09] 右缘 1px 与右侧详情面板同款(之前这里 BorderBrush 挂着但 Thickness 全 0,等于没画) -->
+                            <Grid Background="Transparent" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
@@ -760,6 +772,11 @@
                                                 SizeChanged="WallpapersScrollViewExp_SizeChanged"
                                                 Tapped="WallpaperList_Tapped"
                                                 Margin="4,0,4,0">
+                                    <wetool:CtrlAwareScrollView.Resources>
+                                        <!-- [scrollbar 右移 3px 2026-09] 覆盖 ScrollView 模板的缩进资源(默认 Thickness=1=四边各 1px):
+                                             Right 1→-2 → 竖向 bar 右移 3px;只挂本条 ScrollView,左右面板的 ScrollView 不受影响 -->
+                                        <Thickness x:Key="ScrollViewScrollBarsMargin">1,1,-2,1</Thickness>
+                                    </wetool:CtrlAwareScrollView.Resources>
                                         <ItemsRepeater x:Name="WallpapersRepeater"
                                                        ItemsSource="{x:Bind Wallpapers}"
                                                        PointerWheelChanged="WallpapersRepeater_PointerWheelChanged"
@@ -768,10 +785,10 @@
                                                 <!-- [防崩] MinItemWidth 由代码钳制(见 WallpapersScrollViewExp_SizeChanged):
                                                      可用宽 < MinItemWidth → UniformGridLayout itemsPerLine=0 除零崩溃(#10539) -->
                                                 <UniformGridLayout x:Name="WallpapersUniformLayoutExp"
-                                                    MinColumnSpacing="10"
-                                                    MinRowSpacing="10"
-                                                    ItemsStretch="Fill"
-                                                    Orientation="Horizontal"/>
+                                                                   MinColumnSpacing="10"
+                                                                   MinRowSpacing="10"
+                                                                   ItemsStretch="Fill"
+                                                                   Orientation="Horizontal"/>
                                             </ItemsRepeater.Layout>
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
@@ -885,6 +902,11 @@
                                                 SizeChanged="WallpapersContentScrollViewExp_SizeChanged"
                                                 Tapped="WallpaperList_Tapped"
                                                 Margin="4,0,4,0">
+                                    <wetool:CtrlAwareScrollView.Resources>
+                                        <!-- [scrollbar 右移 3px 2026-09] 覆盖 ScrollView 模板的缩进资源(默认 Thickness=1=四边各 1px):
+                                             Right 1→-2 → 竖向 bar 右移 3px;只挂本条 ScrollView,左右面板的 ScrollView 不受影响 -->
+                                        <Thickness x:Key="ScrollViewScrollBarsMargin">1,1,-2,1</Thickness>
+                                    </wetool:CtrlAwareScrollView.Resources>
                                         <ItemsRepeater x:Name="WallpapersContentRepeater"
                                                        ItemsSource="{x:Bind Wallpapers}">
                                             <ItemsRepeater.Layout>
@@ -1008,6 +1030,11 @@
                                                 SizeChanged="WallpapersListScrollViewExp_SizeChanged"
                                                 Tapped="WallpaperList_Tapped"
                                                 Margin="4,0,4,0">
+                                    <wetool:CtrlAwareScrollView.Resources>
+                                        <!-- [scrollbar 右移 3px 2026-09] 覆盖 ScrollView 模板的缩进资源(默认 Thickness=1=四边各 1px):
+                                             Right 1→-2 → 竖向 bar 右移 3px;只挂本条 ScrollView,左右面板的 ScrollView 不受影响 -->
+                                        <Thickness x:Key="ScrollViewScrollBarsMargin">1,1,-2,1</Thickness>
+                                    </wetool:CtrlAwareScrollView.Resources>
                                         <ItemsRepeater x:Name="WallpapersListRepeater"
                                                        ItemsSource="{x:Bind Wallpapers}"
                                                        Margin="0,0,10,0">

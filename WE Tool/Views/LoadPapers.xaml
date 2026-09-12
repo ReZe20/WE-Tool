@@ -144,6 +144,7 @@
                     Background="Transparent"
                     DefaultLabelPosition="Right">
             <CommandBar.PrimaryCommands>
+                <!-- [分界 2026-09] 按功能分组:配置 | 投递队列 | 运行控制 -->
                 <!-- 导出目录:按钮弹出 Flyout,内含文本框 + 选择文件夹 -->
                 <AppBarButton x:Name="ExportDirButton" x:Uid="LoadPapers_SetExportDir">
                     <AppBarButton.Icon>
@@ -169,6 +170,7 @@
                         </Flyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
+                <AppBarSeparator/>
                 <AppBarButton x:Name="SelectFileButton" x:Uid="LoadPapers_SelectFile" Click="SelectFiles_Click">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8E5;"/>
@@ -186,6 +188,7 @@
                         <FontIcon Glyph="&#xE74D;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
+                <AppBarSeparator/>
                 <AppBarButton x:Name="StartExtractButton"
                               x:Uid="LoadPapers_StartExtract"
                               Click="StartExtractButton_Click"

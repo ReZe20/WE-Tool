@@ -182,6 +182,7 @@
                     DefaultLabelPosition="Right"
                     Visibility="Collapsed">
             <CommandBar.PrimaryCommands>
+                <!-- [分界 2026-09] 按功能分组:选区批量操作 | 常规操作 | 危险操作 -->
                 <!-- 多选操作(选中时显示) -->
                 <AppBarButton x:Name="BatchWhitelistButton" x:Uid="Cleanup_BatchWhitelist" Click="BatchWhitelist_Click" IsEnabled="False">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE72E;"/></AppBarButton.Icon>
@@ -191,6 +192,7 @@
                         <FontIcon Glyph="&#xE74D;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
+                <AppBarSeparator/>
                 <!-- 常规操作 -->
                 <AppBarButton x:Uid="Cleanup_WhitelistManage" Click="WhitelistButton_Click">
                     <AppBarButton.Icon>
@@ -202,6 +204,7 @@
                         <FontIcon Glyph="&#xE72C;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
+                <AppBarSeparator/>
                 <AppBarButton x:Uid="Cleanup_DeleteAll" Click="DeleteAllButton_Click">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE74D;"/></AppBarButton.Icon>
                 </AppBarButton>

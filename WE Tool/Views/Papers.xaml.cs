@@ -3810,7 +3810,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 MaxConcurrentExtractions = ViewModel.MaxConcurrentExtractions,
                 ProcessPriority = ViewModel.ProcessPriority,
                 SkipExistingOutput = ViewModel.OneFolder == 1 ? ViewModel.SkipExistingOutput : false,
-                LazyLoad = ViewModel.LazyLoad,
             };
 
             RepkgCliService.SetProcessPriorityLevel(ViewModel.ProcessPriority);
@@ -4036,30 +4035,41 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 ? [wp]
                 : [];
 
-    /// <summary>右键菜单打开时刷新「备份」按钮状态（已备份→禁用+文案切换）。</summary>
+    /// <summary>[备份子菜单 2026-09] 右键菜单打开时刷新「备份」子菜单:父按钮可用性 +
+    /// 两条命令的文案(带数量)与可用性。选中态三分支:全未备份→只能「备份」/全已备份→只能「取消备份」/
+    /// 混合→两条都可用(各自计数)。替代旧实现"全都已备份就禁用按钮+文案改成已备份"的做法——
+    /// 那种做法在混合态下无法表达"取消",且文案切换容易让人误以为该按钮是"查看已备份列表"。</summary>
     private void UpdateBackupButtonState()
     {
-        if (BackupWallpaperButton is not AppBarButton btn) return;
-
         var items = GetBackupableItems();
         var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+        bool pathOk = !string.IsNullOrEmpty(workshopPath) && Directory.Exists(workshopPath);
 
-        if (items.Count == 0 || string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
+        List<WallpaperItem> backupable = pathOk
+            ? items.Where(i => !string.IsNullOrEmpty(i.WorkshopID)).ToList()
+            : [];
+        int pending = backupable.Count(i => !BackupService.IsBackedUp(workshopPath!, i.WorkshopID!));
+        int done = backupable.Count - pending;
+
+        if (BackupWallpaperButton is AppBarButton btn)
+            btn.IsEnabled = pending > 0 || done > 0;
+
+        if (BackupSelectedMenuItem is MenuFlyoutItem backupItem)
         {
-            btn.IsEnabled = false;
-            btn.Label = LanguageHelper.GetResource("AppBarButton_Backup.Label");
-            return;
+            backupItem.Text = string.Format(
+                LanguageHelper.GetResource("MenuFlyoutItem_BackupSelected.Text"), pending);
+            backupItem.IsEnabled = pending > 0;
         }
-
-        bool allBackedUp = items.All(i => !string.IsNullOrEmpty(i.WorkshopID)
-            && BackupService.IsBackedUp(workshopPath, i.WorkshopID!));
-        btn.IsEnabled = !allBackedUp;
-        btn.Label = allBackedUp
-            ? LanguageHelper.GetResource("AppBarButton_BackupDone.Label")
-            : LanguageHelper.GetResource("AppBarButton_Backup.Label");
+        if (UnbackupSelectedMenuItem is MenuFlyoutItem unbackupItem)
+        {
+            unbackupItem.Text = string.Format(
+                LanguageHelper.GetResource("MenuFlyoutItem_UnbackupSelected.Text"), done);
+            unbackupItem.IsEnabled = done > 0;
+        }
     }
 
-    private async void BackupWallpaper_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+    /// <summary>[备份子菜单 2026-09] 命令一:备份选中项里「未备份」的那些(逻辑同原按钮 Click)。</summary>
+    private async void BackupSelected_Click(object sender, RoutedEventArgs e)
     {
         HideWallpaperContextMenu();
 
@@ -4114,6 +4124,76 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             msg += "\n\n失败项：\n" + string.Join("\n", failures);
         await DialogHelper.ShowMessageAsync("备份完成", msg);
     }
+    /// <summary>[备份子菜单 2026-09] 弹层不自动继承主窗口运行时主题(公共逻辑见 App.ApplyFlyoutTheme);
+    /// 顺带再刷一次两条命令的数量(菜单打开后选中态不变,这里是兜底)。</summary>
+    private void BackupSubMenu_Opening(object sender, object e)
+    {
+        App.ApplyFlyoutTheme(sender, e);
+        UpdateBackupButtonState();
+    }
+
+    /// <summary>[备份子菜单 2026-09] 命令二:取消选中项里「已备份」的那些。
+    /// 只删 .we_backup/&lt;id&gt; 备份目录(硬链接入口),创意工坊源目录一个文件都不动。
+    /// [语义边界] 源目录已被删除的壁纸,备份是唯一副本 —— 确认框单独计数并明确警示永久丢失;
+    /// 判定口径与壁纸备份页一致(content/&lt;id&gt; 不存在 = 源已删除)。</summary>
+    private async void UnbackupSelected_Click(object sender, RoutedEventArgs e)
+    {
+        HideWallpaperContextMenu();
+
+        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+        if (string.IsNullOrEmpty(workshopPath) || !Directory.Exists(workshopPath))
+        {
+            await DialogHelper.ShowMessageAsync("取消备份失败",
+                "无法确定创意工坊目录，请先在设置中检查路径是否有效。");
+            return;
+        }
+
+        var toRemove = GetBackupableItems()
+            .Where(i => !string.IsNullOrEmpty(i.WorkshopID) && BackupService.IsBackedUp(workshopPath, i.WorkshopID!))
+            .ToList();
+        if (toRemove.Count == 0)
+        {
+            await DialogHelper.ShowMessageAsync("取消备份",
+                "所选壁纸都没有备份。");
+            return;
+        }
+
+        int missing = toRemove.Count(i => !Directory.Exists(Path.Combine(workshopPath, i.WorkshopID!)));
+
+        var body = $"确定要取消选中的 {toRemove.Count} 个壁纸的备份吗？\n\n" +
+                   "只删除 .we_backup 里的备份副本（硬链接），创意工坊目录里的壁纸文件不受影响。";
+        if (missing > 0)
+            body += $"\n\n注意：其中 {missing} 个壁纸的源文件已被删除，备份是唯一副本——取消后这些壁纸将永久丢失。";
+
+        bool confirmed = await DialogHelper.ShowConfirmDialogAsync("取消备份", body, "取消备份", "返回");
+        if (!confirmed) return;
+
+        int success = 0, failed = 0;
+        var failures = new List<string>();
+        foreach (var item in toRemove)
+        {
+            try
+            {
+                var backupDir = BackupService.GetBackupDir(workshopPath, item.WorkshopID!);
+                if (Directory.Exists(backupDir))
+                {
+                    Directory.Delete(backupDir, true);
+                    success++;
+                }
+            }
+            catch (Exception ex)
+            {
+                failed++;
+                failures.Add($"{item.Title ?? item.WorkshopID}: {ex.Message}");
+            }
+        }
+
+        var msg = $"取消备份完成：成功 {success} / {toRemove.Count} 个壁纸";
+        if (failed > 0)
+            msg += "\n\n失败项：\n" + string.Join("\n", failures);
+        await DialogHelper.ShowMessageAsync("取消备份完成", msg);
+    }
+
     private void WallpaperScrollView_ContextRequested(FrameworkElement sender, ContextRequestedEventArgs args)
     {
         // 1. 阻止事件进一步冒泡，防止触发多次弹出逻辑

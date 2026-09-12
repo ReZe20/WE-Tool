@@ -558,6 +558,12 @@
   <data name="MenuFlyoutItem_SelectAll.Text" xml:space="preserve">
     <value>全選</value>
   </data>
+  <data name="MenuFlyoutItem_BackupSelected.Text" xml:space="preserve">
+    <value>備份 ({0})</value>
+  </data>
+  <data name="MenuFlyoutItem_UnbackupSelected.Text" xml:space="preserve">
+    <value>取消備份 ({0})</value>
+  </data>
   <data name="MenuFlyoutSubItem_View.Text" xml:space="preserve">
     <value>檢視</value>
   </data>
@@ -875,10 +881,16 @@
     <value>排序方向</value>
   </data>
   <data name="Settings_Output.Header" xml:space="preserve">
-    <value>輸出設定</value>
+    <value>已安裝壁紙頁面輸出設定</value>
   </data>
   <data name="Settings_Output.Description" xml:space="preserve">
     <value>對所有桌布類型生效</value>
+  </data>
+  <data name="Settings_ImportOutput.Header" xml:space="preserve">
+    <value>匯入解包頁面輸出設定</value>
+  </data>
+  <data name="Settings_ImportOutput.Description" xml:space="preserve">
+    <value>只對匯入解包頁的提取生效</value>
   </data>
   <data name="Settings_FileConflict.Text" xml:space="preserve">
     <value>檔案衝突處理</value>
@@ -944,7 +956,7 @@
     <value>效能</value>
   </data>
   <data name="Settings_CpuParallel.Description" xml:space="preserve">
-    <value>並發擷取數、處理程序優先順序、記憶體控制</value>
+    <value>並發擷取數、處理程序優先順序</value>
   </data>
   <data name="Settings_MaxConcurrent.Text" xml:space="preserve">
     <value>最大並發擷取數</value>
@@ -972,9 +984,6 @@
   </data>
   <data name="Settings_CacheAuto.Content" xml:space="preserve">
     <value>自動</value>
-  </data>
-  <data name="Settings_LazyLoad.Content" xml:space="preserve">
-    <value>分塊解析（逐條讀取，減少記憶體占用）</value>
   </data>
   <data name="Settings_FlatOutput.Content" xml:space="preserve">
     <value>所有檔案放在輸出資料夾，不用子資料夾</value>
@@ -1839,7 +1848,10 @@
     <value>操作失敗</value>
   </data>
   <data name="AutoBackup_SettingsButton.Label" xml:space="preserve">
-    <value>自動備份</value>
+    <value>備份設定</value>
+  </data>
+  <data name="AutoBackup_BackupNow.Label" xml:space="preserve">
+    <value>立即備份</value>
   </data>
   <data name="AutoBackup_SettingsDescription.Text" xml:space="preserve">
     <value>選擇自動備份方式，並指定要自動備份的桌布類型與分級</value>

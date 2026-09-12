@@ -50,6 +50,8 @@ namespace WE_Tool.ViewModels
         public WallpaperDisplayViewModel WallpaperDisplayVM { get; } = new();
         public ComponentsDisplayViewModel ComponentsDisplayVM { get; } = new();
         public PathManagementViewModel PathManagementVM { get; }
+        /// <summary>[导入解包输出设置 2026-09] 导入解包页的导出配方(独立于 Papers 那份,见 AppSettings.ImportExtract)。</summary>
+        public ImportExtractViewModel ImportExtractVM { get; } = new();
 
         [ObservableProperty]
         public partial ObservableCollection<WallpaperItem> SelectedWallpapers { get; set; } = [];
@@ -231,9 +233,6 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial bool SkipExistingOutput { get; set; }
 
-        /// <summary>分块解析，逐条读取减少内存占用</summary>
-        [ObservableProperty]
-        public partial bool LazyLoad { get; set; } = true;
         /// <summary>日志记录级别(Off=关闭/Verbose/Debug/Information/Warning/Error/Fatal),修改即时生效。默认关闭。</summary>
         [ObservableProperty]
         public partial string LogLevel { get; set; } = "Off";
@@ -280,6 +279,7 @@ namespace WE_Tool.ViewModels
             WallpaperDisplayVM.PropertyChanged += OnSubViewModelPropertyChanged;
             ComponentsDisplayVM.PropertyChanged += OnSubViewModelPropertyChanged;
             PathManagementVM.PropertyChanged += OnSubViewModelPropertyChanged;
+            ImportExtractVM.PropertyChanged += OnSubViewModelPropertyChanged;
 
             AppSettingsVM.PropertyChanged += (s, e) =>
             {
@@ -554,7 +554,8 @@ namespace WE_Tool.ViewModels
             MaxConcurrentExtractions = _settings.Extract.MaxConcurrentExtractions;
             ProcessPriority = _settings.Extract.ProcessPriority;
             SkipExistingOutput = _settings.Extract.SkipExistingOutput;
-            LazyLoad = _settings.Extract.LazyLoad;
+
+            ImportExtractVM.LoadFrom(_settings.ImportExtract);
             LogLevel = _settings.LogLevel;
 
             if (mode.Contains('1') || string.IsNullOrEmpty(_settings.Path.DownloadPath))
@@ -931,7 +932,7 @@ namespace WE_Tool.ViewModels
                     _settings.Extract.MaxConcurrentExtractions = MaxConcurrentExtractions;
                     _settings.Extract.ProcessPriority = ProcessPriority;
                     _settings.Extract.SkipExistingOutput = OverwriteMode == 1;
-                    _settings.Extract.LazyLoad = LazyLoad;
+                    ImportExtractVM.SaveTo(_settings.ImportExtract);
                     _settings.LogLevel = LogLevel;
 
                     await _configService.SaveAsync(_settings);
