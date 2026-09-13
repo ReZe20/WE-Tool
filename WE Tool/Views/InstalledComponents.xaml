@@ -959,7 +959,11 @@
                                                           PointerPressed="ContentItem_PointerPressed"
                                                           RightTapped="ContentItem_RightTapped"
                                                           ContextFlyout="{StaticResource ComponentContextMenuFlyout}">
-                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Grid ColumnSpacing="6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
                                                             <CheckBox x:Name="ListSelectionCheckBox"
                                                                       VerticalAlignment="Center"
                                                                       Opacity="{x:Bind CheckBoxOpacity, Mode=OneWay}"
@@ -973,11 +977,12 @@
                                                                       HorizontalContentAlignment="Center"
                                                                       VerticalContentAlignment="Center"/>
                                                             <TextBlock Text="{x:Bind Title}"
+                                                                       Grid.Column="1"
                                                                        VerticalAlignment="Center"
                                                                        FontSize="13"
                                                                        FontWeight="Normal"
                                                                        TextTrimming="CharacterEllipsis"/>
-                                                        </StackPanel>
+                                                        </Grid>
                                                     </Grid>
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>

@@ -1171,6 +1171,12 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
     <value>Pagina successiva</value>
   </data>
+  <data name="Pagination_PrevPage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pagina precedente</value>
+  </data>
+  <data name="Pagination_NextPage.AutomationProperties.Name" xml:space="preserve">
+    <value>Pagina successiva</value>
+  </data>
   <data name="Pagination_None.Text" xml:space="preserve">
     <value>Nessuna paginazione</value>
   </data>
@@ -1877,6 +1883,12 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Origine rimossa</value>
+  </data>
+  <data name="BackupPage_CardDelete.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Elimina questo backup</value>
+  </data>
+  <data name="BackupPage_CardOpenFolder.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Apri la directory di questo backup</value>
   </data>
 
   <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">

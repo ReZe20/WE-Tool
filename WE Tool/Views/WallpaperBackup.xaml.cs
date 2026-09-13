@@ -335,6 +335,14 @@ public sealed partial class WallpaperBackup : Page
     private void BackupRepeater_ElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs args)
     {
         if (args.Element is not FrameworkElement content) return;
+
+        // resw 附加属性经 x:Uid 在 WinUI3 不生效(已知限制),tooltip 需代码显式设置
+        // 两个图标按钮只看图标看不出语义,悬浮时给出对应提示(见 Papers.xaml.cs 同法)
+        if (content.FindName("CardDeleteButton") is Button cardDelBtn)
+            ToolTipService.SetToolTip(cardDelBtn, L("BackupPage_CardDelete.ToolTipService.ToolTip"));
+        if (content.FindName("CardOpenFolderButton") is Button cardOpenBtn)
+            ToolTipService.SetToolTip(cardOpenBtn, L("BackupPage_CardOpenFolder.ToolTipService.ToolTip"));
+
         if (content.DataContext is not BackupItemViewModel vm) return;
 
         var img = content.FindName("PreviewImage") as Image;

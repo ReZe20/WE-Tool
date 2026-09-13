@@ -1171,6 +1171,12 @@ project.json 및 미리보기 복사
   <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
     <value>다음 페이지</value>
   </data>
+  <data name="Pagination_PrevPage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>이전 페이지</value>
+  </data>
+  <data name="Pagination_NextPage.AutomationProperties.Name" xml:space="preserve">
+    <value>다음 페이지</value>
+  </data>
   <data name="Pagination_None.Text" xml:space="preserve">
     <value>페이지 매김 없음</value>
   </data>
@@ -1877,6 +1883,12 @@ project.json 및 미리보기 복사
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>원본 삭제됨</value>
+  </data>
+  <data name="BackupPage_CardDelete.ToolTipService.ToolTip" xml:space="preserve">
+    <value>이 백업 삭제</value>
+  </data>
+  <data name="BackupPage_CardOpenFolder.ToolTipService.ToolTip" xml:space="preserve">
+    <value>이 백업의 디렉터리 열기</value>
   </data>
 
   <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">

@@ -1171,6 +1171,12 @@
   <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
     <value>下一页</value>
   </data>
+  <data name="Pagination_PrevPage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>上一页</value>
+  </data>
+  <data name="Pagination_NextPage.AutomationProperties.Name" xml:space="preserve">
+    <value>下一页</value>
+  </data>
   <data name="Pagination_None.Text" xml:space="preserve">
     <value>不分页</value>
   </data>
@@ -1876,6 +1882,12 @@
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>源已删除</value>
+  </data>
+  <data name="BackupPage_CardDelete.ToolTipService.ToolTip" xml:space="preserve">
+    <value>删除此备份</value>
+  </data>
+  <data name="BackupPage_CardOpenFolder.ToolTipService.ToolTip" xml:space="preserve">
+    <value>打开此备份的目录</value>
   </data>
 
   <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">

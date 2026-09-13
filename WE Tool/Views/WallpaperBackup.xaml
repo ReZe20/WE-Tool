@@ -219,7 +219,7 @@
                                         VerticalAlignment="Center" Spacing="4">
                                 <TextBlock Text="{x:Bind Title, Mode=OneWay}"
                                            FontSize="16" FontWeight="SemiBold"
-                                           TextTrimming="CharacterEllipsis" MaxLines="2"/>
+                                           TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2"/>
                                 <TextBlock Text="{x:Bind WorkshopId, Mode=OneWay}"
                                            FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 <TextBlock Text="{x:Bind SizeText, Mode=OneWay}"
@@ -228,13 +228,15 @@
                                            FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
-                                <Button CommandParameter="{x:Bind}"
+                                <Button x:Name="CardDeleteButton"
+                                        CommandParameter="{x:Bind}"
                                         Click="DeleteBackup_Click"
                                         Background="Transparent"
                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}">
                                     <FontIcon Glyph="&#xE74D;" FontSize="16"/>
                                 </Button>
-                                <Button CommandParameter="{x:Bind}"
+                                <Button x:Name="CardOpenFolderButton"
+                                        CommandParameter="{x:Bind}"
                                         Click="OpenBackupFolder_Click"
                                         Background="Transparent"
                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}">

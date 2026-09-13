@@ -1171,6 +1171,12 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
   <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
     <value>Page suivante</value>
   </data>
+  <data name="Pagination_PrevPage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Page précédente</value>
+  </data>
+  <data name="Pagination_NextPage.AutomationProperties.Name" xml:space="preserve">
+    <value>Page suivante</value>
+  </data>
   <data name="Pagination_None.Text" xml:space="preserve">
     <value>Sans pagination</value>
   </data>
@@ -1877,6 +1883,12 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Source supprimée</value>
+  </data>
+  <data name="BackupPage_CardDelete.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Supprimer cette sauvegarde</value>
+  </data>
+  <data name="BackupPage_CardOpenFolder.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ouvrir le répertoire de cette sauvegarde</value>
   </data>
 
   <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">

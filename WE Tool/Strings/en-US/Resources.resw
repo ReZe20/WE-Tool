@@ -1171,6 +1171,12 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
     <value>Next Page</value>
   </data>
+  <data name="Pagination_PrevPage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Previous Page</value>
+  </data>
+  <data name="Pagination_NextPage.AutomationProperties.Name" xml:space="preserve">
+    <value>Next Page</value>
+  </data>
   <data name="Pagination_None.Text" xml:space="preserve">
     <value>No Pagination</value>
   </data>
@@ -1876,6 +1882,12 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>Source removed</value>
+  </data>
+  <data name="BackupPage_CardDelete.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Delete this backup</value>
+  </data>
+  <data name="BackupPage_CardOpenFolder.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open this backup's folder</value>
   </data>
 
   <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">

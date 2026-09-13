@@ -34,16 +34,21 @@
                 VerticalAlignment="Center"
                 Spacing="2">
 
-                <StackPanel Orientation="Horizontal" Spacing="6">
+                <Grid ColumnSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock
                         Style="{StaticResource BodyStrongTextBlockStyle}"
                         Text="{x:Bind Header, Mode=OneWay}"
                         TextTrimming="CharacterEllipsis" />
                     <TextBlock
+                        Grid.Column="1"
                         VerticalAlignment="Center"
                         FontSize="14"
                         Text="{x:Bind Badges, Mode=OneWay}" />
-                </StackPanel>
+                </Grid>
 
                 <HyperlinkButton
                     Padding="0"

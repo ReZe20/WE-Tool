@@ -1171,6 +1171,12 @@ project.json とプレビューをコピー
   <data name="Pagination_NextPage.ToolTipService.ToolTip" xml:space="preserve">
     <value>次のページ</value>
   </data>
+  <data name="Pagination_PrevPage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>前のページ</value>
+  </data>
+  <data name="Pagination_NextPage.AutomationProperties.Name" xml:space="preserve">
+    <value>次のページ</value>
+  </data>
   <data name="Pagination_None.Text" xml:space="preserve">
     <value>ページネーションなし</value>
   </data>
@@ -1877,6 +1883,12 @@ project.json とプレビューをコピー
   </data>
   <data name="BackupPage_SourceMissing.Text" xml:space="preserve">
     <value>元ファイル削除済み</value>
+  </data>
+  <data name="BackupPage_CardDelete.ToolTipService.ToolTip" xml:space="preserve">
+    <value>このバックアップを削除</value>
+  </data>
+  <data name="BackupPage_CardOpenFolder.ToolTipService.ToolTip" xml:space="preserve">
+    <value>このバックアップのディレクトリを開く</value>
   </data>
 
   <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
