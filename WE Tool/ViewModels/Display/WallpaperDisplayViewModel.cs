@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Controls;
+using WE_Tool.Helper;
 
 namespace WE_Tool.ViewModels
 {
@@ -412,6 +413,7 @@ namespace WE_Tool.ViewModels
             OnPropertyChanged(nameof(SortByLastTime));
             OnPropertyChanged(nameof(SortByFileSize));
             OnPropertyChanged(nameof(SortByAcfUpdateTime));
+            OnPropertyChanged(nameof(SortDirectionAutomationName));
         }
 
         public bool SortByName
@@ -461,9 +463,28 @@ namespace WE_Tool.ViewModels
         partial void OnIsSortAscendingChanged(bool value)
         {
             OnPropertyChanged(nameof(SortDirectionGlyph));
+            OnPropertyChanged(nameof(SortDirectionAutomationName));
         }
 
         public string SortDirectionGlyph => IsSortAscending ? "\uE70D" : "\uE70E";
+
+        /// <summary>[A11y 2026-09] 讲述人朗读名 = 排序方向 + 当前排序字段 + 当前方向(如"排序方向: 名称, 降序")。
+        /// 排序字段与方向都只体现在箭头字形 Glyph(E70D/E70E) 和排序菜单的勾选上,对 UIA 均不可见,
+        /// 按钮名若是静态 resw 键(仅"排序方向"),讲述人就讲不出当前按什么排、朝哪排。</summary>
+        public string SortDirectionAutomationName =>
+            LanguageHelper.GetResource("Toolbar_SortDirection.Label") + ": " +
+            LanguageHelper.GetResource(SortFieldResourceKey) + ", " +
+            LanguageHelper.GetResource(IsSortAscending ? "SortDirection_Ascending.Text" : "SortDirection_Descending.Text");
+
+        /// <summary>排序字段的 resw 键:与排序实现(Papers.xaml.cs 中 SortOrder 的 0~4 分支)及排序菜单 CommandParameter 一一对应。</summary>
+        private string SortFieldResourceKey => SortOrder switch
+        {
+            1 => "SortBySubTime.Text",       // 订阅时间
+            2 => "SortByLastTime.Text",      // 更新时间
+            3 => "SortByFileSize.Text",      // 大小
+            4 => "SortByAcfUpdateTime.Text", // 修改时间
+            _ => "SortByName.Text",          // 0 名称(兜底)
+        };
 
         public IRelayCommand<string> ChangeSortCommand { get; }
 

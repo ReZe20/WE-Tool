@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -30,6 +32,15 @@ public sealed partial class WallpaperBackup : Page
     private bool _isApplyingUi;   // 避免 UI 初始化时的 Checked 事件触发保存
     private bool _isBackingUp;    // 「立即备份」进行中(防重入)
     private CancellationTokenSource? _saveDebounceCts; // 配置变更防抖:500ms 只写最后一次
+
+    // [a11y 2026-09,同步 Papers 的 CardFocusProbe] 讲述人支持:备份卡片能不能成为 Tab 停留点、能不能被读出名字。
+    // true  → ElementPrepared 里给卡片根 Grid 设 IsTabStop + UseSystemFocusVisuals + 朗读名(=标题),
+    //         并把卡片里的标题 TextBlock 归到 Raw 视图(避免同一条信息被念两遍),另挂 GotFocus 日志便于核对。
+    //         预期观感:Tab 从上方工具栏进入列表时停在第一张卡;方向键在卡片之间移动焦点
+    //         (ItemsRepeater 官方文档写明它的 XYFocusKeyboardNavigation 默认就是 Enabled,不用另写代码)。
+    // false → 完全不碰卡片的焦点与朗读名,行为与改动前一致(等于撤销本改动)。
+    // 范围:只做讲述人这一件事——不接管 Ctrl/Shift 等快捷键,也不做"焦点即选中"(本页没有选中模型)。
+    private const bool CardFocusProbe = true;
 
     /// <summary>自动备份配置(页面持有副本,变化时回写 config.json)。</summary>
     private Models.AutoBackupConfig? _autoCfg;
@@ -345,6 +356,24 @@ public sealed partial class WallpaperBackup : Page
 
         if (content.DataContext is not BackupItemViewModel vm) return;
 
+        // [a11y 2026-09] 见 CardFocusProbe:让备份卡片可被 Tab 聚焦,并由讲述人读出标题
+        if (CardFocusProbe)
+        {
+            content.IsTabStop = true;               // WinUI3 里 IsTabStop 在 UIElement 上,非 Control 的 Grid 也能进 Tab 序
+            content.UseSystemFocusVisuals = true;   // 让系统画焦点框
+            AutomationProperties.SetName(content, string.IsNullOrEmpty(vm.Title) ? "(无标题)" : vm.Title); // 探针阶段硬编码中文,留用需走 resw
+            // 卡片根已带朗读名(=标题),卡片里的标题 TextBlock 仍是独立可读节点:讲述人停在卡片上按方向键会把它再念一遍
+            // → 一项读两次。官方文档原话就是"composed UI 会引入 duplicate 节点,用 AccessibilityView 归置",
+            // 故把这条文字设为 Raw(只留在 raw 视图,不进讲述人主要遍历的 control/content 视图)。
+            // 只动 UIA 树:渲染/布局/点击/悬停/tooltip 都不受影响;其余三行补充信息(工坊 ID/大小/备份时间)保持可读。
+            if (content.FindName("ItemTitleText") is TextBlock cardTitleText)
+                AutomationProperties.SetAccessibilityView(cardTitleText, AccessibilityView.Raw);
+            else
+                Log.Warning("[A11y] 未取到备份卡片标题节点 ItemTitleText,朗读去重未生效");
+            content.GotFocus -= BackupCard_GotFocus;   // 幂等:容器回收复用会重复走到这里,先减后加避免日志叠加
+            content.GotFocus += BackupCard_GotFocus;
+        }
+
         var img = content.FindName("PreviewImage") as Image;
         var skia = content.FindName("PreviewSkiaGif") as SkiaGifView;
         if (img == null || skia == null) return;
@@ -369,6 +398,14 @@ public sealed partial class WallpaperBackup : Page
             skia.Visibility = Visibility.Collapsed;
             img.Visibility = Visibility.Visible;
         }
+    }
+
+    // [a11y 2026-09] 卡片拿到键盘焦点时写一条日志:即使一时听不出讲述人念什么,
+    // 也能从 Logs 页确认"Tab 确实停到了备份卡片上"(这就是本探针的客观读数)。
+    private void BackupCard_GotFocus(object sender, RoutedEventArgs e)
+    {
+        var title = (sender as FrameworkElement)?.DataContext is BackupItemViewModel vm ? vm.Title : null;
+        Log.Information("[A11y] 备份卡片获得焦点: {Title}", title ?? "(无标题)");
     }
 
     // 元素移出(回收/滚动走远):停 GIF

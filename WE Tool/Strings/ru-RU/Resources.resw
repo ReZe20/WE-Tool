@@ -306,6 +306,12 @@
   <data name="SortBySubTime.Text" xml:space="preserve">
     <value>Дата подписки</value>
   </data>
+<data name="SortDirection_Ascending.Text" xml:space="preserve">
+    <value>По возрастанию</value>
+  </data>
+  <data name="SortDirection_Descending.Text" xml:space="preserve">
+    <value>По убыванию</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>Детали</value>
   </data>

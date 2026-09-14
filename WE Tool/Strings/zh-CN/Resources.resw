@@ -306,6 +306,12 @@
   <data name="SortBySubTime.Text" xml:space="preserve">
     <value>订阅时间</value>
   </data>
+<data name="SortDirection_Ascending.Text" xml:space="preserve">
+    <value>升序</value>
+  </data>
+  <data name="SortDirection_Descending.Text" xml:space="preserve">
+    <value>降序</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>详情面板</value>
   </data>

@@ -217,7 +217,9 @@
                             </Grid>
                             <StackPanel Grid.Column="1" Margin="12,0,0,0"
                                         VerticalAlignment="Center" Spacing="4">
+                                <!-- [A11y 2026-09,同步 Papers] x:Name 供 ElementPrepared 做朗读去重(讲述人不重复念同一条):见 WallpaperBackup.xaml.cs 的 CardFocusProbe -->
                                 <TextBlock Text="{x:Bind Title, Mode=OneWay}"
+                                           x:Name="ItemTitleText"
                                            FontSize="16" FontWeight="SemiBold"
                                            TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2"/>
                                 <TextBlock Text="{x:Bind WorkshopId, Mode=OneWay}"

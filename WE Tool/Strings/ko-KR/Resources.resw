@@ -306,6 +306,12 @@
   <data name="SortBySubTime.Text" xml:space="preserve">
     <value>구독 시간순</value>
   </data>
+<data name="SortDirection_Ascending.Text" xml:space="preserve">
+    <value>오름차순</value>
+  </data>
+  <data name="SortDirection_Descending.Text" xml:space="preserve">
+    <value>내림차순</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>세부 정보 패널</value>
   </data>

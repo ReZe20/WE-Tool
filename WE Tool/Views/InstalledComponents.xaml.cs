@@ -2,6 +2,8 @@
 using Microsoft.UI.Composition;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
@@ -71,6 +73,24 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private bool _isComponentItemTapped;
     private bool _isMultiSelectMode;
     private bool _isBatchUpdating;
+
+    // ===================== [a11y 2026-09,同步 Papers] 焦点探针 + 列表键盘可达 =====================
+    // 五个开关与 Papers.xaml.cs 同名同义(默认值=旧行为,改 false 即完全回到改动前):
+    //   CardFocusProbe               卡片进 Tab 序 + 设朗读名(=标题) + 挂 GotFocus 探针 + 标题去重
+    //   ListKeyboardAccessProbe      点击卡片把键盘焦点交给该卡;Ctrl+L 直达列表(落点=上次停留过的卡)
+    //   FocusSelectsCardInSingleMode 键盘焦点落到哪张卡,单选模式下就选中哪张
+    //   CtrlFocusMultiSelect         按住 Ctrl 移焦点 = 逐张加选(键盘版 Ctrl+点击);只加选不取反
+    //   ShiftFocusRangeSelect        按住 Shift 移焦点 = 从锚点延伸区间(键盘版 Shift+拖动);替换选择
+    // 依赖:ListKeyboardAccessProbe / FocusSelects* / Ctrl* / Shift* 都要求 CardFocusProbe=true
+    // (卡片不是 Tab 停留点时 Focus() 直接返回 false)。
+    private const bool CardFocusProbe = true;
+    private const bool ListKeyboardAccessProbe = true;
+    private int _listAnchorIndex = -1;   // 列表里最后停留过的卡下标:供 Ctrl+L 使用
+    private const bool FocusSelectsCardInSingleMode = true;
+    private const bool CtrlFocusMultiSelect = true;
+    private bool _suppressCtrlFocusMultiSelect;   // Ctrl+L 程序化搬焦点这一下,不当作 Ctrl 划选
+    private const bool ShiftFocusRangeSelect = true;
+    private ComponentInfo? _shiftKeyAnchorItem;   // 键盘区间锚点:Shift 没按住时,每聚焦一张就刷新成这张
 
     /// <summary>导航徽标是否处于失败(红)状态:失败后保持红色,直到下次提取开始才复位。</summary>
     private bool _navBadgeError;
@@ -460,6 +480,23 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (root.DataContext is ComponentInfo dcItem) item = dcItem;
             else if (e.Index >= 0 && e.Index < FilteredComponents.Count) item = FilteredComponents[e.Index];
             if (item == null) return;
+            // [焦点探针 2026-09,同步 Papers] 见 CardFocusProbe 说明:只挂图标模式这一个 repeater,内容/列表模式不受影响
+            if (CardFocusProbe)
+            {
+                root.IsTabStop = true;               // WinUI3 里 IsTabStop 在 UIElement 上,非 Control 的 Grid 也能进 Tab 序
+                root.UseSystemFocusVisuals = true;   // 让系统画焦点框(非 Control 到底画不画,正是本实验要看的第一件事)
+                AutomationProperties.SetName(root, string.IsNullOrEmpty(item.Title) ? "(无标题)" : item.Title); // 探针阶段硬编码中文,留用需走 resw
+                // [去重 2026-09] 卡片根已带朗读名(=标题),卡片里的标题 TextBlock 仍是独立可读节点:
+                // 讲述人停在卡片上按方向键会把它再念一遍 → 一项读两次。官方文档原话就是"composed UI 会引入
+                // duplicate 节点,用 AccessibilityView 归置",故把这条文字设为 Raw(只留在 raw 视图,
+                // 不进讲述人主要遍历的 control/content 视图)。只动 UIA 树:渲染/布局/点击/悬停/右键/多选框都不受影响。
+                if (root.FindName("ItemTitleText") is TextBlock iconTitleText)
+                    AutomationProperties.SetAccessibilityView(iconTitleText, AccessibilityView.Raw);
+                else
+                    Log.Warning("[A11y] 未取到卡片标题节点 ItemTitleText,朗读去重未生效");
+                root.GotFocus -= CardRoot_GotFocus;  // 幂等:容器回收复用会重复走到这里,先减后加避免日志与订阅叠加
+                root.GotFocus += CardRoot_GotFocus;
+            }
             // [外观] ThemeShadow 初始化(原 ShadowRect_Loaded 的阴影部分):ItemRootGrid 投影到 ShadowCastGrid
             if (root.FindName("ItemRootGrid") is Grid itemRootGrid && itemRootGrid.Shadow is not ThemeShadow)
             {
@@ -473,6 +510,113 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             ApplyComponentPreview(root, item, IconPreviewDecodeWidth);
             UpdateTagBadge(root, item); // 角标按当前标签模式设置
         };
+        // [焦点探针 2026-09,同步 Papers] 卡片拿到键盘焦点时写一条日志:即使一时听不出讲述人念什么,
+        // 也能从 Logs 页确认"Tab 确实停到了卡片上"
+        void CardRoot_GotFocus(object sender, RoutedEventArgs e)
+        {
+            // 取 item 别看本元素的 DataContext:真正设了 DataContext 的是里层 ItemRootGrid
+            // (DataContext="{x:Bind}"),模板根 ItemContainer 上没设 —— 否则日志一律打"(无标题)",
+            // "焦点即选中"也因取不到 item 而整条判据不成立。改按 repeater 下标从 ItemsSource 取(与 ElementPrepared 同源)。
+            var focusedCard = sender as FrameworkElement;
+            ComponentInfo? focusedItem = null;
+            var focusedIndex = -1;
+            if (focusedCard != null)
+            {
+                focusedIndex = ComponentsRepeater.GetElementIndex(focusedCard);
+                if (focusedIndex >= 0 && focusedIndex < FilteredComponents.Count)
+                    focusedItem = FilteredComponents[focusedIndex];
+                // 兜底:下标取不到时(理论上不该发生)退回里层 ItemRootGrid 的 DataContext
+                focusedItem ??= (focusedCard.FindName("ItemRootGrid") as FrameworkElement)?.DataContext as ComponentInfo;
+            }
+            Log.Information("[A11y] 卡片获得焦点: {Title}", focusedItem?.Title ?? "(无标题)");
+            // [列表键盘可达 2026-09] 记住"最后停留过的卡":Ctrl+L 再进列表时回到这里,而不是回列表头
+            if (ListKeyboardAccessProbe && focusedIndex >= 0)
+                _listAnchorIndex = focusedIndex;
+            // [Ctrl 焦点多选 2026-09] Ctrl+L 的一次性屏蔽令牌在这里消费:GotFocus 是异步事件(官方文档明示),
+            // 所以不能用"Focus() 调用前后复位"来屏蔽,只能由下一次 GotFocus 自己清零。
+            var suppressCtrlSelectOnce = _suppressCtrlFocusMultiSelect;
+            _suppressCtrlFocusMultiSelect = false;
+
+            // Ctrl/Shift 状态用 GetKeyStateForCurrentThread:本路径是键盘引起的聚焦,读到的是实时按键状态
+            // (文件里那条"会读到过期状态"的告诫针对 Pointer 事件);指针路径已被下面的 FocusState 判据排除。
+            var ctrlHeldOnFocus = CtrlFocusMultiSelect && !suppressCtrlSelectOnce
+                && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+            var shiftHeldOnFocus = ShiftFocusRangeSelect
+                && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+
+            // 区间锚点维护:Shift 没按住时,锚点 = 刚聚焦的这张(所以 Ctrl 连选之后再按 Shift,锚点落在 Ctrl 停住的那张,
+            // 而不是 Ctrl 之前那张);Shift 按住时不动锚点,区间才始终是"锚点 → 当前焦点"这一段。
+            if (focusedItem != null && !shiftHeldOnFocus)
+                _shiftKeyAnchorItem = focusedItem;
+
+            // [Shift 焦点区间 2026-09] 按住 Shift 移焦点 = 从锚点延伸区间(替换选择,同 Shift+拖动)。
+            // 本分支显式排除 Ctrl 同按(!ctrlHeldOnFocus):Ctrl+Shift 按 Ctrl 处理(逐张加选,不动已有选择集合)。
+            // 判据保留 FocusState != Pointer:Shift+点击/Shift+拖动走的是鼠标那条老路(Item_PointerPressed 的 shift 分支),
+            // 这里不抢,否则区间会被算两遍。
+            if (shiftHeldOnFocus && !ctrlHeldOnFocus && focusedCard != null && focusedItem != null
+                && focusedCard.FocusState != FocusState.Pointer)
+            {
+                var rangeAnchor = _shiftKeyAnchorItem;   // 先落局部变量:可空分析对字段比对局部保守
+                if (rangeAnchor != null && !ReferenceEquals(rangeAnchor, focusedItem))
+                {
+                    SelectShiftRange(rangeAnchor, focusedItem);
+                    Log.Information("[A11y] Shift 焦点区间: {Anchor} → {End}",
+                        rangeAnchor.Title ?? "(无标题)", focusedItem.Title ?? "(无标题)");
+                }
+                else
+                {
+                    Log.Debug("[A11y] Shift 焦点区间跳过: 有锚点={HasAnchor} 锚点即本项={Same}",
+                        _shiftKeyAnchorItem != null, ReferenceEquals(_shiftKeyAnchorItem, focusedItem));
+                }
+                return;
+            }
+            // [Ctrl 焦点多选 2026-09] 按住 Ctrl 移焦点 = 累加多选(键盘版 Ctrl+点击 / Ctrl+划过)。
+            // 顺序必须先"置选中 + 加入集合"再进多选模式:反过来会被多选 setter 里同步跑的 UpdateMultiSelectCount
+            // 以 Count==0 立刻翻回 false(与"首次全选要按两次"是同一个旧根因),这里照抄既有 Ctrl+点击的顺序。
+            if (ctrlHeldOnFocus && focusedCard != null && focusedItem != null
+                && focusedCard.FocusState != FocusState.Pointer)
+            {
+                bool newlySelected = false;
+                if (!focusedItem.IsSelected)
+                {
+                    focusedItem.IsSelected = true;
+                    newlySelected = true;
+                }
+                if (!SelectedComponents.Contains(focusedItem))
+                {
+                    SelectedComponents.Add(focusedItem);
+                    newlySelected = true;
+                }
+                UpdateMultiSelectCount();
+                if (!_isMultiSelectMode)
+                {
+                    IsMultiSelectMode = true;
+                }
+                Log.Information("[A11y] Ctrl 焦点多选: {Title} (新增={Added})",
+                    focusedItem.Title ?? "(无标题)", newlySelected);
+                return;
+            }
+
+            // [焦点即选中 2026-09] 焦点即选中(只看单选模式):Tab/方向键/Ctrl+L 走到哪张卡,右侧详情面板就切到哪张。
+            // 判据用 FocusState != Pointer:指针交互引起的聚焦由 Item_PointerReleased 那条老路负责(带钻入动画),
+            // 这里不重复处理,否则"点击某张卡"会因为选中已成事实而丢掉钻入动画。
+            if (FocusSelectsCardInSingleMode && ListKeyboardAccessProbe && !_isMultiSelectMode
+                && focusedCard != null && focusedItem != null
+                && focusedCard.FocusState != FocusState.Pointer
+                && SelectedComponent != focusedItem)
+            {
+                SelectedComponent = focusedItem;
+                Log.Information("[A11y] 焦点即选中: {Title}", focusedItem.Title ?? "(无标题)");
+            }
+            else if (FocusSelectsCardInSingleMode && ListKeyboardAccessProbe)
+            {
+                Log.Debug("[A11y] 焦点即选中跳过: 多选={Multi} 指针焦点={Ptr} 取到item={Got} 已是本项={Same}",
+                    _isMultiSelectMode,
+                    focusedCard?.FocusState == FocusState.Pointer,
+                    focusedItem != null,
+                    focusedItem != null && SelectedComponent == focusedItem);
+            }
+        }
         // 元素移出(回收/滚动走远):停 GIF
         ComponentsRepeater.ElementClearing += (s, e) =>
         {
@@ -539,6 +683,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 _pressedButton = btn;                       // 记录按下的按钮(供释放时弹回)
                 btn.CapturePointer(e.Pointer);              // 捕获指针:移开按钮后释放仍收到事件
                 PlayPressScale(btn, 0.88f);
+                // 全选图标:按下就开始播【填满】那一段(松开接着播回程,见 SelectAllIcon_PointerReleased)
+                if (btn == ToolbarSelectAllButton) SelectAllIcon_PointerPressed();
             }
         }
     }
@@ -568,6 +714,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             {
                 PlayRefreshSpin();
             }
+            // 全选图标:松开时从第 30 帧接着播到第 60 帧(四个方框缩回空心)
+            if (pressedBtn == ToolbarSelectAllButton) SelectAllIcon_PointerReleased();
         }
     }
 
@@ -1852,7 +2000,97 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                     Properties_Accelerator_Invoked(null!, null!);
                     e.Handled = true;
                     return;
+                case VirtualKey.L:
+                    // [列表键盘可达 2026-09,同步 Papers] Ctrl+L 直达组件列表(见 ListKeyboardAccessProbe):
+                    // 列表上方有多个工具栏停留点,再加左侧筛选面板与外壳导航栏,按 Tab 到列表要按很多下。
+                    if (ListKeyboardAccessProbe)
+                    {
+                        // [Ctrl 焦点多选 2026-09] Ctrl+L 里的 Ctrl 是复合键的一部分:程序化搬焦点时要屏蔽"Ctrl 划选",
+                        // 否则一按 Ctrl+L 就会平白进多选。注意 GotFocus 是异步事件(官方文档明示),不能用
+                        // "Focus() 前后 try/finally 复位"——改成一次性令牌,由下一次 GotFocus 自己消费清零;
+                        // 没搬动焦点(返回 false)就当场清掉,别让令牌悬着。
+                        _suppressCtrlFocusMultiSelect = true;
+                        if (!FocusComponentList())
+                        {
+                            _suppressCtrlFocusMultiSelect = false;
+                        }
+                        e.Handled = true;
+                    }
+                    return;
+                // [Ctrl 焦点多选 2026-09] Ctrl+方向键:自己搬焦点,不赌"按住 Ctrl 时框架还做不做 2D 方向导航"这件事
+                // (带修饰键的方向键会不会被框架消费,官方文档没给承诺)。SearchRoot 把候选限在列表内,
+                // 策略用 Projection(与方向键原生导航同一套几何策略);搬完把事件标记 Handled,免得框架再搬一次
+                // (那样一次按键会跳两格)。搬不动(已到边界/候选未实化)只写日志,不静默。
+                // 注意:Override 枚举与 XYFocusNavigationStrategy 的数值不同(官方文档:Override 是
+                // None=0/Auto=1/Projection=2,而 XYFocusNavigationStrategy 是 Auto=0/Projection=1),
+                // 所以不能强转(强转成 1 会变成"继承祖先策略"而不是 Projection),必须取 Override 自己的成员。
+                case VirtualKey.Left:
+                case VirtualKey.Right:
+                case VirtualKey.Up:
+                case VirtualKey.Down:
+                    if (CtrlFocusMultiSelect)
+                    {
+                        var navDirection = e.Key switch
+                        {
+                            VirtualKey.Left => FocusNavigationDirection.Left,
+                            VirtualKey.Right => FocusNavigationDirection.Right,
+                            VirtualKey.Up => FocusNavigationDirection.Up,
+                            _ => FocusNavigationDirection.Down,
+                        };
+                        bool moved;
+                        try
+                        {
+                            var candidate = FocusManager.FindNextElement(navDirection, new FindNextElementOptions
+                            {
+                                SearchRoot = ComponentsRepeater,
+                                XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
+                            });
+                            moved = candidate is FrameworkElement next && next.Focus(FocusState.Keyboard);
+                        }
+                        catch (Exception ex)
+                        {
+                            moved = false;
+                            Log.Warning(ex, "[A11y] Ctrl+方向键 手动搬焦点异常");
+                        }
+                        e.Handled = true;
+                        Log.Information("[A11y] Ctrl+{Key} 手动搬焦点: {Moved}", e.Key, moved);
+                    }
+                    return;
             }
+        }
+        // [Shift 焦点区间 2026-09] Shift+方向键:同样自己搬焦点(理由同上面 Ctrl 分支——带修饰键的方向键框架管不管,
+        // 官方没承诺),搬完标记 Handled 免得框架再搬一次跳两格。选中区间不在这里做:焦点一变,就由 GotFocus 里的
+        // Shift 分支按"锚点 → 当前焦点"重算(与 Ctrl 那条路径同构,选中逻辑只留一处)。
+        // 注意 Ctrl+Shift+方向键到不了这里:上面 if (ctrl) 已先接管(GotFocus 里 Shift 分支也排除了 Ctrl 同按)。
+        else if (ShiftFocusRangeSelect
+            && (e.Key is VirtualKey.Left or VirtualKey.Right or VirtualKey.Up or VirtualKey.Down)
+            && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
+        {
+            var rangeNavDirection = e.Key switch
+            {
+                VirtualKey.Left => FocusNavigationDirection.Left,
+                VirtualKey.Right => FocusNavigationDirection.Right,
+                VirtualKey.Up => FocusNavigationDirection.Up,
+                _ => FocusNavigationDirection.Down,
+            };
+            bool rangeMoved;
+            try
+            {
+                var rangeCandidate = FocusManager.FindNextElement(rangeNavDirection, new FindNextElementOptions
+                {
+                    SearchRoot = ComponentsRepeater,
+                    XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
+                });
+                rangeMoved = rangeCandidate is FrameworkElement rangeNext && rangeNext.Focus(FocusState.Keyboard);
+            }
+            catch (Exception ex)
+            {
+                rangeMoved = false;
+                Log.Warning(ex, "[A11y] Shift+方向键 手动搬焦点异常");
+            }
+            e.Handled = true;
+            Log.Information("[A11y] Shift+{Key} 手动搬焦点: {Moved}", e.Key, rangeMoved);
+            return;
         }
         else if (e.Key == VirtualKey.Delete)
         {
@@ -1865,6 +2103,42 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             ComponentsRefresh_Click(null!, null!);
             e.Handled = true;
         }
+    }
+
+    // [列表键盘可达 2026-09,同步 Papers] 聚焦某张组件卡片的容器(ItemContainer,ElementPrepared 里设成 Tab 停留点的那一层)。
+    // 只用 TryGetElement(已实化的容器):用户点得到的卡必然已实化;跨越视口时 GetOrCreateElement 造出的容器
+    // 要等一次布局才能接收焦点,那是"方向键一路走通"那一步(方案二)的事,本批不做。
+    private bool FocusComponentCard(ComponentInfo item, FocusState state)
+    {
+        var index = FilteredComponents.IndexOf(item);
+        if (index >= 0 && ComponentsRepeater.TryGetElement(index) is FrameworkElement card && card.Focus(state))
+        {
+            _listAnchorIndex = index;
+            return true;
+        }
+        return false;
+    }
+
+    // [列表键盘可达 2026-09,同步 Papers] Ctrl+L 的落点:优先回到上次停留过的卡,其次第一张已实化的卡;都没有就写日志,
+    // 不做静默失败。官方文档:FrameworkElement 获得键盘焦点时由框架负责把它带进视野,故这里不写 StartBringIntoView。
+    // 返回值 = 是否真的搬动了焦点(供 Ctrl 划选的一次性令牌判断要不要留,见 _suppressCtrlFocusMultiSelect)。
+    private bool FocusComponentList()
+    {
+        if (_listAnchorIndex >= 0 && _listAnchorIndex < FilteredComponents.Count
+            && ComponentsRepeater.TryGetElement(_listAnchorIndex) is FrameworkElement anchor && anchor.Focus(FocusState.Keyboard))
+            return true;
+
+        for (int i = 0; i < FilteredComponents.Count; i++)
+        {
+            if (ComponentsRepeater.TryGetElement(i) is FrameworkElement card && card.Focus(FocusState.Keyboard))
+            {
+                _listAnchorIndex = i;
+                return true;
+            }
+        }
+
+        Log.Warning("[A11y] Ctrl+L 未找到可聚焦的组件卡片(列表为空或容器全部未实化)");
+        return false;
     }
 
     private void SelectAllComponents_Accelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs e)
@@ -1924,11 +2198,71 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         Frame?.Navigate(typeof(Settings));
     }
 
+    // ===================== 全选图标动画(2026-09) =====================
+    // 全选图标已由静态字形 E8B3 换成 Lottie 动画:XAML 里 4 处 <AnimatedIcon>,Source = WE_Tool.AnimatedVisuals.SelectAllIcon,
+    // FallbackIconSource 仍是原字形(系统关掉动画效果时自动退回)。素材是"四个空心方框依次变实心"的 1 秒动画(第 0 帧 = 四个空心方框、第 0~19 帧四个方框依次被填满、第 30 帧起稳定填满、第 40~50 帧缩回空心),
+    // 标记对:NormalToPressed_Start(第 0 帧)/_End(第 30 帧) = 按下播【填满】那一段,
+    // PressedToNormal_Start(第 30 帧)/_End(第 60 帧) = 松开播【缩回空心】那一段;
+    // NormalToPlaying_Start/_End(0→60) 留给菜单项/快捷键这些没有【按住】概念的入口,整段播一遍、播完归位。
+    // [为什么不再来回 toggle] 旧写法在 Normal / Playing 之间反复切,只有状态真正【变化】的那次才播动画,
+    // 于是每隔一次点击才看得到动画(日志里 Playing / Normal 逐行交替)——改成两段真实状态后,每次按下/松开都是真实切换。
+    private const bool SelectAllIconAnimationProbe = true;   // false = 完全回到改动前(图标静止在第 0 帧,不播动画)
+    private CancellationTokenSource? _selectAllIconResetCts;   // 整段播放播完的归位令牌(连点时取消上一次)
+    private bool _selectAllIconPointerDriven;                  // 本次点击已由按下/松开驱动,Click 里不再播整段
+
+    private async void PlaySelectAllIconAnimation()
+    {
+        if (!SelectAllIconAnimationProbe) return;
+        // 工具栏按钮的按下/松开已经驱动过动画时不再重复播整段(否则两段会互相打断)
+        if (_selectAllIconPointerDriven) return;
+        // 工具栏按钮可能被 CommandBar 收进溢出菜单,那种情况下图标还没实化(x:Name 字段为 null),直接跳过
+        if (ToolbarSelectAllIcon is null) return;
+        _selectAllIconResetCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _selectAllIconResetCts = cts;
+        Log.Information("[动画] 全选图标状态切换 → Playing(整段:第 0→60 帧)");
+        AnimatedIcon.SetState(ToolbarSelectAllIcon, "Playing");
+        try
+        {
+            await Task.Delay(1000, cts.Token);   // 素材整段 1 秒(60 帧 @60fps)
+        }
+        catch (TaskCanceledException)
+        {
+            return;   // 期间又按下(或又点了一次),交给新的一次接管
+        }
+        if (cts.IsCancellationRequested) return;
+        Log.Information("[动画] 全选图标状态归位 → Normal");
+        AnimatedIcon.SetState(ToolbarSelectAllIcon, "Normal");
+    }
+
+    /// <summary>按下:播到第 30 帧(四个方框依次被填满)。Global_PointerPressed 命中工具栏全选按钮时调用。</summary>
+    private void SelectAllIcon_PointerPressed()
+    {
+        if (!SelectAllIconAnimationProbe) return;
+        if (ToolbarSelectAllIcon is null) return;
+        _selectAllIconPointerDriven = true;   // 本次点击由按下/松开驱动
+        _selectAllIconResetCts?.Cancel();     // 取消可能还挂着的整段归位
+        Log.Information("[动画] 全选图标状态切换 → Pressed(按下:第 0→30 帧)");
+        AnimatedIcon.SetState(ToolbarSelectAllIcon, "Pressed");
+    }
+
+    /// <summary>松开:从第 30 帧播到第 60 帧(四个方框缩回空心)。Global_PointerReleased 命中工具栏全选按钮时调用。</summary>
+    private void SelectAllIcon_PointerReleased()
+    {
+        _selectAllIconPointerDriven = false;
+        if (!SelectAllIconAnimationProbe) return;
+        if (ToolbarSelectAllIcon is null) return;
+        Log.Information("[动画] 全选图标状态切换 → Normal(松开:第 30→60 帧)");
+        AnimatedIcon.SetState(ToolbarSelectAllIcon, "Normal");
+    }
+
     // ===================== 多选面板按钮 =====================
     private void SelectAllComponents_Click(object sender, RoutedEventArgs e)
     {
         // 先填充选中集合,后进多选模式:Toggle 期间 Count==0 会被 UpdateMultiSelectCount
         // 的"0 项自动退出"立刻翻回 false(原因同 Papers.SelectAllWallpapers_Click)
+        // 全选图标动画:播一遍(见 PlaySelectAllIconAnimation)
+        PlaySelectAllIconAnimation();
         _isBatchUpdating = true;
         foreach (var item in FilteredComponents)
         {
@@ -1946,8 +2280,43 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         UpdateMultiSelectCount();
     }
 
+    // ===================== 反选图标动画(2026-09) =====================
+    // 反选图标由静态字形 E8E6 换成 Lottie 动画:XAML 里 4 处 <AnimatedIcon>,Source = WE_Tool.AnimatedVisuals.InvertSelection,
+    // 回退字形仍是 E8E6(系统关掉动画效果时自动退回)。素材内容:第 0~30 帧箭头"从头部向尾部"被逐片抹掉(生成式消失),
+    // 第 30~60 帧再"从尾部向头部"逐片长回来(生成式出现),灰色虚线框全程不动;
+    // 标记对 NormalToPlaying_Start/_End(第 0→60 帧)就是这一整段。
+    // 触发点:所有反选入口(工具栏按钮 / 弹出工具条 / 右键菜单 / Ctrl+I)都汇入 InvertSelection_Click(),在那里播一遍。
+    // [为什么播完要归位] 状态只有真正变化时才播动画:播完切回 Normal,下一次点击才是真实切换。
+    private const bool InvertSelectionIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+    private CancellationTokenSource? _invertSelectionIconResetCts;  // 整段播完的归位令牌(连点时取消上一次)
+
+    /// <summary>播一遍反选动画(第 0→60 帧),播完归位 Normal。调用点:InvertSelection_Click()。</summary>
+    private async void PlayInvertSelectionIconAnimation()
+    {
+        if (!InvertSelectionIconAnimationProbe) return;
+        // 工具栏按钮可能被 CommandBar 收进溢出菜单,那种情况下图标还没实化(x:Name 字段为 null),直接跳过
+        if (ToolbarInvertSelectionIcon is null) return;
+        _invertSelectionIconResetCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _invertSelectionIconResetCts = cts;
+        Log.Information("[动画] 反选图标状态切换 → Playing(整段:第 0→60 帧)");
+        AnimatedIcon.SetState(ToolbarInvertSelectionIcon, "Playing");
+        try
+        {
+            await Task.Delay(1000, cts.Token);   // 素材整段 1 秒(60 帧 @60fps)
+        }
+        catch (TaskCanceledException)
+        {
+            return;   // 期间又点了一次反选,交给新的一次接管
+        }
+        if (cts.IsCancellationRequested) return;
+        Log.Information("[动画] 反选图标状态归位 → Normal");
+        AnimatedIcon.SetState(ToolbarInvertSelectionIcon, "Normal");
+    }
+
     private void InvertSelection_Click(object sender, RoutedEventArgs e)
     {
+        PlayInvertSelectionIconAnimation();   // 反选图标动画:播一遍(见 PlayInvertSelectionIconAnimation)
         _isBatchUpdating = true;
         foreach (var item in FilteredComponents)
         {
@@ -2400,6 +2769,13 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (sender is Grid grid)
         {
             _isComponentItemTapped = true;
+
+            // [列表键盘可达 2026-09,同步 Papers] 点谁就把键盘焦点交给谁:此后的方向键/Shift+Tab 都从这张卡起算,
+            // 而不是从上次停过的工具栏继续往下走。传 Pointer(不是 Programmatic)以免鼠标点击后冒出键盘焦点框。
+            // 左键按住划过(拖拽刷选/区间延伸)时不重复挪焦点:一条手势只认最开始按下那张卡。
+            if (ListKeyboardAccessProbe && !_isLeftMouseButtonPressed && !_shiftDragActive
+                && sender is FrameworkElement pressedEl && pressedEl.DataContext is ComponentInfo pressedItem)
+                FocusComponentCard(pressedItem, FocusState.Pointer);
 
             // [Shift 区间刷选,同步 Papers] Shift+按下 = 开始区间刷选:记锚点,等待拖动延伸
             if (sender is FrameworkElement shiftElement && shiftElement.DataContext is ComponentInfo shiftItem)

@@ -306,6 +306,12 @@
   <data name="SortBySubTime.Text" xml:space="preserve">
     <value>Data iscrizione</value>
   </data>
+<data name="SortDirection_Ascending.Text" xml:space="preserve">
+    <value>Crescente</value>
+  </data>
+  <data name="SortDirection_Descending.Text" xml:space="preserve">
+    <value>Decrescente</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>Dettagli</value>
   </data>

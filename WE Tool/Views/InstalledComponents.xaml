@@ -15,7 +15,8 @@
     xmlns:converters="using:WE_Tool.Converters"
     x:Name="PageRoot"
     KeyDown="Page_KeyDown"
-    NavigationCacheMode="Enabled">
+    NavigationCacheMode="Enabled"
+    xmlns:animatedvisuals="using:WE_Tool.AnimatedVisuals">
 
     <Page.Resources>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
@@ -118,14 +119,28 @@
                               Click="SelectAllComponents_Click"
                               KeyboardAcceleratorTextOverride="     Ctrl+A">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8B3;"/>
+                        <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <AnimatedIcon.Source>
+                                <animatedvisuals:SelectAllIcon/>
+                            </AnimatedIcon.Source>
+                            <AnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE8B3;"/>
+                            </AnimatedIcon.FallbackIconSource>
+                        </AnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="AppBarButton_InvertSelection"
                               Click="InvertSelection_Click"
                               KeyboardAcceleratorTextOverride="     Ctrl+I">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8E6;"/>
+                        <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <AnimatedIcon.Source>
+                                <animatedvisuals:InvertSelection/>
+                            </AnimatedIcon.Source>
+                            <AnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE8E6;"/>
+                            </AnimatedIcon.FallbackIconSource>
+                        </AnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
@@ -150,13 +165,27 @@
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="SelectAllComponents_Click"
                             KeyboardAcceleratorTextOverride="    Ctrl+A">
                 <MenuFlyoutItem.Icon>
-                    <FontIcon Glyph="&#xE8B3;"/>
+                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <AnimatedIcon.Source>
+                            <animatedvisuals:SelectAllIcon/>
+                        </AnimatedIcon.Source>
+                        <AnimatedIcon.FallbackIconSource>
+                            <FontIconSource Glyph="&#xE8B3;"/>
+                        </AnimatedIcon.FallbackIconSource>
+                    </AnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="InvertSelection_Click"
                             KeyboardAcceleratorTextOverride="    Ctrl+I">
                 <MenuFlyoutItem.Icon>
-                    <FontIcon Glyph="&#xE8E6;"/>
+                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <AnimatedIcon.Source>
+                            <animatedvisuals:InvertSelection/>
+                        </AnimatedIcon.Source>
+                        <AnimatedIcon.FallbackIconSource>
+                            <FontIconSource Glyph="&#xE8E6;"/>
+                        </AnimatedIcon.FallbackIconSource>
+                    </AnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutSeparator/>
@@ -225,12 +254,26 @@
         <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening" Opened="FlyoutThemeRefresh_Opened">
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="FilterExpanderSelectAll_Click">
                 <MenuFlyoutItem.Icon>
-                    <FontIcon Glyph="&#xE8B3;"/>
+                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <AnimatedIcon.Source>
+                            <animatedvisuals:SelectAllIcon/>
+                        </AnimatedIcon.Source>
+                        <AnimatedIcon.FallbackIconSource>
+                            <FontIconSource Glyph="&#xE8B3;"/>
+                        </AnimatedIcon.FallbackIconSource>
+                    </AnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="FilterExpanderInvert_Click">
                 <MenuFlyoutItem.Icon>
-                    <FontIcon Glyph="&#xE8E6;"/>
+                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <AnimatedIcon.Source>
+                            <animatedvisuals:InvertSelection/>
+                        </AnimatedIcon.Source>
+                        <AnimatedIcon.FallbackIconSource>
+                            <FontIconSource Glyph="&#xE8E6;"/>
+                        </AnimatedIcon.FallbackIconSource>
+                    </AnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
         </MenuFlyout>
@@ -303,13 +346,27 @@
                 <AppBarButton x:Name="ToolbarSelectAllButton" x:Uid="Toolbar_SelectAll" LabelPosition="Collapsed"
                               Click="SelectAllComponents_Click">
                     <AppBarButton.Icon>
-                        <FontIcon x:Name="ToolbarSelectAllIcon" Glyph="&#xE8B3;" FontSize="16"/>
+                        <AnimatedIcon x:Name="ToolbarSelectAllIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <AnimatedIcon.Source>
+                                <animatedvisuals:SelectAllIcon/>
+                            </AnimatedIcon.Source>
+                            <AnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE8B3;"/>
+                            </AnimatedIcon.FallbackIconSource>
+                        </AnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_InvertSelection" LabelPosition="Collapsed"
                               Click="InvertSelection_Click">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8E6;" FontSize="16"/>
+                        <AnimatedIcon x:Name="ToolbarInvertSelectionIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <AnimatedIcon.Source>
+                                <animatedvisuals:InvertSelection/>
+                            </AnimatedIcon.Source>
+                            <AnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE8E6;"/>
+                            </AnimatedIcon.FallbackIconSource>
+                        </AnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="RefreshButton" x:Uid="Toolbar_Refresh" LabelPosition="Collapsed"
@@ -387,8 +444,10 @@
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
+                <!-- [A11y 2026-09,同步 Papers] 讲述人朗读名随排序字段与方向变(静态 resw 键只讲得出按钮名) -->
                 <AppBarButton x:Uid="Toolbar_SortDirection" LabelPosition="Collapsed"
-                              Click="SortDirectionToggle_Click">
+                              Click="SortDirectionToggle_Click"
+                              AutomationProperties.Name="{x:Bind ViewModel.ComponentsDisplayVM.SortDirectionAutomationName, Mode=OneWay}">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="{x:Bind ViewModel.ComponentsDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
                     </AppBarButton.Icon>
@@ -749,7 +808,9 @@
                                                             <skia:SkiaGifView x:Name="SkiaGifCanvas" Visibility="Collapsed"/>
 
                                                             <Grid VerticalAlignment="Bottom" Height="45" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+                                                                <!-- [A11y 2026-09,同步 Papers] x:Name 供 ElementPrepared 做朗读去重(讲述人不重复念同一张卡):见 InstalledComponents.xaml.cs 的 CardFocusProbe -->
                                                                 <TextBlock Text="{x:Bind Title}"
+                                                                           x:Name="ItemTitleText"
                                                                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                                                                            FontSize="12"
                                                                            VerticalAlignment="Center"
