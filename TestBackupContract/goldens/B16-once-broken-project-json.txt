@@ -1,0 +1,25 @@
+### B16-once-broken-project-json
+runs: 1  exits: 0
+args: --once --data-dir "{ROOT}\data"
+stdout:
+  <<EMPTY>>
+log:
+  [[TS]] 已读配置: AutoBackup.Enabled=True, ServiceEnabled=True
+  [[TS]] VDF 解析完成: 有效订阅 1 个
+  [[TS]] 启动补齐完成: 新增备份 0 个
+  [[TS]] 补齐完成,新增备份 0 个
+tree:
+  data/
+  data/AutoBackupService.log  size=259  links=1  id=G1
+  data/config.json  size=1311  links=1  id=G2
+  steam/
+  steam/userdata/
+  steam/userdata/123/
+  steam/userdata/123/ugc/
+  steam/userdata/123/ugc/431960_subscriptions.vdf  size=175  links=1  id=G3
+  steam/workshop/
+  steam/workshop/content/
+  steam/workshop/content/431960/
+  steam/workshop/content/431960/1001/
+  steam/workshop/content/431960/1001/preview.jpg  size=18  links=1  id=G4
+  steam/workshop/content/431960/1001/project.json  size=37  links=1  id=G5

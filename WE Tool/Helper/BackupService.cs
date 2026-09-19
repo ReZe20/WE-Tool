@@ -77,6 +77,21 @@ public static class BackupService
     public static string GetBackupRoot(string workshopContentPath)
         => Path.Combine(workshopContentPath, BackupRootName);
 
+    /// <summary>
+    /// 给裸 kernel32 调用的路径加 \\?\ 前缀。.NET 的长路径规范化只作用于 BCL 的 File/Directory,
+    /// 不吃 P/Invoke——超过 MAX_PATH 的 target 会以 ERROR_PATH_NOT_FOUND 静默失败。
+    /// 与服务端 AutoBackupService.HardLinkBackup.Ext 同一实现,两侧行为必须一致。
+    /// </summary>
+    private static string Ext(string path)
+    {
+        if (path.StartsWith(@"\\?\", StringComparison.Ordinal)) return path;
+        if (path.StartsWith(@"\\", StringComparison.Ordinal))
+            return @"\\?\UNC\" + path.Substring(2);      // \\server\share → \\?\UNC\server\share
+        return path.Length >= 2 && path[1] == ':'
+            ? @"\\?\" + path                             // D:\a → \\?\D:\a
+            : path;
+    }
+
     /// <summary>指定壁纸的备份目录路径。</summary>
     public static string GetBackupDir(string workshopContentPath, string workshopId)
         => Path.Combine(GetBackupRoot(workshopContentPath), workshopId);
@@ -118,6 +133,7 @@ public static class BackupService
         }
 
         int linked = 0, skipped = 0;
+        string? firstError = null;
         IEnumerable<string> files;
         try
         {
@@ -153,7 +169,7 @@ public static class BackupService
                     continue;
                 }
 
-                if (CreateHardLink(target, file, IntPtr.Zero))
+                if (CreateHardLink(Ext(target), Ext(file), IntPtr.Zero))
                 {
                     linked++;
                 }
@@ -166,28 +182,38 @@ public static class BackupService
                     }
                     else
                     {
+                        firstError ??= $"创建硬链接失败(0x{err:X8}): {file} → {target}";
                         Log.Warning("创建硬链接失败(0x{Err:X8}): {Src} → {Target}", err, file, target);
                     }
                 }
             }
             catch (Exception ex)
             {
+                firstError ??= ex.Message;
                 Log.Warning(ex, "备份单文件失败: {Src} → {Target}", file, target);
             }
         }
 
-        // 全部完成后落完成标记
-        try
+        // 全部完成后落完成标记。有文件没链上就不写:否则 IsBackedUp 会永久跳过该壁纸,
+        // 缺掉的文件再也补不回来(与服务端同一语义)。
+        if (firstError is null)
         {
-            File.WriteAllText(Path.Combine(backupDir, MarkerFileName),
-                $"created={DateTime.Now:yyyy-MM-dd HH:mm:ss}\n");
+            try
+            {
+                File.WriteAllText(Path.Combine(backupDir, MarkerFileName),
+                    $"created={DateTime.Now:yyyy-MM-dd HH:mm:ss}\n");
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "写入备份完成标记失败: {Dir}", backupDir);
+            }
         }
-        catch (Exception ex)
+        else
         {
-            Log.Warning(ex, "写入备份完成标记失败: {Dir}", backupDir);
+            Log.Warning("备份 {Id} 不完整,不写完成标记(下次会重试): {Err}", workshopId, firstError);
         }
 
-        return new BackupResult(linked, skipped, null);
+        return new BackupResult(linked, skipped, firstError);
     }
 
     /// <summary>两路径是否指向同一物理文件（通过卷序列号+文件索引判断，硬链接共享同一索引）。</summary>
@@ -210,7 +236,7 @@ public static class BackupService
     private static bool GetFileId(string path, out (uint VolumeSerial, uint FileIndexHigh, uint FileIndexLow) id)
     {
         id = default;
-        var handle = CreateFile(path, GENERIC_READ, FILE_SHARE_READ_WRITE,
+        var handle = CreateFile(Ext(path), GENERIC_READ, FILE_SHARE_READ_WRITE,
             IntPtr.Zero, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, IntPtr.Zero);
         if (handle == IntPtr.Zero || handle == new IntPtr(-1)) return false;
         try

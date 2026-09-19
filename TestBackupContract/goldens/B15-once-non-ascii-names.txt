@@ -1,0 +1,39 @@
+### B15-once-non-ascii-names
+runs: 1  exits: 0
+args: --once --data-dir "{ROOT}\data"
+stdout:
+  <<EMPTY>>
+log:
+  [[TS]] 已读配置: AutoBackup.Enabled=True, ServiceEnabled=True
+  [[TS]] VDF 解析完成: 有效订阅 1 个
+  [[TS]] 已备份 1001: 链接 4 个,跳过 0 个
+  [[TS]] 启动补齐完成: 新增备份 1 个
+  [[TS]] 补齐完成,新增备份 1 个
+tree:
+  data/
+  data/AutoBackupService.log  size=324  links=1  id=G1
+  data/config.json  size=1283  links=1  id=G2
+  steam/
+  steam/userdata/
+  steam/userdata/123/
+  steam/userdata/123/ugc/
+  steam/userdata/123/ugc/431960_subscriptions.vdf  size=175  links=1  id=G3
+  steam/workshop/
+  steam/workshop/content/
+  steam/workshop/content/431960/
+  steam/workshop/content/431960/.we_backup/
+  steam/workshop/content/431960/.we_backup/1001/
+  steam/workshop/content/431960/.we_backup/1001/.backup_ok  size=28  links=1  id=G4
+  steam/workshop/content/431960/.we_backup/1001/preview.jpg  size=18  links=2  id=G5
+  steam/workshop/content/431960/.we_backup/1001/project.json  size=157  links=2  id=G6
+  steam/workshop/content/431960/.we_backup/1001/壁纸 目录/
+  steam/workshop/content/431960/.we_backup/1001/壁纸 目录/预览 说明.txt  size=42  links=2  id=G7
+  steam/workshop/content/431960/.we_backup/1001/日本語/
+  steam/workshop/content/431960/.we_backup/1001/日本語/データ.bin  size=34  links=2  id=G8
+  steam/workshop/content/431960/1001/
+  steam/workshop/content/431960/1001/preview.jpg  size=18  links=2  id=G5
+  steam/workshop/content/431960/1001/project.json  size=157  links=2  id=G6
+  steam/workshop/content/431960/1001/壁纸 目录/
+  steam/workshop/content/431960/1001/壁纸 目录/预览 说明.txt  size=42  links=2  id=G7
+  steam/workshop/content/431960/1001/日本語/
+  steam/workshop/content/431960/1001/日本語/データ.bin  size=34  links=2  id=G8

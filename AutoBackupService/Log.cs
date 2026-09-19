@@ -26,8 +26,11 @@ public static class Log
             lock (_lock)
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
-                // 超过上限截断重写,防止日志无限增长
-                if (new FileInfo(LogPath).Length > MaxLogSize)
+                // 超过上限截断重写,防止日志无限增长。
+                // 必须先判存在:FileInfo.Length 对不存在的文件抛 FileNotFoundException,
+                // 而本方法整体被 catch 吞掉——那样日志文件将永远创建不了(第一行就丢)。
+                var info = new FileInfo(LogPath);
+                if (info.Exists && info.Length > MaxLogSize)
                     File.WriteAllText(LogPath, string.Empty);
                 File.AppendAllText(LogPath, line + Environment.NewLine);
             }

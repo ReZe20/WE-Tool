@@ -71,6 +71,23 @@ public static class HardLinkBackup
     public static string GetBackupRoot(string workshopContentPath)
         => Path.Combine(workshopContentPath, BackupRootName);
 
+    /// <summary>
+    /// 裸 kernel32 调用不吃 .NET 的长路径规范化(它只作用于 BCL 的 File/Directory),
+    /// 所以超过 MAX_PATH 的路径必须以 0x00000003(ERROR_PATH_NOT_FOUND)失败——
+    /// 而进程未声明 longPathAware 时,这条路在 Registry 关掉长路径的机器上也走不通。
+    /// 统一在这里手工加 \\?\ 前缀:不依赖系统开关,也不依赖宿主 manifest。
+    /// 前提:路径必须已规范化(绝对、无反斜杠以外的分隔符、无 . / ..),Path.Combine 的产物即满足。
+    /// </summary>
+    private static string Ext(string path)
+    {
+        if (path.StartsWith(@"\\?\", StringComparison.Ordinal)) return path;
+        if (path.StartsWith(@"\\", StringComparison.Ordinal))
+            return @"\\?\UNC\" + path.Substring(2);          // UNC: \\server\share → \\?\UNC\server\share
+        return path.Length >= 2 && path[1] == ':'
+            ? @"\\?\" + path                                  // 盘符: D:\a → \\?\D:\a
+            : path;                                           // 相对路径交给上层规范化
+    }
+
     public static string GetBackupDir(string workshopContentPath, string workshopId)
         => Path.Combine(GetBackupRoot(workshopContentPath), workshopId);
 
@@ -110,6 +127,7 @@ public static class HardLinkBackup
         }
 
         int linked = 0, skipped = 0;
+        string? firstError = null;
         IEnumerable<string> files;
         try
         {
@@ -144,7 +162,7 @@ public static class HardLinkBackup
                     continue;
                 }
 
-                if (CreateHardLink(target, file, IntPtr.Zero))
+                if (CreateHardLink(Ext(target), Ext(file), IntPtr.Zero))
                 {
                     linked++;
                 }
@@ -157,27 +175,37 @@ public static class HardLinkBackup
                     }
                     else
                     {
+                        firstError ??= $"创建硬链接失败(0x{err:X8}): {file} → {target}";
                         Log.Write($"创建硬链接失败(0x{err:X8}): {file} → {target}");
                     }
                 }
             }
             catch (Exception ex)
             {
+                firstError ??= ex.Message;
                 Log.Write(ex, $"备份单文件失败: {file} → {target}");
             }
         }
 
-        try
+        // 有文件没链上就不写完成标记:否则 IsBackedUp 会永久跳过这个壁纸,缺掉的文件再也补不回来
+        if (firstError is null)
         {
-            File.WriteAllText(Path.Combine(backupDir, MarkerFileName),
-                $"created={DateTime.Now:yyyy-MM-dd HH:mm:ss}\n");
+            try
+            {
+                File.WriteAllText(Path.Combine(backupDir, MarkerFileName),
+                    $"created={DateTime.Now:yyyy-MM-dd HH:mm:ss}\n");
+            }
+            catch (Exception ex)
+            {
+                Log.Write(ex, $"写入备份完成标记失败: {backupDir}");
+            }
         }
-        catch (Exception ex)
+        else
         {
-            Log.Write(ex, $"写入备份完成标记失败: {backupDir}");
+            Log.Write($"备份 {workshopId} 不完整,不写完成标记(下次会重试): {firstError}");
         }
 
-        return new BackupResult(linked, skipped, null);
+        return new BackupResult(linked, skipped, firstError);
     }
 
     private static bool IsSameFile(string pathA, string pathB)
@@ -199,7 +227,7 @@ public static class HardLinkBackup
     private static bool GetFileId(string path, out (uint VolumeSerial, uint FileIndexHigh, uint FileIndexLow) id)
     {
         id = default;
-        var handle = CreateFile(path, GENERIC_READ, FILE_SHARE_READ_WRITE,
+        var handle = CreateFile(Ext(path), GENERIC_READ, FILE_SHARE_READ_WRITE,
             IntPtr.Zero, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, IntPtr.Zero);
         if (handle == IntPtr.Zero || handle == new IntPtr(-1)) return false;
         try

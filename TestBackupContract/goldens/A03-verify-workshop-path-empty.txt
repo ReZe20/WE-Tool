@@ -1,0 +1,22 @@
+### A03-verify-workshop-path-empty
+runs: 1  exits: 1
+args: --verify --data-dir "{ROOT}\data"
+stdout:
+  Enabled=True
+  ServiceEnabled=True
+  VdfPath={ROOT}\steam\userdata\123\ugc\431960_subscriptions.vdf
+  WorkshopPath=
+  筛选: Scene=True Video=True Web=True App=True Preset=True Unknown=True
+        G=True Pg=True R=True
+  STATUS=INACTIVE
+log:
+  [[TS]] 已读配置: AutoBackup.Enabled=True, ServiceEnabled=True
+tree:
+  data/
+  data/AutoBackupService.log  size=82  links=1  id=G1
+  data/config.json  size=271  links=1  id=G2
+  steam/
+  steam/userdata/
+  steam/userdata/123/
+  steam/userdata/123/ugc/
+  steam/userdata/123/ugc/431960_subscriptions.vdf  size=76  links=1  id=G3
