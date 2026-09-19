@@ -9,7 +9,7 @@
 //           LottieGen -Language CSharp -Namespace WE_Tool.AnimatedVisuals -Public -WinUIVersion 3.0 -InputFile SelectAllIcon.json
 //       
 //       Input file:
-//           SelectAllIcon.json (16332 bytes created 17:19+08:00 Sep 14 2026)
+//           SelectAllIcon.json (58190 bytes created 23:08+08:00 Sep 18 2026)
 //       
 //       LottieGen source:
 //           http://aka.ms/Lottie
@@ -55,44 +55,84 @@ namespace WE_Tool.AnimatedVisuals
 {
     // Name:        SelectAll
     // Frame rate:  60 fps
-    // Frame count: 60
-    // Duration:    1000.0 mS
-    // ___________________________________________________________________________________
-    // |        Marker         |        Constant         | Frame |   mS   |   Progress   |
-    // |_______________________|_________________________|_______|________|______________|
-    // | NormalToPressed_Start | M_NormalToPressed_Start |     0 |    0.0 | 0F           |
-    // | NormalToPlaying_Start | M_NormalToPlaying_Start |     0 |    0.0 | 0F           |
-    // | NormalToPressed_End   | M_NormalToPressed_End   |    30 |  500.0 | 0.500833333F |
-    // | PressedToNormal_Start | M_PressedToNormal_Start |    30 |  500.0 | 0.500833333F |
-    // | PressedToNormal_End   | M_PressedToNormal_End   |    60 | 1000.0 | 1F           |
-    // | NormalToPlaying_End   | M_NormalToPlaying_End   |    60 | 1000.0 | 1F           |
-    // | PlayingToNormal_Start | M_PlayingToNormal_Start |    60 | 1000.0 | 1F           |
-    // | PlayingToNormal_End   | M_PlayingToNormal_End   |    60 | 1000.0 | 1F           |
-    // -----------------------------------------------------------------------------------
+    // Frame count: 20
+    // Duration:    333.3 mS
+    // ____________________________________________________________________________________________
+    // |           Marker           |           Constant           | Frame |  mS   |   Progress   |
+    // |____________________________|______________________________|_______|_______|______________|
+    // | NormalToPointerOver_Start  | M_NormalToPointerOver_Start  |     0 |   0.0 | 0F           |
+    // | NormalToPointerOver_End    | M_NormalToPointerOver_End    |     0 |   0.0 | 0F           |
+    // | PointerOverToNormal_Start  | M_PointerOverToNormal_Start  |     0 |   0.0 | 0F           |
+    // | PointerOverToNormal_End    | M_PointerOverToNormal_End    |     0 |   0.0 | 0F           |
+    // | NormalToPressed_Start      | M_NormalToPressed_Start      |     0 |   0.0 | 0F           |
+    // | PointerOverToPressed_Start | M_PointerOverToPressed_Start |     0 |   0.0 | 0F           |
+    // | PressedToNormal_End        | M_PressedToNormal_End        |     0 |   0.0 | 0F           |
+    // | NormalToPlaying_Start      | M_NormalToPlaying_Start      |     0 |   0.0 | 0F           |
+    // | PointerOverToPlaying_Start | M_PointerOverToPlaying_Start |     0 |   0.0 | 0F           |
+    // | NormalToPressed_End        | M_NormalToPressed_End        |    10 | 166.7 | 0.502499998F |
+    // | PointerOverToPressed_End   | M_PointerOverToPressed_End   |    10 | 166.7 | 0.502499998F |
+    // | PressedToPointerOver_Start | M_PressedToPointerOver_Start |    10 | 166.7 | 0.502499998F |
+    // | PressedToNormal_Start      | M_PressedToNormal_Start      |    10 | 166.7 | 0.502499998F |
+    // | PressedToPointerOver_End   | M_PressedToPointerOver_End   |    20 | 333.3 | 1F           |
+    // | NormalToPlaying_End        | M_NormalToPlaying_End        |    20 | 333.3 | 1F           |
+    // | PointerOverToPlaying_End   | M_PointerOverToPlaying_End   |    20 | 333.3 | 1F           |
+    // | PlayingToNormal_Start      | M_PlayingToNormal_Start      |    20 | 333.3 | 1F           |
+    // | PlayingToNormal_End        | M_PlayingToNormal_End        |    20 | 333.3 | 1F           |
+    // --------------------------------------------------------------------------------------------
     public sealed class SelectAllIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
-        // Animation duration: 1.000 seconds.
-        internal const long c_durationTicks = 10000000;
+        // Animation duration: 0.333 seconds.
+        internal const long c_durationTicks = 3333333;
+
+        // Marker: NormalToPointerOver_Start.
+        internal const float M_NormalToPointerOver_Start = 0F;
+
+        // Marker: NormalToPointerOver_End.
+        internal const float M_NormalToPointerOver_End = 0F;
+
+        // Marker: PointerOverToNormal_Start.
+        internal const float M_PointerOverToNormal_Start = 0F;
+
+        // Marker: PointerOverToNormal_End.
+        internal const float M_PointerOverToNormal_End = 0F;
 
         // Marker: NormalToPressed_Start.
         internal const float M_NormalToPressed_Start = 0F;
 
+        // Marker: PointerOverToPressed_Start.
+        internal const float M_PointerOverToPressed_Start = 0F;
+
+        // Marker: PressedToNormal_End.
+        internal const float M_PressedToNormal_End = 0F;
+
         // Marker: NormalToPlaying_Start.
         internal const float M_NormalToPlaying_Start = 0F;
 
+        // Marker: PointerOverToPlaying_Start.
+        internal const float M_PointerOverToPlaying_Start = 0F;
+
         // Marker: NormalToPressed_End.
-        internal const float M_NormalToPressed_End = 0.500833333F;
+        internal const float M_NormalToPressed_End = 0.502499998F;
+
+        // Marker: PointerOverToPressed_End.
+        internal const float M_PointerOverToPressed_End = 0.502499998F;
+
+        // Marker: PressedToPointerOver_Start.
+        internal const float M_PressedToPointerOver_Start = 0.502499998F;
 
         // Marker: PressedToNormal_Start.
-        internal const float M_PressedToNormal_Start = 0.500833333F;
+        internal const float M_PressedToNormal_Start = 0.502499998F;
 
-        // Marker: PressedToNormal_End.
-        internal const float M_PressedToNormal_End = 1F;
+        // Marker: PressedToPointerOver_End.
+        internal const float M_PressedToPointerOver_End = 1F;
 
         // Marker: NormalToPlaying_End.
         internal const float M_NormalToPlaying_End = 1F;
+
+        // Marker: PointerOverToPlaying_End.
+        internal const float M_PointerOverToPlaying_End = 1F;
 
         // Marker: PlayingToNormal_Start.
         internal const float M_PlayingToNormal_Start = 1F;
@@ -121,7 +161,7 @@ namespace WE_Tool.AnimatedVisuals
         /// <summary>
         /// Gets the number of frames in the animation.
         /// </summary>
-        public double FrameCount => 60d;
+        public double FrameCount => 20d;
 
         /// <summary>
         /// Gets the frame rate of the animation.
@@ -131,7 +171,7 @@ namespace WE_Tool.AnimatedVisuals
         /// <summary>
         /// Gets the duration of the animation.
         /// </summary>
-        public TimeSpan Duration => TimeSpan.FromTicks(10000000);
+        public TimeSpan Duration => TimeSpan.FromTicks(3333333);
 
         /// <summary>
         /// Converts a zero-based frame number to the corresponding progress value denoting the
@@ -139,7 +179,7 @@ namespace WE_Tool.AnimatedVisuals
         /// </summary>
         public double FrameToProgress(double frameNumber)
         {
-            return frameNumber / 60d;
+            return frameNumber / 20d;
         }
 
         /// <summary>
@@ -148,12 +188,22 @@ namespace WE_Tool.AnimatedVisuals
         public IReadOnlyDictionary<string, double> Markers =>
             new Dictionary<string, double>
             {
+                { "NormalToPointerOver_Start", 0d },
+                { "NormalToPointerOver_End", 0d },
+                { "PointerOverToNormal_Start", 0d },
+                { "PointerOverToNormal_End", 0d },
                 { "NormalToPressed_Start", 0d },
+                { "PointerOverToPressed_Start", 0d },
+                { "PressedToNormal_End", 0d },
                 { "NormalToPlaying_Start", 0d },
-                { "NormalToPressed_End", 0.500833333333333 },
-                { "PressedToNormal_Start", 0.500833333333333 },
-                { "PressedToNormal_End", 1d },
+                { "PointerOverToPlaying_Start", 0d },
+                { "NormalToPressed_End", 0.5025 },
+                { "PointerOverToPressed_End", 0.5025 },
+                { "PressedToPointerOver_Start", 0.5025 },
+                { "PressedToNormal_Start", 0.5025 },
+                { "PressedToPointerOver_End", 1d },
                 { "NormalToPlaying_End", 1d },
+                { "PointerOverToPlaying_End", 1d },
                 { "PlayingToNormal_Start", 1d },
                 { "PlayingToNormal_End", 1d },
             };
@@ -178,7 +228,7 @@ namespace WE_Tool.AnimatedVisuals
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {
-            const long c_durationTicks = 10000000;
+            const long c_durationTicks = 3333333;
             readonly Compositor _c;
             readonly ExpressionAnimation _reusableExpressionAnimation;
             AnimationController _animationController_0;
@@ -1051,14 +1101,12 @@ namespace WE_Tool.AnimatedVisuals
             {
                 // Frame 0.
                 var result = CreateVector2KeyFrameAnimation(0F, new Vector2(0F, 0F), StepThenHoldEasingFunction());
-                // Frame 9.
-                result.InsertKeyFrame(0.150000006F, new Vector2(0F, 0F), HoldThenStepEasingFunction());
-                // Frame 19.
-                result.InsertKeyFrame(0.316666663F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
-                // Frame 40.
-                result.InsertKeyFrame(0.666666687F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
-                // Frame 50.
-                result.InsertKeyFrame(0.833333313F, new Vector2(0F, 0F), CubicBezierEasingFunction_0());
+                // Frame 4.
+                result.InsertKeyFrame(0.200000003F, new Vector2(0F, 0F), HoldThenStepEasingFunction());
+                // Frame 10.
+                result.InsertKeyFrame(0.5F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
+                // Frame 20.
+                result.InsertKeyFrame(1F, new Vector2(0F, 0F), CubicBezierEasingFunction_0());
                 return result;
             }
 
@@ -1068,14 +1116,14 @@ namespace WE_Tool.AnimatedVisuals
             {
                 // Frame 0.
                 var result = CreateVector2KeyFrameAnimation(0F, new Vector2(0F, 0F), StepThenHoldEasingFunction());
-                // Frame 6.
-                result.InsertKeyFrame(0.100000001F, new Vector2(0F, 0F), HoldThenStepEasingFunction());
-                // Frame 16.
-                result.InsertKeyFrame(0.266666681F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
-                // Frame 40.
-                result.InsertKeyFrame(0.666666687F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
-                // Frame 50.
-                result.InsertKeyFrame(0.833333313F, new Vector2(0F, 0F), CubicBezierEasingFunction_0());
+                // Frame 3.
+                result.InsertKeyFrame(0.150000006F, new Vector2(0F, 0F), HoldThenStepEasingFunction());
+                // Frame 9.
+                result.InsertKeyFrame(0.449999988F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
+                // Frame 10.
+                result.InsertKeyFrame(0.5F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
+                // Frame 20.
+                result.InsertKeyFrame(1F, new Vector2(0F, 0F), CubicBezierEasingFunction_0());
                 return result;
             }
 
@@ -1085,14 +1133,14 @@ namespace WE_Tool.AnimatedVisuals
             {
                 // Frame 0.
                 var result = CreateVector2KeyFrameAnimation(0F, new Vector2(0F, 0F), StepThenHoldEasingFunction());
-                // Frame 3.
-                result.InsertKeyFrame(0.0500000007F, new Vector2(0F, 0F), HoldThenStepEasingFunction());
-                // Frame 13.
-                result.InsertKeyFrame(0.216666669F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
-                // Frame 40.
-                result.InsertKeyFrame(0.666666687F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
-                // Frame 50.
-                result.InsertKeyFrame(0.833333313F, new Vector2(0F, 0F), CubicBezierEasingFunction_0());
+                // Frame 2.
+                result.InsertKeyFrame(0.100000001F, new Vector2(0F, 0F), HoldThenStepEasingFunction());
+                // Frame 8.
+                result.InsertKeyFrame(0.400000006F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
+                // Frame 10.
+                result.InsertKeyFrame(0.5F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
+                // Frame 20.
+                result.InsertKeyFrame(1F, new Vector2(0F, 0F), CubicBezierEasingFunction_0());
                 return result;
             }
 
@@ -1101,13 +1149,15 @@ namespace WE_Tool.AnimatedVisuals
             Vector2KeyFrameAnimation SizeVector2Animation_3()
             {
                 // Frame 0.
-                var result = CreateVector2KeyFrameAnimation(0F, new Vector2(0F, 0F), HoldThenStepEasingFunction());
+                var result = CreateVector2KeyFrameAnimation(0F, new Vector2(0F, 0F), StepThenHoldEasingFunction());
+                // Frame 1.
+                result.InsertKeyFrame(0.0500000007F, new Vector2(0F, 0F), HoldThenStepEasingFunction());
+                // Frame 7.
+                result.InsertKeyFrame(0.349999994F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
                 // Frame 10.
-                result.InsertKeyFrame(0.166666672F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
-                // Frame 40.
-                result.InsertKeyFrame(0.666666687F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
-                // Frame 50.
-                result.InsertKeyFrame(0.833333313F, new Vector2(0F, 0F), CubicBezierEasingFunction_0());
+                result.InsertKeyFrame(0.5F, new Vector2(96F, 96F), CubicBezierEasingFunction_0());
+                // Frame 20.
+                result.InsertKeyFrame(1F, new Vector2(0F, 0F), CubicBezierEasingFunction_0());
                 return result;
             }
 

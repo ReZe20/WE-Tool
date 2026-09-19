@@ -214,6 +214,7 @@ public sealed partial class WhitelistWindow : WindowEx
 
     private void BatchRemove_Click(object sender, RoutedEventArgs e)
     {
+    AnimatedIconPlayer.PlayOnce(sender, "移除");   // [删除图标动画 2026-09]
         foreach (var card in _cards.Where(c => c.IsSelected).ToList())
         {
             _whitelist.Remove(card.FolderId);

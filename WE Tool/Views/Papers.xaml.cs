@@ -33,6 +33,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using WE_Tool.AnimatedVisuals;
 using WE_Tool.Controls;
 using WE_Tool.Converters;
 using WE_Tool.Helper;
@@ -585,6 +586,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         this.DataContext = this;
         // resw 附加属性经 x:Uid 在 WinUI3 不生效(已知限制),tooltip 需代码显式设置
         ToolTipService.SetToolTip(SortToolbarButton, LanguageHelper.GetResource("Toolbar_Sort.ToolTipService.ToolTip"));
+        ViewIcon_WirePointer();   // [2026-09-16] 视图图标按下/松开直接挂按钮自己(见下方视图图标动画说明)
+        LeftFilterIcon_WirePointer();   // [2026-09-19] 筛选结果(工具栏最左)图标:与视图同一素材、同一接线(见下方筛选结果图标动画说明)
+        LeftFilterIcon_WireColor();   // [2026-09-19] 筛选结果图标颜色同步(见下方说明)
+        SortIcon_WirePointer();   // [2026-09-16] 排序图标同款:直接挂按钮自己(见下方排序图标动画说明)
+        SortDirectionIcon_WirePointer();   // [2026-09-16] 排序方向图标:两份素材按当前方向换源(见下方说明)
+        DetailIcons_WirePointer();   // [2026-09-18] 详情面板六个图标:按下播第 0→10 帧;松开——在按钮上播 10→20,在按钮外倒放回 0(回退),见下方说明
         App.ScanCompleted += App_ScanCompleted;
 
         this.Unloaded += (s, e) =>
@@ -910,6 +917,14 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 UpdateDetailBlur(); // 详情大图同步
                 return;
             }
+            if (e.PropertyName == nameof(WallpaperDisplayViewModel.SortDirectionGlyph))
+            {
+                // 排序方向图标:[2026-09-17] 换源只能在"画面正好等于该素材第 0 帧"时做,所以过渡周期内
+                // (按下段+松开段)一律不动素材 —— 那时正在播折叠/张开段,换源会把方向播反或把过渡截断。
+                // 周期结束时由 SortDirectionIcon_WaitReleaseSegmentAsync 按新方向换一次;周期外(如启动读设置)才在这里同步。
+                // 不 return:下面 _ = ApplyFilters() 还要跑(方向变化要重排列表)。
+                if (!_sortDirectionIconCycleActive) SortDirectionIcon_SyncSource("方向变化");
+            }
             _ = ApplyFilters();
         };
 
@@ -920,6 +935,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 _isFirstLoad = false;
                 await ViewModel.InitializeAsync();
+                SortDirectionIcon_SyncSource("初始化后");   // 设置已读完,按真实方向选素材(升序=尖朝下 / 降序=尖朝上)
                 await RefreshWallpaperList();
             }
 
@@ -1107,16 +1123,20 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _isRightButtonPressed = true;
             _rightMenuShownThisGesture = false;
         }
-        // CommandBar 内按钮按下反馈:按钮缩小(AddHandler handledEventsToo:true 能收到 Button 内部的 handled 事件)
+        // CommandBar 内按钮按下:记录按钮/捕获指针,松开时按需触发图标动画
+        // (AddHandler handledEventsToo:true 能收到 Button 内部的 handled 事件;按下缩小反馈已于 2026-09-16 取消)
         if (e.OriginalSource is FrameworkElement fe && IsDescendantOf(fe, ToolbarCommands))
         {
             if (FindAncestorButton(fe) is { } btn)
             {
-                _pressedButton = btn;                       // 记录按下的按钮(供释放时弹回)
+                _pressedButton = btn;                       // 记录按下的按钮(供松开时触发图标动画)
                 btn.CapturePointer(e.Pointer);              // 捕获指针:移开按钮后释放仍收到事件
-                PlayPressScale(btn, 0.88f);
-                // 全选图标:按下就开始播【填满】那一段(松开接着播回程,见 SelectAllIcon_PointerReleased)
-                if (btn == ToolbarSelectAllButton) SelectAllIcon_PointerPressed();
+                // [2026-09-16 取消顶部栏按下缩小] 用户要求去掉按钮按下缩到 88% 的反馈;
+                // PlayPressScale 方法保留未删,想恢复把下面这行注释解掉即可。
+                // PlayPressScale(btn, 0.88f);
+                // 刷新/全选/反选/删除 四组图标:按下播第 0→10 帧;松开由 Global_PointerReleased 收尾
+                // (在按钮上松开 = 播完后半段;拖出按钮外松开 = 倒放回退)。见下方“工具栏四组图标”区块。
+                ToolbarIconSegments_Pressed(btn);
             }
         }
     }
@@ -1139,29 +1159,586 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             _pressedButton = null;
             pressedBtn.ReleasePointerCapture(e.Pointer);
-            PlayPressScale(pressedBtn, 1f);
-            // 刷新按钮:图标旋转动画在鼠标松开后播放(按下只缩小)
-            if (pressedBtn == RefreshButton)
-            {
-                PlayRefreshSpin();
-            }
-            // 全选图标:松开时从第 30 帧接着播到第 60 帧(四个方框缩回空心)
-            if (pressedBtn == ToolbarSelectAllButton) SelectAllIcon_PointerReleased();
+            // [2026-09-16 取消顶部栏按下缩小] 松开也不再有弹回缩放(见 Global_PointerPressed 里的说明)
+            // 刷新/全选/反选/删除 四组图标:在按钮上松开 → 播完后半段;拖出按钮外松开 → 倒放回退
+            ToolbarIconSegments_Released(pressedBtn, e);
         }
     }
 
-    // ===================== 刷新图标动画(2026-09) =====================
+    // ===================== 视图图标动画(2026-09) =====================
+    // 视图按钮图标由静态字形 E71D 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.ViewIcon,
+    // 见 AnimatedVisuals/ViewIcon.cs;回退字形仍是 E71D)。
+    // 素材内容(2026-09-19 换 Toolbar_View-4,改成“往下滚一行”版):视图图标三行(每行 = 圆角方块 + 横杠),
+    // 另有一组同样的三行停在画布上方;第 0→10 帧画面里三行错开往下起步(+10/+40/+90),第 10→20 帧旧三行
+    // 加速滑出画面下方、新三行从画布上方滑入,第 14→20 帧落回同一排位置;时间轴 20 帧(0.333s)。
+    // 交互(用户口径 2026-09-16,未变):鼠标按下 → 播第 0→10 帧(三行起步下移);松开 → 从第 10 帧继续播到
+    // 第 20 帧(旧行滑出、新行滑入归位)。两段各 10 帧 @60fps = 各 167ms。
+    // 做法与顶部栏"全选"按钮同一套:按下切 Pressed(标记对 NormalToPressed = 第 0→10 帧)、
+    // 松开切 Normal(标记对 PressedToNormal = 第 10→20 帧)。
+    // 素材里 NormalToPlaying/PlayingToNormal 那对标记也保留着:若将来要改回"点击整段播一遍
+    // (AnimatedIconPlayer)",直接复用即可,不用重新生成。
+    // [为什么直接挂在按钮自己身上] 页面级 Global_PointerPressed 靠 IsDescendantOf(fe, ToolbarCommands) 判定,
+    // 而顶部栏开了 IsDynamicOverflowEnabled、视图按钮排在工具栏靠后,默认窗口宽度下会被收进"溢出"菜单 ——
+    // 那时它不在 ToolbarCommands 的视觉子树里,判定落空、按下与松开都收不到
+    // (实测 2026-09-16 日志:同样路径的全选有打点,视图一条都没有)。
+    // 挂在按钮自己身上与它在栏内还是在溢出菜单无关,两种情况都能收到;另外补两处:
+    // ① PointerCaptureLost(按住拖出去再松开);② 溢出菜单 Flyout.Opened(菜单一开就当作这次按压结束,
+    // 免得指针事件被菜单吞掉后图标卡在"按下"姿态、之后因为状态没变化而再也不播)。
+    private const bool ViewIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+
+    private void ViewIcon_WirePointer()
+    {
+        ToolbarViewButton.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(ViewIcon_ButtonPressed), true);
+        ToolbarViewButton.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(ViewIcon_ButtonReleased), true);
+        ToolbarViewButton.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(ViewIcon_ButtonReleased), true);
+        ToolbarViewFlyout.Opened += (_, _) => ViewIcon_SetState(pressed: false, trigger: "溢出菜单打开");
+    }
+
+    private void ViewIcon_ButtonPressed(object sender, PointerRoutedEventArgs e) => ViewIcon_PointerPressed();
+    private void ViewIcon_ButtonReleased(object sender, PointerRoutedEventArgs e) => ViewIcon_PointerReleased();
+    private void ViewIcon_PointerPressed() => ViewIcon_SetState(pressed: true, trigger: "按下");
+    private void ViewIcon_PointerReleased() => ViewIcon_SetState(pressed: false, trigger: "松开");
+
+    /// <summary>按下→Pressed(播第 0→10 帧);松开→Normal(从第 10 帧播到第 20 帧)。</summary>
+    private void ViewIcon_SetState(bool pressed, string trigger)
+    {
+        string target = pressed ? "Pressed" : "Normal";
+        if (!ViewIconAnimationProbe) { Log.Information("[动画] 视图图标跳过({Trigger}):探针已关闭", trigger); return; }
+        if (ToolbarViewIcon is null) { Log.Information("[动画] 视图图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        string before = ToolbarViewIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
+        if (string.Equals(before, target, StringComparison.Ordinal))
+        {
+            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生),记一行便于排查
+            Log.Information("[动画] 视图图标({Trigger}):状态已是 {State},无需切换", trigger, before);
+            return;
+        }
+        Log.Information("[动画] 视图图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
+            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
+        AnimatedIcon.SetState(ToolbarViewIcon, target);
+    }
+
+    // ===================== 筛选结果图标动画(2026-09-19) =====================
+    // 工具栏最左“筛选结果”开关的图标由静态字形 E71D 换成 Lottie 动画 —— 与视图按钮**同一份素材**
+    // (WE_Tool.AnimatedVisuals.ViewIcon,零新类;回退字形仍是 E71D)。按下 = 第 0→10 帧、松开 = 第 10→20 帧。
+    // [为什么直接挂在按钮自己身上] 同视图图标:AppBarToggleButton 模板不驱动 AnimatedIcon.State,且按钮
+    // 可能被收进溢出菜单(那时页面级 IsDescendantOf(fe, ToolbarCommands) 判定落空),挂按钮自己两种情况都能收到;
+    // 这枚没有 Flyout,只需按下/松开/CaptureLost 三处(不铺视图按钮那套“菜单打开”兜底)。
+    // 开关本身的开合(IsChecked ←→ LeftSplitViewPaneOpen)与图标动画无关,两边互不干涉。
+    private const bool LeftFilterIconAnimationProbe = true;
+
+    private void LeftFilterIcon_WirePointer()
+    {
+        LeftToggleFilterButton.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) => LeftFilterIcon_SetState(pressed: true, trigger: "按下")), true);
+        LeftToggleFilterButton.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler((_, _) => LeftFilterIcon_SetState(pressed: false, trigger: "松开")), true);
+        LeftToggleFilterButton.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler((_, _) => LeftFilterIcon_SetState(pressed: false, trigger: "捕获丢失")), true);
+    }
+
+    /// <summary>按下→Pressed(播第 0→10 帧);松开→Normal(从第 10 帧播到第 20 帧)。</summary>
+    private void LeftFilterIcon_SetState(bool pressed, string trigger)
+    {
+        string target = pressed ? "Pressed" : "Normal";
+        if (!LeftFilterIconAnimationProbe) { Log.Information("[动画] 筛选结果图标跳过({Trigger}):探针已关闭", trigger); return; }
+        if (LeftToggleFilterIcon is null) { Log.Information("[动画] 筛选结果图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        string before = LeftToggleFilterIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
+        if (string.Equals(before, target, StringComparison.Ordinal))
+        {
+            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生),记一行便于排查
+            Log.Information("[动画] 筛选结果图标({Trigger}):状态已是 {State},无需切换", trigger, before);
+            return;
+        }
+        Log.Information("[动画] 筛选结果图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
+            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
+        AnimatedIcon.SetState(LeftToggleFilterIcon, target);
+    }
+
+    // ── 筛选结果图标颜色同步(2026-09-19) ──
+    // [为什么需要] AppBarToggleButton 模板的选中前景用 <VisualState.Setters> 设到图标宿主 Content 与 TextLabel,
+    // 但 .Icon 槽里 IconElement.Foreground 实测拿不到该值(选中后图标始终只有未选中的白; 原来 FontIcon 时代同样拿不到,
+    // 只是近白字形看不出问题)。对照: 页面右侧普通 ToggleButton 的模板用 Storyboard 动画驱动 ContentPresenter.Foreground,
+    // 动画能覆盖一切、图标继承得到, 所以那枚一直是正常的。
+    // [怎么修] 与右侧对齐: 选中态变化时把色值显式设到图标自己的 Foreground(本地值必然生效, 深浅主题自动跟)。
+    // 色值不硬编码: Papers.xaml 里两个 Collapsed 探针用 {ThemeResource}(AppBarToggleButtonForeground /
+    // AppBarToggleButtonForegroundChecked)让框架解析; 主题切换后重同步一次(探针笔刷会换成新主题的对象)。
+    // 只保证选中/未选中两个稳定态; 悬停/按下时文字的轻微过渡色不逐帧跟。
+    private bool _leftFilterColorHooked;
+
+    private void LeftFilterIcon_WireColor()
+    {
+        LeftToggleFilterButton.Checked += (_, _) => LeftFilterIcon_SyncColor();
+        LeftToggleFilterButton.Unchecked += (_, _) => LeftFilterIcon_SyncColor();
+        LeftToggleFilterButton.Loaded += (_, _) =>
+        {
+            if (!_leftFilterColorHooked && XamlRoot?.Content is FrameworkElement themeRoot)
+            {
+                _leftFilterColorHooked = true;
+                themeRoot.ActualThemeChanged += (_, _) => LeftFilterIcon_SyncColor();   // 挂主题根: ThemedAnimatedIcon 同款机理(部分元素自身的不触发)
+            }
+            LeftFilterIcon_SyncColor();                                                  // 初始态(面板可能默认打开)
+            DispatcherQueue.TryEnqueue(() => LeftFilterIcon_SyncColor());                // 主题可能到本帧末才落定, 再补一次
+        };
+    }
+
+    /// <summary>把选中/未选中对应的框架前景色同步给筛选结果图标 —— 图标与开关文字同色的来源。</summary>
+    private void LeftFilterIcon_SyncColor()
+    {
+        if (LeftToggleFilterIcon is null || LeftFilterColorProbeNormal is null || LeftFilterColorProbeChecked is null) return;
+        var probe = LeftToggleFilterButton.IsChecked == true ? LeftFilterColorProbeChecked : LeftFilterColorProbeNormal;
+        LeftToggleFilterIcon.Foreground = probe.Background;
+    }
+
+    // ===================== 排序图标动画(2026-09) =====================
+    // 排序按钮图标由静态字形 E8CB 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.SortIcon,
+    // 见 AnimatedVisuals/SortIcon.cs;回退字形仍是 E8CB)。
+    // 素材内容:E8CB 字形的左右两半(各一条 22 点路径)。第 0→10 帧原字形两半飞散 —— 左半向上、右半向下,
+    // 分别飞出画面上下边;第 10→19 帧副本的两半反向飞回(左半自下、右半自上),第 20 帧完全归位、与第 0 帧一致。
+    // 时间轴 20 帧(0.333s),循环前后同形(可反复播不残留)。
+    // 交互(用户口径 2026-09-16):鼠标按下 → 播第 0→10 帧(两半飞散);松开 → 从第 10 帧继续播到第 20 帧(两半飞回)。
+    // 两段各 10 帧 @60fps = 各 167ms,由标记进度(0 → 0.5025 → 1)自动决定,不需要时长常量。
+    // 做法与顶部栏"视图"按钮完全同一套:按下切 Pressed(NormalToPressed = 第 0→10 帧)、松开切 Normal(PressedToNormal = 第 10→20 帧);
+    // 钩子直接挂在按钮自己身上(工具栏开了 IsDynamicOverflowEnabled,排序按钮排第 8 位,同样可能被收进溢出菜单,
+    // 那时页面级 IsDescendantOf(fe, ToolbarCommands) 判定会落空),另补 PointerCaptureLost 与 Flyout.Opened 两处兜底。
+    // NormalToPlaying/PlayingToNormal 那对标记也保留着:将来若要改回"点击整段播一遍"直接复用,不用重新生成。
+    private const bool SortIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+
+    private void SortIcon_WirePointer()
+    {
+        SortToolbarButton.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(SortIcon_ButtonPressed), true);
+        SortToolbarButton.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(SortIcon_ButtonReleased), true);
+        SortToolbarButton.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(SortIcon_ButtonReleased), true);
+        ToolbarSortFlyout.Opened += (_, _) => SortIcon_SetState(pressed: false, trigger: "溢出菜单打开");
+    }
+
+    private void SortIcon_ButtonPressed(object sender, PointerRoutedEventArgs e) => SortIcon_PointerPressed();
+    private void SortIcon_ButtonReleased(object sender, PointerRoutedEventArgs e) => SortIcon_PointerReleased();
+    private void SortIcon_PointerPressed() => SortIcon_SetState(pressed: true, trigger: "按下");
+    private void SortIcon_PointerReleased() => SortIcon_SetState(pressed: false, trigger: "松开");
+
+    /// <summary>按下→Pressed(播第 0→10 帧);松开→Normal(从第 10 帧播到第 20 帧)。</summary>
+    private void SortIcon_SetState(bool pressed, string trigger)
+    {
+        string target = pressed ? "Pressed" : "Normal";
+        if (!SortIconAnimationProbe) { Log.Information("[动画] 排序图标跳过({Trigger}):探针已关闭", trigger); return; }
+        if (ToolbarSortIcon is null) { Log.Information("[动画] 排序图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        string before = ToolbarSortIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
+        if (string.Equals(before, target, StringComparison.Ordinal))
+        {
+            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生),记一行便于排查
+            Log.Information("[动画] 排序图标({Trigger}):状态已是 {State},无需切换", trigger, before);
+            return;
+        }
+        Log.Information("[动画] 排序图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
+            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
+        AnimatedIcon.SetState(ToolbarSortIcon, target);
+    }
+
+    // ===================== 排序方向图标动画(2026-09) =====================
+    // 排序方向按钮的图标原本是"随方向绑定的静态字形"(升序 E70D 尖朝下 / 降序 E70E 尖朝上,见
+    // WallpaperDisplayViewModel.SortDirectionGlyph),现换成两个 Lottie 动画按当前方向二选一:
+    //   AnimatedVisuals/SortDirectionAscIcon.cs   起点 = 升序(尖朝下) → 终点 = 降序(尖朝上)
+    //   AnimatedVisuals/SortDirectionDescIcon.cs  起点 = 降序(尖朝上) → 终点 = 升序(尖朝下)
+    // 回退字形仍是 E70D/E70E(随方向在 SyncSource 里一起换)。
+    // [素材结构(2026-09-17 第三版)] 每份两层:一层带动画的路径(第 0→10 帧三点压平成一条线、第 10→19 帧
+    // 张开成新方向),另一层是只显示在第 19→20 帧的静态定格层,姿态 = 动画末帧(即新方向)。
+    // 两份素材内容相同、只差图层旋转:sort_direction_up(r=0) 静止尖朝下、播完尖朝上;sort_direction_down(r=180) 相反。
+    // 规则:**载入的那份素材,起点必须是当前方向、终点必须是切换后的方向** —— 这样"按下折 + 松开张"播完,
+    // 图标正好停在新方向上;两份都必须定格在新方向的姿态上,两条边才有动画。
+    // [播放时序(2026-09-17 第三版,按用户"按下播放十帧 / 播完动画再改变图标"口径)]
+    //   ① 按下 → 切 Pressed:`NormalToPressed` = 第 0→10 帧(≈167ms,三点压平成一条线);
+    //   ② 松开 → 切 Normal:`PressedToNormal` = 第 10→20 帧(≈167ms,张开成新方向);
+    //      若按下段还没播完就松开了,**排队等它播完再播第二段**,绝不跳帧;
+    //   ③ 第二段播完那一刻画面正好 = 新素材第 0 帧(新方向) → 这才换 Source(换上去无感)= "播完动画再改变图标";
+    //      (2026-09-17 第四版)换完 Source 立刻**归零** —— 把画面拨回第 0 帧:素材第 0 帧与上一段落点同姿态,看不见;
+    //      不归零的话 AnimatedIcon 停在末帧,下次按下又要先跳到第 0 帧,看着就是"闪一下又播回原方向";
+    //   ④ 过渡期间再按下:排队,等本轮两段播完再从头走一次(一次点击 = 完整周期 ≈334ms);
+    //   ⑤ 按住不放:第一段播完停在第 10 帧(压平成一条线那帧)等松开。
+    private const bool SortDirectionIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+    private const int SortDirectionIconFrameMs = 17;             // 每帧 @60fps ≈ 16.7ms
+    private const int SortDirectionIconPressMs = 10 * SortDirectionIconFrameMs;     // 按下段 第 0→10 帧
+    private const int SortDirectionIconReleaseMs = 10 * SortDirectionIconFrameMs;   // 松开段 第 10→20 帧
+
+    private bool _sortDirectionIconCycleActive;                  // 一个完整周期(按下段+松开段)进行中:期间不响应方向变化通知
+    private bool _sortDirectionIconPressedSegDone;               // 按下段已播完(画面 = 第 10 帧压平线,正等松开)
+    private bool _sortDirectionIconPendingRelease;               // 按下段没播完就松开了 → 排队,等按下段播完立刻播第二段
+    private bool _sortDirectionIconPendingPress;                 // 过渡中又按下 → 排队,等本轮两段播完再走
+    private CancellationTokenSource? _sortDirectionIconCycleCts; // 分段计时令牌(防过期回调)
+
+    private void SortDirectionIcon_WirePointer()
+    {
+        SortDirectionButton.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(SortDirectionIcon_ButtonPressed), true);
+        SortDirectionButton.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(SortDirectionIcon_ButtonReleased), true);
+        SortDirectionButton.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(SortDirectionIcon_ButtonReleased), true);
+        // [为什么首次同步不放在这里] ViewModel.WallpaperDisplayVM.IsSortAscending 的字段默认是 false(降序),
+        // 要等 Loaded 里 InitializeAsync() 读完设置才准;在这里读会把"已保存为升序"的情况先显示成降序。
+        // 首次选素材放在 InitializeAsync() 之后(见 Loaded),方向变化则由上面的 PropertyChanged 分支同步。
+    }
+
+    private void SortDirectionIcon_ButtonPressed(object sender, PointerRoutedEventArgs e) => SortDirectionIcon_PointerPressed();
+    private void SortDirectionIcon_ButtonReleased(object sender, PointerRoutedEventArgs e) => SortDirectionIcon_PointerReleased();
+
+    /// <summary>按下:空闲就开始一轮(先确认起点素材 = 当前方向,再播按下段第 0→10 帧);过渡中则排队。</summary>
+    private void SortDirectionIcon_PointerPressed()
+    {
+        if (_sortDirectionIconCycleActive)
+        {
+            // 播放完上一个状态的动画才能切换到下一个状态:本轮没播完,这次按压排在后面
+            _sortDirectionIconPendingPress = true;
+            if (SortDirectionIconAnimationProbe)
+                Log.Information("[动画] 排序方向图标按下:本轮过渡还在播,已排队等播完");
+            return;
+        }
+        SortDirectionIcon_StartCycle("按下");
+    }
+
+    /// <summary>松开:按下段已播完就立刻播第二段;还没播完就排队(绝不跳帧)。</summary>
+    private void SortDirectionIcon_PointerReleased()
+    {
+        if (!_sortDirectionIconCycleActive)
+        {
+            if (SortDirectionIconAnimationProbe)
+                Log.Information("[动画] 排序方向图标松开:当前没有过渡周期,忽略");
+            return;
+        }
+        if (_sortDirectionIconPressedSegDone)
+        {
+            SortDirectionIcon_PlayReleaseSegment("松开");
+            return;
+        }
+        _sortDirectionIconPendingRelease = true;
+        if (SortDirectionIconAnimationProbe)
+            Log.Information("[动画] 排序方向图标松开:按下段还在播,已排队等它播完再播第二段");
+    }
+
+    /// <summary>一轮过渡:先确认起点素材 = 当前方向(换源无感),再播按下段第 0→10 帧。</summary>
+    private void SortDirectionIcon_StartCycle(string trigger)
+    {
+        _sortDirectionIconCycleActive = true;
+        _sortDirectionIconPressedSegDone = false;
+        _sortDirectionIconPendingRelease = false;
+        _sortDirectionIconPendingPress = false;
+        bool swapped = SortDirectionIcon_SyncSource(trigger);
+        if (swapped)
+        {
+            // 刚换过 Source:新合成树要等这一帧走完才挂上,推迟一帧再播,免得动画第一帧被吃掉
+            DispatcherQueue.TryEnqueue(() => SortDirectionIcon_PlayPressSegment(trigger + "(换源后)"));
+            return;
+        }
+        SortDirectionIcon_PlayPressSegment(trigger);
+    }
+
+    /// <summary>第一段(按下):Pressed → NormalToPressed = 第 0→10 帧(折角压平成一条线)。</summary>
+    private void SortDirectionIcon_PlayPressSegment(string trigger)
+    {
+        SortDirectionIcon_SetState("Pressed", "按下:第 0→10 帧(折角压平)", trigger);
+        SortDirectionIcon_WaitPressSegmentAsync();
+    }
+
+    /// <summary>第一段播完:松过手就接着播第二段;还按着就停在第 10 帧等松开。</summary>
+    private async void SortDirectionIcon_WaitPressSegmentAsync()
+    {
+        _sortDirectionIconCycleCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _sortDirectionIconCycleCts = cts;
+        try { await Task.Delay(SortDirectionIconPressMs, cts.Token); }
+        catch (OperationCanceledException) { return; }
+        if (cts.IsCancellationRequested) return;
+
+        _sortDirectionIconPressedSegDone = true;
+        if (_sortDirectionIconPendingRelease)
+        {
+            _sortDirectionIconPendingRelease = false;
+            SortDirectionIcon_PlayReleaseSegment("松开(排队)");
+        }
+        else if (SortDirectionIconAnimationProbe)
+        {
+            Log.Information("[动画] 排序方向图标按下段播完:仍按住,停在第 10 帧等松开");
+        }
+    }
+
+    /// <summary>第二段(松开):Normal → PressedToNormal = 第 10→20 帧(张开成新方向)。</summary>
+    private void SortDirectionIcon_PlayReleaseSegment(string trigger)
+    {
+        SortDirectionIcon_SetState("Normal", "松开:第 10→20 帧(张开成新方向)", trigger);
+        SortDirectionIcon_WaitReleaseSegmentAsync();
+    }
+
+    /// <summary>两段播完:换素材(此时画面 = 新素材第 0 帧,无感)→ 处理排队的按下。</summary>
+    private async void SortDirectionIcon_WaitReleaseSegmentAsync()
+    {
+        _sortDirectionIconCycleCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _sortDirectionIconCycleCts = cts;
+        try { await Task.Delay(SortDirectionIconReleaseMs, cts.Token); }
+        catch (OperationCanceledException) { return; }
+        if (cts.IsCancellationRequested) return;
+
+        _sortDirectionIconCycleActive = false;
+        _sortDirectionIconPressedSegDone = false;
+        SortDirectionIcon_SyncSource("过渡播完");   // 两段播完的瞬间画面 = 新素材第 0 帧,换上去无感
+        if (_sortDirectionIconPendingPress)
+        {
+            _sortDirectionIconPendingPress = false;
+            SortDirectionIcon_StartCycle("排队按下");
+        }
+    }
+
+    /// <summary>按当前排序方向选素材(升序 → Asc 素材 / 降序 → Desc 素材),返回是否真的换了源。</summary>
+    private bool SortDirectionIcon_SyncSource(string trigger)
+    {
+        if (ToolbarSortDirectionIcon is null) return false;
+        bool ascending = ViewModel?.WallpaperDisplayVM?.IsSortAscending ?? true;
+        IAnimatedVisualSource2 wanted = ascending ? new SortDirectionAscIcon() : new SortDirectionDescIcon();   // 注意:AnimatedIcon.Source 的类型是 IAnimatedVisualSource2(不是 IAnimatedVisualSource)
+        if (ReferenceEquals(ToolbarSortDirectionIcon.Source?.GetType(), wanted.GetType())) return false;
+        ToolbarSortDirectionIcon.Source = wanted;
+        ToolbarSortDirectionIcon.FallbackIconSource = new FontIconSource { Glyph = ascending ? "\uE70D" : "\uE70E" };
+        ToolbarSortDirectionIcon.RefreshColorAfterSourceChange();   // 新素材的画笔是全新对象,立刻重涂(否则浅色主题闪一下原色)
+
+        SortDirectionIcon_ResetToFirstFrame(trigger);   // 归零:换源后把画面拨回起手帧(第 0 帧 = 当前方向)
+        // AnimatedIcon 可能在换源那一拍之后才把状态重新挂上、把画面又推到末帧,隔一拍再归一次(若此时已在转场中,就交给本轮结束去归)
+        DispatcherQueue.TryEnqueue(() => { if (!_sortDirectionIconCycleActive) SortDirectionIcon_ResetToFirstFrame(trigger + "(隔拍)"); });
+        if (SortDirectionIconAnimationProbe)
+            Log.Information("[动画] 排序方向图标换源({Trigger}):{Dir} → {Class} 回退字形={Glyph}", trigger,
+                ascending ? "升序(尖朝下)" : "降序(尖朝上)", wanted.GetType().Name, ascending ? "E70D" : "E70E");
+        return true;
+    }
+    /// <summary>归零:把画面拨回素材第 0 帧(= 起手帧 = 当前方向)。
+    /// [为什么需要] AnimatedIcon 播完会停在**末帧**(第 20 帧),而下次按下 SetState 会先把画面跳到第 0 帧,
+    /// 看起来就是"闪一下又播回原方向、像没反应"。归零后:静止永远等于起手帧,按下从第 0 帧开始播、不跳帧。
+    /// [实现] 一对零长度标记 NormalToReset / ResetToNormal(都是第 0 帧 → 第 0 帧):SetState("Reset") 拨回第 0 帧,
+    /// 再 SetState("Normal") 恢复状态名(下次按下仍是 Normal → Pressed)。此时画面本来就等于新素材第 0 帧,看不见。
+    /// </summary>
+    private void SortDirectionIcon_ResetToFirstFrame(string trigger)
+    {
+        if (!SortDirectionIconAnimationProbe) return;
+        if (ToolbarSortDirectionIcon is null) return;
+        SortDirectionIcon_SetState("Reset", "归零:拨回第 0 帧(画面不动)", trigger);
+        SortDirectionIcon_SetState("Normal", "归零后恢复状态名", trigger);
+    }
+
+    /// <summary>切 AnimatedIcon 状态(状态名 → 对应标记对);状态没变化时 AnimatedIcon 不会播,故记一行。</summary>
+    private void SortDirectionIcon_SetState(string target, string seg, string trigger)
+    {
+        if (!SortDirectionIconAnimationProbe) { Log.Information("[动画] 排序方向图标跳过({Trigger}):探针已关闭", trigger); return; }
+        if (ToolbarSortDirectionIcon is null) { Log.Information("[动画] 排序方向图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        string before = ToolbarSortDirectionIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
+        if (string.Equals(before, target, StringComparison.Ordinal))
+        {
+            Log.Information("[动画] 排序方向图标({Trigger}):状态已是 {State},无需切换", trigger, before);
+            return;
+        }
+        Log.Information("[动画] 排序方向图标状态切换({Trigger})→ {State}({Seg})", trigger, target, seg);
+        AnimatedIcon.SetState(ToolbarSortDirectionIcon, target);
+    }
+
+    // ===================== 详情面板按钮图标动画(2026-09-18) =====================
+    // 详情面板里带图标的按钮 + 工具栏那个"详情面板"开关,由静态字形换成 Lottie 动画
+    // (素材 = WE_Tool.AnimatedVisuals.<类名>,见 AnimatedVisuals/*.cs;回退字形仍是原字形):
+    //   提取 E72D → ExtractIcon      复制 E8C8 → CopyIcon(勾动画见下)  导入壁纸编辑器 E70F → ImportToEditorIcon
+    //   打开目录 E838 → OpenDirectoryIcon     属性 E90F → PropertiesIcon   详情面板开关 E90D → DetailPanelToggleIcon
+    // 素材 512×512、60fps、20 帧:按下 = 第 0→10 帧(播到第十帧);松开在按钮上 = 第 10→20 帧,松开在按钮外(点空)= 第 10→0 帧倒放(回退)。
+    // [谁在切状态(2026-09-18 查 WinUI generic.xaml 实测,别再想当然)] 这五个是普通 Button,WinUI 的
+    // DefaultButtonStyle 里 ContentPresenter 上有三个 Setter:PointerOver → "PointerOver"、Pressed → "Pressed"、
+    // Disabled → "Normal"(不悬停时撤掉 Setter、落回图标自己的本地值 "Normal")—— **框架自己会驱动图标状态**。
+    // AnimatedIcon 只在状态真的变了才播过渡,而且它内部就有队列(默认 QueueOne),所以"按下没播完就松开"
+    // 是控件自己排队接着播,不需要我们再插一手;我们**反而不该**调 AnimatedIcon.SetState:实测两边都设会
+    // 多出一次 Normal↔PointerOver 过渡(0→0 一跳,看着像闪),而且我们设的值会被按钮模板的值盖掉。
+    // ⇒ 所以素材里必须把 Button 会用的状态对全补上,尤其是悬停那一对:**鼠标总是先悬停再按下**,少了
+    //   PointerOverToPressed 就会落进 AnimatedIcon 的兜底规则(硬切到第一个以 ToPressed_End 结尾的标记 =
+    //   第 10 帧)—— 2026-09-18 用户报的"按下是从第十帧开始,不是播放到第十帧"就是这个,已修:
+    //     NormalToPointerOver / PointerOverToNormal = 0→0     (悬停进出,画面不动)
+    //     NormalToPressed / PointerOverToPressed   = 0→10    (按下:播到第十帧)
+    //     PressedToPointerOver                     = 10→20   (在按钮上松开:从第十帧播完到第二十帧)
+    //     PressedToNormal                          = 10→0    (在按钮外松开=点空:从第十帧倒放回第 0 帧=回退动画)
+    // [回退怎么来的(2026-09-18 加,AnimatedIcon.cpp 源码)] PlaySegment 的段时长按 |终点−起点| 算、实现就是对进度值
+    // 做线性数值动画 —— 终点小于起点即素材倒放,不用重做素材、不用表达式;按下段没播完就在按钮外松开时,内部
+    // 队列(QueueOne)会等按下段播完再播回退段,起点(第 10 帧)正好接上,不跳帧。
+    //     (另留 NormalToPlaying / PlayingToNormal 备用;CopyIcon 多一对 NormalToReset/ResetToNormal 供勾动画后归零)
+    // 唯一的例外是"详情面板"开关:它是 ToggleButton,DefaultToggleButtonStyle 里**没有**这三个 Setter(实测 0 命中),
+    // 框架不驱动它 —— 所以那一个由代码切状态(下面 RightToggleIcon_* 那套,含排队,绝不跳帧)。
+    // [复制按钮的勾动画] 复制成功反馈仍是原来那套代码动画(PlayCopyCheckAnimationAsync:淡出 → 切勾 U+E73E →
+    // 从左往右扫出 → 停留 → 淡出 → 切回 E8C8 → 淡入),承载它的还是 DetailCopyIcon 这个 FontIcon ——
+    // 它平时折叠,只在勾动画期间露面:Lottie 两段播完 → 淡出 Lottie → 显示 FontIcon 播勾 → 播完换回 Lottie
+    // 并归零(两者此时都是"复制"姿态,切换无感)。"两段播完"按时间戳算(按下段 170ms + 松开段 170ms,松开若早于
+    // 按下段结束则排在它之后),不读状态 —— 状态是按钮模板在管,我们不去抢。
+    private const bool DetailIconAnimationProbe = true;   // false = 只记日志不做事(排查用)
+    private const int DetailIconFrameMs = 17;             // 每帧 @60fps ≈ 16.7ms
+    private const int DetailIconSegMs = 10 * DetailIconFrameMs;   // 每段 10 帧 ≈ 170ms
+
+    private DateTime _detailCopyPressAt;
+    private DateTime _detailCopyReleaseAt;
+    private bool _detailCopyPressed;
+    private bool _detailCopyReleased;
+
+    private void DetailIcons_WirePointer()
+    {
+        // 复制按钮:只记时间戳(状态由 Button 模板驱动,见上方说明),供勾动画"等两段播完"用
+        DetailCopyButton.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) => DetailCopyIcon_NotePress()), true);
+        DetailCopyButton.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler((_, _) => DetailCopyIcon_NoteRelease()), true);
+        DetailCopyButton.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler((_, _) => DetailCopyIcon_NoteRelease()), true);
+        // 详情面板开关:ToggleButton 模板不驱动图标状态,这一枚由我们切(含排队)
+        RightToggleFilterButton.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) => RightToggleIcon_PointerPressed()), true);
+        RightToggleFilterButton.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler((_, _) => RightToggleIcon_PointerReleased()), true);
+        RightToggleFilterButton.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler((_, _) => RightToggleIcon_PointerReleased()), true);
+    }
+
+    private void DetailCopyIcon_NotePress()
+    {
+        _detailCopyPressAt = DateTime.Now;
+        _detailCopyPressed = true;
+        _detailCopyReleased = false;
+        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标按下:已记时刻(状态由按钮模板驱动,按下播第 0→10 帧)");
+    }
+
+    private void DetailCopyIcon_NoteRelease()
+    {
+        if (!_detailCopyPressed || _detailCopyReleased) return;
+        _detailCopyReleased = true;
+        _detailCopyReleaseAt = DateTime.Now;
+        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标松开:已记时刻(在按钮上松开播第 10→20 帧,在按钮外倒放回第 0 帧)");
+    }
+
+    /// <summary>复制按钮用:等这一轮(按下段 + 松开段)播完 —— 勾动画要等它播完再开始("播完后还要播放勾的动画")。
+    /// 按下段从按下算 170ms;松开段排在 max(松开时刻, 按下+170ms) 之后,同样 170ms。</summary>
+    private async Task DetailCopyIcon_WaitCycleAsync()
+    {
+        if (!_detailCopyPressed) return;
+        DateTime pressAt = _detailCopyPressAt;
+        DateTime releaseAt = _detailCopyReleased ? _detailCopyReleaseAt : DateTime.Now;
+        DateTime pressEnd = pressAt.AddMilliseconds(DetailIconSegMs);
+        DateTime releaseStart = releaseAt > pressEnd ? releaseAt : pressEnd;
+        int waitMs = (int)Math.Max(0, (releaseStart.AddMilliseconds(DetailIconSegMs) - DateTime.Now).TotalMilliseconds);
+        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标:等本轮播完再播勾(还需 {Wait}ms)", waitMs);
+        if (waitMs > 0) await Task.Delay(waitMs);
+        _detailCopyPressed = false;
+        _detailCopyReleased = false;
+    }
+
+    /// <summary>复制按钮用:勾动画的淡出阶段已把 Lottie 淡掉,这里把画面交给承载勾的 FontIcon。</summary>
+    private void DetailCopyIcon_SwapToFontIcon()
+    {
+        DetailCopyAnimatedIcon.Visibility = Visibility.Collapsed;
+        DetailCopyIcon.Visibility = Visibility.Visible;
+        ElementCompositionPreview.GetElementVisual(DetailCopyIcon).Opacity = 0f;   // 交给勾那段 fadeIn(0→1) 亮起来
+    }
+
+    /// <summary>复制按钮用:勾动画播完,把画面还给 Lottie 并把进度归零(零长度标记对,画面不动)。</summary>
+    private void DetailCopyIcon_SwapBackToLottie()
+    {
+        DetailCopyIcon.Visibility = Visibility.Collapsed;
+        DetailCopyAnimatedIcon.Visibility = Visibility.Visible;
+        var v = ElementCompositionPreview.GetElementVisual(DetailCopyAnimatedIcon);
+        v.StopAnimation("Opacity");
+        v.Opacity = 1f;   // 勾动画开头把它淡掉过,必须复位,否则换回来的图标是透明的
+        // 归零:两段播完停在末帧(两张纸飞散开),拨回第 0 帧,否则下次按下会先跳到 0 看着像闪一下
+        DetailIcon_SetState(DetailCopyAnimatedIcon, "复制", "Reset", "归零:拨回第 0 帧(画面不动)", "勾动画结束");
+        DetailIcon_SetState(DetailCopyAnimatedIcon, "复制", "Normal", "归零后恢复状态名", "勾动画结束");
+    }
+
+    /// <summary>切 AnimatedIcon 状态(状态名 → 对应标记对);状态没变化时 AnimatedIcon 不会播,故记一行。
+    /// 只给"详情面板开关"(框架不驱动的那枚)和复制按钮的归零用 —— 五个普通按钮的状态由 Button 模板驱动,别插手。</summary>
+    private void DetailIcon_SetState(AnimatedIcon icon, string name, string target, string seg, string trigger)
+    {
+        if (!DetailIconAnimationProbe) { Log.Information("[动画] {Name}图标跳过({Trigger}):开关已关", name, trigger); return; }
+        if (icon is null) { Log.Information("[动画] {Name}图标跳过({Trigger}):图标实例为 null", name, trigger); return; }
+        string before = icon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
+        if (string.Equals(before, target, StringComparison.Ordinal))
+        {
+            Log.Information("[动画] {Name}图标({Trigger}):状态已是 {State},无需切换", name, trigger, before);
+            return;
+        }
+        Log.Information("[动画] {Name}图标状态切换({Trigger})→ {State}({Seg})", name, trigger, target, seg);
+        AnimatedIcon.SetState(icon, target);
+    }
+
+    // ---- 详情面板开关(ToggleButton):框架不驱动图标状态 → 由代码切,按下 0→10 / 松开 10→20,没播完就排队 ----
+    private bool _rightToggleIconCycleActive;
+    private bool _rightToggleIconPressSegDone;
+    private bool _rightToggleIconPendingRelease;
+    private bool _rightToggleIconPendingPress;
+    private CancellationTokenSource? _rightToggleIconCts;
+
+    private void RightToggleIcon_PointerPressed()
+    {
+        if (_rightToggleIconCycleActive)
+        {
+            _rightToggleIconPendingPress = true;
+            if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关按下:本轮过渡还在播,已排队等播完");
+            return;
+        }
+        RightToggleIcon_StartCycle("按下");
+    }
+
+    private void RightToggleIcon_PointerReleased()
+    {
+        if (!_rightToggleIconCycleActive)
+        {
+            if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关松开:当前没有过渡周期,忽略");
+            return;
+        }
+        if (_rightToggleIconPressSegDone)
+        {
+            _ = RightToggleIcon_PlayReleaseSegmentAsync("松开");
+            return;
+        }
+        _rightToggleIconPendingRelease = true;
+        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关松开:按下段还在播,已排队等它播完再播第二段");
+    }
+
+    private void RightToggleIcon_StartCycle(string trigger)
+    {
+        _rightToggleIconCycleActive = true;
+        _rightToggleIconPressSegDone = false;
+        _rightToggleIconPendingRelease = false;
+        _rightToggleIconPendingPress = false;
+        _rightToggleIconCts?.Cancel();
+        _rightToggleIconCts = new CancellationTokenSource();
+        _ = RightToggleIcon_RunPressSegmentAsync(trigger, _rightToggleIconCts.Token);
+    }
+
+    private async Task RightToggleIcon_RunPressSegmentAsync(string trigger, CancellationToken token)
+    {
+        DetailIcon_SetState(RightToggleFilterIcon, "详情面板开关", "Pressed", "按下:第 0→10 帧", trigger);
+        try { await Task.Delay(DetailIconSegMs, token); } catch (TaskCanceledException) { return; }
+        if (token.IsCancellationRequested) return;
+        _rightToggleIconPressSegDone = true;
+        if (_rightToggleIconPendingRelease)
+        {
+            _rightToggleIconPendingRelease = false;
+            _ = RightToggleIcon_PlayReleaseSegmentAsync("松开(排队后)");
+            return;
+        }
+        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关:按下段播完,停在第 10 帧等松开");
+    }
+
+    private async Task RightToggleIcon_PlayReleaseSegmentAsync(string trigger)
+    {
+        _rightToggleIconCts?.Cancel();
+        _rightToggleIconCts = new CancellationTokenSource();
+        var token = _rightToggleIconCts.Token;
+        DetailIcon_SetState(RightToggleFilterIcon, "详情面板开关", "Normal", "松开:第 10→20 帧", trigger);
+        try { await Task.Delay(DetailIconSegMs, token); } catch (TaskCanceledException) { return; }
+        if (token.IsCancellationRequested) return;
+        _rightToggleIconCycleActive = false;
+        _rightToggleIconPressSegDone = false;
+        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关:一轮播完(第 20 帧)");
+        if (_rightToggleIconPendingPress)
+        {
+            _rightToggleIconPendingPress = false;
+            RightToggleIcon_StartCycle("排队后");
+        }
+    }
+
+    // ===================== 刷新图标动画(2026-09-18 换“按下十帧”版) ===================== 
     // 刷新图标由静态字形 E777 换成 Lottie 动画:XAML 里 <AnimatedIcon x:Name="ToolbarRefreshIcon">,
     // 素材 = WE_Tool.AnimatedVisuals.RefreshIcon(AnimatedVisuals/RefreshIcon.cs,LottieGen 生成),回退字形仍是 E777。
-    // 素材内容 = 整层旋转 0°→360°(关键帧在第 0/27/40/59 帧),1 秒;标记对 NormalToPlaying_Start/_End(第 0→60 帧)就是这一整段。
-    // 触发点没变:仍然是鼠标松开时播一遍(按下只有按钮缩小反馈)。
+    // 素材内容(2026-09-18 换 30 帧新版):整层旋转 0°→360°;按下 = 第 0→10 帧(转 120°)、松开 = 第 10→30 帧(转完一圈)。
+    // 触发点(2026-09-18 改):工具条那枚由按下/松开两段驱动(见下方“工具栏四组图标”区块);菜单/F5 入口不播图标动画(保持原样)。
     // 原 Composition 旋转(2 圈/2000ms)已被素材自带的旋转取代,整段删掉;要退回旧行为用 git 即可。
     // [为什么播完要归位] 状态只有真正变化时才播动画:播完切回 Normal,下一次点击才是真实切换
     //(全选那边踩过这个坑,见 PlaySelectAllIconAnimation 的注释)。
-    private const bool RefreshIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+    private const bool RefreshIconAnimationProbe = true;   // [2026-09-18 弃用] 只约束下面那个已无调用点的 PlayRefreshSpin
     private CancellationTokenSource? _refreshIconResetCts;  // 整段播完的归位令牌(连点时取消上一次)
 
-    /// <summary>播一遍刷新动画(第 0→60 帧转一圈),播完归位 Normal。调用点:Global_PointerReleased 里刷新按钮松开时。</summary>
+    /// <summary>[2026-09-18 起无调用点,保留以便回退] 播一遍刷新动画(整段:第 0→30 帧),播完归位 Normal。</summary>
     private async void PlayRefreshSpin()
     {
         if (!RefreshIconAnimationProbe) return;
@@ -1170,11 +1747,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         _refreshIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _refreshIconResetCts = cts;
-        Log.Information("[动画] 刷新图标状态切换 → Playing(整段:第 0→60 帧)");
+        Log.Information("[动画] 刷新图标状态切换 → Playing(整段:第 0→30 帧)");
         AnimatedIcon.SetState(ToolbarRefreshIcon, "Playing");
         try
         {
-            await Task.Delay(1000, cts.Token);   // 素材整段 1 秒(60 帧 @60fps)
+            await Task.Delay(500, cts.Token);   // 新素材整段 0.5 秒(30 帧 @60fps)
         }
         catch (TaskCanceledException)
         {
@@ -1185,30 +1762,48 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         AnimatedIcon.SetState(ToolbarRefreshIcon, "Normal");
     }
 
-    // ===================== 反选图标动画(2026-09) =====================
+    // ===================== 删除(卸载)图标动画(2026-09-18 换“按下十帧”版) =====================
+    // 删除图标(字形 E74D)素材 = WE_Tool.AnimatedVisuals.DeleteIcon;2026-09-18 换成 20 帧新版
+    // (第 0→10 帧按下、第 10→20 帧复位,首末帧姿态相同);另带导航栏“清理”项的六态标记(共用一个类)。
+    // 本页 3 个入口(滚动区右键菜单 / 工具条 / 详情按钮)都绑 UninstallSelectedCommand,Click="UninstallIcon_Click"
+    // 只负责播图标动画,不改变命令执行与确认对话框流程。玩法分三类(2026-09-18):
+    //   工具条那枚 → 按下/松开两段(见“工具栏四组图标”区块),这里的整段播放被标志位跳过;
+    //   详情面板那枚(普通 Button)→ 全交按钮模板(按下 0→10 / 松开 10→20 / 在按钮外松手倒放回退),
+    //     AnimatedIconPlayer.PlayOnce 内部对普通 Button 宿主直接跳过(否则会和两段重复播);
+    //   弹窗工具条 / 右键菜单项 → 没有“按住”概念,照旧点击播整段(Playing 对)。
+    private void UninstallIcon_Click(object sender, RoutedEventArgs e)
+    {
+        // 工具条那枚:按下/松开已经驱动过两段动画,不再播整段(标志在“工具栏四组图标”区块里置位/复位)
+        if (_deleteIconPointerDriven) return;
+        AnimatedIconPlayer.PlayOnce(sender, "卸载");
+    }
+
+    // ===================== 反选图标动画(2026-09-18 换“按下十帧”版) =====================
     // 反选图标由静态字形 E8E6 换成 Lottie 动画:XAML 里 4 处 <AnimatedIcon>,Source = WE_Tool.AnimatedVisuals.InvertSelection,
-    // 回退字形仍是 E8E6(系统关掉动画效果时自动退回)。素材内容:第 0~30 帧箭头"从头部向尾部"被逐片抹掉(生成式消失),
-    // 第 30~60 帧再"从尾部向头部"逐片长回来(生成式出现),灰色虚线框全程不动;
-    // 标记对 NormalToPlaying_Start/_End(第 0→60 帧)就是这一整段。
-    // 触发点:所有反选入口(工具栏按钮 / 弹出工具条 / 滚动区右键菜单 / Ctrl+I)都汇入 InternalInvertSelection(),在那里播一遍。
+    // 回退字形仍是 E8E6(系统关掉动画效果时自动退回)。素材内容(2026-09-18 换 30 帧新版):第 0→10 帧箭头被抹掉一截(修剪路径),
+    // 第 10→20 帧虚线框擦除、第 20→30 帧同款虚线框重画并箭头长回(首末帧姿态相同;按下 = 0→10、松开 = 10→30)。
+    // 触发点(2026-09-18 改):工具条那枚由按下/松开两段驱动(见“工具栏四组图标”区块);其余入口(弹出工具条 /
+    // 滚动区右键菜单 / Ctrl+I)都汇入 InternalInvertSelection(),在那里对工具条图标整段播一遍(Playing 对)。
     // [为什么播完要归位] 状态只有真正变化时才播动画:播完切回 Normal,下一次点击才是真实切换。
     private const bool InvertSelectionIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
     private CancellationTokenSource? _invertSelectionIconResetCts;  // 整段播完的归位令牌(连点时取消上一次)
 
-    /// <summary>播一遍反选动画(第 0→60 帧),播完归位 Normal。调用点:InternalInvertSelection()。</summary>
+    /// <summary>播一遍反选动画(整段:第 0→30 帧),播完归位 Normal。工具条按下/松开驱动过时会跳过。</summary>
     private async void PlayInvertSelectionIconAnimation()
     {
         if (!InvertSelectionIconAnimationProbe) return;
+        // 工具条那枚已由按下/松开驱动时不再播整段(否则两段之后又整段重播一遍)
+        if (_invertSelectionIconPointerDriven) return;
         // 工具栏按钮可能被 CommandBar 收进溢出菜单,那种情况下图标还没实化(x:Name 字段为 null),直接跳过
         if (ToolbarInvertSelectionIcon is null) return;
         _invertSelectionIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _invertSelectionIconResetCts = cts;
-        Log.Information("[动画] 反选图标状态切换 → Playing(整段:第 0→60 帧)");
+        Log.Information("[动画] 反选图标状态切换 → Playing(整段:第 0→30 帧)");
         AnimatedIcon.SetState(ToolbarInvertSelectionIcon, "Playing");
         try
         {
-            await Task.Delay(1000, cts.Token);   // 素材整段 1 秒(60 帧 @60fps)
+            await Task.Delay(500, cts.Token);   // 素材整段 0.5 秒(30 帧 @60fps)
         }
         catch (TaskCanceledException)
         {
@@ -1217,6 +1812,154 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (cts.IsCancellationRequested) return;
         Log.Information("[动画] 反选图标状态归位 → Normal");
         AnimatedIcon.SetState(ToolbarInvertSelectionIcon, "Normal");
+    }
+
+    // ===================== 工具栏四组图标 + 复制:按下 0→10 / 松开播完或回退(2026-09-18) =====================
+    // 刷新/全选/反选/删除 四组素材换成“按下十帧”版(2026-09-18,素材与标记见各 json 留档):
+    //   RefreshIcon 30 帧(2026-09-18 深夜换“位置居中 + 旋转中段缩小”版)、SelectAllIcon 20 帧、InvertSelection 30 帧、DeleteIcon 20 帧;
+    //   复制(2026-09-18 补):素材与详情面板复制同一份(CopyIcon,20 帧),同样“按下 0→10 / 松开播完 / 点空回退”;
+    //   它的点击不是整段播放,而是接勾动画(见下方“工具栏复制图标”区块)。
+    //   按下 = 第 0→10 帧;在按钮上松开 = 第 10→末尾帧(播完);在按钮外松开(点空)= 第 10→0 帧倒放(回退),
+    //   与详情面板那批同一套口径(含“按下段没播完就松开 → AnimatedIcon 内部队列排完再播,不跳帧”)。
+    // [为什么按“素材类型”认按钮] 工具条里反选/删除两枚没有 x:Name,按 AnimatedIcon 挂的 Source 类型分发即可,
+    // 不用为接线往 XAML 加名字(加名字会要求重新生成 .g.cs)。菜单项 / 弹出工具条没有“按住”概念,不经过这里,
+    // 照旧点击播整段(Playing 对:第 0→末尾帧,播完整段后归位)。
+    // [标志位] 按下时置“本次点击已由按下/松开驱动”,Click 里的整段播放据此跳过 —— 点击发生在按钮松开处理里、
+    // 早于页面级松开回调,所以回调里复位标志正好(这套写法当初在全选那儿踩出来的)。
+    private bool _invertSelectionIconPointerDriven;   // 反选:工具条那枚已由按下/松开驱动
+    private bool _deleteIconPointerDriven;           // 删除:工具条那枚已由按下/松开驱动
+
+    /// <summary>工具条按下:四个图标之一 → 切 Pressed(按下:第 0→10 帧)。Global_PointerPressed 命中工具条按钮时调用。</summary>
+    private void ToolbarIconSegments_Pressed(AppBarButton btn)
+    {
+        var icon = FindToolbarSegmentsIcon(btn);
+        if (icon is null) return;
+        switch (icon.Source)
+        {
+            case SelectAllIcon: _selectAllIconPointerDriven = true; _selectAllIconResetCts?.Cancel(); break;
+            case InvertSelection: _invertSelectionIconPointerDriven = true; _invertSelectionIconResetCts?.Cancel(); break;
+            case DeleteIcon: _deleteIconPointerDriven = true; break;
+            // 刷新没有整段归位(PlayRefreshSpin 已弃用),不用管标志;复制由点击后的勾动画收尾,也没有标志
+        }
+        // 复制图标:顺手记按下时刻,供点击后的勾动画“等两段播完”(状态由下面 SetState 照常驱动)
+        if (ReferenceEquals(btn, ToolbarCopyButton))
+        {
+            _toolbarCopyPressAt = DateTime.Now;
+            _toolbarCopyPressed = true;
+            _toolbarCopyReleased = false;
+        }
+        Log.Information("[动画] {Name}图标状态切换 → Pressed(按下:第 0→10 帧)", SegmentsIconName(icon));
+        AnimatedIcon.SetState(icon, "Pressed");
+    }
+
+    /// <summary>工具条松开:在按钮上 → 播完后半段(PointerOver);拖出按钮外松开 → 倒放回退(Normal)。Global_PointerReleased 调用。</summary>
+    private void ToolbarIconSegments_Released(AppBarButton btn, PointerRoutedEventArgs e)
+    {
+        var icon = FindToolbarSegmentsIcon(btn);
+        if (icon is null) return;
+        bool inside = IsReleaseInsideButton(btn, e);
+        // 复制图标:记松开时刻(勾动画“等两段播完”用;在按钮外松开=回退段,同样等它播完)
+        if (ReferenceEquals(btn, ToolbarCopyButton))
+        {
+            _toolbarCopyReleased = true;
+            _toolbarCopyReleaseAt = DateTime.Now;
+        }
+        switch (icon.Source)
+        {
+            case SelectAllIcon: _selectAllIconPointerDriven = false; break;
+            case InvertSelection: _invertSelectionIconPointerDriven = false; break;
+            case DeleteIcon: _deleteIconPointerDriven = false; break;
+        }
+        Log.Information("[动画] {Name}图标状态切换 → {State}({Seg})", SegmentsIconName(icon),
+            inside ? "PointerOver" : "Normal", inside ? "松开:第 10→末尾帧" : "松开在按钮外:倒放回第 0 帧");
+        AnimatedIcon.SetState(icon, inside ? "PointerOver" : "Normal");
+    }
+
+    /// <summary>按钮里的图标是这几款之一才返回(其余工具条按钮:视图/排序等自己有接线,返回 null 不动它们)。</summary>
+    private static AnimatedIcon? FindToolbarSegmentsIcon(AppBarButton btn)
+    {
+        var icon = AnimatedIconPlayer.FindAnimatedIcon(btn);
+        return icon?.Source is RefreshIcon or SelectAllIcon or InvertSelection or DeleteIcon or CopyIcon ? icon : null;
+    }
+
+    private static string SegmentsIconName(AnimatedIcon icon) => icon.Source switch
+    {
+        RefreshIcon => "刷新",
+        SelectAllIcon => "全选",
+        InvertSelection => "反选",
+        DeleteIcon => "删除",
+        CopyIcon => "复制",
+        _ => "?",
+    };
+
+    /// <summary>松开点是否落在按钮区域内(判定“在按钮上松开”还是“点空”)。</summary>
+    private static bool IsReleaseInsideButton(FrameworkElement el, PointerRoutedEventArgs e)
+    {
+        var p = e.GetCurrentPoint(el).Position;
+        return p.X >= 0 && p.Y >= 0 && p.X <= el.ActualWidth && p.Y <= el.ActualHeight;
+    }
+
+    // ===================== 工具栏复制图标:两段播完接勾(2026-09-18) =====================
+    // 复制图标换成 Lottie(素材 = WE_Tool.AnimatedVisuals.CopyIcon,与详情面板复制同一份 json):按下 = 第 0→10 帧;
+    // 在按钮上松开 = 第 10→20 帧;在按钮外松开 = 第 10→0 帧倒放(回退)。状态由上面“工具栏四组图标”那套按素材类型分发驱动。
+    // [勾动画怎么上来] AppBarButton 图标槽只放得下一个元素(模板里就是一个 Viewbox 包 ContentPresenter 绑 Icon),
+    //   勾没法像详情面板那样“Lottie 旁边再叠一个折叠 FontIcon”。做法:勾动画开头把 Lottie 淡掉之后,直接把按钮的
+    //   Icon 换成代码里备好的 FontIcon(勾由它承载,字号 16 与原图标一致),播完再换回 Lottie 并归零(零长度
+    //   Reset 标记对,画面不动)—— 复用详情面板同一套 PlayCopyCheckAnimationAsync(swapIn/finished 两个回调)。
+    // [为什么记时间戳] 勾动画要等按下/松开两段播完再开始(用户口径“播完后还要播放勾的动画”),时刻在
+    //   ToolbarIconSegments_Pressed/Released 里顺手记(那两处已经认得出这枚按钮)。
+    private DateTime _toolbarCopyPressAt;
+    private DateTime _toolbarCopyReleaseAt;
+    private bool _toolbarCopyPressed;
+    private bool _toolbarCopyReleased;
+
+    /// <summary>复制按钮用:等这一轮(按下段 + 松开段)播完再播勾 —— 与详情面板同款算法(每段 10 帧≈170ms)。
+    /// 走菜单/快捷键(没有“按住”)时没记过时刻,直接返回。</summary>
+    private async Task ToolbarCopyIcon_WaitCycleAsync()
+    {
+        if (!_toolbarCopyPressed) return;
+        DateTime pressAt = _toolbarCopyPressAt;
+        DateTime releaseAt = _toolbarCopyReleased ? _toolbarCopyReleaseAt : DateTime.Now;
+        DateTime pressEnd = pressAt.AddMilliseconds(DetailIconSegMs);
+        DateTime releaseStart = releaseAt > pressEnd ? releaseAt : pressEnd;
+        int waitMs = (int)Math.Max(0, (releaseStart.AddMilliseconds(DetailIconSegMs) - DateTime.Now).TotalMilliseconds);
+        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标(工具栏):等本轮播完再播勾(还需 {Wait}ms)", waitMs);
+        if (waitMs > 0) await Task.Delay(waitMs);
+        _toolbarCopyPressed = false;
+        _toolbarCopyReleased = false;
+    }
+
+    /// <summary>承载勾的 FontIcon:首次创建即置透明(交给勾那段 fadeIn 亮起来),平时不在树上,换入图标槽才现身。</summary>
+    private FontIcon? _toolbarCopyCheckFontIcon;
+    private FontIcon GetToolbarCopyCheckFontIcon()
+    {
+        if (_toolbarCopyCheckFontIcon is null)
+        {
+            _toolbarCopyCheckFontIcon = new FontIcon { Glyph = "\uE8C8", FontSize = 16, Opacity = 0 };
+        }
+        return _toolbarCopyCheckFontIcon;
+    }
+
+    /// <summary>复制图标用:勾动画的淡出阶段已把 Lottie 淡掉,这里把图标槽换给承载勾的 FontIcon。</summary>
+    private void ToolbarCopyIcon_SwapToCheckFontIcon()
+    {
+        ToolbarCopyButton.Icon = GetToolbarCopyCheckFontIcon();
+    }
+
+    /// <summary>复制图标用:勾动画播完,图标槽还给 Lottie 并把进度归零(零长度标记对,画面不动)。</summary>
+    private void ToolbarCopyIcon_SwapBackToLottie()
+    {
+        // 勾的 FontIcon 即将离场:此刻它还在树上,先把它收尾的淡入停掉并置回透明,下次换入直接从 0 亮起
+        var cv = ElementCompositionPreview.GetElementVisual(GetToolbarCopyCheckFontIcon());
+        cv.StopAnimation("Opacity");
+        cv.Opacity = 0f;
+        ToolbarCopyButton.Icon = ToolbarCopyIcon;
+        var v = ElementCompositionPreview.GetElementVisual(ToolbarCopyIcon);
+        v.StopAnimation("Opacity");
+        v.Opacity = 1f;   // 勾动画开头把它淡掉过,必须复位,否则换回来的图标是透明的
+        // 归零:两段播完停在末帧(两张纸飞散开),拨回第 0 帧,否则下次按下会先跳到 0 看着像闪一下
+        DetailIcon_SetState(ToolbarCopyIcon, "复制(工具栏)", "Reset", "归零:拨回第 0 帧(画面不动)", "勾动画结束");
+        DetailIcon_SetState(ToolbarCopyIcon, "复制(工具栏)", "Normal", "归零后恢复状态名", "勾动画结束");
     }
 
     // 从事件源向上找最近的 AppBarButton/AppBarToggleButton(CommandBar 命令按钮)
@@ -3195,12 +3938,11 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         batch.End();
     }
 
-    // ===================== 全选图标动画(2026-09) =====================
-    // 全选图标已由静态字形 E8B3 换成 Lottie 动画:XAML 里 4 处 <AnimatedIcon>,Source = WE_Tool.AnimatedVisuals.SelectAllIcon,
-    // FallbackIconSource 仍是原字形(系统关掉动画效果时自动退回)。素材是"四个空心方框依次变实心"的 1 秒动画(第 0 帧 = 四个空心方框、第 0~19 帧四个方框依次被填满、第 30 帧起稳定填满、第 40~50 帧缩回空心),
-    // 标记对:NormalToPressed_Start(第 0 帧)/_End(第 30 帧) = 按下播【填满】那一段,
-    // PressedToNormal_Start(第 30 帧)/_End(第 60 帧) = 松开播【缩回空心】那一段;
-    // NormalToPlaying_Start/_End(0→60) 留给菜单项/快捷键这些没有【按住】概念的入口,整段播一遍、播完归位。
+    // ===================== 全选图标动画(2026-09-18 换“按下十帧”版) =====================
+    // 全选图标(字形 E8B3)素材 = WE_Tool.AnimatedVisuals.SelectAllIcon;2026-09-18 换成 20 帧新版:
+    // 第 0→10 帧四个方框依次被填满、第 10→20 帧一起缩回空心(首末帧姿态相同)。
+    // 按下/松开(第 0→10 / 第 10→20 帧)由“工具栏四组图标”区块驱动;菜单项/快捷键这些没有【按住】概念的入口
+    // 走 NormalToPlaying(0→20) 整段播一遍、播完归位。
     // [为什么不再来回 toggle] 旧写法在 Normal / Playing 之间反复切,只有状态真正【变化】的那次才播动画,
     // 于是每隔一次点击才看得到动画(日志里 Playing / Normal 逐行交替)——改成两段真实状态后,每次按下/松开都是真实切换。
     private const bool SelectAllIconAnimationProbe = true;   // false = 完全回到改动前(图标静止在第 0 帧,不播动画)
@@ -3217,11 +3959,11 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         _selectAllIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _selectAllIconResetCts = cts;
-        Log.Information("[动画] 全选图标状态切换 → Playing(整段:第 0→60 帧)");
+        Log.Information("[动画] 全选图标状态切换 → Playing(整段:第 0→20 帧)");
         AnimatedIcon.SetState(ToolbarSelectAllIcon, "Playing");
         try
         {
-            await Task.Delay(1000, cts.Token);   // 素材整段 1 秒(60 帧 @60fps)
+            await Task.Delay(340, cts.Token);   // 素材整段约 0.33 秒(20 帧 @60fps)
         }
         catch (TaskCanceledException)
         {
@@ -3232,26 +3974,8 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         AnimatedIcon.SetState(ToolbarSelectAllIcon, "Normal");
     }
 
-    /// <summary>按下:播到第 30 帧(四个方框依次被填满)。Global_PointerPressed 命中工具栏全选按钮时调用。</summary>
-    private void SelectAllIcon_PointerPressed()
-    {
-        if (!SelectAllIconAnimationProbe) return;
-        if (ToolbarSelectAllIcon is null) return;
-        _selectAllIconPointerDriven = true;   // 本次点击由按下/松开驱动
-        _selectAllIconResetCts?.Cancel();     // 取消可能还挂着的整段归位
-        Log.Information("[动画] 全选图标状态切换 → Pressed(按下:第 0→30 帧)");
-        AnimatedIcon.SetState(ToolbarSelectAllIcon, "Pressed");
-    }
-
-    /// <summary>松开:从第 30 帧播到第 60 帧(四个方框缩回空心)。Global_PointerReleased 命中工具栏全选按钮时调用。</summary>
-    private void SelectAllIcon_PointerReleased()
-    {
-        _selectAllIconPointerDriven = false;
-        if (!SelectAllIconAnimationProbe) return;
-        if (ToolbarSelectAllIcon is null) return;
-        Log.Information("[动画] 全选图标状态切换 → Normal(松开:第 30→60 帧)");
-        AnimatedIcon.SetState(ToolbarSelectAllIcon, "Normal");
-    }
+    // (原 SelectAllIcon_PointerPressed / SelectAllIcon_PointerReleased 已删除:按下/松开改由“工具栏四组图标”区块
+    //  统一驱动;标志 _selectAllIconPointerDriven 与归位令牌 _selectAllIconResetCts 仍由那边和上面的整段播放共用。)
 
     private void SelectAllWallpapers_Click(object sender, RoutedEventArgs e)
     {
@@ -3483,8 +4207,16 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         }
         finally
         {
-            // 快捷键无点击按钮,动画作用于 CommandBar 复制图标
-            await PlayCopyCheckAnimationAsync(ToolbarCopyIcon);
+            // 快捷键无点击按钮,动画作用于工具条复制图标(没记过按下/松开时刻,不等两段、直接播勾)
+            // [2026-09-18 修] C# 不允许从 finally 里离开(return/goto 都是 CS0157),空判一律写成包一层 if
+            if (ToolbarCopyIcon is not null)
+            {
+                await ToolbarCopyIcon_WaitCycleAsync();
+                await PlayCopyCheckAnimationAsync(GetToolbarCopyCheckFontIcon(),
+                    fadeOutElement: ToolbarCopyIcon,
+                    swapIn: ToolbarCopyIcon_SwapToCheckFontIcon,
+                    finished: ToolbarCopyIcon_SwapBackToLottie);
+            }
         }
     }
     private async void Copy_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
@@ -3501,18 +4233,37 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         finally
         {
             // 动画不依赖复制结果,即使复制抛异常/无选中项也执行
-            // 目标图标:CommandBar 按钮 → ToolbarCopyIcon;详情面板按钮 → DetailCopyIcon
-            var targetIcon = sender is AppBarButton ? ToolbarCopyIcon : DetailCopyIcon;
-            if (targetIcon != null)
-                await PlayCopyCheckAnimationAsync(targetIcon);
+            // 目标:CommandBar 按钮/右键菜单 → 工具栏那枚 Lottie(勾由临时换入的 FontIcon 承载);详情面板按钮 → 详情那枚
+            if (sender is AppBarButton)
+            {
+                if (ToolbarCopyIcon is not null)
+                {
+                    await ToolbarCopyIcon_WaitCycleAsync();   // 等按下/松开两段播完再播勾(用户口径“播完后还要播放勾的动画”)
+                    await PlayCopyCheckAnimationAsync(GetToolbarCopyCheckFontIcon(),
+                        fadeOutElement: ToolbarCopyIcon,
+                        swapIn: ToolbarCopyIcon_SwapToCheckFontIcon,
+                        finished: ToolbarCopyIcon_SwapBackToLottie);
+                }
+            }
+            else if (DetailCopyIcon is not null)
+            {
+                await DetailCopyIcon_WaitCycleAsync();
+                await PlayCopyCheckAnimationAsync(DetailCopyIcon,
+                    fadeOutElement: DetailCopyAnimatedIcon,
+                    swapIn: DetailCopyIcon_SwapToFontIcon,
+                    finished: DetailCopyIcon_SwapBackToLottie);
+            }
         }
     }
 
     // 复制成功反馈(单 FontIcon 序列):淡出 → 切勾 → 从左往右扫出 → 停留 → 淡出 → 切回复制 → 淡入
+    // [2026-09-18 详情面板按钮换 Lottie 后] 新增可选参数:fadeOutElement = 该淡出的元素(Lottie —— 它才是屏幕上
+    // 看得见的东西);swapIn = 淡出后把画面交给承载勾的 FontIcon(详情面板=取消折叠;工具栏=图标槽换元素);
+    // finished = 收尾回调(把画面还给 Lottie 并归零)。三个都不传 = 老的“单 FontIcon”行为。
     private int _copyCheckAnimationGeneration;
     private Microsoft.UI.Composition.InsetClip? _copyCheckClip; // 勾扫出的 clip
 
-    private async Task PlayCopyCheckAnimationAsync(FontIcon targetIcon)
+    private async Task PlayCopyCheckAnimationAsync(FontIcon targetIcon, UIElement? fadeOutElement = null, Action? swapIn = null, Action? finished = null)
     {
         int gen = ++_copyCheckAnimationGeneration;
 
@@ -3523,7 +4274,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             if (gen != _copyCheckAnimationGeneration) { tcs.TrySetResult(); return; } // 排队期间已作废
 
-            var visual = ElementCompositionPreview.GetElementVisual(targetIcon);
+            var visual = ElementCompositionPreview.GetElementVisual(fadeOutElement ?? (UIElement)targetIcon);
             var compositor = visual.Compositor;
 
             // 复位:可见、无裁剪
@@ -3549,6 +4300,10 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
         await Task.Delay(150); // 淡出完成
         if (gen != _copyCheckAnimationGeneration) return;
+
+        // 上一步淡出的是 Lottie 时:这里把画面交给承载勾的 FontIcon
+        // (详情面板 = DetailCopyIcon 取消折叠;工具栏 = 图标槽换成 FontIcon,见 ToolbarCopyIcon_SwapToCheckFontIcon)
+        swapIn?.Invoke();
 
         // 切为勾
         targetIcon.Glyph = "\uE73E";
@@ -3639,6 +4394,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             v.Compositor.CreateCubicBezierEasingFunction(new Vector2(0.17f, 0.67f), new Vector2(0.83f, 0.67f)));
         fadeIn2.Duration = TimeSpan.FromMilliseconds(150);
         v.StartAnimation("Opacity", fadeIn2);
+
+        // 详情面板按钮:把画面还给 Lottie(并归零);顶部栏按钮 finished = null,不走这段
+        finished?.Invoke();
     }
     private async Task<bool> CopyWallpapersAsync()
     {

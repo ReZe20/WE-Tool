@@ -6,6 +6,7 @@
     xmlns:wetool="using:WE_Tool.Controls"
     xmlns:skia="using:WE_Tool.Controls"
     xmlns:animations="using:CommunityToolkit.WinUI.Animations"
+    xmlns:animatedvisuals="using:WE_Tool.AnimatedVisuals"
     x:Name="PageRoot"
     NavigationCacheMode="Enabled">
 
@@ -235,7 +236,14 @@
                                         Click="DeleteBackup_Click"
                                         Background="Transparent"
                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                                    <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                                        <wetool:ThemedAnimatedIcon.Source>
+                                            <animatedvisuals:DeleteIcon/>
+                                        </wetool:ThemedAnimatedIcon.Source>
+                                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            <FontIconSource Glyph="&#xE74D;"/>
+                                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                    </wetool:ThemedAnimatedIcon>
                                 </Button>
                                 <Button x:Name="CardOpenFolderButton"
                                         CommandParameter="{x:Bind}"
@@ -271,7 +279,16 @@
             <AppBarSeparator/>
             <AppBarButton x:Name="DeleteAllButton" x:Uid="BackupPage_DeleteAll"
                           Click="DeleteAll_Click">
-                <AppBarButton.Icon><FontIcon Glyph="&#xE74D;"/></AppBarButton.Icon>
+                <AppBarButton.Icon>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
+                            <animatedvisuals:DeleteIcon/>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                            <FontIconSource Glyph="&#xE74D;"/>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
+                </AppBarButton.Icon>
             </AppBarButton>
         </CommandBar>
     </Grid>

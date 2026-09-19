@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:WE_Tool.ViewModels"
     xmlns:wetool="using:WE_Tool.Controls"
+    xmlns:animatedvisuals="using:WE_Tool.AnimatedVisuals"
     x:Name="PageRoot"
     NavigationCacheMode="Enabled">
 
@@ -189,7 +190,14 @@
                 </AppBarButton>
                 <AppBarButton x:Name="BatchDeleteButton" x:Uid="Cleanup_BatchDelete" Click="BatchDelete_Click" IsEnabled="False" Foreground="Red">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE74D;"/>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
@@ -206,7 +214,16 @@
                 </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="Cleanup_DeleteAll" Click="DeleteAllButton_Click">
-                    <AppBarButton.Icon><FontIcon Glyph="&#xE74D;"/></AppBarButton.Icon>
+                    <AppBarButton.Icon>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
+                    </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBar.PrimaryCommands>
         </CommandBar>

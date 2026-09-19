@@ -1304,10 +1304,10 @@
     <value>刷新</value>
   </data>
   <data name="Toolbar_View.Label" xml:space="preserve">
-    <value>查看▾</value>
+    <value>查看</value>
   </data>
   <data name="Toolbar_Sort.Label" xml:space="preserve">
-    <value>排序▾</value>
+    <value>排序</value>
   </data>
   <data name="Toolbar_SortDirection.Label" xml:space="preserve">
     <value>排序方向</value>

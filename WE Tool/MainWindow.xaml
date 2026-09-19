@@ -8,6 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:winuiex="using:WinUIEx"
+    xmlns:animatedvisuals="using:WE_Tool.AnimatedVisuals"
+    xmlns:wetool="using:WE_Tool.Controls"
     Title="WE Tool"
     MinWidth="700"
     MinHeight="600">
@@ -24,53 +26,102 @@
         </Grid>
         <NavigationView x:Name="nvSample" Grid.Row="1" OpenPaneLength="240" ItemInvoked="NvSample_ItemInvoked" IsSettingsVisible="True" IsBackButtonVisible="Collapsed" IsPaneOpen="False" PaneOpening="NvSample_PaneOpening" PaneClosing="NvSample_PaneClosing">
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Uid="InstalledWallpapers" Tag="Papers">
+                <NavigationViewItem x:Name="PapersNavItem" x:Uid="InstalledWallpapers" Tag="Papers">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE8B9;"/>
+                        <wetool:ThemedAnimatedIcon x:Name="PapersNavIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:PapersIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE8B9;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </NavigationViewItem.Icon>
                     <NavigationViewItem.InfoBadge>
                         <InfoBadge x:Name="PapersBadge" Visibility="Collapsed"/>
                     </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
 
-                <NavigationViewItem x:Uid="InstalledComponentsPage" Tag="InstalledComponents">
+                <NavigationViewItem x:Name="InstalledComponentsNavItem" x:Uid="InstalledComponentsPage" Tag="InstalledComponents">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xF4A5;"/>
+                        <wetool:ThemedAnimatedIcon x:Name="InstalledComponentsNavIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:InstalledComponentsIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xF4A5;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </NavigationViewItem.Icon>
                     <NavigationViewItem.InfoBadge>
                         <InfoBadge x:Name="InstalledComponentsBadge" Visibility="Collapsed"/>
                     </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
 
-                <NavigationViewItem x:Uid="ImportWallpapers" Tag="LoadPapers">
+                <NavigationViewItem x:Name="LoadPapersNavItem" x:Uid="ImportWallpapers" Tag="LoadPapers">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE8B5;" />
+                        <wetool:ThemedAnimatedIcon x:Name="LoadPapersNavIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:LoadPapersIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE8B5;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </NavigationViewItem.Icon>
                     <NavigationViewItem.InfoBadge>
                         <InfoBadge x:Name="LoadPapersBadge" Visibility="Collapsed"/>
                     </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
 
-                <NavigationViewItem x:Uid="CleanupPage" Tag="Cleanup">
+                <NavigationViewItem x:Name="CleanupNavItem" x:Uid="CleanupPage" Tag="Cleanup">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE74D;"/>
+                        <wetool:ThemedAnimatedIcon x:Name="CleanupNavIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="BackupPage" Tag="WallpaperBackup">
+                <NavigationViewItem x:Name="WallpaperBackupNavItem" x:Uid="BackupPage" Tag="WallpaperBackup">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xF738;"/>
+                        <wetool:ThemedAnimatedIcon x:Name="WallpaperBackupNavIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:WallpaperBackupIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xF738;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem x:Uid="LogsPage" Tag="Logs">
+                <NavigationViewItem x:Name="LogsNavItem" x:Uid="LogsPage" Tag="Logs">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE823;"/>
+                        <wetool:ThemedAnimatedIcon x:Name="LogsNavIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:LogsIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE823;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="AboutPage" Tag="Info">
+                <NavigationViewItem x:Name="InfoNavItem" x:Uid="AboutPage" Tag="Info">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE946;"/>
+                        <wetool:ThemedAnimatedIcon x:Name="InfoNavIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:InfoIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE946;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </NavigationViewItem.Icon>
                     <NavigationViewItem.InfoBadge>
                         <InfoBadge x:Name="SteamStatusBadge" Visibility="Collapsed"/>

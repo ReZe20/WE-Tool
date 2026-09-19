@@ -102,7 +102,14 @@
                               Click="UninstallComponent_Click"
                               KeyboardAcceleratorTextOverride="     Delete">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE74D;"/>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBarFlyout.PrimaryCommands>
@@ -119,28 +126,28 @@
                               Click="SelectAllComponents_Click"
                               KeyboardAcceleratorTextOverride="     Ctrl+A">
                     <AppBarButton.Icon>
-                        <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:SelectAllIcon/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE8B3;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="AppBarButton_InvertSelection"
                               Click="InvertSelection_Click"
                               KeyboardAcceleratorTextOverride="     Ctrl+I">
                     <AppBarButton.Icon>
-                        <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:InvertSelection/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE8E6;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
@@ -165,27 +172,27 @@
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="SelectAllComponents_Click"
                             KeyboardAcceleratorTextOverride="    Ctrl+A">
                 <MenuFlyoutItem.Icon>
-                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                        <AnimatedIcon.Source>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
                             <animatedvisuals:SelectAllIcon/>
-                        </AnimatedIcon.Source>
-                        <AnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
                             <FontIconSource Glyph="&#xE8B3;"/>
-                        </AnimatedIcon.FallbackIconSource>
-                    </AnimatedIcon>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="InvertSelection_Click"
                             KeyboardAcceleratorTextOverride="    Ctrl+I">
                 <MenuFlyoutItem.Icon>
-                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                        <AnimatedIcon.Source>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
                             <animatedvisuals:InvertSelection/>
-                        </AnimatedIcon.Source>
-                        <AnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
                             <FontIconSource Glyph="&#xE8E6;"/>
-                        </AnimatedIcon.FallbackIconSource>
-                    </AnimatedIcon>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutSeparator/>
@@ -254,26 +261,26 @@
         <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening" Opened="FlyoutThemeRefresh_Opened">
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="FilterExpanderSelectAll_Click">
                 <MenuFlyoutItem.Icon>
-                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                        <AnimatedIcon.Source>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
                             <animatedvisuals:SelectAllIcon/>
-                        </AnimatedIcon.Source>
-                        <AnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
                             <FontIconSource Glyph="&#xE8B3;"/>
-                        </AnimatedIcon.FallbackIconSource>
-                    </AnimatedIcon>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="FilterExpanderInvert_Click">
                 <MenuFlyoutItem.Icon>
-                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                        <AnimatedIcon.Source>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
                             <animatedvisuals:InvertSelection/>
-                        </AnimatedIcon.Source>
-                        <AnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
                             <FontIconSource Glyph="&#xE8E6;"/>
-                        </AnimatedIcon.FallbackIconSource>
-                    </AnimatedIcon>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
         </MenuFlyout>
@@ -340,33 +347,40 @@
                               IsEnabled="{x:Bind IsComponentButtonEnabled, Mode=OneWay}"
                               Click="UninstallComponent_Click">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="ToolbarSelectAllButton" x:Uid="Toolbar_SelectAll" LabelPosition="Collapsed"
                               Click="SelectAllComponents_Click">
                     <AppBarButton.Icon>
-                        <AnimatedIcon x:Name="ToolbarSelectAllIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarSelectAllIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:SelectAllIcon/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE8B3;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_InvertSelection" LabelPosition="Collapsed"
                               Click="InvertSelection_Click">
                     <AppBarButton.Icon>
-                        <AnimatedIcon x:Name="ToolbarInvertSelectionIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarInvertSelectionIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:InvertSelection/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE8E6;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="RefreshButton" x:Uid="Toolbar_Refresh" LabelPosition="Collapsed"
@@ -377,6 +391,14 @@
                 </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="Toolbar_View">
+                    <!-- 有菜单小箭头:两层覆盖都要逐按钮写(官方 issue #10707 的配方)——
+                         ① AppBarButtonHasFlyoutChevronVisibility:CommandBar 默认模板藏成 Collapsed,覆盖回 Visible;
+                         ② AppBarButtonFlyoutGlyph 默认 E974(朝右)→ E972(朝下);溢出态 AppBarButtonOverflowFlyoutGlyph 一并换 -->
+                    <AppBarButton.Resources>
+                        <Visibility x:Key="AppBarButtonHasFlyoutChevronVisibility">Visible</Visibility>
+                        <x:String x:Key="AppBarButtonFlyoutGlyph">&#xE972;</x:String>
+                        <x:String x:Key="AppBarButtonOverflowFlyoutGlyph">&#xE972;</x:String>
+                    </AppBarButton.Resources>
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE71D;" FontSize="16"/>
                     </AppBarButton.Icon>
@@ -426,6 +448,14 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarButton x:Name="SortToolbarButton" x:Uid="Toolbar_Sort">
+                    <!-- 有菜单小箭头:两层覆盖都要逐按钮写(官方 issue #10707 的配方)——
+                         ① AppBarButtonHasFlyoutChevronVisibility:CommandBar 默认模板藏成 Collapsed,覆盖回 Visible;
+                         ② AppBarButtonFlyoutGlyph 默认 E974(朝右)→ E972(朝下);溢出态 AppBarButtonOverflowFlyoutGlyph 一并换 -->
+                    <AppBarButton.Resources>
+                        <Visibility x:Key="AppBarButtonHasFlyoutChevronVisibility">Visible</Visibility>
+                        <x:String x:Key="AppBarButtonFlyoutGlyph">&#xE972;</x:String>
+                        <x:String x:Key="AppBarButtonOverflowFlyoutGlyph">&#xE972;</x:String>
+                    </AppBarButton.Resources>
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8CB;" FontSize="16"/>
                     </AppBarButton.Icon>
@@ -547,7 +577,14 @@
                                     </Button>
                                     <Button Click="UninstallComponent_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <FontIcon Glyph="&#xE74D;" FontSize="14"/>
+                                            <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:DeleteIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xE74D;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
                                             <TextBlock x:Uid="Detail_Uninstall" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>

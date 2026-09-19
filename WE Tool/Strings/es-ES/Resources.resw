@@ -1304,10 +1304,10 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
     <value>Actualizar</value>
   </data>
   <data name="Toolbar_View.Label" xml:space="preserve">
-    <value>Ver▾</value>
+    <value>Ver</value>
   </data>
   <data name="Toolbar_Sort.Label" xml:space="preserve">
-    <value>Ordenar▾</value>
+    <value>Ordenar</value>
   </data>
   <data name="Toolbar_SortDirection.Label" xml:space="preserve">
     <value>Dirección de ordenación</value>

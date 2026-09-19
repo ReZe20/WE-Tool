@@ -63,10 +63,18 @@
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_Uninstall"
                               Command="{x:Bind UninstallSelectedCommand}"
+                              Click="UninstallIcon_Click"
                               IsEnabled="{x:Bind IsUninstallEnabled, Mode=OneWay}"
                               KeyboardAcceleratorTextOverride="     Delete">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE74D;"/>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBarFlyout.PrimaryCommands>
@@ -109,28 +117,28 @@
                               Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
                               KeyboardAcceleratorTextOverride="     Ctrl+A">
                     <AppBarButton.Icon>
-                        <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:SelectAllIcon/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE8B3;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="AppBarButton_InvertSelection" 
                               Click="InvertSelection_CLick_ByCommandBarFlyout"
                               KeyboardAcceleratorTextOverride="     Ctrl+I">
                     <AppBarButton.Icon>
-                        <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:InvertSelection/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE8E6;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
@@ -157,28 +165,28 @@
                             Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
                             KeyboardAcceleratorTextOverride="    Ctrl+A">
                 <MenuFlyoutItem.Icon>
-                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                        <AnimatedIcon.Source>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
                             <animatedvisuals:SelectAllIcon/>
-                        </AnimatedIcon.Source>
-                        <AnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
                             <FontIconSource Glyph="&#xE8B3;"/>
-                        </AnimatedIcon.FallbackIconSource>
-                    </AnimatedIcon>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection"
                             Click="InvertSelection_CLick_ByCommandBarFlyout"
                             KeyboardAcceleratorTextOverride="    Ctrl+I">
                 <MenuFlyoutItem.Icon>
-                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                        <AnimatedIcon.Source>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
                             <animatedvisuals:InvertSelection/>
-                        </AnimatedIcon.Source>
-                        <AnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
                             <FontIconSource Glyph="&#xE8E6;"/>
-                        </AnimatedIcon.FallbackIconSource>
-                    </AnimatedIcon>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutSeparator/>
@@ -272,26 +280,26 @@
         <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening">
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_SelectAll" Click="FilterExpanderSelectAll_Click">
                 <MenuFlyoutItem.Icon>
-                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                        <AnimatedIcon.Source>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
                             <animatedvisuals:SelectAllIcon/>
-                        </AnimatedIcon.Source>
-                        <AnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
                             <FontIconSource Glyph="&#xE8B3;"/>
-                        </AnimatedIcon.FallbackIconSource>
-                    </AnimatedIcon>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_InvertSelection" Click="FilterExpanderInvert_Click">
                 <MenuFlyoutItem.Icon>
-                    <AnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
-                        <AnimatedIcon.Source>
+                    <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                        <wetool:ThemedAnimatedIcon.Source>
                             <animatedvisuals:InvertSelection/>
-                        </AnimatedIcon.Source>
-                        <AnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon.FallbackIconSource>
                             <FontIconSource Glyph="&#xE8E6;"/>
-                        </AnimatedIcon.FallbackIconSource>
-                    </AnimatedIcon>
+                        </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                    </wetool:ThemedAnimatedIcon>
                 </MenuFlyoutItem.Icon>
             </MenuFlyoutItem>
         </MenuFlyout>
@@ -342,7 +350,15 @@
                                     x:Uid="Toolbar_FilterToggle"
                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LeftSplitViewPaneOpen, Mode=TwoWay}">
                     <AppBarToggleButton.Icon>
-                        <FontIcon Glyph="&#xE71D;" FontSize="16"/>
+                        <!-- 筛选结果图标:按下/松开两段播的 Lottie(与视图按钮同一素材 ViewIcon),E71D 回退;接线见 Papers.xaml.cs“筛选结果图标动画”区块;TrustForeground 让选中态与文字同色(黑/白反相) -->
+                        <wetool:ThemedAnimatedIcon x:Name="LeftToggleFilterIcon" AnimatedIcon.State="Normal" Width="16" Height="16" TrustForeground="True">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:ViewIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE71D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarToggleButton.Icon>
                 </AppBarToggleButton>
                 <AppBarSeparator/>
@@ -351,67 +367,99 @@
                               Click="Copy_Click_ByCommandBarFlyout"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <!-- 复制图标:官方字形 E8C8;动画:淡出→切 E73E→从左往右扫出→淡出→切回 E8C8→淡入 -->
-                        <FontIcon x:Name="ToolbarCopyIcon" Glyph="&#xE8C8;" FontSize="16"/>
+                        <!-- 复制图标:按下/松开两段播的是这份 Lottie(与详情面板复制同一素材);勾动画由代码换入的 FontIcon 承载
+                             —— AppBarButton 图标槽只放得下一个元素(模板里是 Viewbox 包 ContentPresenter 绑 Icon),
+                             播完换回 Lottie 并归零。见 Papers.xaml.cs“工具栏复制图标”区块 -->
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarCopyIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:CopyIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE8C8;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_Uninstall"
                               IsEnabled="{x:Bind ViewModel.IsButtonInGridColumnEnabled, Mode=OneWay}"
                               Command="{x:Bind UninstallSelectedCommand}"
+                              Click="UninstallIcon_Click"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="ToolbarSelectAllButton" x:Uid="Toolbar_SelectAll"
                               Click="SelectAllWallpapers_Click_ByCommandBarFlyout"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <AnimatedIcon x:Name="ToolbarSelectAllIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarSelectAllIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:SelectAllIcon/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE8B3;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Uid="Toolbar_InvertSelection"
                               Click="InvertSelection_CLick_ByCommandBarFlyout"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <AnimatedIcon x:Name="ToolbarInvertSelectionIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarInvertSelectionIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:InvertSelection/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE8E6;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarButton x:Name="RefreshButton" x:Uid="Toolbar_Refresh"
                               Click="WallpaperListRefresh_Click_ByCommandBarFlyout"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <AnimatedIcon x:Name="ToolbarRefreshIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
-                            <AnimatedIcon.Source>
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarRefreshIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
                                 <animatedvisuals:RefreshIcon/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
                                 <FontIconSource Glyph="&#xE777;"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton x:Uid="Toolbar_View">
+                <AppBarButton x:Name="ToolbarViewButton" x:Uid="Toolbar_View">
+                    <!-- 有菜单小箭头:两层覆盖都要逐按钮写(官方 issue #10707 的配方)——
+                         ① AppBarButtonHasFlyoutChevronVisibility:CommandBar 默认模板藏成 Collapsed,覆盖回 Visible;
+                         ② AppBarButtonFlyoutGlyph 默认 E974(朝右)→ E972(朝下);溢出态 AppBarButtonOverflowFlyoutGlyph 一并换 -->
+                    <AppBarButton.Resources>
+                        <Visibility x:Key="AppBarButtonHasFlyoutChevronVisibility">Visible</Visibility>
+                        <x:String x:Key="AppBarButtonFlyoutGlyph">&#xE972;</x:String>
+                        <x:String x:Key="AppBarButtonOverflowFlyoutGlyph">&#xE972;</x:String>
+                    </AppBarButton.Resources>
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE71D;" FontSize="16"/>
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarViewIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:ViewIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE71D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
-                        <MenuFlyout Placement="Bottom" Opened="FlyoutThemeRefresh_Opened">
+                        <MenuFlyout x:Name="ToolbarViewFlyout" Placement="Bottom" Opened="FlyoutThemeRefresh_Opened">
                             <RadioMenuFlyoutItem x:Uid="AppBarButton_SmallIcon"
                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SmallIconViewItem,Mode=TwoWay}"
                                                  GroupName="ViewGroup"/>
@@ -474,11 +522,26 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarButton x:Name="SortToolbarButton" x:Uid="Toolbar_Sort">
+                    <!-- 有菜单小箭头:两层覆盖都要逐按钮写(官方 issue #10707 的配方)——
+                         ① AppBarButtonHasFlyoutChevronVisibility:CommandBar 默认模板藏成 Collapsed,覆盖回 Visible;
+                         ② AppBarButtonFlyoutGlyph 默认 E974(朝右)→ E972(朝下);溢出态 AppBarButtonOverflowFlyoutGlyph 一并换 -->
+                    <AppBarButton.Resources>
+                        <Visibility x:Key="AppBarButtonHasFlyoutChevronVisibility">Visible</Visibility>
+                        <x:String x:Key="AppBarButtonFlyoutGlyph">&#xE972;</x:String>
+                        <x:String x:Key="AppBarButtonOverflowFlyoutGlyph">&#xE972;</x:String>
+                    </AppBarButton.Resources>
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8CB;" FontSize="16"/>
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarSortIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:SortIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE8CB;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                     <AppBarButton.Flyout>
-                        <MenuFlyout Placement="Bottom" Opened="FlyoutThemeRefresh_Opened">
+                        <MenuFlyout x:Name="ToolbarSortFlyout" Placement="Bottom" Opened="FlyoutThemeRefresh_Opened">
                             <RadioMenuFlyoutItem GroupName="SortGroup"
                                                  x:Uid="SortByName"
                                                  Command="{x:Bind ViewModel.WallpaperDisplayVM.ChangeSortCommand}" CommandParameter="0"
@@ -513,15 +576,29 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <!-- [A11y 2026-09] 讲述人朗读名随排序字段与方向变(静态 resw 键只讲得出按钮名) -->
-                <AppBarButton x:Uid="Toolbar_SortDirection"
+                <AppBarButton x:Name="SortDirectionButton" x:Uid="Toolbar_SortDirection"
                               Click="SortDirectionToggle_Click"
                               AutomationProperties.Name="{x:Bind ViewModel.WallpaperDisplayVM.SortDirectionAutomationName, Mode=OneWay}"
                               LabelPosition="Collapsed">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="{x:Bind ViewModel.WallpaperDisplayVM.SortDirectionGlyph, Mode=OneWay}" FontSize="16"/>
+                        <wetool:ThemedAnimatedIcon x:Name="ToolbarSortDirectionIcon" AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:SortDirectionAscIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE70D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBar>
+            <!-- 颜色探针(2026-09-19)：“筛选结果”开关的图标在 .Icon 槽里，AppBarToggleButton 模板的选中色到不了
+                 图标（见 Papers.xaml.cs“筛选结果图标颜色同步”）；这里借 {ThemeResource} 把该按钮家族在选中/未选中
+                 下的两个前景色实例化出来，代码把它同步到图标自己的 Foreground（本地值必生效）。Collapsed 不参与布局。 -->
+            <Border x:Name="LeftFilterColorProbeNormal" Grid.Column="1" Visibility="Collapsed"
+                    Background="{ThemeResource AppBarToggleButtonForeground}"/>
+            <Border x:Name="LeftFilterColorProbeChecked" Grid.Column="1" Visibility="Collapsed"
+                    Background="{ThemeResource AppBarToggleButtonForegroundChecked}"/>
             <!-- 右侧：详情面板切换 -->
             <StackPanel Grid.Column="2" x:Name="RightToolbarPanel" Orientation="Horizontal" VerticalAlignment="Center">
                 <ToggleButton x:Name="RightToggleFilterButton"
@@ -531,7 +608,14 @@
                               Margin="0,0,5,0">
                     <ToggleButton.Content>
                         <StackPanel Orientation="Horizontal">
-                            <FontIcon Glyph="&#xE90D;" Margin="0,0,5,0"/>
+                            <wetool:ThemedAnimatedIcon x:Name="RightToggleFilterIcon" AnimatedIcon.State="Normal" Width="16" Height="16" Margin="0,0,5,0" TrustForeground="True">
+                                <wetool:ThemedAnimatedIcon.Source>
+                                    <animatedvisuals:DetailPanelToggleIcon/>
+                                </wetool:ThemedAnimatedIcon.Source>
+                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                    <FontIconSource Glyph="&#xE90D;"/>
+                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                            </wetool:ThemedAnimatedIcon>
                             <TextBlock x:Uid="DetailsPanel" Margin="5,0,5,0"/>
                         </StackPanel>
                     </ToggleButton.Content>
@@ -598,30 +682,63 @@
                                            FontSize="20"
                                            Margin="10,0,0,0"/>
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
-                                    <Button Command="{x:Bind ExtractSelectedCommand}" HorizontalAlignment="Left">
+                                    <Button x:Name="DetailExtractButton" Command="{x:Bind ExtractSelectedCommand}" HorizontalAlignment="Left">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon Glyph="&#xE72D;" FontSize="14"/>
+                                            <wetool:ThemedAnimatedIcon x:Name="DetailExtractIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:ExtractIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xE72D;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
                                             <TextBlock x:Uid="Detail_Extract" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button Click="Copy_Click_ByCommandBarFlyout">
+                                    <Button x:Name="DetailCopyButton" Click="Copy_Click_ByCommandBarFlyout">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <FontIcon x:Name="DetailCopyIcon" Glyph="&#xE8C8;" FontSize="14"/>
+                                            <!-- 复制图标:按下/松开两段播的是这份 Lottie;勾动画仍由下面的 FontIcon 承载(平时折叠,只在勾期间露面) -->
+                                            <Grid>
+                                                <wetool:ThemedAnimatedIcon x:Name="DetailCopyAnimatedIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                    <wetool:ThemedAnimatedIcon.Source>
+                                                        <animatedvisuals:CopyIcon/>
+                                                    </wetool:ThemedAnimatedIcon.Source>
+                                                    <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                        <FontIconSource Glyph="&#xE8C8;"/>
+                                                    </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                </wetool:ThemedAnimatedIcon>
+                                                <FontIcon x:Name="DetailCopyIcon" Glyph="&#xE8C8;" FontSize="14" Visibility="Collapsed"/>
+                                            </Grid>
                                             <TextBlock x:Uid="Detail_Copy" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                     <Button Command="{x:Bind UninstallSelectedCommand}"
+                                            Click="UninstallIcon_Click"
                                             IsEnabled="{x:Bind IsUninstallEnabled, Mode=OneWay}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <FontIcon Glyph="&#xE74D;" FontSize="14"/>
+                                            <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:DeleteIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xE74D;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
                                             <TextBlock x:Uid="Detail_Uninstall" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
-                                    <Button Click="ImportToEditor_Click">
+                                    <Button x:Name="DetailImportToEditorButton" Click="ImportToEditor_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <FontIcon Glyph="&#xE70F;" FontSize="14"/>
+                                            <wetool:ThemedAnimatedIcon x:Name="DetailImportToEditorIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:ImportToEditorIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xE70F;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
                                             <TextBlock x:Uid="Detail_ImportToEditor" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
@@ -634,15 +751,29 @@
                                            Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}"
                                            Margin="10,0,0,0"/>
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
-                                    <Button Command="{x:Bind OpenSelectedFoldersCommand}">
+                                    <Button x:Name="DetailOpenDirectoryButton" Command="{x:Bind OpenSelectedFoldersCommand}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <FontIcon Glyph="&#xE838;" FontSize="14"/>
+                                            <wetool:ThemedAnimatedIcon x:Name="DetailOpenDirectoryIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:OpenDirectoryIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xE838;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
                                             <TextBlock x:Uid="Detail_OpenDirectory" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button Click="Properties_Click_ByCommandBarFlyout">
+                                    <Button x:Name="DetailPropertiesButton" Click="Properties_Click_ByCommandBarFlyout">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <FontIcon Glyph="&#xE90F;" FontSize="14"/>
+                                            <wetool:ThemedAnimatedIcon x:Name="DetailPropertiesIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:PropertiesIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xE90F;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
                                             <TextBlock x:Uid="Detail_Properties" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>

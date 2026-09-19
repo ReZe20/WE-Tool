@@ -1304,10 +1304,10 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
     <value>Aktualisieren</value>
   </data>
   <data name="Toolbar_View.Label" xml:space="preserve">
-    <value>Ansicht▾</value>
+    <value>Ansicht</value>
   </data>
   <data name="Toolbar_Sort.Label" xml:space="preserve">
-    <value>Sortierung▾</value>
+    <value>Sortierung</value>
   </data>
   <data name="Toolbar_SortDirection.Label" xml:space="preserve">
     <value>Sortierrichtung</value>

@@ -5,6 +5,7 @@
     xmlns:winuiex="using:WinUIEx"
     xmlns:models="using:WE_Tool.ViewModels"
     xmlns:wetool="using:WE_Tool.Controls"
+    xmlns:animatedvisuals="using:WE_Tool.AnimatedVisuals"
     Title=""
     Width="900" Height="600"
     MinWidth="600" MinHeight="400">
@@ -145,7 +146,16 @@
                     DefaultLabelPosition="Right">
             <CommandBar.PrimaryCommands>
                 <AppBarButton x:Name="BatchRemoveButton" x:Uid="WhitelistWindow_BatchRemove" Click="BatchRemove_Click" IsEnabled="False" Foreground="Red">
-                    <AppBarButton.Icon><FontIcon Glyph="&#xE74D;"/></AppBarButton.Icon>
+                    <AppBarButton.Icon>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
+                    </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBar.PrimaryCommands>
         </CommandBar>

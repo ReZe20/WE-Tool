@@ -221,6 +221,7 @@ namespace WE_Tool
         private void ClearQueue_Click(object sender, RoutedEventArgs e)
         {
             if (_isExtracting) return;
+            AnimatedIconPlayer.PlayOnce(sender, "清空");   // [删除图标动画 2026-09]
             QueueItems.Clear();
             ImportInfoBar.IsOpen = false;
         }

@@ -53,6 +53,420 @@ namespace WE_Tool
 
             // 导航项数量徽标:页面提取开始/进度/完成时经 NavBadgeService 更新
             NavBadgeService.BadgeChanged += OnNavBadgeChanged;
+            PapersNavIcon_WirePointer();   // [导航项图标动画 2026-09] 见下方 PapersNavItem_PointerPressed/Released
+            InstalledComponentsNavIcon_WirePointer();   // [导航项图标动画 2026-09] 见下方 InstalledComponentsNavItem_PointerPressed/Released
+            LoadPapersNavIcon_WirePointer();   // [导航项图标动画 2026-09] 见下方 LoadPapersNavItem_PointerPressed/Released
+            WallpaperBackupNavIcon_WirePointer();   // [导航项图标动画 2026-09] 见下方 WallpaperBackupNavItem_PointerPressed/Released
+            LogsNavIcon_WirePointer();   // [导航项图标动画 2026-09] 见下方 LogsNavItem_PointerPressed/Released
+            CleanupNavIcon_WirePointer();   // [导航项图标动画 2026-09] 见下方 CleanupNavItem_PointerPressed/Released
+            InfoNavIcon_WirePointer();   // [导航项图标动画 2026-09] 见下方 InfoNavItem_PointerPressed/Released
+        }
+
+        // ===================== Papers 导航项图标动画(2026-09) =====================
+        // 导航项图标由静态字形 E8B9 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.PapersIcon,
+        // 见 AnimatedVisuals/PapersIcon.cs;回退字形仍是 E8B9)。
+        // 素材内容(2026-09-16 换新版):合成时间轴只有 20 帧(0.33s),两块图案第 0→10 帧靠拢、第 10→20 帧复位;
+        // 首帧与第 20 帧姿态逐值相同,静止态外观不变(形状与关键帧值均未改)。
+        // 素材标记[重要]:NavigationViewItem 会自己给 AnimatedIcon 设 PointerOver/Pressed/Selected 等状态,
+        // 而 AnimatedIcon 的切换规则是"先跳到目标标记对的起始帧,再播到结束帧";标记缺失时会走兜底
+        // ("硬切到某个位置")——那样按下就不是动画、而是直接跳到第 20 帧。所以素材里把六种状态之间
+        // 全部 30 个转移都补齐了:进入按下态 = 第 0→10 帧,离开按下态 = 第 10→20 帧,其余 = 停在静止姿态。
+        // 交互:鼠标按下 → 播前 10 帧;松开 → 从第 10 帧继续播完并复位。
+        // [为什么还在这里排队]点一下时"按下→松开"只隔几十毫秒,而状态切换固定从第 10 帧开始播,
+        // 会看出"跳到第 10 帧"。所以让每一段都完整播完再切:点一下看到的是靠拢(0.17s)+ 复位(0.17s)。
+        private const int PapersNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
+        private const int PapersNavReleaseMs = 167;   // 第 10→20 帧(10 帧 @60fps;新版素材时间轴只有 20 帧)
+        private const bool PapersNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+        private bool _papersNavPressed;               // 当前是否已切到"按下"态
+        private long _papersNavBusyUntil;             // 当前片段预计播完的时刻(0=空闲)
+        private CancellationTokenSource? _papersNavCts;
+
+        private void PapersNavIcon_WirePointer()
+        {
+            // NavigationViewItem 自己会处理 PointerPressed 做选中/按下视觉,事件被标记 Handled,
+            // 普通 XAML 挂法收不到,必须 handledEventsToo: true。
+            PapersNavItem.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(PapersNavItem_PointerPressed), true);
+            PapersNavItem.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(PapersNavItem_PointerReleased), true);
+            PapersNavItem.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(PapersNavItem_PointerReleased), true);   // 拖动/丢捕获也要归位
+        }
+
+        private void PapersNavItem_PointerPressed(object sender, PointerRoutedEventArgs e) => PapersNavSwitchAsync(pressed: true);
+        private void PapersNavItem_PointerReleased(object sender, PointerRoutedEventArgs e) => PapersNavSwitchAsync(pressed: false);
+
+        /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 20 帧(复位)。</summary>
+        private async void PapersNavSwitchAsync(bool pressed)
+        {
+            if (!PapersNavIconAnimationProbe || PapersNavIcon is null) return;
+            if (pressed == _papersNavPressed) return;   // 目标态 = 当前态
+            var current = PapersNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
+            if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
+            {
+                // 导航项自己已经把状态切走了(它会在松开时设 PointerOverSelected/Selected 等),
+                // 那一段动画它已经在播,这里不插手,免得"跳一下"
+                _papersNavPressed = false;
+                return;
+            }
+            _papersNavPressed = pressed;
+            _papersNavCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _papersNavCts = cts;
+            long wait = _papersNavBusyUntil - Environment.TickCount64;
+            if (wait > 0)
+            {
+                try { await Task.Delay((int)wait, cts.Token); }
+                catch (TaskCanceledException) { return; }   // 期间又点了一次,交给新的一次
+            }
+            if (cts.IsCancellationRequested) return;
+            _papersNavBusyUntil = Environment.TickCount64 + (pressed ? PapersNavPressMs : PapersNavReleaseMs);
+            Log.Information("[动画] Papers 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→20 帧)");
+            AnimatedIcon.SetState(PapersNavIcon, pressed ? "Pressed" : "Normal");
+        }
+
+        // ===================== 已安装组件 导航项图标动画(2026-09) =====================
+        // 导航项图标由静态字形 F4A5 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.InstalledComponentsIcon,
+        // 见 AnimatedVisuals/InstalledComponentsIcon.cs;回退字形仍是 F4A5)。
+        // 素材内容(2026-09-16 换新版):合成时间轴只有 20 帧(0.33s),两块图案第 0→10 帧外扩、
+        // 第 10→20 帧归位;首帧与第 20 帧姿态逐值相同,静止态外观不变(形状与关键帧值均未改)。
+        // 标记[重要]同 PapersIcon:NavigationViewItem 会自己设 PointerOver/Pressed/Selected 等状态,
+        // 而 AnimatedIcon 切换是"先跳到目标标记对的起始帧再播到结束帧",标记缺失会走硬切兜底 ——
+        // 所以素材里六种状态之间全部 30 个转移都补齐:进入按下态 = 第 0→10 帧,离开按下态 = 第 10→20 帧。
+        // 交互:鼠标按下 → 播前 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
+        private const int InstalledComponentsNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
+        private const int InstalledComponentsNavReleaseMs = 167;   // 第 10→20 帧(10 帧 @60fps;新版素材时间轴只有 20 帧)
+        private const bool InstalledComponentsNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+        private bool _installedComponentsNavPressed;    // 当前是否已切到"按下"态
+        private long _installedComponentsNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
+        private CancellationTokenSource? _installedComponentsNavCts;
+
+        private void InstalledComponentsNavIcon_WirePointer()
+        {
+            // NavigationViewItem 自己会处理 PointerPressed 做选中/按下视觉,事件被标记 Handled,
+            // 普通 XAML 挂法收不到,必须 handledEventsToo: true。
+            InstalledComponentsNavItem.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(InstalledComponentsNavItem_PointerPressed), true);
+            InstalledComponentsNavItem.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(InstalledComponentsNavItem_PointerReleased), true);
+            InstalledComponentsNavItem.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(InstalledComponentsNavItem_PointerReleased), true);   // 拖动/丢捕获也要归位
+        }
+
+        private void InstalledComponentsNavItem_PointerPressed(object sender, PointerRoutedEventArgs e) => InstalledComponentsNavSwitchAsync(pressed: true);
+        private void InstalledComponentsNavItem_PointerReleased(object sender, PointerRoutedEventArgs e) => InstalledComponentsNavSwitchAsync(pressed: false);
+
+        /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 20 帧(复位)。</summary>
+        private async void InstalledComponentsNavSwitchAsync(bool pressed)
+        {
+            if (!InstalledComponentsNavIconAnimationProbe || InstalledComponentsNavIcon is null) return;
+            if (pressed == _installedComponentsNavPressed) return;   // 目标态 = 当前态
+            var current = InstalledComponentsNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
+            if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
+            {
+                // 导航项自己已经把状态切走了(它会在松开时设 PointerOverSelected/Selected 等),
+                // 那一段动画它已经在播,这里不插手,免得"跳一下"
+                _installedComponentsNavPressed = false;
+                return;
+            }
+            _installedComponentsNavPressed = pressed;
+            _installedComponentsNavCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _installedComponentsNavCts = cts;
+            long wait = _installedComponentsNavBusyUntil - Environment.TickCount64;
+            if (wait > 0)
+            {
+                try { await Task.Delay((int)wait, cts.Token); }
+                catch (TaskCanceledException) { return; }   // 期间又点了一次,交给新的一次
+            }
+            if (cts.IsCancellationRequested) return;
+            _installedComponentsNavBusyUntil = Environment.TickCount64 + (pressed ? InstalledComponentsNavPressMs : InstalledComponentsNavReleaseMs);
+            Log.Information("[动画] 已安装组件 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→20 帧)");
+            AnimatedIcon.SetState(InstalledComponentsNavIcon, pressed ? "Pressed" : "Normal");
+        }
+
+        // ===================== 导入壁纸 导航项图标动画(2026-09) =====================
+        // 导航项图标由静态字形 E8B5 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.LoadPapersIcon,
+        // 见 AnimatedVisuals/LoadPapersIcon.cs;回退字形仍是 E8B5)。
+        // 素材内容(2026-09-16 换新版):合成时间轴只有 20 帧(0.33s),一块图案第 0→10 帧靠拢、第 10→20 帧复位;
+        // 首帧与第 20 帧姿态逐值相同,静止态外观不变;三个导航项图标现在都是 20 帧时间轴与同一套标记方案。
+        // 标记[重要]:NavigationViewItem 会自己设 PointerOver/Pressed/Selected 等状态,
+        // 而 AnimatedIcon 切换是"先跳到目标标记对的起始帧再播到结束帧",标记缺失会走硬切兜底 ——
+        // 所以素材里六种状态之间全部 30 个转移都补齐:进入按下态 = 第 0→10 帧,离开按下态 = 第 10→20 帧。
+        // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
+        private const int LoadPapersNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
+        private const int LoadPapersNavReleaseMs = 167;   // 第 10→20 帧(10 帧 @60fps;新版素材时间轴只有 20 帧)
+        private const bool LoadPapersNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+        private bool _loadPapersNavPressed;    // 当前是否已切到"按下"态
+        private long _loadPapersNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
+        private CancellationTokenSource? _loadPapersNavCts;
+
+        private void LoadPapersNavIcon_WirePointer()
+        {
+            // NavigationViewItem 自己会处理 PointerPressed 做选中/按下视觉,事件被标记 Handled,
+            // 普通 XAML 挂法收不到,必须 handledEventsToo: true。
+            LoadPapersNavItem.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(LoadPapersNavItem_PointerPressed), true);
+            LoadPapersNavItem.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(LoadPapersNavItem_PointerReleased), true);
+            LoadPapersNavItem.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(LoadPapersNavItem_PointerReleased), true);   // 拖动/丢捕获也要归位
+        }
+
+        private void LoadPapersNavItem_PointerPressed(object sender, PointerRoutedEventArgs e) => LoadPapersNavSwitchAsync(pressed: true);
+        private void LoadPapersNavItem_PointerReleased(object sender, PointerRoutedEventArgs e) => LoadPapersNavSwitchAsync(pressed: false);
+
+        /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 20 帧(复位)。</summary>
+        private async void LoadPapersNavSwitchAsync(bool pressed)
+        {
+            if (!LoadPapersNavIconAnimationProbe || LoadPapersNavIcon is null) return;
+            if (pressed == _loadPapersNavPressed) return;   // 目标态 = 当前态
+            var current = LoadPapersNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
+            if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
+            {
+                // 导航项自己已经把状态切走了(它会在松开时设 PointerOverSelected/Selected 等),
+                // 那一段动画它已经在播,这里不插手,免得"跳一下"
+                _loadPapersNavPressed = false;
+                return;
+            }
+            _loadPapersNavPressed = pressed;
+            _loadPapersNavCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _loadPapersNavCts = cts;
+            long wait = _loadPapersNavBusyUntil - Environment.TickCount64;
+            if (wait > 0)
+            {
+                try { await Task.Delay((int)wait, cts.Token); }
+                catch (TaskCanceledException) { return; }   // 期间又点了一次,交给新的一次
+            }
+            if (cts.IsCancellationRequested) return;
+            _loadPapersNavBusyUntil = Environment.TickCount64 + (pressed ? LoadPapersNavPressMs : LoadPapersNavReleaseMs);
+            Log.Information("[动画] 导入壁纸 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→20 帧)");
+            AnimatedIcon.SetState(LoadPapersNavIcon, pressed ? "Pressed" : "Normal");
+        }
+
+        // ===================== 壁纸备份 导航项图标动画(2026-09) =====================
+        // 导航项图标由静态字形 F738 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.WallpaperBackupIcon,
+        // 见 AnimatedVisuals/WallpaperBackupIcon.cs;回退字形仍是 F738)。
+        // 素材内容(2026-09-16 再换新版):时钟图标(时针/分针/表盘外轮廓各自旋转),合成时间轴 40 帧(0.67s),
+        // 整圈匀速转完;外轮廓第 0→10 帧缩到 80%、第 10→30 帧胀回 100%(按下缩小的反馈);
+        // 第 40 帧与第 0 帧姿态逐值相同,静止态外观不变。
+        // 标记[重要]:NavigationViewItem 会自己设 PointerOver/Pressed/Selected 等状态,
+        // 而 AnimatedIcon 切换是"先跳到目标标记对的起始帧再播到结束帧",标记缺失会走硬切兜底 ——
+        // 所以素材里六种状态之间全部 30 个转移都补齐:进入按下态 = 第 0→10 帧,离开按下态 = 第 10→40 帧。
+        // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
+        private const int WallpaperBackupNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
+        private const int WallpaperBackupNavReleaseMs = 500;   // 第 10→40 帧(30 帧 @60fps)
+        private const bool WallpaperBackupNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+        private bool _wallpaperBackupNavPressed;    // 当前是否已切到"按下"态
+        private long _wallpaperBackupNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
+        private CancellationTokenSource? _wallpaperBackupNavCts;
+
+        private void WallpaperBackupNavIcon_WirePointer()
+        {
+            // NavigationViewItem 自己会处理 PointerPressed 做选中/按下视觉,事件被标记 Handled,
+            // 普通 XAML 挂法收不到,必须 handledEventsToo: true。
+            WallpaperBackupNavItem.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(WallpaperBackupNavItem_PointerPressed), true);
+            WallpaperBackupNavItem.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(WallpaperBackupNavItem_PointerReleased), true);
+            WallpaperBackupNavItem.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(WallpaperBackupNavItem_PointerReleased), true);   // 拖动/丢捕获也要归位
+        }
+
+        private void WallpaperBackupNavItem_PointerPressed(object sender, PointerRoutedEventArgs e) => WallpaperBackupNavSwitchAsync(pressed: true);
+        private void WallpaperBackupNavItem_PointerReleased(object sender, PointerRoutedEventArgs e) => WallpaperBackupNavSwitchAsync(pressed: false);
+
+        /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 40 帧(复位)。</summary>
+        private async void WallpaperBackupNavSwitchAsync(bool pressed)
+        {
+            if (!WallpaperBackupNavIconAnimationProbe || WallpaperBackupNavIcon is null) return;
+            if (pressed == _wallpaperBackupNavPressed) return;   // 目标态 = 当前态
+            var current = WallpaperBackupNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
+            if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
+            {
+                // 导航项自己已经把状态切走了(它会在松开时设 PointerOverSelected/Selected 等),
+                // 那一段动画它已经在播,这里不插手,免得"跳一下"
+                _wallpaperBackupNavPressed = false;
+                return;
+            }
+            _wallpaperBackupNavPressed = pressed;
+            _wallpaperBackupNavCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _wallpaperBackupNavCts = cts;
+            long wait = _wallpaperBackupNavBusyUntil - Environment.TickCount64;
+            if (wait > 0)
+            {
+                try { await Task.Delay((int)wait, cts.Token); }
+                catch (TaskCanceledException) { return; }   // 期间又点了一次,交给新的一次
+            }
+            if (cts.IsCancellationRequested) return;
+            _wallpaperBackupNavBusyUntil = Environment.TickCount64 + (pressed ? WallpaperBackupNavPressMs : WallpaperBackupNavReleaseMs);
+            Log.Information("[动画] 壁纸备份 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→40 帧)");
+            AnimatedIcon.SetState(WallpaperBackupNavIcon, pressed ? "Pressed" : "Normal");
+        }
+
+        // ===================== 日志 导航项图标动画(2026-09) =====================
+        // 导航项图标由静态字形 E823 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.LogsIcon,
+        // 见 AnimatedVisuals/LogsIcon.cs;回退字形仍是 E823)。
+        // 素材内容:时钟图标(表盘圆环 + 时针/分针),合成时间轴 40 帧(0.67s)——指针整圈旋转,
+        // 圆环第 0→10 帧缩到 80%、第 10→30 帧胀回 100%;第 40 帧与第 0 帧姿态逐值相同,静止态外观不变。
+        // 标记[重要]:NavigationViewItem 会自己设 PointerOver/Pressed/Selected 等状态,
+        // 而 AnimatedIcon 切换是"先跳到目标标记对的起始帧再播到结束帧",标记缺失会走硬切兜底 ——
+        // 所以素材里六种状态之间全部 30 个转移都补齐:进入按下态 = 第 0→10 帧,离开按下态 = 第 10→40 帧。
+        // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
+        private const int LogsNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
+        private const int LogsNavReleaseMs = 500;   // 第 10→40 帧(30 帧 @60fps)
+        private const bool LogsNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+        private bool _logsNavPressed;    // 当前是否已切到"按下"态
+        private long _logsNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
+        private CancellationTokenSource? _logsNavCts;
+
+        private void LogsNavIcon_WirePointer()
+        {
+            // NavigationViewItem 自己会处理 PointerPressed 做选中/按下视觉,事件被标记 Handled,
+            // 普通 XAML 挂法收不到,必须 handledEventsToo: true。
+            LogsNavItem.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(LogsNavItem_PointerPressed), true);
+            LogsNavItem.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(LogsNavItem_PointerReleased), true);
+            LogsNavItem.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(LogsNavItem_PointerReleased), true);   // 拖动/丢捕获也要归位
+        }
+
+        private void LogsNavItem_PointerPressed(object sender, PointerRoutedEventArgs e) => LogsNavSwitchAsync(pressed: true);
+        private void LogsNavItem_PointerReleased(object sender, PointerRoutedEventArgs e) => LogsNavSwitchAsync(pressed: false);
+
+        /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 40 帧(复位)。</summary>
+        private async void LogsNavSwitchAsync(bool pressed)
+        {
+            if (!LogsNavIconAnimationProbe || LogsNavIcon is null) return;
+            if (pressed == _logsNavPressed) return;   // 目标态 = 当前态
+            var current = LogsNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
+            if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
+            {
+                // 导航项自己已经把状态切走了(它会在松开时设 PointerOverSelected/Selected 等),
+                // 那一段动画它已经在播,这里不插手,免得"跳一下"
+                _logsNavPressed = false;
+                return;
+            }
+            _logsNavPressed = pressed;
+            _logsNavCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _logsNavCts = cts;
+            long wait = _logsNavBusyUntil - Environment.TickCount64;
+            if (wait > 0)
+            {
+                try { await Task.Delay((int)wait, cts.Token); }
+                catch (TaskCanceledException) { return; }   // 期间又点了一次,交给新的一次
+            }
+            if (cts.IsCancellationRequested) return;
+            _logsNavBusyUntil = Environment.TickCount64 + (pressed ? LogsNavPressMs : LogsNavReleaseMs);
+            Log.Information("[动画] 日志 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→40 帧)");
+            AnimatedIcon.SetState(LogsNavIcon, pressed ? "Pressed" : "Normal");
+        }
+
+        // ===================== 清理 导航项图标动画(2026-09) =====================
+        // 导航项图标由静态字形 E74D 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.DeleteIcon,
+        // 见 AnimatedVisuals/DeleteIcon.cs;回退字形仍是 E74D)。
+        // [为什么共用 DeleteIcon] 用户要求删除图标统一:导航项与页面顶部栏那 12 处删除按钮共用同一个
+        // 生成类(DeleteIcon.cs 里既有本导航项的六态标记,也有顶部栏 AnimatedIconPlayer 用的
+        // NormalToPlaying/PlayingToNormal 标记),避免同一素材生成两份、增大发布体积。
+        // 素材内容(2026-09-18 换新版):垃圾桶(桶盖掀起、桶身压扁,再复位),时间轴 20 帧(0.333s):
+        // 第 0→10 帧按下、第 10→20 帧复位;第 20 帧与第 0 帧姿态逐值相同,静止态外观不变。
+        // 标记[重要]:NavigationViewItem 会自己设 PointerOver/Pressed/Selected 等状态,
+        // 而 AnimatedIcon 切换是"先跳到目标标记对的起始帧再播到结束帧",标记缺失会走硬切兜底 ——
+        // 所以素材里六种状态之间全部 30 个转移都补齐:进入按下态 = 第 0→10 帧,离开按下态 = 第 10→20 帧
+        //(离开到 Normal 的那条是倒放回退段,时长同为 10 帧,不影响下面的排队计时)。
+        // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
+        private const int CleanupNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
+        private const int CleanupNavReleaseMs = 167;   // 第 10→20 帧(含倒放回退;10 帧 @60fps)
+        private const bool CleanupNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+        private bool _cleanupNavPressed;    // 当前是否已切到"按下"态
+        private long _cleanupNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
+        private CancellationTokenSource? _cleanupNavCts;
+
+        private void CleanupNavIcon_WirePointer()
+        {
+            // NavigationViewItem 自己会处理 PointerPressed 做选中/按下视觉,事件被标记 Handled,
+            // 普通 XAML 挂法收不到,必须 handledEventsToo: true。
+            CleanupNavItem.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(CleanupNavItem_PointerPressed), true);
+            CleanupNavItem.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(CleanupNavItem_PointerReleased), true);
+            CleanupNavItem.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(CleanupNavItem_PointerReleased), true);   // 拖动/丢捕获也要归位
+        }
+
+        private void CleanupNavItem_PointerPressed(object sender, PointerRoutedEventArgs e) => CleanupNavSwitchAsync(pressed: true);
+        private void CleanupNavItem_PointerReleased(object sender, PointerRoutedEventArgs e) => CleanupNavSwitchAsync(pressed: false);
+
+        /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 20 帧(复位)。</summary>
+        private async void CleanupNavSwitchAsync(bool pressed)
+        {
+            if (!CleanupNavIconAnimationProbe || CleanupNavIcon is null) return;
+            if (pressed == _cleanupNavPressed) return;   // 目标态 = 当前态
+            var current = CleanupNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
+            if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
+            {
+                // 导航项自己已经把状态切走了(它会在松开时设 PointerOverSelected/Selected 等),
+                // 那一段动画它已经在播,这里不插手,免得"跳一下"
+                _cleanupNavPressed = false;
+                return;
+            }
+            _cleanupNavPressed = pressed;
+            _cleanupNavCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _cleanupNavCts = cts;
+            long wait = _cleanupNavBusyUntil - Environment.TickCount64;
+            if (wait > 0)
+            {
+                try { await Task.Delay((int)wait, cts.Token); }
+                catch (TaskCanceledException) { return; }   // 期间又点了一次,交给新的一次
+            }
+            if (cts.IsCancellationRequested) return;
+            _cleanupNavBusyUntil = Environment.TickCount64 + (pressed ? CleanupNavPressMs : CleanupNavReleaseMs);
+            Log.Information("[动画] 清理 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→20 帧)");
+            AnimatedIcon.SetState(CleanupNavIcon, pressed ? "Pressed" : "Normal");
+        }
+        // ===================== 信息 导航项图标动画(2026-09) =====================
+        // 导航项图标由静态字形 E946 换成 Lottie 动画(素材 = WE_Tool.AnimatedVisuals.InfoIcon,
+        // 见 AnimatedVisuals/InfoIcon.cs;回退字形仍是 E946)。
+        // 素材内容:信息图标(外圈圆环 + 中间笔画),合成时间轴 30 帧(0.5s)——
+        // 外圈第 0→10 帧缩到 80%、第 10→30 帧胀回 100%,中间笔画第 5→10 帧同步缩小再胀回;
+        // 第 30 帧与第 0 帧姿态逐值相同,静止态外观不变。
+        // 标记[重要]:NavigationViewItem 会自己设 PointerOver/Pressed/Selected 等状态,
+        // 而 AnimatedIcon 切换是"先跳到目标标记对的起始帧再播到结束帧",标记缺失会走硬切兜底 ——
+        // 所以素材里六种状态之间全部 30 个转移都补齐:进入按下态 = 第 0→10 帧,离开按下态 = 第 10→30 帧。
+        // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
+        private const int InfoNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
+        private const int InfoNavReleaseMs = 333;   // 第 10→30 帧(20 帧 @60fps)
+        private const bool InfoNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
+        private bool _infoNavPressed;    // 当前是否已切到"按下"态
+        private long _infoNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
+        private CancellationTokenSource? _infoNavCts;
+
+        private void InfoNavIcon_WirePointer()
+        {
+            // NavigationViewItem 自己会处理 PointerPressed 做选中/按下视觉,事件被标记 Handled,
+            // 普通 XAML 挂法收不到,必须 handledEventsToo: true。
+            InfoNavItem.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(InfoNavItem_PointerPressed), true);
+            InfoNavItem.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(InfoNavItem_PointerReleased), true);
+            InfoNavItem.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(InfoNavItem_PointerReleased), true);   // 拖动/丢捕获也要归位
+        }
+
+        private void InfoNavItem_PointerPressed(object sender, PointerRoutedEventArgs e) => InfoNavSwitchAsync(pressed: true);
+        private void InfoNavItem_PointerReleased(object sender, PointerRoutedEventArgs e) => InfoNavSwitchAsync(pressed: false);
+
+        /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 30 帧(复位)。</summary>
+        private async void InfoNavSwitchAsync(bool pressed)
+        {
+            if (!InfoNavIconAnimationProbe || InfoNavIcon is null) return;
+            if (pressed == _infoNavPressed) return;   // 目标态 = 当前态
+            var current = InfoNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
+            if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
+            {
+                // 导航项自己已经把状态切走了(它会在松开时设 PointerOverSelected/Selected 等),
+                // 那一段动画它已经在播,这里不插手,免得"跳一下"
+                _infoNavPressed = false;
+                return;
+            }
+            _infoNavPressed = pressed;
+            _infoNavCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _infoNavCts = cts;
+            long wait = _infoNavBusyUntil - Environment.TickCount64;
+            if (wait > 0)
+            {
+                try { await Task.Delay((int)wait, cts.Token); }
+                catch (TaskCanceledException) { return; }   // 期间又点了一次,交给新的一次
+            }
+            if (cts.IsCancellationRequested) return;
+            _infoNavBusyUntil = Environment.TickCount64 + (pressed ? InfoNavPressMs : InfoNavReleaseMs);
+            Log.Information("[动画] 信息 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→30 帧)");
+            AnimatedIcon.SetState(InfoNavIcon, pressed ? "Pressed" : "Normal");
         }
 
         /// <summary>导航项徽标更新(页面经 NavBadgeService 调用,count 为 null/0 时隐藏;state 决定颜色)。</summary>

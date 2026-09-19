@@ -1660,6 +1660,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
     private async void UninstallComponent_Click(object sender, RoutedEventArgs e)
     {
+    AnimatedIconPlayer.PlayOnce(sender, "卸载");   // [删除图标动画 2026-09] 点击即播一遍(右键菜单/工具条/详情按钮共用本处理函数)
         // 照抄 Papers：执行前先收起右键菜单，避免菜单停留在确认对话框上方
         try
         {
@@ -2198,12 +2199,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         Frame?.Navigate(typeof(Settings));
     }
 
-    // ===================== 全选图标动画(2026-09) =====================
-    // 全选图标已由静态字形 E8B3 换成 Lottie 动画:XAML 里 4 处 <AnimatedIcon>,Source = WE_Tool.AnimatedVisuals.SelectAllIcon,
-    // FallbackIconSource 仍是原字形(系统关掉动画效果时自动退回)。素材是"四个空心方框依次变实心"的 1 秒动画(第 0 帧 = 四个空心方框、第 0~19 帧四个方框依次被填满、第 30 帧起稳定填满、第 40~50 帧缩回空心),
-    // 标记对:NormalToPressed_Start(第 0 帧)/_End(第 30 帧) = 按下播【填满】那一段,
-    // PressedToNormal_Start(第 30 帧)/_End(第 60 帧) = 松开播【缩回空心】那一段;
-    // NormalToPlaying_Start/_End(0→60) 留给菜单项/快捷键这些没有【按住】概念的入口,整段播一遍、播完归位。
+    // ===================== 全选图标动画(2026-09-18 换“按下十帧”版) =====================
+    // 全选图标(字形 E8B3)素材 = WE_Tool.AnimatedVisuals.SelectAllIcon;2026-09-18 换成 20 帧新版:
+    // 第 0→10 帧四个方框依次被填满、第 10→20 帧一起缩回空心(首末帧姿态相同)。
+    // 本页工具条那枚由按下/松开两段驱动:按下 = 第 0→10 帧;松开 = “PointerOver” 那条(第 10→20 帧,播完)。
+    // 注意新版素材把 PressedToNormal 改成了倒放回退段(给详情面板那类普通 Button 用),这里松开**不能**再切 Normal,
+    // 否则松开会倒放;菜单项/快捷键入口照旧走 NormalToPlaying(0→20) 整段播一遍、播完归位。
     // [为什么不再来回 toggle] 旧写法在 Normal / Playing 之间反复切,只有状态真正【变化】的那次才播动画,
     // 于是每隔一次点击才看得到动画(日志里 Playing / Normal 逐行交替)——改成两段真实状态后,每次按下/松开都是真实切换。
     private const bool SelectAllIconAnimationProbe = true;   // false = 完全回到改动前(图标静止在第 0 帧,不播动画)
@@ -2220,11 +2221,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         _selectAllIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _selectAllIconResetCts = cts;
-        Log.Information("[动画] 全选图标状态切换 → Playing(整段:第 0→60 帧)");
+        Log.Information("[动画] 全选图标状态切换 → Playing(整段:第 0→20 帧)");
         AnimatedIcon.SetState(ToolbarSelectAllIcon, "Playing");
         try
         {
-            await Task.Delay(1000, cts.Token);   // 素材整段 1 秒(60 帧 @60fps)
+            await Task.Delay(340, cts.Token);   // 素材整段约 0.33 秒(20 帧 @60fps)
         }
         catch (TaskCanceledException)
         {
@@ -2242,7 +2243,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (ToolbarSelectAllIcon is null) return;
         _selectAllIconPointerDriven = true;   // 本次点击由按下/松开驱动
         _selectAllIconResetCts?.Cancel();     // 取消可能还挂着的整段归位
-        Log.Information("[动画] 全选图标状态切换 → Pressed(按下:第 0→30 帧)");
+        Log.Information("[动画] 全选图标状态切换 → Pressed(按下:第 0→10 帧)");
         AnimatedIcon.SetState(ToolbarSelectAllIcon, "Pressed");
     }
 
@@ -2252,8 +2253,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         _selectAllIconPointerDriven = false;
         if (!SelectAllIconAnimationProbe) return;
         if (ToolbarSelectAllIcon is null) return;
-        Log.Information("[动画] 全选图标状态切换 → Normal(松开:第 30→60 帧)");
-        AnimatedIcon.SetState(ToolbarSelectAllIcon, "Normal");
+        Log.Information("[动画] 全选图标状态切换 → PointerOver(松开:第 10→20 帧)");
+        AnimatedIcon.SetState(ToolbarSelectAllIcon, "PointerOver");   // PressedToPointerOver = 第 10→20 帧(播完);不能切 Normal(那是回退段)
     }
 
     // ===================== 多选面板按钮 =====================

@@ -6,10 +6,10 @@
 //           8.2.250604.1+b02a3ee244
 //       
 //       Command:
-//           LottieGen -Language CSharp -Namespace WE_Tool.AnimatedVisuals -Public -WinUIVersion 3.0 -InputFile InvertSelection.json
+//           LottieGen -Language CSharp -Namespace WE_Tool.AnimatedVisuals -Public -WinUIVersion 3.0 -InputFile ExtractIcon.json
 //       
 //       Input file:
-//           InvertSelection.json (20127 bytes created 23:08+08:00 Sep 18 2026)
+//           ExtractIcon.json (13898 bytes created 22:23+08:00 Sep 18 2026)
 //       
 //       LottieGen source:
 //           http://aka.ms/Lottie
@@ -21,10 +21,10 @@
 // ____________________________________
 // |       Object stats       | Count |
 // |__________________________|_______|
-// | All CompositionObjects   |    34 |
+// | All CompositionObjects   |    36 |
 // |--------------------------+-------|
 // | Expression animators     |     1 |
-// | KeyFrame animators       |     3 |
+// | KeyFrame animators       |     4 |
 // | Reference parameters     |     1 |
 // | Expression operations    |     0 |
 // |--------------------------+-------|
@@ -53,10 +53,10 @@ using Windows.UI;
 
 namespace WE_Tool.AnimatedVisuals
 {
-    // Name:        InvertSelection
+    // Name:        Extract
     // Frame rate:  60 fps
-    // Frame count: 30
-    // Duration:    500.0 mS
+    // Frame count: 20
+    // Duration:    333.3 mS
     // ____________________________________________________________________________________________
     // |           Marker           |           Constant           | Frame |  mS   |   Progress   |
     // |____________________________|______________________________|_______|_______|______________|
@@ -65,26 +65,24 @@ namespace WE_Tool.AnimatedVisuals
     // | PointerOverToNormal_Start  | M_PointerOverToNormal_Start  |     0 |   0.0 | 0F           |
     // | PointerOverToNormal_End    | M_PointerOverToNormal_End    |     0 |   0.0 | 0F           |
     // | NormalToPressed_Start      | M_NormalToPressed_Start      |     0 |   0.0 | 0F           |
-    // | PointerOverToPressed_Start | M_PointerOverToPressed_Start |     0 |   0.0 | 0F           |
     // | PressedToNormal_End        | M_PressedToNormal_End        |     0 |   0.0 | 0F           |
+    // | PointerOverToPressed_Start | M_PointerOverToPressed_Start |     0 |   0.0 | 0F           |
     // | NormalToPlaying_Start      | M_NormalToPlaying_Start      |     0 |   0.0 | 0F           |
-    // | PointerOverToPlaying_Start | M_PointerOverToPlaying_Start |     0 |   0.0 | 0F           |
-    // | NormalToPressed_End        | M_NormalToPressed_End        |    10 | 166.7 | 0.335000008F |
-    // | PointerOverToPressed_End   | M_PointerOverToPressed_End   |    10 | 166.7 | 0.335000008F |
-    // | PressedToPointerOver_Start | M_PressedToPointerOver_Start |    10 | 166.7 | 0.335000008F |
-    // | PressedToNormal_Start      | M_PressedToNormal_Start      |    10 | 166.7 | 0.335000008F |
-    // | PressedToPointerOver_End   | M_PressedToPointerOver_End   |    30 | 500.0 | 1F           |
-    // | NormalToPlaying_End        | M_NormalToPlaying_End        |    30 | 500.0 | 1F           |
-    // | PointerOverToPlaying_End   | M_PointerOverToPlaying_End   |    30 | 500.0 | 1F           |
-    // | PlayingToNormal_Start      | M_PlayingToNormal_Start      |    30 | 500.0 | 1F           |
-    // | PlayingToNormal_End        | M_PlayingToNormal_End        |    30 | 500.0 | 1F           |
+    // | NormalToPressed_End        | M_NormalToPressed_End        |    10 | 166.7 | 0.502499998F |
+    // | PressedToNormal_Start      | M_PressedToNormal_Start      |    10 | 166.7 | 0.502499998F |
+    // | PointerOverToPressed_End   | M_PointerOverToPressed_End   |    10 | 166.7 | 0.502499998F |
+    // | PressedToPointerOver_Start | M_PressedToPointerOver_Start |    10 | 166.7 | 0.502499998F |
+    // | PressedToPointerOver_End   | M_PressedToPointerOver_End   |    20 | 333.3 | 1F           |
+    // | NormalToPlaying_End        | M_NormalToPlaying_End        |    20 | 333.3 | 1F           |
+    // | PlayingToNormal_Start      | M_PlayingToNormal_Start      |    20 | 333.3 | 1F           |
+    // | PlayingToNormal_End        | M_PlayingToNormal_End        |    20 | 333.3 | 1F           |
     // --------------------------------------------------------------------------------------------
-    public sealed class InvertSelection
+    public sealed class ExtractIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
-        // Animation duration: 0.500 seconds.
-        internal const long c_durationTicks = 5000000;
+        // Animation duration: 0.333 seconds.
+        internal const long c_durationTicks = 3333333;
 
         // Marker: NormalToPointerOver_Start.
         internal const float M_NormalToPointerOver_Start = 0F;
@@ -101,38 +99,32 @@ namespace WE_Tool.AnimatedVisuals
         // Marker: NormalToPressed_Start.
         internal const float M_NormalToPressed_Start = 0F;
 
-        // Marker: PointerOverToPressed_Start.
-        internal const float M_PointerOverToPressed_Start = 0F;
-
         // Marker: PressedToNormal_End.
         internal const float M_PressedToNormal_End = 0F;
+
+        // Marker: PointerOverToPressed_Start.
+        internal const float M_PointerOverToPressed_Start = 0F;
 
         // Marker: NormalToPlaying_Start.
         internal const float M_NormalToPlaying_Start = 0F;
 
-        // Marker: PointerOverToPlaying_Start.
-        internal const float M_PointerOverToPlaying_Start = 0F;
-
         // Marker: NormalToPressed_End.
-        internal const float M_NormalToPressed_End = 0.335000008F;
-
-        // Marker: PointerOverToPressed_End.
-        internal const float M_PointerOverToPressed_End = 0.335000008F;
-
-        // Marker: PressedToPointerOver_Start.
-        internal const float M_PressedToPointerOver_Start = 0.335000008F;
+        internal const float M_NormalToPressed_End = 0.502499998F;
 
         // Marker: PressedToNormal_Start.
-        internal const float M_PressedToNormal_Start = 0.335000008F;
+        internal const float M_PressedToNormal_Start = 0.502499998F;
+
+        // Marker: PointerOverToPressed_End.
+        internal const float M_PointerOverToPressed_End = 0.502499998F;
+
+        // Marker: PressedToPointerOver_Start.
+        internal const float M_PressedToPointerOver_Start = 0.502499998F;
 
         // Marker: PressedToPointerOver_End.
         internal const float M_PressedToPointerOver_End = 1F;
 
         // Marker: NormalToPlaying_End.
         internal const float M_NormalToPlaying_End = 1F;
-
-        // Marker: PointerOverToPlaying_End.
-        internal const float M_PointerOverToPlaying_End = 1F;
 
         // Marker: PlayingToNormal_Start.
         internal const float M_PlayingToNormal_Start = 1F;
@@ -151,7 +143,7 @@ namespace WE_Tool.AnimatedVisuals
             diagnostics = null;
 
             var res = 
-                new InvertSelection_AnimatedVisual(
+                new ExtractIcon_AnimatedVisual(
                     compositor
                     );
                 res.CreateAnimations();
@@ -161,7 +153,7 @@ namespace WE_Tool.AnimatedVisuals
         /// <summary>
         /// Gets the number of frames in the animation.
         /// </summary>
-        public double FrameCount => 30d;
+        public double FrameCount => 20d;
 
         /// <summary>
         /// Gets the frame rate of the animation.
@@ -171,7 +163,7 @@ namespace WE_Tool.AnimatedVisuals
         /// <summary>
         /// Gets the duration of the animation.
         /// </summary>
-        public TimeSpan Duration => TimeSpan.FromTicks(5000000);
+        public TimeSpan Duration => TimeSpan.FromTicks(3333333);
 
         /// <summary>
         /// Converts a zero-based frame number to the corresponding progress value denoting the
@@ -179,7 +171,7 @@ namespace WE_Tool.AnimatedVisuals
         /// </summary>
         public double FrameToProgress(double frameNumber)
         {
-            return frameNumber / 30d;
+            return frameNumber / 20d;
         }
 
         /// <summary>
@@ -193,17 +185,15 @@ namespace WE_Tool.AnimatedVisuals
                 { "PointerOverToNormal_Start", 0d },
                 { "PointerOverToNormal_End", 0d },
                 { "NormalToPressed_Start", 0d },
-                { "PointerOverToPressed_Start", 0d },
                 { "PressedToNormal_End", 0d },
+                { "PointerOverToPressed_Start", 0d },
                 { "NormalToPlaying_Start", 0d },
-                { "PointerOverToPlaying_Start", 0d },
-                { "NormalToPressed_End", 0.335 },
-                { "PointerOverToPressed_End", 0.335 },
-                { "PressedToPointerOver_Start", 0.335 },
-                { "PressedToNormal_Start", 0.335 },
+                { "NormalToPressed_End", 0.5025 },
+                { "PressedToNormal_Start", 0.5025 },
+                { "PointerOverToPressed_End", 0.5025 },
+                { "PressedToPointerOver_Start", 0.5025 },
                 { "PressedToPointerOver_End", 1d },
                 { "NormalToPlaying_End", 1d },
-                { "PointerOverToPlaying_End", 1d },
                 { "PlayingToNormal_Start", 1d },
                 { "PlayingToNormal_End", 1d },
             };
@@ -224,23 +214,22 @@ namespace WE_Tool.AnimatedVisuals
         {
         }
 
-        sealed class InvertSelection_AnimatedVisual
+        sealed class ExtractIcon_AnimatedVisual
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {
-            const long c_durationTicks = 5000000;
+            const long c_durationTicks = 3333333;
             readonly Compositor _c;
             readonly ExpressionAnimation _reusableExpressionAnimation;
             AnimationController _animationController_0;
             CompositionColorBrush _colorBrush_AlmostLavender_FFEBEBEB;
             CompositionPath _path;
-            CompositionPathGeometry _pathGeometry_0;
             CompositionPathGeometry _pathGeometry_1;
             CompositionPathGeometry _pathGeometry_2;
+            CompositionSpriteShape _spriteShape_0;
             ContainerVisual _root;
             CubicBezierEasingFunction _cubicBezierEasingFunction_0;
             StepEasingFunction _holdThenStepEasingFunction;
-            StepEasingFunction _stepThenHoldEasingFunction;
 
             void BindProperty(
                 CompositionObject target,
@@ -263,6 +252,14 @@ namespace WE_Tool.AnimatedVisuals
                 return result;
             }
 
+            Vector2KeyFrameAnimation CreateVector2KeyFrameAnimation(float initialProgress, Vector2 initialValue, CompositionEasingFunction initialEasingFunction)
+            {
+                var result = _c.CreateVector2KeyFrameAnimation();
+                result.Duration = TimeSpan.FromTicks(c_durationTicks);
+                result.InsertKeyFrame(initialProgress, initialValue, initialEasingFunction);
+                return result;
+            }
+
             CompositionSpriteShape CreateSpriteShape(CompositionGeometry geometry, Matrix3x2 transformMatrix)
             {
                 var result = _c.CreateSpriteShape(geometry);
@@ -280,28 +277,30 @@ namespace WE_Tool.AnimatedVisuals
             }
 
             // - - - Layer aggregator
-            // - -  Offset:<256, 256>
+            // - - 路径 2+路径 1
             // - 路径 2+路径 1.PathGeometry
-            CanvasGeometry Geometry_00()
+            CanvasGeometry Geometry_0()
             {
                 var result = CanvasGeometry.CreateGroup(
                     null,
-                    new CanvasGeometry[] { Geometry_01(), Geometry_02() },
+                    new CanvasGeometry[] { Geometry_1(), Geometry_2() },
                     CanvasFilledRegionDetermination.Alternate);
                 return result;
             }
 
             // - - - - Layer aggregator
-            // - - -  Offset:<256, 256>
+            // - - - 路径 2+路径 1
             // - - 路径 2+路径 1.PathGeometry
-            CanvasGeometry Geometry_01()
+            CanvasGeometry Geometry_1()
             {
                 CanvasGeometry result;
                 using (var builder = new CanvasPathBuilder(null))
                 {
-                    builder.BeginFigure(new Vector2(128.110992F, 80F));
-                    builder.AddLine(new Vector2(64.1389999F, 80.1529999F));
-                    builder.AddLine(new Vector2(63.8779984F, 15.8249998F));
+                    builder.BeginFigure(new Vector2(69.5179977F, -106.950996F));
+                    builder.AddLine(new Vector2(70.1119995F, -210.535995F));
+                    builder.AddLine(new Vector2(219.662994F, -63.4179993F));
+                    builder.AddLine(new Vector2(70.5589981F, 81.7149963F));
+                    builder.AddLine(new Vector2(69.8199997F, -21.9120007F));
                     builder.EndFigure(CanvasFigureLoop.Open);
                     result = CanvasGeometry.CreatePath(builder);
                 }
@@ -309,139 +308,43 @@ namespace WE_Tool.AnimatedVisuals
             }
 
             // - - - - Layer aggregator
-            // - - -  Offset:<256, 256>
+            // - - - 路径 2+路径 1
             // - - 路径 2+路径 1.PathGeometry
-            CanvasGeometry Geometry_02()
+            CanvasGeometry Geometry_2()
             {
                 CanvasGeometry result;
                 using (var builder = new CanvasPathBuilder(null))
                 {
-                    builder.BeginFigure(new Vector2(106.474998F, 224.076996F));
-                    builder.AddLine(new Vector2(210.222F, 120F));
-                    builder.AddCubicBezier(new Vector2(210.222F, 120F), new Vector2(245.968994F, 77.0619965F), new Vector2(203.647003F, 33.1780014F));
-                    builder.AddCubicBezier(new Vector2(185.875F, 14.75F), new Vector2(152.375F, 12.125F), new Vector2(136.153F, 20.4309998F));
-                    builder.AddCubicBezier(new Vector2(110.884003F, 33.3699989F), new Vector2(108.333F, 41.4440002F), new Vector2(97.8339996F, 51.7789993F));
-                    builder.AddCubicBezier(new Vector2(86.9300003F, 62.5130005F), new Vector2(64.2959976F, 80.2279968F), new Vector2(64.2959976F, 80.2279968F));
+                    builder.BeginFigure(new Vector2(83.7490005F, -122.732002F));
+                    builder.AddCubicBezier(new Vector2(83.7490005F, -122.732002F), new Vector2(35.2949982F, -125.575996F), new Vector2(-12.5869999F, -108.240997F));
+                    builder.AddCubicBezier(new Vector2(-34.0530014F, -100.470001F), new Vector2(-54.8040009F, -88.2429962F), new Vector2(-72.0589981F, -70.5780029F));
+                    builder.AddCubicBezier(new Vector2(-95.7539978F, -46.3209991F), new Vector2(-109.805F, -18.0629997F), new Vector2(-118.672997F, 7.34200001F));
+                    builder.AddCubicBezier(new Vector2(-132.451996F, 46.8170013F), new Vector2(-133.087006F, 79.4059982F), new Vector2(-133.087006F, 79.4059982F));
+                    builder.AddCubicBezier(new Vector2(-133.087006F, 79.4059982F), new Vector2(-83.6989975F, 35.9319992F), new Vector2(-33.5760002F, 15.6070004F));
+                    builder.AddCubicBezier(new Vector2(-14.9829998F, 8.06700039F), new Vector2(13.1149998F, -0.746999979F), new Vector2(34.637001F, -3.60400009F));
+                    builder.AddCubicBezier(new Vector2(48.9970016F, -5.51000023F), new Vector2(66.1729965F, -6.98000002F), new Vector2(76.4599991F, -7.65999985F));
+                    builder.AddCubicBezier(new Vector2(82.4810028F, -8.05799961F), new Vector2(85.7529984F, -8.05500031F), new Vector2(85.7529984F, -8.05500031F));
                     builder.EndFigure(CanvasFigureLoop.Open);
                     result = CanvasGeometry.CreatePath(builder);
                 }
                 return result;
             }
 
-            CanvasGeometry Geometry_03()
-            {
-                var result = CanvasGeometry.CreateGroup(
-                    null,
-                    new CanvasGeometry[] { Geometry_04(), Geometry_05(), Geometry_06(), Geometry_07(), Geometry_08(), Geometry_09(), Geometry_10(), Geometry_11() },
-                    CanvasFilledRegionDetermination.Alternate);
-                return result;
-            }
-
-            CanvasGeometry Geometry_04()
+            CanvasGeometry Geometry_3()
             {
                 CanvasGeometry result;
                 using (var builder = new CanvasPathBuilder(null))
                 {
-                    builder.BeginFigure(new Vector2(160.25F, -64.25F));
-                    builder.AddLine(new Vector2(160.222F, -28.2220001F));
-                    builder.EndFigure(CanvasFigureLoop.Open);
-                    result = CanvasGeometry.CreatePath(builder);
-                }
-                return result;
-            }
-
-            CanvasGeometry Geometry_05()
-            {
-                CanvasGeometry result;
-                using (var builder = new CanvasPathBuilder(null))
-                {
-                    builder.BeginFigure(new Vector2(95.9759979F, -223.901993F));
-                    builder.AddCubicBezier(new Vector2(95.9759979F, -223.901993F), new Vector2(130.457993F, -225.535995F), new Vector2(138.889008F, -222.069F));
-                    builder.AddCubicBezier(new Vector2(156.363007F, -214.882996F), new Vector2(159.645996F, -199.207993F), new Vector2(159.645996F, -199.207993F));
-                    builder.AddLine(new Vector2(159.949997F, -159.901001F));
-                    builder.EndFigure(CanvasFigureLoop.Open);
-                    result = CanvasGeometry.CreatePath(builder);
-                }
-                return result;
-            }
-
-            CanvasGeometry Geometry_06()
-            {
-                CanvasGeometry result;
-                using (var builder = new CanvasPathBuilder(null))
-                {
-                    builder.BeginFigure(new Vector2(-64.197998F, -224F));
-                    builder.AddLine(new Vector2(0F, -224.197998F));
-                    builder.EndFigure(CanvasFigureLoop.Open);
-                    result = CanvasGeometry.CreatePath(builder);
-                }
-                return result;
-            }
-
-            CanvasGeometry Geometry_07()
-            {
-                CanvasGeometry result;
-                using (var builder = new CanvasPathBuilder(null))
-                {
-                    builder.BeginFigure(new Vector2(0F, 0F));
-                    builder.EndFigure(CanvasFigureLoop.Closed);
-                    result = CanvasGeometry.CreatePath(builder);
-                }
-                return result;
-            }
-
-            CanvasGeometry Geometry_08()
-            {
-                CanvasGeometry result;
-                using (var builder = new CanvasPathBuilder(null))
-                {
-                    builder.BeginFigure(new Vector2(-223.932007F, -159.837006F));
-                    builder.AddLine(new Vector2(-223.587997F, -198.813995F));
-                    builder.AddCubicBezier(new Vector2(-223.587997F, -198.813995F), new Vector2(-223.860992F, -203.925995F), new Vector2(-216.104996F, -213.214005F));
-                    builder.AddCubicBezier(new Vector2(-210.125F, -220.375F), new Vector2(-203.016006F, -223.731003F), new Vector2(-203.016006F, -223.731003F));
-                    builder.AddLine(new Vector2(-159.996994F, -224.091995F));
-                    builder.EndFigure(CanvasFigureLoop.Open);
-                    result = CanvasGeometry.CreatePath(builder);
-                }
-                return result;
-            }
-
-            CanvasGeometry Geometry_09()
-            {
-                CanvasGeometry result;
-                using (var builder = new CanvasPathBuilder(null))
-                {
-                    builder.BeginFigure(new Vector2(-223.856995F, 0.402999997F));
-                    builder.AddLine(new Vector2(-223.850006F, -63.8240013F));
-                    builder.EndFigure(CanvasFigureLoop.Open);
-                    result = CanvasGeometry.CreatePath(builder);
-                }
-                return result;
-            }
-
-            CanvasGeometry Geometry_10()
-            {
-                CanvasGeometry result;
-                using (var builder = new CanvasPathBuilder(null))
-                {
-                    builder.BeginFigure(new Vector2(-159.444F, 159.945007F));
-                    builder.AddCubicBezier(new Vector2(-159.444F, 159.945007F), new Vector2(-170.998993F, 160.501999F), new Vector2(-189.830994F, 159.763F));
-                    builder.AddCubicBezier(new Vector2(-197.339996F, 159.468002F), new Vector2(-206.444F, 158.847F), new Vector2(-211.046005F, 154.514999F));
-                    builder.AddCubicBezier(new Vector2(-220.274994F, 145.826004F), new Vector2(-224.125F, 139.75F), new Vector2(-224.156998F, 125.332001F));
-                    builder.AddCubicBezier(new Vector2(-224.184006F, 113.371002F), new Vector2(-223.869003F, 95.9240036F), new Vector2(-223.869003F, 95.9240036F));
-                    builder.EndFigure(CanvasFigureLoop.Open);
-                    result = CanvasGeometry.CreatePath(builder);
-                }
-                return result;
-            }
-
-            CanvasGeometry Geometry_11()
-            {
-                CanvasGeometry result;
-                using (var builder = new CanvasPathBuilder(null))
-                {
-                    builder.BeginFigure(new Vector2(0.231000006F, 159.837997F));
-                    builder.AddLine(new Vector2(-63.9749985F, 160.052994F));
+                    builder.BeginFigure(new Vector2(166.485992F, 111.769997F));
+                    builder.AddCubicBezier(new Vector2(166.485992F, 111.769997F), new Vector2(168.158997F, 154.328995F), new Vector2(160.839005F, 169.582001F));
+                    builder.AddCubicBezier(new Vector2(152F, 188F), new Vector2(136.764008F, 203.897995F), new Vector2(109.786003F, 207.908005F));
+                    builder.AddCubicBezier(new Vector2(99.9649963F, 209.367996F), new Vector2(-150.891006F, 208.287994F), new Vector2(-150.891006F, 208.287994F));
+                    builder.AddCubicBezier(new Vector2(-150.891006F, 208.287994F), new Vector2(-176.395004F, 206.923996F), new Vector2(-190.016006F, 197.147003F));
+                    builder.AddCubicBezier(new Vector2(-212.666F, 180.889008F), new Vector2(-215.733994F, 160.813004F), new Vector2(-217.669998F, 149.783005F));
+                    builder.AddCubicBezier(new Vector2(-219.220001F, 140.955002F), new Vector2(-221.039001F, -28.4220009F), new Vector2(-217.270004F, -118.793999F));
+                    builder.AddCubicBezier(new Vector2(-216.820007F, -129.576004F), new Vector2(-213.380997F, -139.570999F), new Vector2(-205.654999F, -150.457001F));
+                    builder.AddCubicBezier(new Vector2(-199.638F, -158.934998F), new Vector2(-179.755997F, -174.057007F), new Vector2(-164.931F, -175.309998F));
+                    builder.AddCubicBezier(new Vector2(-137.227997F, -177.651001F), new Vector2(-57.473999F, -176.011993F), new Vector2(-57.473999F, -176.011993F));
                     builder.EndFigure(CanvasFigureLoop.Open);
                     result = CanvasGeometry.CreatePath(builder);
                 }
@@ -458,23 +361,20 @@ namespace WE_Tool.AnimatedVisuals
             CompositionPath Path()
             {
                 if (_path != null) { return _path; }
-                var result = _path = new CompositionPath(Geometry_03());
+                var result = _path = new CompositionPath(Geometry_3());
                 return result;
             }
 
             // - Layer aggregator
-            // Offset:<256, 256>
+            // 路径 2+路径 1
             // 路径 2+路径 1.PathGeometry
             CompositionPathGeometry PathGeometry_0()
             {
-                if (_pathGeometry_0 != null) { return _pathGeometry_0; }
-                var result = _pathGeometry_0 = _c.CreatePathGeometry(new CompositionPath(Geometry_00()));
-                return result;
+                return _c.CreatePathGeometry(new CompositionPath(Geometry_0()));
             }
 
             // - Layer aggregator
             // Offset:<256, 256>
-            // 路径 8+路径 7+路径 6+路径 5+路径 4+路径 3+路径 2+路径 1.PathGeometry
             CompositionPathGeometry PathGeometry_1()
             {
                 if (_pathGeometry_1 != null) { return _pathGeometry_1; }
@@ -484,7 +384,6 @@ namespace WE_Tool.AnimatedVisuals
 
             // - Layer aggregator
             // Offset:<256, 256>
-            // 路径 8+路径 7+路径 6+路径 5+路径 4+路径 3+路径 2+路径 1.PathGeometry
             CompositionPathGeometry PathGeometry_2()
             {
                 if (_pathGeometry_2 != null) { return _pathGeometry_2; }
@@ -496,12 +395,10 @@ namespace WE_Tool.AnimatedVisuals
             // 路径 2+路径 1
             CompositionSpriteShape SpriteShape_0()
             {
-                // Offset:<256, 256>
-                var result = CreateSpriteShape(PathGeometry_0(), new Matrix3x2(1F, 0F, 0F, 1F, 256F, 256F));;
+                if (_spriteShape_0 != null) { return _spriteShape_0; }
+                var result = _spriteShape_0 = _c.CreateSpriteShape(PathGeometry_0());
+                result.CenterPoint = new Vector2(0F, 200F);
                 result.StrokeBrush = ColorBrush_AlmostLavender_FFEBEBEB();
-                result.StrokeDashCap = CompositionStrokeCap.Round;
-                result.StrokeStartCap = CompositionStrokeCap.Round;
-                result.StrokeEndCap = CompositionStrokeCap.Round;
                 result.StrokeLineJoin = CompositionStrokeLineJoin.Round;
                 result.StrokeMiterLimit = 2F;
                 result.StrokeThickness = 32F;
@@ -509,7 +406,7 @@ namespace WE_Tool.AnimatedVisuals
             }
 
             // Layer aggregator
-            // 路径 8+路径 7+路径 6+路径 5+路径 4+路径 3+路径 2+路径 1
+            // 路径 1
             CompositionSpriteShape SpriteShape_1()
             {
                 // Offset:<256, 256>
@@ -525,7 +422,7 @@ namespace WE_Tool.AnimatedVisuals
             }
 
             // Layer aggregator
-            // 路径 8+路径 7+路径 6+路径 5+路径 4+路径 3+路径 2+路径 1
+            // 路径 1
             CompositionSpriteShape SpriteShape_2()
             {
                 // Offset:<256, 256>
@@ -559,48 +456,45 @@ namespace WE_Tool.AnimatedVisuals
                     : _cubicBezierEasingFunction_0;
             }
 
-            // - - Layer aggregator
-            // -  Offset:<256, 256>
-            // 路径 8+路径 7+路径 6+路径 5+路径 4+路径 3+路径 2+路径 1.PathGeometry
-            // TrimEnd
-            ScalarKeyFrameAnimation TrimEndScalarAnimation_0_to_1()
-            {
-                // Frame 0.
-                var result = CreateScalarKeyFrameAnimation(0F, 0F, StepThenHoldEasingFunction());
-                // Frame 20.
-                result.InsertKeyFrame(0.666666687F, 0F, HoldThenStepEasingFunction());
-                // Frame 30.
-                result.InsertKeyFrame(1F, 1F, CubicBezierEasingFunction_0());
-                return result;
-            }
-
-            // - - Layer aggregator
-            // -  Offset:<256, 256>
-            // 路径 2+路径 1.PathGeometry
-            // TrimStart
-            ScalarKeyFrameAnimation TrimStartScalarAnimation_0_to_0()
+            // - Layer aggregator
+            // 路径 2+路径 1
+            // Rotation
+            ScalarKeyFrameAnimation RotationAngleInDegreesScalarAnimation_0_to_0()
             {
                 // Frame 0.
                 var result = CreateScalarKeyFrameAnimation(0F, 0F, HoldThenStepEasingFunction());
                 // Frame 10.
-                result.InsertKeyFrame(0.333333343F, 0.620000005F, CubicBezierEasingFunction_0());
-                // Frame 30.
+                result.InsertKeyFrame(0.5F, 15F, CubicBezierEasingFunction_0());
+                // Frame 20.
                 result.InsertKeyFrame(1F, 0F, CubicBezierEasingFunction_0());
                 return result;
             }
 
             // - - Layer aggregator
             // -  Offset:<256, 256>
-            // 路径 8+路径 7+路径 6+路径 5+路径 4+路径 3+路径 2+路径 1.PathGeometry
-            // TrimStart
-            ScalarKeyFrameAnimation TrimStartScalarAnimation_0_to_1()
+            // TrimEnd
+            ScalarKeyFrameAnimation TrimEndScalarAnimation_0_to_1()
             {
                 // Frame 0.
                 var result = CreateScalarKeyFrameAnimation(0F, 0F, StepThenHoldEasingFunction());
-                // Frame 10.
-                result.InsertKeyFrame(0.333333343F, 0F, HoldThenStepEasingFunction());
+                // Frame 13.
+                result.InsertKeyFrame(0.649999976F, 0F, HoldThenStepEasingFunction());
                 // Frame 20.
-                result.InsertKeyFrame(0.666666687F, 1F, CubicBezierEasingFunction_0());
+                result.InsertKeyFrame(1F, 1F, CubicBezierEasingFunction_0());
+                return result;
+            }
+
+            // - - Layer aggregator
+            // -  Offset:<256, 256>
+            // TrimStart
+            ScalarKeyFrameAnimation TrimStartScalarAnimation_0p14_to_1()
+            {
+                // Frame 0.
+                var result = CreateScalarKeyFrameAnimation(0F, 0.140000001F, HoldThenStepEasingFunction());
+                // Frame 10.
+                result.InsertKeyFrame(0.5F, 0.649999976F, CubicBezierEasingFunction_0());
+                // Frame 12.
+                result.InsertKeyFrame(0.600000024F, 1F, CubicBezierEasingFunction_0());
                 return result;
             }
 
@@ -610,7 +504,7 @@ namespace WE_Tool.AnimatedVisuals
                 var result = _c.CreateShapeVisual();
                 result.Size = new Vector2(512F, 512F);
                 var shapes = result.Shapes;
-                // Offset:<256, 256>
+                // 路径 2+路径 1
                 shapes.Add(SpriteShape_0());
                 // Offset:<256, 256>
                 shapes.Add(SpriteShape_1());
@@ -627,15 +521,31 @@ namespace WE_Tool.AnimatedVisuals
                 return result;
             }
 
+            // - - - Layer aggregator
+            // - -  Offset:<256, 256>
+            // TrimEnd
             StepEasingFunction StepThenHoldEasingFunction()
             {
-                if (_stepThenHoldEasingFunction != null) { return _stepThenHoldEasingFunction; }
-                var result = _stepThenHoldEasingFunction = _c.CreateStepEasingFunction();
+                var result = _c.CreateStepEasingFunction();
                 result.IsInitialStepSingleFrame = true;
                 return result;
             }
 
-            internal InvertSelection_AnimatedVisual(
+            // - Layer aggregator
+            // 路径 2+路径 1
+            // Offset
+            Vector2KeyFrameAnimation OffsetVector2Animation()
+            {
+                // Frame 0.
+                var result = CreateVector2KeyFrameAnimation(0F, new Vector2(256F, 256F), HoldThenStepEasingFunction());
+                // Frame 10.
+                result.InsertKeyFrame(0.5F, new Vector2(356F, 226F), CubicBezierEasingFunction_0());
+                // Frame 20.
+                result.InsertKeyFrame(1F, new Vector2(256F, 256F), CubicBezierEasingFunction_0());
+                return result;
+            }
+
+            internal ExtractIcon_AnimatedVisual(
                 Compositor compositor
                 )
             {
@@ -651,16 +561,18 @@ namespace WE_Tool.AnimatedVisuals
 
             public void CreateAnimations()
             {
-                _pathGeometry_0.StartAnimation("TrimStart", TrimStartScalarAnimation_0_to_0(), AnimationController_0());
-                _pathGeometry_1.StartAnimation("TrimStart", TrimStartScalarAnimation_0_to_1(), AnimationController_0());
+                _pathGeometry_1.StartAnimation("TrimStart", TrimStartScalarAnimation_0p14_to_1(), AnimationController_0());
                 _pathGeometry_2.StartAnimation("TrimEnd", TrimEndScalarAnimation_0_to_1(), AnimationController_0());
+                _spriteShape_0.StartAnimation("RotationAngleInDegrees", RotationAngleInDegreesScalarAnimation_0_to_0(), AnimationController_0());
+                _spriteShape_0.StartAnimation("Offset", OffsetVector2Animation(), AnimationController_0());
             }
 
             public void DestroyAnimations()
             {
-                _pathGeometry_0.StopAnimation("TrimStart");
                 _pathGeometry_1.StopAnimation("TrimStart");
                 _pathGeometry_2.StopAnimation("TrimEnd");
+                _spriteShape_0.StopAnimation("RotationAngleInDegrees");
+                _spriteShape_0.StopAnimation("Offset");
             }
 
         }

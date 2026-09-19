@@ -370,3 +370,5 @@ FodyWeavers.xsd
 TestData/
 # Inno Setup 安装包编译输出
 installer/bin/
+# Qoder 技能库(从 Hermes 迁移,本机用,勿入库)
+/.qoder/skills/

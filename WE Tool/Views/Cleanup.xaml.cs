@@ -418,6 +418,7 @@ public sealed partial class Cleanup : Page
     {
         var selected = Cards.Where(c => c.IsSelected).ToList();
         if (selected.Count == 0) return;
+        AnimatedIconPlayer.PlayOnce(sender, "批量删除");   // [删除图标动画 2026-09]
 
         int totalFiles = selected.Sum(c => c.Files.Count);
         var dlg = new ContentDialog
@@ -508,6 +509,7 @@ public sealed partial class Cleanup : Page
     private async void DeleteAllButton_Click(object sender, RoutedEventArgs e)
     {
         if (Cards.Count == 0) return;
+        AnimatedIconPlayer.PlayOnce(sender, "全部删除");   // [删除图标动画 2026-09]
 
         int totalFiles = 0;
         foreach (var c in Cards)

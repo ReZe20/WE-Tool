@@ -1304,10 +1304,10 @@ project.json とプレビューをコピー
     <value>更新</value>
   </data>
   <data name="Toolbar_View.Label" xml:space="preserve">
-    <value>表示▾</value>
+    <value>表示</value>
   </data>
   <data name="Toolbar_Sort.Label" xml:space="preserve">
-    <value>並び替え▾</value>
+    <value>並び替え</value>
   </data>
   <data name="Toolbar_SortDirection.Label" xml:space="preserve">
     <value>並び替え方向</value>

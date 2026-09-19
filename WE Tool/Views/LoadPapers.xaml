@@ -7,6 +7,8 @@
     xmlns:models="using:WE_Tool.Models"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:animatedvisuals="using:WE_Tool.AnimatedVisuals"
+    xmlns:wetool="using:WE_Tool.Controls"
     mc:Ignorable="d"
     NavigationCacheMode="Enabled"
     AllowDrop="True"
@@ -185,7 +187,14 @@
                               x:Uid="LoadPapers_Clear"
                               Click="ClearQueue_Click">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE74D;"/>
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:DeleteIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE74D;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>

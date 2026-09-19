@@ -9,7 +9,7 @@
 //           LottieGen -Language CSharp -Namespace WE_Tool.AnimatedVisuals -Public -WinUIVersion 3.0 -InputFile RefreshIcon.json
 //       
 //       Input file:
-//           RefreshIcon.json (4135 bytes created 22:56+08:00 Sep 14 2026)
+//           RefreshIcon.json (14985 bytes created 23:08+08:00 Sep 18 2026)
 //       
 //       LottieGen source:
 //           http://aka.ms/Lottie
@@ -21,10 +21,10 @@
 // ____________________________________
 // |       Object stats       | Count |
 // |__________________________|_______|
-// | All CompositionObjects   |    22 |
+// | All CompositionObjects   |    24 |
 // |--------------------------+-------|
 // | Expression animators     |     1 |
-// | KeyFrame animators       |     1 |
+// | KeyFrame animators       |     2 |
 // | Reference parameters     |     1 |
 // | Expression operations    |     0 |
 // |--------------------------+-------|
@@ -55,28 +55,84 @@ namespace WE_Tool.AnimatedVisuals
 {
     // Name:        Refresh
     // Frame rate:  60 fps
-    // Frame count: 60
-    // Duration:    1000.0 mS
-    // _______________________________________________________________________________
-    // |        Marker         |        Constant         | Frame |   mS   | Progress |
-    // |_______________________|_________________________|_______|________|__________|
-    // | NormalToPlaying_Start | M_NormalToPlaying_Start |     0 |    0.0 | 0F       |
-    // | NormalToPlaying_End   | M_NormalToPlaying_End   |    60 | 1000.0 | 1F       |
-    // | PlayingToNormal_Start | M_PlayingToNormal_Start |    60 | 1000.0 | 1F       |
-    // | PlayingToNormal_End   | M_PlayingToNormal_End   |    60 | 1000.0 | 1F       |
-    // -------------------------------------------------------------------------------
+    // Frame count: 30
+    // Duration:    500.0 mS
+    // ____________________________________________________________________________________________
+    // |           Marker           |           Constant           | Frame |  mS   |   Progress   |
+    // |____________________________|______________________________|_______|_______|______________|
+    // | NormalToPointerOver_Start  | M_NormalToPointerOver_Start  |     0 |   0.0 | 0F           |
+    // | NormalToPointerOver_End    | M_NormalToPointerOver_End    |     0 |   0.0 | 0F           |
+    // | PointerOverToNormal_Start  | M_PointerOverToNormal_Start  |     0 |   0.0 | 0F           |
+    // | PointerOverToNormal_End    | M_PointerOverToNormal_End    |     0 |   0.0 | 0F           |
+    // | NormalToPressed_Start      | M_NormalToPressed_Start      |     0 |   0.0 | 0F           |
+    // | PointerOverToPressed_Start | M_PointerOverToPressed_Start |     0 |   0.0 | 0F           |
+    // | PressedToNormal_End        | M_PressedToNormal_End        |     0 |   0.0 | 0F           |
+    // | NormalToPlaying_Start      | M_NormalToPlaying_Start      |     0 |   0.0 | 0F           |
+    // | PointerOverToPlaying_Start | M_PointerOverToPlaying_Start |     0 |   0.0 | 0F           |
+    // | NormalToPressed_End        | M_NormalToPressed_End        |    10 | 166.7 | 0.335000008F |
+    // | PointerOverToPressed_End   | M_PointerOverToPressed_End   |    10 | 166.7 | 0.335000008F |
+    // | PressedToPointerOver_Start | M_PressedToPointerOver_Start |    10 | 166.7 | 0.335000008F |
+    // | PressedToNormal_Start      | M_PressedToNormal_Start      |    10 | 166.7 | 0.335000008F |
+    // | PressedToPointerOver_End   | M_PressedToPointerOver_End   |    30 | 500.0 | 1F           |
+    // | NormalToPlaying_End        | M_NormalToPlaying_End        |    30 | 500.0 | 1F           |
+    // | PointerOverToPlaying_End   | M_PointerOverToPlaying_End   |    30 | 500.0 | 1F           |
+    // | PlayingToNormal_Start      | M_PlayingToNormal_Start      |    30 | 500.0 | 1F           |
+    // | PlayingToNormal_End        | M_PlayingToNormal_End        |    30 | 500.0 | 1F           |
+    // --------------------------------------------------------------------------------------------
     public sealed class RefreshIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
-        // Animation duration: 1.000 seconds.
-        internal const long c_durationTicks = 10000000;
+        // Animation duration: 0.500 seconds.
+        internal const long c_durationTicks = 5000000;
+
+        // Marker: NormalToPointerOver_Start.
+        internal const float M_NormalToPointerOver_Start = 0F;
+
+        // Marker: NormalToPointerOver_End.
+        internal const float M_NormalToPointerOver_End = 0F;
+
+        // Marker: PointerOverToNormal_Start.
+        internal const float M_PointerOverToNormal_Start = 0F;
+
+        // Marker: PointerOverToNormal_End.
+        internal const float M_PointerOverToNormal_End = 0F;
+
+        // Marker: NormalToPressed_Start.
+        internal const float M_NormalToPressed_Start = 0F;
+
+        // Marker: PointerOverToPressed_Start.
+        internal const float M_PointerOverToPressed_Start = 0F;
+
+        // Marker: PressedToNormal_End.
+        internal const float M_PressedToNormal_End = 0F;
 
         // Marker: NormalToPlaying_Start.
         internal const float M_NormalToPlaying_Start = 0F;
 
+        // Marker: PointerOverToPlaying_Start.
+        internal const float M_PointerOverToPlaying_Start = 0F;
+
+        // Marker: NormalToPressed_End.
+        internal const float M_NormalToPressed_End = 0.335000008F;
+
+        // Marker: PointerOverToPressed_End.
+        internal const float M_PointerOverToPressed_End = 0.335000008F;
+
+        // Marker: PressedToPointerOver_Start.
+        internal const float M_PressedToPointerOver_Start = 0.335000008F;
+
+        // Marker: PressedToNormal_Start.
+        internal const float M_PressedToNormal_Start = 0.335000008F;
+
+        // Marker: PressedToPointerOver_End.
+        internal const float M_PressedToPointerOver_End = 1F;
+
         // Marker: NormalToPlaying_End.
         internal const float M_NormalToPlaying_End = 1F;
+
+        // Marker: PointerOverToPlaying_End.
+        internal const float M_PointerOverToPlaying_End = 1F;
 
         // Marker: PlayingToNormal_Start.
         internal const float M_PlayingToNormal_Start = 1F;
@@ -105,7 +161,7 @@ namespace WE_Tool.AnimatedVisuals
         /// <summary>
         /// Gets the number of frames in the animation.
         /// </summary>
-        public double FrameCount => 60d;
+        public double FrameCount => 30d;
 
         /// <summary>
         /// Gets the frame rate of the animation.
@@ -115,7 +171,7 @@ namespace WE_Tool.AnimatedVisuals
         /// <summary>
         /// Gets the duration of the animation.
         /// </summary>
-        public TimeSpan Duration => TimeSpan.FromTicks(10000000);
+        public TimeSpan Duration => TimeSpan.FromTicks(5000000);
 
         /// <summary>
         /// Converts a zero-based frame number to the corresponding progress value denoting the
@@ -123,7 +179,7 @@ namespace WE_Tool.AnimatedVisuals
         /// </summary>
         public double FrameToProgress(double frameNumber)
         {
-            return frameNumber / 60d;
+            return frameNumber / 30d;
         }
 
         /// <summary>
@@ -132,8 +188,22 @@ namespace WE_Tool.AnimatedVisuals
         public IReadOnlyDictionary<string, double> Markers =>
             new Dictionary<string, double>
             {
+                { "NormalToPointerOver_Start", 0d },
+                { "NormalToPointerOver_End", 0d },
+                { "PointerOverToNormal_Start", 0d },
+                { "PointerOverToNormal_End", 0d },
+                { "NormalToPressed_Start", 0d },
+                { "PointerOverToPressed_Start", 0d },
+                { "PressedToNormal_End", 0d },
                 { "NormalToPlaying_Start", 0d },
+                { "PointerOverToPlaying_Start", 0d },
+                { "NormalToPressed_End", 0.335 },
+                { "PointerOverToPressed_End", 0.335 },
+                { "PressedToPointerOver_Start", 0.335 },
+                { "PressedToNormal_Start", 0.335 },
+                { "PressedToPointerOver_End", 1d },
                 { "NormalToPlaying_End", 1d },
+                { "PointerOverToPlaying_End", 1d },
                 { "PlayingToNormal_Start", 1d },
                 { "PlayingToNormal_End", 1d },
             };
@@ -158,13 +228,14 @@ namespace WE_Tool.AnimatedVisuals
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {
-            const long c_durationTicks = 10000000;
+            const long c_durationTicks = 5000000;
             readonly Compositor _c;
             readonly ExpressionAnimation _reusableExpressionAnimation;
             AnimationController _animationController_0;
             CompositionSpriteShape _spriteShape;
             ContainerVisual _root;
             CubicBezierEasingFunction _cubicBezierEasingFunction_0;
+            StepEasingFunction _holdThenStepEasingFunction;
 
             void BindProperty(
                 CompositionObject target,
@@ -187,8 +258,14 @@ namespace WE_Tool.AnimatedVisuals
                 return result;
             }
 
-            // - Shape tree root for layer: “”轮廓
-            // 
+            Vector2KeyFrameAnimation CreateVector2KeyFrameAnimation(float initialProgress, Vector2 initialValue, CompositionEasingFunction initialEasingFunction)
+            {
+                var result = _c.CreateVector2KeyFrameAnimation();
+                result.Duration = TimeSpan.FromTicks(c_durationTicks);
+                result.InsertKeyFrame(initialProgress, initialValue, initialEasingFunction);
+                return result;
+            }
+
             AnimationController AnimationController_0()
             {
                 if (_animationController_0 != null) { return _animationController_0; }
@@ -330,7 +407,7 @@ namespace WE_Tool.AnimatedVisuals
             CubicBezierEasingFunction CubicBezierEasingFunction_0()
             {
                 return (_cubicBezierEasingFunction_0 == null)
-                    ? _cubicBezierEasingFunction_0 = _c.CreateCubicBezierEasingFunction(new Vector2(0.166999996F, 0.166999996F), new Vector2(0.833000004F, 0.833000004F))
+                    ? _cubicBezierEasingFunction_0 = _c.CreateCubicBezierEasingFunction(new Vector2(0.333000004F, 0F), new Vector2(0.666999996F, 1F))
                     : _cubicBezierEasingFunction_0;
             }
 
@@ -341,12 +418,8 @@ namespace WE_Tool.AnimatedVisuals
             {
                 // Frame 0.
                 var result = CreateScalarKeyFrameAnimation(0F, 0F, HoldThenStepEasingFunction());
-                // Frame 27.
-                result.InsertKeyFrame(0.449999988F, 95.7409973F, CubicBezierEasingFunction_0());
-                // Frame 40.
-                result.InsertKeyFrame(0.666666687F, 274.375F, CubicBezierEasingFunction_0());
-                // Frame 59.
-                result.InsertKeyFrame(0.983333349F, 360F, CubicBezierEasingFunction_0());
+                // Frame 30.
+                result.InsertKeyFrame(1F, 360F, CubicBezierEasingFunction_0());
                 return result;
             }
 
@@ -360,13 +433,27 @@ namespace WE_Tool.AnimatedVisuals
                 return result;
             }
 
-            // - - Shape tree root for layer: “”轮廓
-            // - 
-            // RotationAngleInDegrees
             StepEasingFunction HoldThenStepEasingFunction()
             {
-                var result = _c.CreateStepEasingFunction();
+                if (_holdThenStepEasingFunction != null) { return _holdThenStepEasingFunction; }
+                var result = _holdThenStepEasingFunction = _c.CreateStepEasingFunction();
                 result.IsFinalStepSingleFrame = true;
+                return result;
+            }
+
+            // - Shape tree root for layer: “”轮廓
+            // 
+            // Scale
+            Vector2KeyFrameAnimation ScaleVector2Animation()
+            {
+                // Frame 0.
+                var result = CreateVector2KeyFrameAnimation(0F, new Vector2(1F, 1F), HoldThenStepEasingFunction());
+                // Frame 7.
+                result.InsertKeyFrame(0.233333334F, new Vector2(0.75F, 0.75F), CubicBezierEasingFunction_0());
+                // Frame 25.
+                result.InsertKeyFrame(0.833333313F, new Vector2(0.75F, 0.75F), CubicBezierEasingFunction_0());
+                // Frame 30.
+                result.InsertKeyFrame(1F, new Vector2(1F, 1F), CubicBezierEasingFunction_0());
                 return result;
             }
 
@@ -387,11 +474,13 @@ namespace WE_Tool.AnimatedVisuals
             public void CreateAnimations()
             {
                 _spriteShape.StartAnimation("RotationAngleInDegrees", RotationAngleInDegreesScalarAnimation_0_to_360(), AnimationController_0());
+                _spriteShape.StartAnimation("Scale", ScaleVector2Animation(), AnimationController_0());
             }
 
             public void DestroyAnimations()
             {
                 _spriteShape.StopAnimation("RotationAngleInDegrees");
+                _spriteShape.StopAnimation("Scale");
             }
 
         }

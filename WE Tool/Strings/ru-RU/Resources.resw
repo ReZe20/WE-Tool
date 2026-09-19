@@ -1304,10 +1304,10 @@
     <value>Обновить</value>
   </data>
   <data name="Toolbar_View.Label" xml:space="preserve">
-    <value>Вид▾</value>
+    <value>Вид</value>
   </data>
   <data name="Toolbar_Sort.Label" xml:space="preserve">
-    <value>Сортировка▾</value>
+    <value>Сортировка</value>
   </data>
   <data name="Toolbar_SortDirection.Label" xml:space="preserve">
     <value>Направление сортировки</value>
