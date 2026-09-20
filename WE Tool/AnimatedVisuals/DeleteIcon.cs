@@ -127,7 +127,7 @@ namespace WE_Tool.AnimatedVisuals
     // | PressedSelectedToSelected_End              | M_PressedSelectedToSelected_End              |    20 | 333.3 | 1F           |
     // | PressedSelectedToPointerOverSelected_End   | M_PressedSelectedToPointerOverSelected_End   |    20 | 333.3 | 1F           |
     // ----------------------------------------------------------------------------------------------------------------------------
-    public sealed class DeleteIcon
+    public sealed partial class DeleteIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
@@ -464,7 +464,7 @@ namespace WE_Tool.AnimatedVisuals
         {
         }
 
-        sealed class DeleteIcon_AnimatedVisual
+        sealed partial class DeleteIcon_AnimatedVisual
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {

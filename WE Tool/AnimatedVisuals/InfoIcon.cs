@@ -121,7 +121,7 @@ namespace WE_Tool.AnimatedVisuals
     // | PressedSelectedToSelected_End              | M_PressedSelectedToSelected_End              |    30 | 500.0 | 1F           |
     // | PressedSelectedToPointerOverSelected_End   | M_PressedSelectedToPointerOverSelected_End   |    30 | 500.0 | 1F           |
     // ----------------------------------------------------------------------------------------------------------------------------
-    public sealed class InfoIcon
+    public sealed partial class InfoIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
@@ -434,7 +434,7 @@ namespace WE_Tool.AnimatedVisuals
         {
         }
 
-        sealed class InfoIcon_AnimatedVisual
+        sealed partial class InfoIcon_AnimatedVisual
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {

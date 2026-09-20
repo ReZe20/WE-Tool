@@ -80,7 +80,7 @@ public static class BackupService
     /// <summary>
     /// 给裸 kernel32 调用的路径加 \\?\ 前缀。.NET 的长路径规范化只作用于 BCL 的 File/Directory,
     /// 不吃 P/Invoke——超过 MAX_PATH 的 target 会以 ERROR_PATH_NOT_FOUND 静默失败。
-    /// 与服务端 AutoBackupService.HardLinkBackup.Ext 同一实现,两侧行为必须一致。
+    /// 与服务端同一实现(现在是 C++ 那份:AutoBackupService/backup.cpp 的 Ext),两侧行为必须一致。
     /// </summary>
     private static string Ext(string path)
     {

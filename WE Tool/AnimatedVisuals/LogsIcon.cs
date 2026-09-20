@@ -119,7 +119,7 @@ namespace WE_Tool.AnimatedVisuals
     // | PressedSelectedToSelected_End              | M_PressedSelectedToSelected_End              |    40 | 666.7 | 1F           |
     // | PressedSelectedToPointerOverSelected_End   | M_PressedSelectedToPointerOverSelected_End   |    40 | 666.7 | 1F           |
     // ----------------------------------------------------------------------------------------------------------------------------
-    public sealed class LogsIcon
+    public sealed partial class LogsIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
@@ -432,7 +432,7 @@ namespace WE_Tool.AnimatedVisuals
         {
         }
 
-        sealed class LogsIcon_AnimatedVisual
+        sealed partial class LogsIcon_AnimatedVisual
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {

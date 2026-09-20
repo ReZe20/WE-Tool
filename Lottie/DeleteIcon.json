@@ -1,0 +1,1167 @@
+{
+ "v": "5.12.2",
+ "fr": 60,
+ "ip": 0,
+ "op": 20,
+ "w": 512,
+ "h": 512,
+ "nm": "delete_final",
+ "ddd": 0,
+ "assets": [],
+ "layers": [
+  {
+   "ddd": 0,
+   "ind": 1,
+   "ty": 4,
+   "nm": "盖子",
+   "sr": 1,
+   "ks": {
+    "o": {
+     "a": 0,
+     "k": 100,
+     "ix": 11
+    },
+    "r": {
+     "a": 1,
+     "k": [
+      {
+       "i": {
+        "x": [
+         0.667
+        ],
+        "y": [
+         1
+        ]
+       },
+       "o": {
+        "x": [
+         0.333
+        ],
+        "y": [
+         0
+        ]
+       },
+       "t": 4,
+       "s": [
+        0
+       ]
+      },
+      {
+       "i": {
+        "x": [
+         0.667
+        ],
+        "y": [
+         1
+        ]
+       },
+       "o": {
+        "x": [
+         0.333
+        ],
+        "y": [
+         0
+        ]
+       },
+       "t": 10,
+       "s": [
+        10
+       ]
+      },
+      {
+       "t": 20,
+       "s": [
+        0
+       ]
+      }
+     ],
+     "ix": 10
+    },
+    "p": {
+     "a": 1,
+     "k": [
+      {
+       "i": {
+        "x": 0.667,
+        "y": 1
+       },
+       "o": {
+        "x": 0.333,
+        "y": 0
+       },
+       "t": 5,
+       "s": [
+        256,
+        256,
+        0
+       ],
+       "to": [
+        0,
+        0,
+        0
+       ],
+       "ti": [
+        0,
+        0,
+        0
+       ]
+      },
+      {
+       "i": {
+        "x": 0.667,
+        "y": 1
+       },
+       "o": {
+        "x": 0.333,
+        "y": 0
+       },
+       "t": 10,
+       "s": [
+        256,
+        206,
+        0
+       ],
+       "to": [
+        0,
+        0,
+        0
+       ],
+       "ti": [
+        0,
+        0,
+        0
+       ]
+      },
+      {
+       "t": 20,
+       "s": [
+        256,
+        256,
+        0
+       ]
+      }
+     ],
+     "ix": 2,
+     "l": 2
+    },
+    "a": {
+     "a": 0,
+     "k": [
+      0,
+      0,
+      0
+     ],
+     "ix": 1,
+     "l": 2
+    },
+    "s": {
+     "a": 1,
+     "k": [
+      {
+       "i": {
+        "x": [
+         0.667,
+         0.667,
+         0.667
+        ],
+        "y": [
+         1,
+         1,
+         1
+        ]
+       },
+       "o": {
+        "x": [
+         0.333,
+         0.333,
+         0.333
+        ],
+        "y": [
+         0,
+         0,
+         0
+        ]
+       },
+       "t": 0,
+       "s": [
+        100,
+        100,
+        100
+       ]
+      },
+      {
+       "i": {
+        "x": [
+         0.667,
+         0.667,
+         0.667
+        ],
+        "y": [
+         1,
+         1,
+         1
+        ]
+       },
+       "o": {
+        "x": [
+         0.333,
+         0.333,
+         0.333
+        ],
+        "y": [
+         0,
+         0,
+         0
+        ]
+       },
+       "t": 4,
+       "s": [
+        75,
+        75,
+        100
+       ]
+      },
+      {
+       "t": 20,
+       "s": [
+        100,
+        100,
+        100
+       ]
+      }
+     ],
+     "ix": 6,
+     "l": 2
+    }
+   },
+   "ao": 0,
+   "shapes": [
+    {
+     "ind": 0,
+     "ty": "sh",
+     "ix": 1,
+     "ks": {
+      "a": 0,
+      "k": {
+       "i": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "o": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "v": [
+        [
+         -223.949,
+         -175.946
+        ],
+        [
+         224.071,
+         -175.918
+        ]
+       ],
+       "c": false
+      },
+      "ix": 2
+     },
+     "nm": "路径 1",
+     "mn": "ADBE Vector Shape - Group",
+     "hd": false
+    },
+    {
+     "ind": 1,
+     "ty": "sh",
+     "ix": 2,
+     "ks": {
+      "a": 0,
+      "k": {
+       "i": [
+        [
+         0,
+         0
+        ],
+        [
+         -7.174,
+         7.314
+        ],
+        [
+         -11.607,
+         3.535
+        ],
+        [
+         -10.049,
+         -2.223
+        ],
+        [
+         -8.154,
+         -7.435
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "o": [
+        [
+         0,
+         0
+        ],
+        [
+         8.496,
+         -8.662
+        ],
+        [
+         9.846,
+         -2.998
+        ],
+        [
+         10.774,
+         2.384
+        ],
+        [
+         12.17,
+         11.097
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "v": [
+        [
+         -62.859,
+         -192.439
+        ],
+        [
+         -48.094,
+         -218.701
+        ],
+        [
+         -17.996,
+         -237.619
+        ],
+        [
+         13.309,
+         -238.575
+        ],
+        [
+         43.545,
+         -223.24
+        ],
+        [
+         62.617,
+         -192.746
+        ]
+       ],
+       "c": false
+      },
+      "ix": 2
+     },
+     "nm": "路径 2",
+     "mn": "ADBE Vector Shape - Group",
+     "hd": false
+    },
+    {
+     "ty": "st",
+     "c": {
+      "a": 0,
+      "k": [
+       0.92156869173,
+       0.92156869173,
+       0.92156869173,
+       1
+      ],
+      "ix": 3
+     },
+     "o": {
+      "a": 0,
+      "k": 100,
+      "ix": 4
+     },
+     "w": {
+      "a": 0,
+      "k": 32,
+      "ix": 5
+     },
+     "lc": 2,
+     "lj": 1,
+     "ml": 4,
+     "bm": 0,
+     "nm": "描边 1",
+     "mn": "ADBE Vector Graphic - Stroke",
+     "hd": false
+    }
+   ],
+   "ip": 0,
+   "op": 20,
+   "st": 0,
+   "ct": 1,
+   "bm": 0
+  },
+  {
+   "ddd": 0,
+   "ind": 2,
+   "ty": 4,
+   "nm": "形状图层 1",
+   "sr": 1,
+   "ks": {
+    "o": {
+     "a": 0,
+     "k": 100,
+     "ix": 11
+    },
+    "r": {
+     "a": 0,
+     "k": 0,
+     "ix": 10
+    },
+    "p": {
+     "a": 1,
+     "k": [
+      {
+       "i": {
+        "x": 0.667,
+        "y": 1
+       },
+       "o": {
+        "x": 0.333,
+        "y": 0
+       },
+       "t": 5,
+       "s": [
+        256,
+        256,
+        0
+       ],
+       "to": [
+        0,
+        0,
+        0
+       ],
+       "ti": [
+        0,
+        0,
+        0
+       ]
+      },
+      {
+       "i": {
+        "x": 0.667,
+        "y": 1
+       },
+       "o": {
+        "x": 0.333,
+        "y": 0
+       },
+       "t": 10,
+       "s": [
+        256,
+        286,
+        0
+       ],
+       "to": [
+        0,
+        0,
+        0
+       ],
+       "ti": [
+        0,
+        0,
+        0
+       ]
+      },
+      {
+       "t": 20,
+       "s": [
+        256,
+        256,
+        0
+       ]
+      }
+     ],
+     "ix": 2,
+     "l": 2
+    },
+    "a": {
+     "a": 0,
+     "k": [
+      0,
+      0,
+      0
+     ],
+     "ix": 1,
+     "l": 2
+    },
+    "s": {
+     "a": 1,
+     "k": [
+      {
+       "i": {
+        "x": [
+         0.667,
+         0.667,
+         0.667
+        ],
+        "y": [
+         1,
+         1,
+         1
+        ]
+       },
+       "o": {
+        "x": [
+         0.333,
+         0.333,
+         0.333
+        ],
+        "y": [
+         0,
+         0,
+         0
+        ]
+       },
+       "t": 0,
+       "s": [
+        100,
+        100,
+        100
+       ]
+      },
+      {
+       "i": {
+        "x": [
+         0.667,
+         0.667,
+         0.667
+        ],
+        "y": [
+         1,
+         1,
+         1
+        ]
+       },
+       "o": {
+        "x": [
+         0.333,
+         0.333,
+         0.333
+        ],
+        "y": [
+         0,
+         0,
+         0
+        ]
+       },
+       "t": 4,
+       "s": [
+        75,
+        75,
+        100
+       ]
+      },
+      {
+       "t": 20,
+       "s": [
+        100,
+        100,
+        100
+       ]
+      }
+     ],
+     "ix": 6,
+     "l": 2
+    }
+   },
+   "ao": 0,
+   "shapes": [
+    {
+     "ind": 0,
+     "ty": "sh",
+     "ix": 1,
+     "ks": {
+      "a": 0,
+      "k": {
+       "i": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ],
+        [
+         -5.447,
+         -6.688
+        ],
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ],
+        [
+         -7.426,
+         9.268
+        ],
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "o": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ],
+        [
+         5.568,
+         6.836
+        ],
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ],
+        [
+         6.548,
+         -8.173
+        ],
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "v": [
+        [
+         -189.863,
+         -156.801
+        ],
+        [
+         -148.855,
+         200.09
+        ],
+        [
+         -138.133,
+         223.352
+        ],
+        [
+         -113.224,
+         240
+        ],
+        [
+         110.702,
+         239.867
+        ],
+        [
+         136.128,
+         225.135
+        ],
+        [
+         147.797,
+         206.973
+        ],
+        [
+         190.4,
+         -161.782
+        ]
+       ],
+       "c": false
+      },
+      "ix": 2
+     },
+     "nm": "路径 1",
+     "mn": "ADBE Vector Shape - Group",
+     "hd": false
+    },
+    {
+     "ind": 1,
+     "ty": "sh",
+     "ix": 2,
+     "ks": {
+      "a": 0,
+      "k": {
+       "i": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "o": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "v": [
+        [
+         -48,
+         -48
+        ],
+        [
+         -48,
+         112
+        ]
+       ],
+       "c": false
+      },
+      "ix": 2
+     },
+     "nm": "路径 2",
+     "mn": "ADBE Vector Shape - Group",
+     "hd": false
+    },
+    {
+     "ind": 2,
+     "ty": "sh",
+     "ix": 3,
+     "ks": {
+      "a": 0,
+      "k": {
+       "i": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "o": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "v": [
+        [
+         53.006,
+         -47.989
+        ],
+        [
+         53.333,
+         112.177
+        ]
+       ],
+       "c": false
+      },
+      "ix": 2
+     },
+     "nm": "路径 3",
+     "mn": "ADBE Vector Shape - Group",
+     "hd": false
+    },
+    {
+     "ty": "st",
+     "c": {
+      "a": 0,
+      "k": [
+       0.92156869173,
+       0.92156869173,
+       0.92156869173,
+       1
+      ],
+      "ix": 3
+     },
+     "o": {
+      "a": 0,
+      "k": 100,
+      "ix": 4
+     },
+     "w": {
+      "a": 0,
+      "k": 32,
+      "ix": 5
+     },
+     "lc": 2,
+     "lj": 2,
+     "bm": 0,
+     "nm": "描边 1",
+     "mn": "ADBE Vector Graphic - Stroke",
+     "hd": false
+    }
+   ],
+   "ip": 0,
+   "op": 20,
+   "st": 0,
+   "ct": 1,
+   "bm": 0
+  }
+ ],
+ "markers": [
+  {
+   "cm": "NormalToPointerOver_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPointerOver_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToNormal_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToNormal_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPressed_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPressed_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToPressed_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToPressed_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToPointerOver_Start",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToPointerOver_End",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToNormal_Start",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToNormal_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPlaying_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPlaying_End",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToPlaying_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToPlaying_End",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "PlayingToNormal_Start",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "PlayingToNormal_End",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToSelected_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPressedSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPointerOverSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPointerOverSelected_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToSelected_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToPressedSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToPointerOverSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToPointerOverSelected_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToPressedSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToNormal_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToNormal_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToPointerOver_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToPointerOver_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToPressed_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToPressedSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToPointerOverSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToPointerOverSelected_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToPressed_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToNormal_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToNormal_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToPointerOver_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToPointerOver_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToPressed_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToSelected_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToPressedSelected_Start",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "NormalToPressedSelected_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverToPressedSelected_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToSelected_Start",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToPressedSelected_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToPointerOverSelected_Start",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToPressed_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "SelectedToPressedSelected_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToNormal_Start",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToPointerOver_Start",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToPressed_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToSelected_Start",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToPointerOverSelected_Start",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToPressed_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PointerOverSelectedToPressedSelected_End",
+   "tm": 10,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToSelected_End",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "PressedToPointerOverSelected_End",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToNormal_End",
+   "tm": 0,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToPointerOver_End",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToSelected_End",
+   "tm": 20,
+   "dr": 0
+  },
+  {
+   "cm": "PressedSelectedToPointerOverSelected_End",
+   "tm": 20,
+   "dr": 0
+  }
+ ],
+ "props": {}
+}

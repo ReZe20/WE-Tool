@@ -79,7 +79,7 @@ namespace WE_Tool.AnimatedVisuals
     // | PlayingToNormal_Start      | M_PlayingToNormal_Start      |    30 | 500.0 | 1F           |
     // | PlayingToNormal_End        | M_PlayingToNormal_End        |    30 | 500.0 | 1F           |
     // --------------------------------------------------------------------------------------------
-    public sealed class RefreshIcon
+    public sealed partial class RefreshIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
@@ -224,7 +224,7 @@ namespace WE_Tool.AnimatedVisuals
         {
         }
 
-        sealed class RefreshIcon_AnimatedVisual
+        sealed partial class RefreshIcon_AnimatedVisual
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {

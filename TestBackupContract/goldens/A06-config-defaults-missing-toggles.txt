@@ -1,5 +1,5 @@
 ### A06-config-defaults-missing-toggles
-runs: 1  exits: 0
+mode: batch  runs: 1  exits: 0
 args: --verify --data-dir "{ROOT}\data"
 stdout:
   Enabled=True

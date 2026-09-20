@@ -1,5 +1,5 @@
 ### B04-once-one-video-backup
-runs: 1  exits: 0
+mode: batch  runs: 1  exits: 0
 args: --once --data-dir "{ROOT}\data"
 stdout:
   <<EMPTY>>

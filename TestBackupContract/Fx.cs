@@ -161,9 +161,35 @@ internal sealed class Fx
         return Write(VdfPath, sb.ToString());
     }
 
+    /// <summary>服务从 WorkshopPath 反推 downloads 目录,fixture 必须同构摆出来。</summary>
+    public string DownloadsDir => Path.Combine(Root, "steam", "workshop", "downloads", "431960");
+
+    public Fx MakeDownloadsDir()
+    {
+        Directory.CreateDirectory(DownloadsDir);
+        return this;
+    }
+
+    /// <summary>模拟 Steam 开始下载:downloads 下出现工坊 ID 目录。</summary>
+    public Fx DownloadArrived(string id)
+    {
+        Directory.CreateDirectory(Path.Combine(DownloadsDir, id));
+        return this;
+    }
+
     /// <summary>在备份目录里预先放一个「外来」文件(内容与源不同),验证服务不覆盖。</summary>
     public Fx PreExistingBackupFile(string id, string rel, string content)
         => FileItem(Path.Combine(Workshop, ".we_backup", id, rel.Replace('/', Path.DirectorySeparatorChar)), content);
+
+    /// <summary>把项目内的某个文件/子目录标成 Hidden(探测 .NET 递归枚举的 AttributesToSkip 行为)。</summary>
+    public Fx SetHiddenInItem(string id, string rel)
+    {
+        string p = Path.Combine(Workshop, id, rel.Replace('/', Path.DirectorySeparatorChar));
+        if (File.Exists(p)) File.SetAttributes(p, FileAttributes.Hidden);
+        else if (Directory.Exists(p)) File.SetAttributes(p, FileAttributes.Hidden | FileAttributes.Directory);
+        else throw new FileNotFoundException("标 Hidden 的目标不存在: " + p);
+        return this;
+    }
 
     /// <summary>
     /// 模拟「上一次运行被中断」:把某个源文件预先硬链接进备份目录,但不写 .backup_ok。

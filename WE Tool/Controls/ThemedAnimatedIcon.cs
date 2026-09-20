@@ -29,7 +29,7 @@ namespace WE_Tool.Controls
     /// 前景本身是暗色(异常场景)才退回素材原色 #EBEBEB。详见 ResolveTarget()。
     /// 例外:开关类"选中反相"场景把 TrustForeground 设为 True,则黑也照画(无条件跟随 Foreground)。
     /// </summary>
-    public sealed class ThemedAnimatedIcon : AnimatedIcon
+    public sealed partial class ThemedAnimatedIcon : AnimatedIcon
     {
         private static readonly Color LightThemeColor = Color.FromArgb(0xE4, 0x00, 0x00, 0x00);   // 浅色主题标准图标色
         private static readonly List<WeakReference<ThemedAnimatedIcon>> _live = new();

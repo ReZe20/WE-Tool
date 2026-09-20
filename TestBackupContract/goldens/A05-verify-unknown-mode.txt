@@ -1,5 +1,5 @@
 ### A05-verify-unknown-mode
-runs: 1  exits: 0
+mode: batch  runs: 1  exits: 0
 args: --bogus --data-dir "{ROOT}\data"
 stdout:
   未知参数。用法: AutoBackupService [--run|--once|--verify] [--data-dir <path>]

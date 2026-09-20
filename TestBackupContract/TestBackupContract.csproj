@@ -8,7 +8,8 @@
     <AssemblyName>TestBackupContract</AssemblyName>
     <RootNamespace>TestBackupContract</RootNamespace>
     <Version>1.0.0</Version>
-    <!-- 纯开发期差分工具,不发布、不进解决方案、不进包 -->
+    <!-- 纯开发期差分工具:进解决方案只为能在 VS 里 F5(launchSettings 提供 profile),
+         不发布、不进安装包;主程序构建/发布链路都不引用它 -->
   </PropertyGroup>
 
 </Project>

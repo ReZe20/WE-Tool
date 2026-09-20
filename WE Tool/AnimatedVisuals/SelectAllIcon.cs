@@ -79,7 +79,7 @@ namespace WE_Tool.AnimatedVisuals
     // | PlayingToNormal_Start      | M_PlayingToNormal_Start      |    20 | 333.3 | 1F           |
     // | PlayingToNormal_End        | M_PlayingToNormal_End        |    20 | 333.3 | 1F           |
     // --------------------------------------------------------------------------------------------
-    public sealed class SelectAllIcon
+    public sealed partial class SelectAllIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
@@ -224,7 +224,7 @@ namespace WE_Tool.AnimatedVisuals
         {
         }
 
-        sealed class SelectAllIcon_AnimatedVisual
+        sealed partial class SelectAllIcon_AnimatedVisual
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {

@@ -7,7 +7,19 @@ namespace TestBackupContract;
 /// </summary>
 internal sealed record Scenario(string Name, Action<Fx> Build, string Args, int Runs = 1)
 {
+    /// <summary>常驻场景:日志里必须出现这些子串,超时即判失败。</summary>
+    public string[] Expect { get; init; } = [];
+    public int ExpectTimeoutMs { get; init; } = 30_000;
+    /// <summary>进程跑起来之后对文件系统动的手(模拟 Steam 订阅/下载落盘)。</summary>
+    public Action<Fx>? During { get; init; }
+    public int DuringDelayMs { get; init; } = 1500;
+    /// <summary>Expect 全部命中后再静置这么久,然后才杀进程 —— 空转/忙轮询只有在这段里才看得见。</summary>
+    public int SettleAfterMs { get; init; } = 1500;
+    public bool Resident => Expect.Length > 0;
+
+    private const string Run = "--run --data-dir \"{ROOT}\\data\"";
     private const string Once = "--once --data-dir \"{ROOT}\\data\"";
+
     private const string Verify = "--verify --data-dir \"{ROOT}\\data\"";
 
     /// <summary>只指定 AutoBackup 段(原文嵌入),Path 段指向本场景根目录。</summary>
@@ -221,6 +233,18 @@ internal sealed record Scenario(string Name, Action<Fx> Build, string Args, int 
             }, Once),
 
         // ---- C 组:护栏 ----
+        // 探测 .NET 递归枚举的 AttributesToSkip(Hidden|System)到底作用在哪一层:
+        // 隐藏文件 / 隐藏目录内的文件 / 正常文件各一,C++ 必须按基线结果复刻同一套取舍
+        new("B20-once-hidden-entries",
+            fx =>
+            {
+                fx.ConfigStandard();
+                fx.Vdf(("1001", "0"));
+                fx.Item("1001", "video", "Everyone", "plain.bin", "hd/inside.bin", "sub/vis.bin");
+                fx.SetHiddenInItem("1001", "plain.bin");
+                fx.SetHiddenInItem("1001", "hd");
+                fx.SetHiddenInItem("1001", "sub/vis.bin");
+            }, Once),
         // .we_backup 自己绝不能被当成项目备份进去
         new("C01-once-never-backs-up-backup-root",
             fx =>
@@ -241,5 +265,83 @@ internal sealed record Scenario(string Name, Action<Fx> Build, string Args, int 
                 fx.ItemRaw("temp", """{ "type": "video", "contentrating": "Everyone" }""");
                 fx.ItemRaw("1001.bak", """{ "type": "video", "contentrating": "Everyone" }""");
             }, Once),
+
+        // ---- R 组:常驻(--run)。时序噪声无法完全消除,所以渲染时折叠连续重复行;
+        //      Expect 不出现判失败,多出来的行同样让基线不一致 —— 忙轮询会当场现形。
+        new("R01-run-subscribe-triggers-backup",
+            fx =>
+            {
+                fx.ConfigStandard();
+                fx.Vdf(("1001", "0"));
+                fx.Item("1001", "video", "Everyone");
+                fx.Item("1002", "video", "Everyone");   // 启动时未订阅 → 不该被备份
+            },
+            Run)
+        {
+            During = fx => fx.Vdf(("1001", "0"), ("1002", "0")),
+            DuringDelayMs = 2000,
+            Expect =
+            [
+                "服务已启动: VDF=",
+                "发现新增订阅 1 个: 1002",
+                "已备份 1002: 链接 2 个,跳过 0 个",
+            ],
+        },
+
+        new("R02-run-downloads-signal",
+            fx =>
+            {
+                fx.ConfigStandard();
+                fx.Vdf(("1001", "0"));
+                fx.Item("1001", "video", "Everyone");
+                fx.MakeDownloadsDir();
+            },
+            Run)
+        {
+            During = fx => fx.DownloadArrived("2002"),
+            DuringDelayMs = 2000,
+            Expect =
+            [
+                "服务已启动: VDF=",
+                "downloads 缓存出现新目录: 2002(下载中,等待移入 content)",
+            ],
+        },
+
+        // 静置 8 秒(> 5 秒轮询间隔)且不动任何文件:日志必须停在「常驻运行中」不再多一行
+        new("R03-run-idle-silent",
+            fx =>
+            {
+                fx.ConfigStandard();
+                fx.Vdf(("1001", "0"));
+                fx.Item("1001", "video", "Everyone");
+                fx.MakeDownloadsDir();
+            },
+            Run)
+        {
+            During = _ => { },
+            SettleAfterMs = 8000,
+            Expect = ["AutoBackupService 常驻运行中,按 Ctrl+C 退出"],
+        },
+
+        // VDF 的父目录不存在(Steam 尚未创建 userdata\<sid>\ugc 的真实形态)。
+        // C# 修之前这里直接 0xC0000409 failfast;基线钉的是「不崩、留一行日志、继续常驻」
+        new("R04-run-missing-vdf-dir",
+            fx =>
+            {
+                fx.Config("""
+                    {
+                      "Version": 2,
+                      "Path": { "WorkshopPath": "{WS}", "VdfPath": "{ROOT}\\nodir\\431960_subscriptions.vdf" },
+                      "AutoBackup": { "Enabled": true, "ServiceEnabled": true }
+                    }
+                    """);
+                fx.Item("1001", "video", "Everyone");
+            },
+            Run)
+        {
+            During = _ => { },
+            SettleAfterMs = 3000,
+            Expect = ["监听目录不存在,跳过 VDF 监听:", "AutoBackupService 常驻运行中,按 Ctrl+C 退出"],
+        },
     ];
 }

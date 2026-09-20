@@ -15,7 +15,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>0.8.0</Version>
+    <Version>0.8.1</Version>
     <!-- Release 下 WinUI 默认禁用反射序列化,导致 config.json 读写失败(实测:设置全部丢失);显式开启 -->
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <Authors>ReZe20</Authors>
@@ -78,39 +78,73 @@
   <!-- SteamworksBridge 部署:应用对桥接无编译期引用(仅进程调用),不能 ProjectReference
        (自包含发布会报 NETSDK1150);构建/发布时构建桥接并把输出拷进目标目录 -->
   <Target Name="CopySteamworksBridge" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher" Condition="Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj')">
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
-    <ItemGroup>
-      <!-- 指向桥接当前 TFM 输出目录(桥接固定 OutputPath=bin\$(Configuration)\$(TargetFramework)\)。
-           曾硬编码 net8.0 导致双缺陷:本地匹配到历史残留发布夹,把整套 .NET8 运行时拷进发布产物;
-           CI 全新检出则失配,桥接被静默遗漏(正式包无 SteamworksBridge.exe,Steam 功能不可用)。改用
-           $(TargetFramework) 跟随主项目 TFM,若两 TFM 未来不一致由下方 Error 失配保护兜底 -->
-      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\*.pdb;$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\win-x64\**\*" />
+    <!-- 桥接把 OutputPath 钉成不含平台段(为了引用解析稳定,见其 csproj 注释),所以 x64 与 ARM64 两次
+         构建写进的是同一个目录、后编的赢:用 dotnet build WE Tool.slnx 时 slnx 里的 ARM64 平台会把
+         apphost 换成 ARM64,VS 调试时报「映像文件…无效,但它对另一种计算机类型有效」。
+         不改路径形状(会引回 CS0006),改为构建前清空目录:顺带根除"历史残留被 glob 收进产物"那一类
+         老问题(见 skill:曾经整套 .NET8 运行时被拷进发布包)。 -->
+    <!-- 输出目录形状随调用方式变(实测):dotnet build 单项目 → bin\$(Configuration)\$(TargetFramework)\;
+         dotnet build WE Tool.slnx(RID 作为全局属性泄漏进 <MSBuild>)→ 多一段 win-x64\;
+         dotnet publish(RID 由 pubxml 在项目内赋值,不传给子项目)→ 又是无平台段。
+         所以不去猜路径,直接向子项目的 Build 目标要 TargetOutputs(它返回真实主输出路径),取其目录再 glob。
+         只拷本次真正产出的那一份,历史 bin 里的其他形状一律不参与。 -->
+    <RemoveDir Directories="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\" ContinueOnError="WarnAndContinue" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform)">
+      <Output TaskParameter="TargetOutputs" ItemName="BridgeBuiltAssembly" />
+    </MSBuild>
+    <PropertyGroup>
+      <BridgeOutDir Condition="'@(BridgeBuiltAssembly)' != ''">$([System.IO.Path]::GetDirectoryName('%(BridgeBuiltAssembly.FullPath)'))\</BridgeOutDir>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(BridgeOutDir)' != ''">
+      <BridgeOutput Include="$(BridgeOutDir)**\*" Exclude="$(BridgeOutDir)*.pdb" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(BridgeOutDir)' == ''">
+      <!-- 兜底:TargetOutputs 取不到时仍按主路径形状找(排除任何 win-* 子目录残留) -->
+      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\**\*"
+                    Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\*.pdb;$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\win-*\**" />
     </ItemGroup>
     <!-- 失配保护:桥接必须产出文件,空则直接报错,杜绝发布包静默缺失 -->
-    <Error Condition="'@(BridgeOutput)' == ''" Text="CopySteamworksBridge 未找到任何桥接输出(...\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\),请检查 SteamworksBridge 的 TFM 是否与主项目一致" />
+    <Error Condition="'@(BridgeOutput)' == ''" Text="CopySteamworksBridge 未找到任何桥接输出(TargetOutputs=$(BridgeOutDir)),请检查 SteamworksBridge 的 TFM 是否与主项目一致" />
     <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
   </Target>
-  <!-- AutoBackupService 部署:应用对服务无编译期引用(仅进程调用),不能 ProjectReference。
-       始终 publish NativeAOT 单文件 exe(不依赖 .NET runtime,Run 键/Start() 直接可运行)。
-       Debug 也 AOT:避免 framework-dependent 产物被 Run 键指向后缺 runtime 起不来 -->
-  <Target Name="CopyAutoBackupService" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher" Condition="Exists('$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj')">
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
-    <Exec Condition="'$(Configuration)' == 'Debug'" Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj&quot; -c Debug -r win-x64 --nologo -v q" />
-    <Exec Condition="'$(Configuration)' == 'Release'" Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.csproj&quot; -c Release -r win-x64 --nologo -v q" />
-    <ItemGroup>
-      <!-- 统一取 AOT publish 产物 -->
-      <AbsAot Include="$(MSBuildThisFileDirectory)..\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\**\*" Exclude="$(MSBuildThisFileDirectory)..\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\*.pdb" />
-    </ItemGroup>
-    <Error Condition="'@(AbsAot)' == ''" Text="CopyAutoBackupService 未找到服务 AOT 输出(...\AutoBackupService\bin\$(Configuration)\net10.0\win-x64\publish\)" />
-    <!-- 先清空目标目录,避免残留 framework-dependent 旧文件(dll/deps/runtimeconfig)与 AOT exe 混放 -->
-    <RemoveDir Directories="$(TargetDir)AutoBackupService\" />
+  <!-- 自动备份服务 AutoBackupService.exe:C++/MSVC 实现。
+       应用对服务无编译期引用(只按 AppContext.BaseDirectory\AutoBackupService\AutoBackupService.exe
+       起进程 + HKCU Run 键自启),所以不能 ProjectReference,只能在这里编好再拷进那个子目录。
+       vcxproj 只能由 VS 的 MSBuild.exe 编(dotnet msbuild 没有 Microsoft.Cpp.targets),
+       故 vswhere → installationPath → MSBuild.exe。
+       target 故意不设 Condition、每一步都硬失败:静默跳过会让包里带上一次构建残留的旧 exe,
+       那比构建失败危险得多(服务还在跑,只是跑的是旧版本)。 -->
+  <PropertyGroup>
+    <VsWhereExe>$([System.Environment]::GetEnvironmentVariable('ProgramFiles(x86)'))\Microsoft Visual Studio\Installer\vswhere.exe</VsWhereExe>
+    <AutoBackupCppProj>$(MSBuildThisFileDirectory)..\AutoBackupService\AutoBackupService.vcxproj</AutoBackupCppProj>
+    <AutoBackupCppExe>$(MSBuildThisFileDirectory)..\AutoBackupService\bin\$(Configuration)\AutoBackupService.exe</AutoBackupCppExe>
+  </PropertyGroup>
+  <Target Name="CopyAutoBackupService" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher">
+    <Error Condition="!Exists('$(AutoBackupCppProj)')" Text="找不到自动备份服务工程:$(AutoBackupCppProj)。它是服务唯一实现,不允许缺失。" />
+    <Error Condition="!Exists('$(VsWhereExe)')" Text="找不到 vswhere.exe($(VsWhereExe)),无法定位 C++ 工具链来构建 AutoBackupService。" />
+    <Exec Command="&quot;$(VsWhereExe)&quot; -latest -prerelease -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath"
+          ConsoleToMSBuild="true" StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="VsInstallPathRaw" />
+    </Exec>
+    <PropertyGroup>
+      <VcMsBuild>$(VsInstallPathRaw.Trim())\MSBuild\Current\Bin\MSBuild.exe</VcMsBuild>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(VcMsBuild)')" Text="没找到带 VC++ 工具集的 MSBuild.exe(应为 $(VcMsBuild))。构建 AutoBackupService 需要「使用 C++ 的桌面开发」工作负载。" />
+    <Exec Command="&quot;$(VcMsBuild)&quot; &quot;$(AutoBackupCppProj)&quot; -t:Build -p:Configuration=$(Configuration) -p:Platform=x64 -nologo -v:m" StandardOutputImportance="low" />
+    <Error Condition="!Exists('$(AutoBackupCppExe)')" Text="C++ 版构建结束却没有产物:$(AutoBackupCppExe)" />
+    <!-- 先清空再拷:目录里可能残留旧版 C# AOT 产物(pdb 等),混进包里只会白涨体积。
+         服务正在运行时删不掉自己(拒绝访问),所以这里容错 + 下面用 SkipUnchangedFiles:
+         字节没变就不碰文件,免掉「调试时 F5 构建失败」。 -->
+    <RemoveDir Directories="$(TargetDir)AutoBackupService\" ContinueOnError="WarnAndContinue" />
     <MakeDir Directories="$(TargetDir)AutoBackupService\" />
-    <Copy SourceFiles="@(AbsAot)" DestinationFolder="$(TargetDir)AutoBackupService\" SkipUnchangedFiles="true" />
-    <RemoveDir Directories="$(PublishDir)AutoBackupService\" Condition="'$(PublishDir)' != ''" />
+    <Copy SourceFiles="$(AutoBackupCppExe)" DestinationFolder="$(TargetDir)AutoBackupService\" SkipUnchangedFiles="true" />
+    <RemoveDir Directories="$(PublishDir)AutoBackupService\" Condition="'$(PublishDir)' != ''" ContinueOnError="WarnAndContinue" />
     <MakeDir Directories="$(PublishDir)AutoBackupService\" Condition="'$(PublishDir)' != ''" />
-    <Copy SourceFiles="@(AbsAot)" DestinationFolder="$(PublishDir)AutoBackupService\" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
+    <Copy SourceFiles="$(AutoBackupCppExe)" DestinationFolder="$(PublishDir)AutoBackupService\" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
+    <Message Importance="high" Text="AutoBackupService(C++) $(AutoBackupCppExe) → $(TargetDir)AutoBackupService\ (PublishDir 同步)" />
   </Target>
+
   <!-- 从 external/repkg_Re 仓库 csproj 读取目标后端版本,构建时生成 RepkgVersion.g.cs 常量供运行时校验。
        不依赖 SDK 的 AssemblyMetadata 管线(其特性转换发生在 CreateGeneratedAssemblyInfoInputsCacheFile,
        顺序敏感且增量缓存易跳过);直接生成源码文件最稳 -->
@@ -258,6 +292,12 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
     <!-- Native AOT:仅 Release 开启(.NET 10 Debug AOT 有 GC 死锁 bug,随机卡死 10-20s) -->
     <PublishAot Condition="'$(Configuration)' != 'Debug'">true</PublishAot>
+    <!-- AOT 的 WE_Tool.pdb(实测 140MB)是 SDK 的 _CopyAotSymbols 目标从 obj\native\ 拷进发布根目录的。
+         该目标用 AfterTargets="Publish" 挂接,而 SDK targets 在 csproj 末尾才被 import,所以它排在
+         本文件所有 AfterTargets=Publish 目标之后 —— 本文件里"打包前删除 pdb"那两处永远删不到它
+         (zip/setup 之所以干净,是因为组装产物时它还没落地)。直接从源头关掉这次拷贝:符号仍留在
+         obj\native\ 供本地调试,发布根目录与包体不再接触它。实测 -p:DebugType=none 关不掉生成,别走那条 -->
+    <CopyOutputSymbolsToPublishDirectory Condition="'$(PublishAot)' == 'true'">false</CopyOutputSymbolsToPublishDirectory>
     <AssemblyName>WE_Tool</AssemblyName>
     <AssemblyTitle>WE_Tool</AssemblyTitle>
     <StartupObject>WE_Tool.Program</StartupObject>
@@ -444,8 +484,8 @@
     <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (AOT 主程序,无 launcher) (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />
   </Target>
 
-  <!-- AOT 的 WE_Tool.pdb 由 NativeAOT 在 PackageWithLauncher 之后生成(时序晚,上面的剔除匹配不到),
-       独立目标在 PackageWithLauncher 之后执行删除(仅调试用,发布不携带;实测 117.9MB) -->
+  <!-- AOT 符号拷贝已由上方 CopyOutputSymbolsToPublishDirectory=false 关掉;此处删除只作兜底
+       (万一 SDK 行为变化或有人在别处开了符号拷贝,发布根目录仍不会带着 140MB pdb 进 setup) -->
   <Target Name="DeleteAotPdb" AfterTargets="PackageWithLauncher">
     <Message Importance="high" Text="AOT PDB 检查: $(PublishDir)WE_Tool.pdb" Condition="Exists('$(PublishDir)WE_Tool.pdb')" />
     <Delete Files="$(PublishDir)WE_Tool.pdb" Condition="Exists('$(PublishDir)WE_Tool.pdb')" />

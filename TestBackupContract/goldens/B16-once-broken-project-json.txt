@@ -1,5 +1,5 @@
 ### B16-once-broken-project-json
-runs: 1  exits: 0
+mode: batch  runs: 1  exits: 0
 args: --once --data-dir "{ROOT}\data"
 stdout:
   <<EMPTY>>

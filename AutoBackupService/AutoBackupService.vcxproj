@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7F0C1C4E-9B7A-4C57-8E2D-3A5D6C1B4F21}</ProjectGuid>
+    <RootNamespace>AutoBackupService</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <!-- 固定输出目录:主项目 CopyAutoBackupService 的 glob 只认这一条路径 -->
+  <PropertyGroup>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
+    <TargetName>AutoBackupService</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0A00;WINVER=0x0A00;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- 源码是无 BOM UTF-8,含中文消息常量:不显式声明会按系统 ANSI(简中=GBK)解读而错码 -->
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Release'">MultiThreaded</RuntimeLibrary>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)'=='Release'">MinSpace</Optimization>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <!-- 目标机不装 VC++ 运行库也要能跑:静态 CRT + 不发 PDB -->
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding Condition="'$(Configuration)'=='Release'">true</EnableCOMDATFolding>
+      <OptimizeReferences Condition="'$(Configuration)'=='Release'">true</OptimizeReferences>
+      <LinkTimeCodeGeneration Condition="'$(Configuration)'=='Release'">UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClInclude Include="ab.h" />
+    <ClCompile Include="support.cpp" />
+    <ClCompile Include="json.cpp" />
+    <ClCompile Include="config.cpp" />
+    <ClCompile Include="backup.cpp" />
+    <ClCompile Include="runner.cpp" />
+    <ClCompile Include="watch.cpp" />
+    <ClCompile Include="main.cpp" />
+    <Manifest Include="app.manifest" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+</Project>

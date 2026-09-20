@@ -1,0 +1,33 @@
+{
+  "profiles": {
+    "契约检查 (F5 默认)": {
+      "commandName": "Project",
+      "commandLineArgs": "--check --wait",
+      "environmentVariables": {}
+    },
+    "契约检查 · Release 服务": {
+      "commandName": "Project",
+      "commandLineArgs": "--check AutoBackupService/bin/Release/AutoBackupService.exe --wait"
+    },
+    "契约检查 · Debug 服务": {
+      "commandName": "Project",
+      "commandLineArgs": "--check AutoBackupService/bin/Debug/AutoBackupService.exe --wait"
+    },
+    "只跑一条 (改 B14 前缀换场景)": {
+      "commandName": "Project",
+      "commandLineArgs": "--check --only B14 --wait"
+    },
+    "检查并保留现场目录": {
+      "commandName": "Project",
+      "commandLineArgs": "--check --keep --wait"
+    },
+    "重录基线 (会改写 goldens\\*)": {
+      "commandName": "Project",
+      "commandLineArgs": "--record --wait"
+    },
+    "列出全部场景名": {
+      "commandName": "Project",
+      "commandLineArgs": "--list"
+    }
+  }
+}

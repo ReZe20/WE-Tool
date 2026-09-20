@@ -51,7 +51,9 @@ NoIcons=不创建开始菜单文件夹(&W)
 
 [Files]
 ; 整目录递归打包(含 repkg 等子目录),忽略仅存在于本地的残留文件
-Source: "{#SourceRoot}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+; Excludes 兜住 .pdb:AOT 符号由 ILC 在发布目标全部跑完之后才落回发布根,csproj 里两次"打包前删除"
+; 都存在时序风险,这里再挡一道,保证安装包体积不会被 140MB 符号污染
+Source: "{#SourceRoot}\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
 ; 开始菜单项由 AllowNoIcons 的"不创建开始菜单文件夹"勾选框控制:勾选则全部跳过

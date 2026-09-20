@@ -1,5 +1,5 @@
 ### A02-verify-service-disabled
-runs: 1  exits: 1
+mode: batch  runs: 1  exits: 1
 args: --verify --data-dir "{ROOT}\data"
 stdout:
   Enabled=True

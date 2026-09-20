@@ -1,5 +1,5 @@
 ### A08-argv-data-dir-first
-runs: 1  exits: 0
+mode: batch  runs: 1  exits: 0
 args: --data-dir "{ROOT}\data" --once
 stdout:
   未知参数。用法: AutoBackupService [--run|--once|--verify] [--data-dir <path>]

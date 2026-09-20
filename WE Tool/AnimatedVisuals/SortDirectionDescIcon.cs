@@ -73,7 +73,7 @@ namespace WE_Tool.AnimatedVisuals
     // | PlayingToNormal_Start | M_PlayingToNormal_Start |    20 | 333.3 | 1F           |
     // | PlayingToNormal_End   | M_PlayingToNormal_End   |    20 | 333.3 | 1F           |
     // ----------------------------------------------------------------------------------
-    public sealed class SortDirectionDescIcon
+    public sealed partial class SortDirectionDescIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
@@ -194,7 +194,7 @@ namespace WE_Tool.AnimatedVisuals
         {
         }
 
-        sealed class SortDirectionDescIcon_AnimatedVisual
+        sealed partial class SortDirectionDescIcon_AnimatedVisual
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {

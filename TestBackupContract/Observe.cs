@@ -11,7 +11,94 @@ namespace TestBackupContract;
 /// </summary>
 internal static class Observe
 {
-    public sealed record Result(int ExitCode, string StdOut, string StdErr, string Log, string Tree);
+    public sealed record Result(int ExitCode, string StdOut, string StdErr, string Log, string Tree, string Extra = "");
+
+    // stdout 两侧都固定 UTF-8(无 BOM):C++ 直接写字节,C# 绕开 Console 编码层写标准输出流。
+    // 因此这里按 UTF-8 解码即可,不再与本机代码页牵扯。
+
+    /// <summary>
+    /// 常驻场景:起进程 → 按时刻做 During 动作 → 轮询日志直到 Expect 全部出现 →
+    /// 静置 SettleAfterMs → 杀掉。日志是这里唯一的观测面(进程不往 stdout 写东西)。
+    /// </summary>
+    public static Result RunResident(Scenario s, string exe, string root, Fx fx)
+    {
+        string args = s.Args.Replace("{ROOT}", root);
+        var psi = new ProcessStartInfo(exe, args)
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            WorkingDirectory = root,
+            StandardOutputEncoding = new UTF8Encoding(false),
+            StandardErrorEncoding = new UTF8Encoding(false),
+        };
+        var p = Process.Start(psi) ?? throw new InvalidOperationException("无法启动 " + exe);
+        string logPath = Path.Combine(root, "data", "AutoBackupService.log");
+
+        var sw = Stopwatch.StartNew();
+        var met = new bool[s.Expect.Length];
+        bool duringDone = s.During is null;
+        string log = "";
+        while (true)
+        {
+            if (!duringDone && sw.ElapsedMilliseconds >= s.DuringDelayMs)
+            {
+                s.During!(fx);
+                duringDone = true;
+            }
+            log = Tail(logPath);
+            for (int i = 0; i < s.Expect.Length; i++)
+                if (!met[i] && log.Contains(s.Expect[i], StringComparison.Ordinal)) met[i] = true;
+            bool all = true;
+            for (int i = 0; i < met.Length; i++) all &= met[i];
+            if (all || sw.ElapsedMilliseconds > s.ExpectTimeoutMs || p.HasExited) break;
+            Thread.Sleep(100);
+        }
+        if (!duringDone) s.During!(fx);
+
+        for (int i = 0; i < met.Length; i++)
+            if (!met[i] && log.Contains(s.Expect[i], StringComparison.Ordinal)) met[i] = true;
+
+        Thread.Sleep(s.SettleAfterMs);                     // 静置期:空转/忙轮询只在这里露出来
+        log = Tail(logPath);
+
+        bool exited = p.WaitForExit(2000);
+        int exit = -1;
+        string stdout = "", stderr = "";
+        if (exited) exit = p.ExitCode;
+        else
+        {
+            try { p.Kill(entireProcessTree: true); p.WaitForExit(5000); } catch { /* 已退出 */ }
+        }
+        try { stdout = p.StandardOutput.ReadToEnd(); } catch { /* 管道随进程一起没了 */ }
+        try { stderr = p.StandardError.ReadToEnd(); } catch { /* 同上 */ }
+        p.Dispose();
+
+        var extra = new StringBuilder();
+        extra.Append("expect:\n");
+        for (int i = 0; i < s.Expect.Length; i++)
+            extra.Append("  ").Append(met[i] ? "MET   " : "UNMET ").AppendLine(s.Expect[i]);
+        extra.Append("killed: ").Append(exited ? "no(自己退了)" : "yes").Append('\n');
+
+        return new Result(exit, stdout, stderr, log, Tree(root), extra.ToString());
+    }
+
+    private static string Tail(string path)
+    {
+        try
+        {
+            // 服务可能正握着写句柄:用 ReadWrite 共享打开,失败就给空(下一轮再读)
+            using var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite);
+            using var sr = new StreamReader(fs, System.Text.Encoding.UTF8);
+            return sr.ReadToEnd();
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
 
     public static Result Run(string exe, string argsWithRootToken, string root)
     {
@@ -23,6 +110,10 @@ internal static class Observe
             RedirectStandardError = true,
             CreateNoWindow = true,
             WorkingDirectory = root,
+            // 显式钉 UTF-8:不设时 .NET 会跟着父进程的 Console.OutputEncoding 走,
+            // 无控制台的场景下恰好是 UTF-8,但换机器/换代码页就会解错中文 stdout
+            StandardOutputEncoding = new UTF8Encoding(false),
+            StandardErrorEncoding = new UTF8Encoding(false),
         };
 
         var sbOut = new StringBuilder();
@@ -54,15 +145,34 @@ internal static class Observe
     }
 
     /// <summary>渲染为 golden 文件内容。归一化在此集中做,新增场景无需自己处理。</summary>
-    public static string Render(string name, string args, Result r, string root, IReadOnlyList<int> exits)
+    public static string Render(Scenario s, string root, Result r, IReadOnlyList<int> exits)
     {
         var sb = new StringBuilder();
-        sb.Append("### ").AppendLine(name);
-        sb.Append("runs: ").Append(exits.Count).Append("  exits: ").AppendLine(string.Join(",", exits));
-        sb.Append("args: ").AppendLine(Norm(args, root));
+        sb.Append("### ").AppendLine(s.Name);
+        sb.Append(s.Resident
+            ? "mode: resident"
+            : $"mode: batch  runs: {exits.Count}  exits: {string.Join(",", exits)}").Append('\n');
+        sb.Append("args: ").AppendLine(Norm(s.Args, root));
+        if (r.Extra.Length > 0) sb.Append(NormBlock(r.Extra, root));
         sb.Append("stdout:\n").Append(NormBlock(r.StdOut, root));
-        sb.Append("log:\n").Append(NormBlock(r.Log, root));
+        // 常驻场景的回调次数受时序影响(FileSystemWatcher 可能一次写触发多行),
+        // 折叠连续重复行后仍然保留「有没有出现」与「先后次序」这两个有效信息
+        sb.Append("log:\n").Append(NormBlock(s.Resident ? Collapse(r.Log) : r.Log, root));
         sb.Append("tree:\n").Append(NormBlock(r.Tree, root));
+        return sb.ToString();
+    }
+
+    private static string Collapse(string log)
+    {
+        var lines = log.Replace("\r\n", "\n").Split('\n');
+        var sb = new StringBuilder();
+        string prev = "\0";
+        foreach (var l in lines)
+        {
+            if (l == prev && l.Length > 0) continue;
+            sb.Append(l).Append('\n');
+            prev = l;
+        }
         return sb.ToString();
     }
 

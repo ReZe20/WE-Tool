@@ -1,5 +1,5 @@
 ### B11-once-idempotent-second-run
-runs: 2  exits: 0,0
+mode: batch  runs: 2  exits: 0,0
 args: --once --data-dir "{ROOT}\data"
 stdout:
   <<EMPTY>>

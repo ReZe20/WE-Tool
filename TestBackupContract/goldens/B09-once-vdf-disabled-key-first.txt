@@ -1,11 +1,11 @@
 ### B09-once-vdf-disabled-key-first
-runs: 1  exits: 0
+mode: batch  runs: 1  exits: 0
 args: --once --data-dir "{ROOT}\data"
 stdout:
   <<EMPTY>>
 log:
   [[TS]] 已读配置: AutoBackup.Enabled=True, ServiceEnabled=True
-  [[TS]] VDF 解析完成: 有效订阅 0 个
+  [[TS]] VDF 解析完成: 有效订阅 2 个
   [[TS]] 已备份 1001: 链接 2 个,跳过 0 个
   [[TS]] 已备份 1002: 链接 2 个,跳过 0 个
   [[TS]] 启动补齐完成: 新增备份 2 个

@@ -1,5 +1,5 @@
 ### B10-once-vdf-disabled-1-excluded
-runs: 1  exits: 0
+mode: batch  runs: 1  exits: 0
 args: --once --data-dir "{ROOT}\data"
 stdout:
   <<EMPTY>>

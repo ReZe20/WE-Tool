@@ -121,7 +121,7 @@ namespace WE_Tool.AnimatedVisuals
     // | PressedSelectedToSelected_End              | M_PressedSelectedToSelected_End              |    20 | 333.3 | 1F           |
     // | PressedSelectedToPointerOverSelected_End   | M_PressedSelectedToPointerOverSelected_End   |    20 | 333.3 | 1F           |
     // ----------------------------------------------------------------------------------------------------------------------------
-    public sealed class PapersIcon
+    public sealed partial class PapersIcon
         : Microsoft.UI.Xaml.Controls.IAnimatedVisualSource
         , Microsoft.UI.Xaml.Controls.IAnimatedVisualSource2
     {
@@ -434,7 +434,7 @@ namespace WE_Tool.AnimatedVisuals
         {
         }
 
-        sealed class PapersIcon_AnimatedVisual
+        sealed partial class PapersIcon_AnimatedVisual
             : Microsoft.UI.Xaml.Controls.IAnimatedVisual
             , Microsoft.UI.Xaml.Controls.IAnimatedVisual2
         {

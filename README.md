@@ -150,10 +150,12 @@ WE Tool/
 │   └── Assets/                 # 应用图标 + 贡献者数据源 CSV(仅源码留存,不随发布分发)
 ├── WE_Tool.Launcher/           # 启动器(.NET Framework 4.7.2,自动拉起 app\WE_Tool.exe)
 ├── SteamworksBridge/           # Steamworks 桥接子进程(持有 Steam 会话;Steam 强杀的是它,主应用存活)
-├── AutoBackupService/          # 自动备份服务(NativeAOT 单文件 exe,开机常驻,新订阅自动硬链接备份)
+├── AutoBackupService/          # 自动备份服务(C++/MSVC 单文件 exe,开机常驻,新订阅自动硬链接备份)
 ├── FakeRePkg/                  # 测试替身:模拟 RePKG_Re 的 batch 事件协议(崩溃/成功剧本)
 ├── TestBatchRestart/           # 集成测试:提取进程崩溃重启逻辑(5 场景)
 ├── TestSteamUnsub/             # 实验:Steam 取消订阅 API 验证
+├── TestBackupContract/         # 自动备份服务的契约差分器(黑盒回归:34 个场景 + goldens/ 基线,可在 VS 里 F5)
+├── Lottie/                     # 动画图标的 Lottie json 源(AnimatedVisuals/*.cs 的输入,仅源码留存,不随发布分发)
 └── external/
     └── repkg_Re/               # 独立 git 仓库:RePKG_Re(ReZe20 分支)
         ├── RePKG_Re.sln
