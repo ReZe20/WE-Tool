@@ -1237,6 +1237,27 @@ Hinweis: Gleichzeitige Aktivierung mit vollständiger Ausgabe kann zu Dateiunord
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>Eigenschaften</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>Hintergrundbild sichern</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>Sicherung entfernen</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>Entfernt nur die Sicherungskopie in .we_backup (Hardlinks); Hintergrundbilder im Workshop-Ordner bleiben unberührt.</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>Achtung: Die Originaldateien dieses Hintergrunds wurden bereits gelöscht – die Sicherung ist die einzige Kopie und geht endgültig verloren.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>Das Abonnement wird beendet und die lokalen Dateien werden gelöscht.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>Die lokalen Dateien werden gelöscht.</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Alle auswählen</value>
   </data>

@@ -1237,6 +1237,27 @@
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>属性</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>备份壁纸</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>取消备份</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>只删除 .we_backup 里的备份副本（硬链接），创意工坊目录中的壁纸文件不受影响。</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>注意：这张壁纸的源文件已被删除，备份是唯一副本，取消后将永久丢失。</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>将取消订阅并删除本地文件。</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>将直接删除本地文件。</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>全选</value>
   </data>

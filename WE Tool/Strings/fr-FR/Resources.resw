@@ -1237,6 +1237,27 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>Propriétés</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>Sauvegarder le fond d'écran</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>Supprimer la sauvegarde</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>Seule la copie de sauvegarde dans .we_backup (liens physiques) est supprimée ; les fonds d'écran du dossier Workshop ne sont pas touchés.</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>Attention : les fichiers d'origine de ce fond d'écran ont déjà été supprimés, la sauvegarde est l'unique copie et sera perdue définitivement.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>Cela annulera l'abonnement et supprimera les fichiers locaux.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>Cela supprimera directement les fichiers locaux.</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Tout sélectionner</value>
   </data>

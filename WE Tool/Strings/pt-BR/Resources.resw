@@ -1237,6 +1237,27 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>Propriedades</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>Fazer backup do wallpaper</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>Remover backup</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>Remove apenas a cópia de backup em .we_backup (links físicos); os wallpapers na pasta da Workshop não são afetados.</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>Atenção: os arquivos originais deste wallpaper já foram excluídos; o backup é a única cópia e será perdido definitivamente.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>Cancela a inscrição e exclui os arquivos locais.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>Exclui diretamente os arquivos locais.</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Selecionar tudo</value>
   </data>

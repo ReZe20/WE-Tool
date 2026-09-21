@@ -1237,6 +1237,27 @@ project.json 및 미리보기 복사
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>속성</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>배경화면 백업</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>백업 취소</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>.we_backup 안의 백업 사본(하드 링크)만 삭제되며, Workshop 폴더의 배경화면 파일은 영향을 받지 않습니다.</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>참고: 이 배경화면의 원본 파일은 이미 삭제되어 백업이 유일한 사본입니다. 취소하면 영구적으로 사라집니다.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>구독을 취소하고 로컬 파일을 삭제합니다.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>로컬 파일을 바로 삭제합니다.</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>취소</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>모두 선택</value>
   </data>

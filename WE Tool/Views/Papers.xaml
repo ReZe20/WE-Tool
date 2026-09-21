@@ -89,7 +89,15 @@
                 <AppBarButton x:Name="BackupWallpaperButton"
                               x:Uid="AppBarButton_Backup">
                     <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE7B8;"/>
+                        <!-- [2026-09-21] 换成壁纸备份页在导航栏那一枚的 Lottie(原静态字形 E7B8 留作回退) -->
+                        <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
+                            <wetool:ThemedAnimatedIcon.Source>
+                                <animatedvisuals:WallpaperBackupIcon/>
+                            </wetool:ThemedAnimatedIcon.Source>
+                            <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                <FontIconSource Glyph="&#xE7B8;"/>
+                            </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                        </wetool:ThemedAnimatedIcon>
                     </AppBarButton.Icon>
                     <!-- [备份/取消备份 2026-09] 子菜单:两条命令各自带数量与可用性(混合选中时两条都可用);
                          父按钮不再直接执行动作(原 Click 拆到两条命令),避免"混合态只能表达一半" -->
@@ -152,6 +160,33 @@
             </CommandBarFlyout.SecondaryCommands>
         </CommandBarFlyout>
         
+        <!-- [详情面板确认弹层 2026-09-21] 取代"确认对话框 + 结果对话框"两次点击:在按钮处弹这层小卡,
+             一句提示 + 确定/取消(Esc 或点别处也算放弃)。提示与按钮文案都在代码里按 LanguageHelper 设,
+             不走 x:Uid(TextBlock 用 .Text、Button 用 .Content,两套键名在弹层里容易踩空)。
+             Opened 仍挂 FlyoutThemeRefresh_Opened:弹层内容在独立顶层里,不继承页面主题(App.ApplyFlyoutTheme 支持 Flyout)。 -->
+        <Flyout x:Name="UnbackupConfirmFlyout" Opened="FlyoutThemeRefresh_Opened">
+            <StackPanel Width="300" Spacing="10">
+                <TextBlock x:Name="UnbackupFlyoutHint" TextWrapping="Wrap" FontSize="12"/>
+                <TextBlock x:Name="UnbackupFlyoutWarn" TextWrapping="Wrap" FontSize="12"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" Visibility="Collapsed"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button x:Name="UnbackupFlyoutConfirmButton" Style="{StaticResource AccentButtonStyle}"
+                            Click="UnbackupConfirm_Click"/>
+                    <Button x:Name="UnbackupFlyoutCancelButton" Click="FlyoutDismiss_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Flyout>
+        <Flyout x:Name="UninstallConfirmFlyout" Opened="FlyoutThemeRefresh_Opened">
+            <StackPanel Width="300" Spacing="10">
+                <TextBlock x:Name="UninstallFlyoutHint" TextWrapping="Wrap" FontSize="12"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button x:Name="UninstallFlyoutConfirmButton" Style="{StaticResource AccentButtonStyle}"
+                            Click="UninstallConfirm_Click"/>
+                    <Button x:Name="UninstallFlyoutCancelButton" Click="FlyoutDismiss_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Flyout>
+
         <MenuFlyout x:Name="ScrollViewBackgroundMenu" Opened="FlyoutThemeRefresh_Opened">
             <MenuFlyoutItem x:Uid="MenuFlyoutItem_Refresh" 
                             Click="WallpaperListRefresh_Click_ByCommandBarFlyout"
@@ -592,7 +627,7 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBar>
-            <!-- 颜色探针(2026-09-19)：“筛选结果”开关的图标在 .Icon 槽里，AppBarToggleButton 模板的选中色到不了
+            <!-- 颜色取色载体(2026-09-19;不是诊断探针,删了图标就不跟主题变色)：“筛选结果”开关的图标在 .Icon 槽里，AppBarToggleButton 模板的选中色到不了
                  图标（见 Papers.xaml.cs“筛选结果图标颜色同步”）；这里借 {ThemeResource} 把该按钮家族在选中/未选中
                  下的两个前景色实例化出来，代码把它同步到图标自己的 Foreground（本地值必生效）。Collapsed 不参与布局。 -->
             <Border x:Name="LeftFilterColorProbeNormal" Grid.Column="1" Visibility="Collapsed"
@@ -712,8 +747,11 @@
                                             <TextBlock x:Uid="Detail_Copy" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button Command="{x:Bind UninstallSelectedCommand}"
-                                            Click="UninstallIcon_Click"
+                                    <!-- [详情面板卸载 2026-09-21] 不再直接绑命令执行:详情面板只作用于当前这一张壁纸,
+                                         改成在按钮处弹确认小卡(与「取消备份」同一套),比模态对话框轻。图标动画仍由
+                                         普通 Button 模板驱动(按下/松开/点空回退),所以这里不再点一次播一遍。 -->
+                                    <Button x:Name="DetailUninstallButton"
+                                            Click="DetailUninstallButton_Click"
                                             IsEnabled="{x:Bind IsUninstallEnabled, Mode=OneWay}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="14" Height="14">
@@ -740,6 +778,26 @@
                                                 </wetool:ThemedAnimatedIcon.FallbackIconSource>
                                             </wetool:ThemedAnimatedIcon>
                                             <TextBlock x:Uid="Detail_ImportToEditor" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <!-- [详情面板备份按钮 2026-09-21] 一枚按钮两用:当前这张壁纸已备份 → 文案「取消备份」,
+                                         点击在按钮处弹确认小卡;未备份 → 文案「备份壁纸」,点击直接备份不弹层。
+                                         文案/可用性由 UpdateDetailBackupButton 在选中项、工坊路径变化或一次备份操作结束后刷新
+                                         (x:Bind OneWay 走属性通知)。图标 = 壁纸备份页在导航栏那一枚的 Lottie,
+                                         状态切换由 Button 模板驱动(见 Papers.xaml.cs「详情面板按钮图标动画」段:不要再手动 SetState)。 -->
+                                    <Button x:Name="DetailBackupButton"
+                                            Click="DetailBackupButton_Click"
+                                            IsEnabled="{x:Bind IsBackupActionEnabled, Mode=OneWay}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:WallpaperBackupIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xF738;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
+                                            <TextBlock Text="{x:Bind DetailBackupActionText, Mode=OneWay}" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -1109,8 +1167,9 @@
                                         <ItemsRepeater x:Name="WallpapersContentRepeater"
                                                        ItemsSource="{x:Bind Wallpapers}">
                                             <ItemsRepeater.Layout>
-                                                <!-- 内容模式单列:StackLayout 垂直列表 -->
-                                                <StackLayout Spacing="0" Orientation="Vertical"/>
+                                                <!-- 内容模式单列:StackLayout 垂直列表。间距 8 与列表模式(行高 36/间隔 4)
+                                                     保持同一视觉比例;原先 Spacing=0 让相邻行卡贴成一块 -->
+                                                <StackLayout Spacing="8" Orientation="Vertical"/>
                                             </ItemsRepeater.Layout>
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="models:WallpaperItem">
@@ -1165,6 +1224,7 @@
                                                         </Grid>
                                                         <!-- 标题 -->
                                                         <TextBlock Grid.Column="2" 
+                                                                   x:Name="ContentTitleText"
                                                                    Text="{x:Bind Title}" 
                                                                    VerticalAlignment="Center"
                                                                    Margin="12,0,8,0"
@@ -1279,6 +1339,7 @@
                                                                       HorizontalContentAlignment="Center"
                                                                       VerticalContentAlignment="Center"/>
                                                             <TextBlock Text="{x:Bind Title}"
+                                                                       x:Name="ListTitleText"
                                                                        Grid.Column="1"
                                                                        VerticalAlignment="Center"
                                                                        FontSize="13"

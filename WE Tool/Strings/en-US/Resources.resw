@@ -1237,6 +1237,27 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>Properties</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>Back up wallpaper</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>Remove backup</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>Only the backup copy in .we_backup (hard links) is removed; wallpapers in the Workshop folder are untouched.</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>Note: the original files of this wallpaper are already deleted, so this backup is the only copy and will be lost for good.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>This unsubscribes and deletes the local files.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>This deletes the local files.</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Select All</value>
   </data>

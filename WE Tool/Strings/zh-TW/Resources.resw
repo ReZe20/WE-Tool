@@ -1237,6 +1237,27 @@
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>屬性</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>備份桌布</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>取消備份</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>只刪除 .we_backup 裡的備份副本（硬連結），創意工坊目錄中的桌布檔案不受影響。</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>注意：這張桌布的來源檔案已被刪除，備份是唯一副本，取消後將永久遺失。</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>將取消訂閱並刪除本機檔案。</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>將直接刪除本機檔案。</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>全選</value>
   </data>

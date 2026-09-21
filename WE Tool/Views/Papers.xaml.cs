@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -329,6 +330,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     // ===== [右键释放检测 2026-09] 右键按下→松开手动弹菜单(绕开系统"右键带移动抑制"手势判定) =====
     private bool _isRightButtonPressed;       // 右键是否按下(按下置位,松开检测消费)
     private bool _rightMenuShownThisGesture;  // 本次右键手势是否已弹菜单(防双弹)
+    private Point _rightPressPagePoint;        // [空白区右键 2026-09-21] 右键按下点(根坐标),空白判定用
     // ===== [Shift 区间刷选] 状态字段(图标模式;Shift+拖动从锚点延伸连续区间) =====
     private WallpaperItem? _shiftAnchorItem;    // Shift 区间锚点(按下处)
     private bool _shiftDragActive;              // Shift 区间刷选进行中
@@ -491,7 +493,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
     private bool _isMultiSelectMode = false;
     private bool _isScanning = false;
-    private FrameworkElement? _rightClickedWallpaperElement;
     private static readonly FrozenDictionary<string, Func<SettingsViewModel, bool>> _tagGetters = new Dictionary<string, Func<SettingsViewModel, bool>>
     {
         ["Abstract"] = vm => vm.FilterExpanderVM.Abstract,
@@ -633,6 +634,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 {
                     OnPropertyChanged(nameof(IsUninstallEnabled));
                     OnPropertyChanged(nameof(IsImportToEditorEnabled));
+                    UpdateDetailBackupButton();   // [详情面板备份按钮 2026-09-21] 换选中项 → 文案/可用性重算
                     // 多选模式下详情面板的显示/提示由 ToggleMultiSelectVisuals 全权接管:
                     // 此处不得重新点亮无选择提示(否则勾选引发的 SelectedWallpaper 变动会把提示盖回堆叠视图上)
                     if (_isMultiSelectMode) return;
@@ -680,7 +682,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (root.DataContext is WallpaperItem dcItem) item = dcItem;
             else if (e.Index >= 0 && e.Index < Wallpapers.Count) item = Wallpapers[e.Index];
             if (item == null) return;
-            // [焦点探针 2026-09] 见 CardFocusProbe 说明:只挂图标模式这一个 repeater,内容/列表模式不受影响
+            // [焦点探针 2026-09] 见 CardFocusProbe 说明。[内容/列表模式焦点可达 2026-09] 另外两个 repeater 的同类
+            // 接线见下方 PrepareRowCardForFocus(行卡没有 GIF 逐帧/模糊那套外观逻辑,只补停留点与朗读名)
             if (CardFocusProbe)
             {
                 root.IsTabStop = true;               // WinUI3 里 IsTabStop 在 UIElement 上,非 Control 的 Grid 也能进 Tab 序
@@ -757,24 +760,47 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (root.FindName("ItemRootGrid") is Grid blurRootGrid)
                 UpdateItemBlur(blurRootGrid, item);
         };
+
+        // [内容/列表模式焦点可达 2026-09] 把图标模式那套"卡片=Tab 停留点 + 朗读名 + 焦点即选中"复制到另外两个 repeater。
+        // 三种模式共用同一个 Wallpapers 列表,所以下标、选中、Ctrl/Shift 多选那整块逻辑都直接复用 CardRoot_GotFocus,
+        // 这里只补"停留点 + 系统焦点框 + 朗读名 + 标题节点去重"。
+        WallpapersContentRepeater.ElementPrepared += (s, e) => PrepareRowCardForFocus(e, "ContentTitleText");
+        WallpapersListRepeater.ElementPrepared += (s, e) => PrepareRowCardForFocus(e, "ListTitleText");
+
+        void PrepareRowCardForFocus(ItemsRepeaterElementPreparedEventArgs e, string titleNodeName)
+        {
+            if (!CardFocusProbe || e.Element is not FrameworkElement root) return;
+            WallpaperItem? item = e.Index >= 0 && e.Index < Wallpapers.Count
+                ? Wallpapers[e.Index]
+                : root.DataContext as WallpaperItem;
+            if (item == null) return;
+
+            root.IsTabStop = true;
+            root.UseSystemFocusVisuals = true;
+            // 朗读名与图标模式同源,同样硬编码中文占位(留用需走 resw)
+            AutomationProperties.SetName(root, string.IsNullOrEmpty(item.Title) ? "(无标题)" : item.Title);
+            // 行根已经念标题,行内的标题文字要设为 Raw,否则讲述人停在行上按方向键会把它再念一遍
+            if (root.FindName(titleNodeName) is TextBlock rowTitleText)
+                AutomationProperties.SetAccessibilityView(rowTitleText, AccessibilityView.Raw);
+            else
+                Serilog.Log.Warning("[A11y] 未取到行卡标题节点 {Name},朗读去重未生效", titleNodeName);
+            root.GotFocus -= CardRoot_GotFocus;   // 幂等:容器回收复用会重复走到这里
+            root.GotFocus += CardRoot_GotFocus;
+        }
+
         // [焦点探针 2026-09] 卡片拿到键盘焦点时写一条日志:即使一时听不出讲述人念什么,
         // 也能从 Logs 页确认"Tab 确实停到了卡片上"(这就是本实验的客观读数)。
         void CardRoot_GotFocus(object sender, RoutedEventArgs e)
         {
-            // [修复 2026-09] 取 item 别看本元素的 DataContext:真正设了 DataContext 的是里层 ItemRootGrid
-            // (DataContext="{x:Bind}"),模板根 ItemContainer 上没设 —— 所以此前日志一律打"(无标题)",
-            // "焦点即选中"也因取不到 item 而整条判据不成立。改按 repeater 下标从 ItemsSource 取(与 ElementPrepared 同源)。
+            // [内容/列表模式焦点可达 2026-09] item 认定改成三模式通用:内容/列表的行根
+            // (ContentItemContainer/ListItemContainer)自己设了 DataContext="{x:Bind}",图标模式的模板根 ItemContainer
+            // 没设(item 在里层 ItemRootGrid 上)→ 先读本元素 DataContext,读不到再探里层那一格。
+            // 下标不再向某一个 repeater 要:三种模式的 ItemsSource 是同一个 Wallpapers 列表,IndexOf 出来的就是
+            // 当前可见模式那一行的下标(原先写死 WallpapersRepeater.GetElementIndex,焦点落在内容/列表行上会得 -1)。
             var focusedCard = sender as FrameworkElement;
-            WallpaperItem? focusedItem = null;
-            var focusedIndex = -1;
-            if (focusedCard != null)
-            {
-                focusedIndex = WallpapersRepeater.GetElementIndex(focusedCard);
-                if (focusedIndex >= 0 && focusedIndex < Wallpapers.Count)
-                    focusedItem = Wallpapers[focusedIndex];
-                // 兜底:下标取不到时(理论上不该发生)退回里层 ItemRootGrid 的 DataContext
-                focusedItem ??= (focusedCard.FindName("ItemRootGrid") as FrameworkElement)?.DataContext as WallpaperItem;
-            }
+            WallpaperItem? focusedItem = (focusedCard?.DataContext as WallpaperItem)
+                ?? (focusedCard?.FindName("ItemRootGrid") as FrameworkElement)?.DataContext as WallpaperItem;
+            var focusedIndex = focusedItem != null ? Wallpapers.IndexOf(focusedItem) : -1;
             Serilog.Log.Information("[A11y] 卡片获得焦点: {Title}", focusedItem?.Title ?? "(无标题)");
             // [列表键盘可达 2026-09] 记住"最后停留过的卡":Ctrl+L 再进列表时回到这里,而不是回列表头
             if (ListKeyboardAccessProbe && focusedIndex >= 0)
@@ -939,6 +965,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 await RefreshWallpaperList();
             }
 
+            UpdateDetailBackupButton();   // [详情面板备份按钮 2026-09-21] 回到本页时按当前选中项重算文案与可用性
+
             // [性能 2026-09] 先设预渲染缓冲(减少实化/回收容器数),再钳列宽
             ApplyRepeaterCacheLength();
             // ItemsRepeater 首次布局后钳制列宽(防崩;GridView 已全迁 ItemsRepeater)
@@ -955,10 +983,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             HideWallpaperContextMenu();
 
-            var itemsToUninstall = ViewModel.SelectedWallpapers.Count > 0
-                ? SelectedWallpapers.ToList()
-                : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
-
+            var itemsToUninstall = UninstallTargets();
             if (itemsToUninstall.Count == 0) return;
 
             // 拆分创意工坊(需取消订阅)与非创意工坊(直接删文件)
@@ -977,12 +1002,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 "取消");
             if (!confirmed) return;
 
-            await UninstallWallpapersAsync(workshopItems, nonWorkshopItems);
-
-            Log.Information("已卸载 {Count} 个壁纸: {Titles}", itemsToUninstall.Count,
-                string.Join("; ", itemsToUninstall.Select(w => w.Title ?? w.WorkshopID ?? "未知")));
-
-            ViewModel.SelectedWallpaper = null;
+            await UninstallSelectionCoreAsync(itemsToUninstall, workshopItems, nonWorkshopItems);
         });
 
         ExtractSelectedCommand = new AsyncRelayCommand(async () =>
@@ -1122,6 +1142,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             _isRightButtonPressed = true;
             _rightMenuShownThisGesture = false;
+            _rightPressPagePoint = pt.Position;
         }
         // CommandBar 内按钮按下:记录按钮/捕获指针,松开时按需触发图标动画
         // (AddHandler handledEventsToo:true 能收到 Button 内部的 handled 事件;按下缩小反馈已于 2026-09-16 取消)
@@ -1184,7 +1205,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     // 挂在按钮自己身上与它在栏内还是在溢出菜单无关,两种情况都能收到;另外补两处:
     // ① PointerCaptureLost(按住拖出去再松开);② 溢出菜单 Flyout.Opened(菜单一开就当作这次按压结束,
     // 免得指针事件被菜单吞掉后图标卡在"按下"姿态、之后因为状态没变化而再也不播)。
-    private const bool ViewIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
 
     private void ViewIcon_WirePointer()
     {
@@ -1203,17 +1223,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void ViewIcon_SetState(bool pressed, string trigger)
     {
         string target = pressed ? "Pressed" : "Normal";
-        if (!ViewIconAnimationProbe) { Log.Information("[动画] 视图图标跳过({Trigger}):探针已关闭", trigger); return; }
-        if (ToolbarViewIcon is null) { Log.Information("[动画] 视图图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        if (ToolbarViewIcon is null) return;
         string before = ToolbarViewIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生),记一行便于排查
-            Log.Information("[动画] 视图图标({Trigger}):状态已是 {State},无需切换", trigger, before);
+            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生)
             return;
         }
-        Log.Information("[动画] 视图图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
-            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
         AnimatedIcon.SetState(ToolbarViewIcon, target);
     }
 
@@ -1224,7 +1240,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     // 可能被收进溢出菜单(那时页面级 IsDescendantOf(fe, ToolbarCommands) 判定落空),挂按钮自己两种情况都能收到;
     // 这枚没有 Flyout,只需按下/松开/CaptureLost 三处(不铺视图按钮那套“菜单打开”兜底)。
     // 开关本身的开合(IsChecked ←→ LeftSplitViewPaneOpen)与图标动画无关,两边互不干涉。
-    private const bool LeftFilterIconAnimationProbe = true;
 
     private void LeftFilterIcon_WirePointer()
     {
@@ -1237,17 +1252,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void LeftFilterIcon_SetState(bool pressed, string trigger)
     {
         string target = pressed ? "Pressed" : "Normal";
-        if (!LeftFilterIconAnimationProbe) { Log.Information("[动画] 筛选结果图标跳过({Trigger}):探针已关闭", trigger); return; }
-        if (LeftToggleFilterIcon is null) { Log.Information("[动画] 筛选结果图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        if (LeftToggleFilterIcon is null) return;
         string before = LeftToggleFilterIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生),记一行便于排查
-            Log.Information("[动画] 筛选结果图标({Trigger}):状态已是 {State},无需切换", trigger, before);
+            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生)
             return;
         }
-        Log.Information("[动画] 筛选结果图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
-            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
         AnimatedIcon.SetState(LeftToggleFilterIcon, target);
     }
 
@@ -1257,8 +1268,8 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     // 只是近白字形看不出问题)。对照: 页面右侧普通 ToggleButton 的模板用 Storyboard 动画驱动 ContentPresenter.Foreground,
     // 动画能覆盖一切、图标继承得到, 所以那枚一直是正常的。
     // [怎么修] 与右侧对齐: 选中态变化时把色值显式设到图标自己的 Foreground(本地值必然生效, 深浅主题自动跟)。
-    // 色值不硬编码: Papers.xaml 里两个 Collapsed 探针用 {ThemeResource}(AppBarToggleButtonForeground /
-    // AppBarToggleButtonForegroundChecked)让框架解析; 主题切换后重同步一次(探针笔刷会换成新主题的对象)。
+    // 色值不硬编码: 借 Papers.xaml 里两个 Collapsed Border(LeftFilterColorProbe*)用 {ThemeResource}(AppBarToggleButtonForeground /
+    // AppBarToggleButtonForegroundChecked)让框架解析; 主题切换后重同步一次(这两个取色载体的笔刷会换成新主题的对象)。
     // 只保证选中/未选中两个稳定态; 悬停/按下时文字的轻微过渡色不逐帧跟。
     private bool _leftFilterColorHooked;
 
@@ -1298,7 +1309,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     // 钩子直接挂在按钮自己身上(工具栏开了 IsDynamicOverflowEnabled,排序按钮排第 8 位,同样可能被收进溢出菜单,
     // 那时页面级 IsDescendantOf(fe, ToolbarCommands) 判定会落空),另补 PointerCaptureLost 与 Flyout.Opened 两处兜底。
     // NormalToPlaying/PlayingToNormal 那对标记也保留着:将来若要改回"点击整段播一遍"直接复用,不用重新生成。
-    private const bool SortIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
 
     private void SortIcon_WirePointer()
     {
@@ -1317,17 +1327,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private void SortIcon_SetState(bool pressed, string trigger)
     {
         string target = pressed ? "Pressed" : "Normal";
-        if (!SortIconAnimationProbe) { Log.Information("[动画] 排序图标跳过({Trigger}):探针已关闭", trigger); return; }
-        if (ToolbarSortIcon is null) { Log.Information("[动画] 排序图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        if (ToolbarSortIcon is null) return;
         string before = ToolbarSortIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生),记一行便于排查
-            Log.Information("[动画] 排序图标({Trigger}):状态已是 {State},无需切换", trigger, before);
+            // 状态没变化时 AnimatedIcon 不会播(切状态只在真正变化时发生)
             return;
         }
-        Log.Information("[动画] 排序图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
-            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
         AnimatedIcon.SetState(ToolbarSortIcon, target);
     }
 
@@ -1351,7 +1357,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     //      不归零的话 AnimatedIcon 停在末帧,下次按下又要先跳到第 0 帧,看着就是"闪一下又播回原方向";
     //   ④ 过渡期间再按下:排队,等本轮两段播完再从头走一次(一次点击 = 完整周期 ≈334ms);
     //   ⑤ 按住不放:第一段播完停在第 10 帧(压平成一条线那帧)等松开。
-    private const bool SortDirectionIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
     private const int SortDirectionIconFrameMs = 17;             // 每帧 @60fps ≈ 16.7ms
     private const int SortDirectionIconPressMs = 10 * SortDirectionIconFrameMs;     // 按下段 第 0→10 帧
     private const int SortDirectionIconReleaseMs = 10 * SortDirectionIconFrameMs;   // 松开段 第 10→20 帧
@@ -1382,8 +1387,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             // 播放完上一个状态的动画才能切换到下一个状态:本轮没播完,这次按压排在后面
             _sortDirectionIconPendingPress = true;
-            if (SortDirectionIconAnimationProbe)
-                Log.Information("[动画] 排序方向图标按下:本轮过渡还在播,已排队等播完");
             return;
         }
         SortDirectionIcon_StartCycle("按下");
@@ -1394,9 +1397,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (!_sortDirectionIconCycleActive)
         {
-            if (SortDirectionIconAnimationProbe)
-                Log.Information("[动画] 排序方向图标松开:当前没有过渡周期,忽略");
-            return;
+            return;   // 当前没有过渡周期,松开不参与
         }
         if (_sortDirectionIconPressedSegDone)
         {
@@ -1404,8 +1405,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return;
         }
         _sortDirectionIconPendingRelease = true;
-        if (SortDirectionIconAnimationProbe)
-            Log.Information("[动画] 排序方向图标松开:按下段还在播,已排队等它播完再播第二段");
     }
 
     /// <summary>一轮过渡:先确认起点素材 = 当前方向(换源无感),再播按下段第 0→10 帧。</summary>
@@ -1447,10 +1446,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             _sortDirectionIconPendingRelease = false;
             SortDirectionIcon_PlayReleaseSegment("松开(排队)");
-        }
-        else if (SortDirectionIconAnimationProbe)
-        {
-            Log.Information("[动画] 排序方向图标按下段播完:仍按住,停在第 10 帧等松开");
         }
     }
 
@@ -1495,9 +1490,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         SortDirectionIcon_ResetToFirstFrame(trigger);   // 归零:换源后把画面拨回起手帧(第 0 帧 = 当前方向)
         // AnimatedIcon 可能在换源那一拍之后才把状态重新挂上、把画面又推到末帧,隔一拍再归一次(若此时已在转场中,就交给本轮结束去归)
         DispatcherQueue.TryEnqueue(() => { if (!_sortDirectionIconCycleActive) SortDirectionIcon_ResetToFirstFrame(trigger + "(隔拍)"); });
-        if (SortDirectionIconAnimationProbe)
-            Log.Information("[动画] 排序方向图标换源({Trigger}):{Dir} → {Class} 回退字形={Glyph}", trigger,
-                ascending ? "升序(尖朝下)" : "降序(尖朝上)", wanted.GetType().Name, ascending ? "E70D" : "E70E");
         return true;
     }
     /// <summary>归零:把画面拨回素材第 0 帧(= 起手帧 = 当前方向)。
@@ -1508,7 +1500,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     /// </summary>
     private void SortDirectionIcon_ResetToFirstFrame(string trigger)
     {
-        if (!SortDirectionIconAnimationProbe) return;
         if (ToolbarSortDirectionIcon is null) return;
         SortDirectionIcon_SetState("Reset", "归零:拨回第 0 帧(画面不动)", trigger);
         SortDirectionIcon_SetState("Normal", "归零后恢复状态名", trigger);
@@ -1517,15 +1508,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     /// <summary>切 AnimatedIcon 状态(状态名 → 对应标记对);状态没变化时 AnimatedIcon 不会播,故记一行。</summary>
     private void SortDirectionIcon_SetState(string target, string seg, string trigger)
     {
-        if (!SortDirectionIconAnimationProbe) { Log.Information("[动画] 排序方向图标跳过({Trigger}):探针已关闭", trigger); return; }
-        if (ToolbarSortDirectionIcon is null) { Log.Information("[动画] 排序方向图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        if (ToolbarSortDirectionIcon is null) return;
         string before = ToolbarSortDirectionIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            Log.Information("[动画] 排序方向图标({Trigger}):状态已是 {State},无需切换", trigger, before);
             return;
         }
-        Log.Information("[动画] 排序方向图标状态切换({Trigger})→ {State}({Seg})", trigger, target, seg);
         AnimatedIcon.SetState(ToolbarSortDirectionIcon, target);
     }
 
@@ -1559,7 +1547,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     // 它平时折叠,只在勾动画期间露面:Lottie 两段播完 → 淡出 Lottie → 显示 FontIcon 播勾 → 播完换回 Lottie
     // 并归零(两者此时都是"复制"姿态,切换无感)。"两段播完"按时间戳算(按下段 170ms + 松开段 170ms,松开若早于
     // 按下段结束则排在它之后),不读状态 —— 状态是按钮模板在管,我们不去抢。
-    private const bool DetailIconAnimationProbe = true;   // false = 只记日志不做事(排查用)
     private const int DetailIconFrameMs = 17;             // 每帧 @60fps ≈ 16.7ms
     private const int DetailIconSegMs = 10 * DetailIconFrameMs;   // 每段 10 帧 ≈ 170ms
 
@@ -1585,7 +1572,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         _detailCopyPressAt = DateTime.Now;
         _detailCopyPressed = true;
         _detailCopyReleased = false;
-        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标按下:已记时刻(状态由按钮模板驱动,按下播第 0→10 帧)");
     }
 
     private void DetailCopyIcon_NoteRelease()
@@ -1593,7 +1579,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (!_detailCopyPressed || _detailCopyReleased) return;
         _detailCopyReleased = true;
         _detailCopyReleaseAt = DateTime.Now;
-        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标松开:已记时刻(在按钮上松开播第 10→20 帧,在按钮外倒放回第 0 帧)");
     }
 
     /// <summary>复制按钮用:等这一轮(按下段 + 松开段)播完 —— 勾动画要等它播完再开始("播完后还要播放勾的动画")。
@@ -1606,7 +1591,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         DateTime pressEnd = pressAt.AddMilliseconds(DetailIconSegMs);
         DateTime releaseStart = releaseAt > pressEnd ? releaseAt : pressEnd;
         int waitMs = (int)Math.Max(0, (releaseStart.AddMilliseconds(DetailIconSegMs) - DateTime.Now).TotalMilliseconds);
-        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标:等本轮播完再播勾(还需 {Wait}ms)", waitMs);
         if (waitMs > 0) await Task.Delay(waitMs);
         _detailCopyPressed = false;
         _detailCopyReleased = false;
@@ -1637,15 +1621,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     /// 只给"详情面板开关"(框架不驱动的那枚)和复制按钮的归零用 —— 五个普通按钮的状态由 Button 模板驱动,别插手。</summary>
     private void DetailIcon_SetState(AnimatedIcon icon, string name, string target, string seg, string trigger)
     {
-        if (!DetailIconAnimationProbe) { Log.Information("[动画] {Name}图标跳过({Trigger}):开关已关", name, trigger); return; }
-        if (icon is null) { Log.Information("[动画] {Name}图标跳过({Trigger}):图标实例为 null", name, trigger); return; }
+        if (icon is null) return;
         string before = icon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            Log.Information("[动画] {Name}图标({Trigger}):状态已是 {State},无需切换", name, trigger, before);
             return;
         }
-        Log.Information("[动画] {Name}图标状态切换({Trigger})→ {State}({Seg})", name, trigger, target, seg);
         AnimatedIcon.SetState(icon, target);
     }
 
@@ -1661,7 +1642,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (_rightToggleIconCycleActive)
         {
             _rightToggleIconPendingPress = true;
-            if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关按下:本轮过渡还在播,已排队等播完");
             return;
         }
         RightToggleIcon_StartCycle("按下");
@@ -1671,7 +1651,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     {
         if (!_rightToggleIconCycleActive)
         {
-            if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关松开:当前没有过渡周期,忽略");
             return;
         }
         if (_rightToggleIconPressSegDone)
@@ -1680,7 +1659,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return;
         }
         _rightToggleIconPendingRelease = true;
-        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关松开:按下段还在播,已排队等它播完再播第二段");
     }
 
     private void RightToggleIcon_StartCycle(string trigger)
@@ -1706,7 +1684,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _ = RightToggleIcon_PlayReleaseSegmentAsync("松开(排队后)");
             return;
         }
-        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关:按下段播完,停在第 10 帧等松开");
     }
 
     private async Task RightToggleIcon_PlayReleaseSegmentAsync(string trigger)
@@ -1719,7 +1696,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         if (token.IsCancellationRequested) return;
         _rightToggleIconCycleActive = false;
         _rightToggleIconPressSegDone = false;
-        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关:一轮播完(第 20 帧)");
         if (_rightToggleIconPendingPress)
         {
             _rightToggleIconPendingPress = false;
@@ -1735,19 +1711,16 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     // 原 Composition 旋转(2 圈/2000ms)已被素材自带的旋转取代,整段删掉;要退回旧行为用 git 即可。
     // [为什么播完要归位] 状态只有真正变化时才播动画:播完切回 Normal,下一次点击才是真实切换
     //(全选那边踩过这个坑,见 PlaySelectAllIconAnimation 的注释)。
-    private const bool RefreshIconAnimationProbe = true;   // [2026-09-18 弃用] 只约束下面那个已无调用点的 PlayRefreshSpin
     private CancellationTokenSource? _refreshIconResetCts;  // 整段播完的归位令牌(连点时取消上一次)
 
     /// <summary>[2026-09-18 起无调用点,保留以便回退] 播一遍刷新动画(整段:第 0→30 帧),播完归位 Normal。</summary>
     private async void PlayRefreshSpin()
     {
-        if (!RefreshIconAnimationProbe) return;
         // 工具栏按钮可能被 CommandBar 收进溢出菜单,那种情况下图标还没实化(x:Name 字段为 null),直接跳过
         if (ToolbarRefreshIcon is null) return;
         _refreshIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _refreshIconResetCts = cts;
-        Log.Information("[动画] 刷新图标状态切换 → Playing(整段:第 0→30 帧)");
         AnimatedIcon.SetState(ToolbarRefreshIcon, "Playing");
         try
         {
@@ -1758,24 +1731,24 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return;   // 期间又点了刷新,交给新的一次接管
         }
         if (cts.IsCancellationRequested) return;
-        Log.Information("[动画] 刷新图标状态归位 → Normal");
         AnimatedIcon.SetState(ToolbarRefreshIcon, "Normal");
     }
 
     // ===================== 删除(卸载)图标动画(2026-09-18 换“按下十帧”版) =====================
     // 删除图标(字形 E74D)素材 = WE_Tool.AnimatedVisuals.DeleteIcon;2026-09-18 换成 20 帧新版
     // (第 0→10 帧按下、第 10→20 帧复位,首末帧姿态相同);另带导航栏“清理”项的六态标记(共用一个类)。
-    // 本页 3 个入口(滚动区右键菜单 / 工具条 / 详情按钮)都绑 UninstallSelectedCommand,Click="UninstallIcon_Click"
-    // 只负责播图标动画,不改变命令执行与确认对话框流程。玩法分三类(2026-09-18):
+    // 本页绑 UninstallSelectedCommand 的两个入口(滚动区右键菜单 / 工具条)都带 Click="UninstallIcon_Click",
+    // 它只负责播图标动画,不改变命令执行与确认对话框流程。玩法分三类(2026-09-18):
     //   工具条那枚 → 按下/松开两段(见“工具栏四组图标”区块),这里的整段播放被标志位跳过;
-    //   详情面板那枚(普通 Button)→ 全交按钮模板(按下 0→10 / 松开 10→20 / 在按钮外松手倒放回退),
-    //     AnimatedIconPlayer.PlayOnce 内部对普通 Button 宿主直接跳过(否则会和两段重复播);
+    //   详情面板那枚(普通 Button)→ 2026-09-21 起改走 DetailUninstallButton_Click 弹确认小卡,不再经过本方法;
+    //     它的图标动画全交按钮模板(按下 0→10 / 松开 10→20 / 在按钮外松手倒放回退),
+    //     AnimatedIconPlayer.PlayOnce 内部对普通 Button 宿主本来也会直接跳过(否则会和两段重复播);
     //   弹窗工具条 / 右键菜单项 → 没有“按住”概念,照旧点击播整段(Playing 对)。
     private void UninstallIcon_Click(object sender, RoutedEventArgs e)
     {
         // 工具条那枚:按下/松开已经驱动过两段动画,不再播整段(标志在“工具栏四组图标”区块里置位/复位)
         if (_deleteIconPointerDriven) return;
-        AnimatedIconPlayer.PlayOnce(sender, "卸载");
+        AnimatedIconPlayer.PlayOnce(sender);
     }
 
     // ===================== 反选图标动画(2026-09-18 换“按下十帧”版) =====================
@@ -1785,13 +1758,11 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     // 触发点(2026-09-18 改):工具条那枚由按下/松开两段驱动(见“工具栏四组图标”区块);其余入口(弹出工具条 /
     // 滚动区右键菜单 / Ctrl+I)都汇入 InternalInvertSelection(),在那里对工具条图标整段播一遍(Playing 对)。
     // [为什么播完要归位] 状态只有真正变化时才播动画:播完切回 Normal,下一次点击才是真实切换。
-    private const bool InvertSelectionIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
     private CancellationTokenSource? _invertSelectionIconResetCts;  // 整段播完的归位令牌(连点时取消上一次)
 
     /// <summary>播一遍反选动画(整段:第 0→30 帧),播完归位 Normal。工具条按下/松开驱动过时会跳过。</summary>
     private async void PlayInvertSelectionIconAnimation()
     {
-        if (!InvertSelectionIconAnimationProbe) return;
         // 工具条那枚已由按下/松开驱动时不再播整段(否则两段之后又整段重播一遍)
         if (_invertSelectionIconPointerDriven) return;
         // 工具栏按钮可能被 CommandBar 收进溢出菜单,那种情况下图标还没实化(x:Name 字段为 null),直接跳过
@@ -1799,7 +1770,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         _invertSelectionIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _invertSelectionIconResetCts = cts;
-        Log.Information("[动画] 反选图标状态切换 → Playing(整段:第 0→30 帧)");
         AnimatedIcon.SetState(ToolbarInvertSelectionIcon, "Playing");
         try
         {
@@ -1810,7 +1780,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return;   // 期间又点了一次反选,交给新的一次接管
         }
         if (cts.IsCancellationRequested) return;
-        Log.Information("[动画] 反选图标状态归位 → Normal");
         AnimatedIcon.SetState(ToolbarInvertSelectionIcon, "Normal");
     }
 
@@ -1848,7 +1817,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             _toolbarCopyPressed = true;
             _toolbarCopyReleased = false;
         }
-        Log.Information("[动画] {Name}图标状态切换 → Pressed(按下:第 0→10 帧)", SegmentsIconName(icon));
         AnimatedIcon.SetState(icon, "Pressed");
     }
 
@@ -1870,8 +1838,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             case InvertSelection: _invertSelectionIconPointerDriven = false; break;
             case DeleteIcon: _deleteIconPointerDriven = false; break;
         }
-        Log.Information("[动画] {Name}图标状态切换 → {State}({Seg})", SegmentsIconName(icon),
-            inside ? "PointerOver" : "Normal", inside ? "松开:第 10→末尾帧" : "松开在按钮外:倒放回第 0 帧");
         AnimatedIcon.SetState(icon, inside ? "PointerOver" : "Normal");
     }
 
@@ -1881,16 +1847,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         var icon = AnimatedIconPlayer.FindAnimatedIcon(btn);
         return icon?.Source is RefreshIcon or SelectAllIcon or InvertSelection or DeleteIcon or CopyIcon ? icon : null;
     }
-
-    private static string SegmentsIconName(AnimatedIcon icon) => icon.Source switch
-    {
-        RefreshIcon => "刷新",
-        SelectAllIcon => "全选",
-        InvertSelection => "反选",
-        DeleteIcon => "删除",
-        CopyIcon => "复制",
-        _ => "?",
-    };
 
     /// <summary>松开点是否落在按钮区域内(判定“在按钮上松开”还是“点空”)。</summary>
     private static bool IsReleaseInsideButton(FrameworkElement el, PointerRoutedEventArgs e)
@@ -1923,7 +1879,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         DateTime pressEnd = pressAt.AddMilliseconds(DetailIconSegMs);
         DateTime releaseStart = releaseAt > pressEnd ? releaseAt : pressEnd;
         int waitMs = (int)Math.Max(0, (releaseStart.AddMilliseconds(DetailIconSegMs) - DateTime.Now).TotalMilliseconds);
-        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标(工具栏):等本轮播完再播勾(还需 {Wait}ms)", waitMs);
         if (waitMs > 0) await Task.Delay(waitMs);
         _toolbarCopyPressed = false;
         _toolbarCopyReleased = false;
@@ -2998,6 +2953,17 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         return null;
     }
 
+    /// <summary>[内容/列表模式焦点可达 2026-09] 当前可见模式对应的 ItemsRepeater。三个 repeater 绑同一个 Wallpapers
+    /// 列表,所以下标通用;但"聚焦某下标的容器""XY 焦点搜索范围"必须按可见模式来 —— 隐藏模式的容器根本没实化,
+    /// 向其要容器只会拿到 null。</summary>
+    private ItemsRepeater? GetVisibleWallpaperRepeater()
+    {
+        if (WallpapersScrollViewExp.Visibility == Visibility.Visible) return WallpapersRepeater;
+        if (WallpapersContentScrollViewExp.Visibility == Visibility.Visible) return WallpapersContentRepeater;
+        if (WallpapersListScrollViewExp.Visibility == Visibility.Visible) return WallpapersListRepeater;
+        return null;
+    }
+
     /// <summary>可见模式滚动回顶(分页/刷新后)</summary>
     private void ScrollVisibleGridToTop()
     {
@@ -3344,6 +3310,13 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             _isWallpaperItemTapped = true;
 
+            // [内容/列表模式焦点可达 2026-09] 与图标模式 Item_PointerPressed 同步:点谁就把键盘焦点交给谁,
+            // 此后的方向键/Enter 唤菜单都从这一行起算。图标模式一直有这段,内容/列表模式(本处理器)漏了 ——
+            // 表现就是"用鼠标点了行,方向键却从上次的落点起算"。判据与图标模式完全一致(同一条手势只认最先按下那张)。
+            if (ListKeyboardAccessProbe && !_isLeftMouseButtonPressed && !_shiftDragActive
+                && sender is FrameworkElement pressedRow && pressedRow.DataContext is WallpaperItem pressedRowItem)
+                FocusWallpaperCard(pressedRowItem, FocusState.Pointer);
+
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             visual.CenterPoint = new Vector3((float)grid.ActualWidth / 2, (float)grid.ActualHeight / 2, 0f);
 
@@ -3433,7 +3406,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     {
         if (sender is FrameworkElement element && element.DataContext is WallpaperItem item)
         {
-            _rightClickedWallpaperElement = element;
             if (!_isMultiSelectMode)
             {
                 ViewModel.SelectedWallpaper = item;
@@ -3731,51 +3703,79 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     /// 系统 ContextFlyout/RightTapped 在右键按下与松开间鼠标移动(哪怕 1px)时会被 Windows 输入层
     /// 抑制(判定为潜在拖拽);ContextRequested 是"请求上下文"底层事件,不受该移动检测限制。</summary>
     // [右键释放检测 2026-09] 松开点命中图标卡片 → 选中 + 手动弹菜单。
-    // 只处理图标模式(ItemsRepeater);内容/列表模式仍走各自 ContextFlyout。
+    // [空白区右键 2026-09-21] 三种视图模式的列表容器都参与判定:命中卡片 → 卡片菜单;命中空白 → 背景菜单。
     private void HandleRightReleaseOpenMenu(Point releasePagePoint)
     {
         if (_rightMenuShownThisGesture) return; // 已弹过(如 ContextFlyout 兜底触发),防双弹
 
-        // 仅图标模式可见时命中图标卡片
-        if (WallpapersScrollViewExp.Visibility != Visibility.Visible
-            || WallpapersScrollViewExp.ActualWidth <= 0) return;
+        var list = GetVisibleWallpaperScrollView();
+        if (list == null || list.ActualWidth <= 0) return;
 
-        FrameworkElement? card = FindWallpaperCardAt(releasePagePoint);
-        // 只认松开点命中的卡片:拖出卡片/列表外松开不弹(符合常理)
-        if (card == null) return;
-        if (card is not FrameworkElement fe || fe.DataContext is not WallpaperItem item) return;
+        FrameworkElement? card = FindWallpaperCardAt(releasePagePoint, list);
 
-        // 与右键菜单语义一致:选中逻辑(多选模式不切单选指针)
-        if (!_isMultiSelectMode)
+        // 命中卡片:只图标模式手动弹(绕开系统"移动抑制");内容/列表模式仍走卡片自己的 ContextFlyout,
+        // 这里必须让开,否则松开时会和系统弹出的卡片菜单叠成两层。
+        if (card != null)
         {
-            if (ViewModel.SelectedWallpaper != item)
+            if (!ReferenceEquals(list, WallpapersScrollViewExp)) return;
+            if (card is not FrameworkElement fe || fe.DataContext is not WallpaperItem item) return;
+
+            // 与右键菜单语义一致:选中逻辑(多选模式不切单选指针)
+            if (!_isMultiSelectMode)
             {
-                ViewModel.SelectedWallpaper = item;
-                PlayDrillInAnimation();
+                if (ViewModel.SelectedWallpaper != item)
+                {
+                    ViewModel.SelectedWallpaper = item;
+                    PlayDrillInAnimation();
+                }
             }
+            RefreshDisplayedSelectedWallpapers(forceRebuild: true);
+            UpdateMultiSelectCount();
+            if (!_isMultiSelectMode)
+                ViewModel.SelectedWallpaper = item;
+
+            _rightMenuShownThisGesture = true;
+            // 在松开位置弹菜单(相对卡片定位更稳:用卡片坐标换算)
+            var posInCard = fe.TransformToVisual(null).TransformPoint(new Point(0, 0));
+            var menuPos = new Point(releasePagePoint.X - posInCard.X, releasePagePoint.Y - posInCard.Y);
+            WallpaperContextMenu.ShowAt(fe, new FlyoutShowOptions
+            {
+                Position = menuPos,
+                ShowMode = FlyoutShowMode.Standard
+            });
+            return;
         }
-        RefreshDisplayedSelectedWallpapers(forceRebuild: true);
-        UpdateMultiSelectCount();
-        if (!_isMultiSelectMode)
-            ViewModel.SelectedWallpaper = item;
-        _rightClickedWallpaperElement = fe;
+
+        // 空白处松开 → 弹背景菜单。再要求按下点也不落在卡片上:按住卡片拖到空白松开不该弹背景菜单
+        if (FindWallpaperCardAt(_rightPressPagePoint, list) != null) return;
+        ShowBackgroundMenuAt(releasePagePoint, list);
+    }
+
+    /// <summary>[空白区右键 2026-09-21] 松开点落在列表可视区内且未命中卡片 → 弹 ScrollViewBackgroundMenu。
+    /// 走右键释放这条手动链路而不是挂 ContextFlyout:系统弹出在右键按下与松开之间移动哪怕 1px 也会被输入层
+    /// 抑制(见上方注释),与卡片菜单同病。这个菜单原先挂在内容/列表模式的 GridView 上,v0.8.0 把 GridView
+    /// 迁成 ScrollView+ItemsRepeater(2db62c4)时属性随控件一起丢了,资源本身一直留在 Page.Resources 里。</summary>
+    private void ShowBackgroundMenuAt(Point releasePagePoint, FrameworkElement list)
+    {
+        // 换算到列表容器坐标,顺带用作"松开点是否在列表区内"的判定
+        var listTopLeft = list.TransformToVisual(null).TransformPoint(new Point(0, 0));
+        var pos = new Point(releasePagePoint.X - listTopLeft.X, releasePagePoint.Y - listTopLeft.Y);
+        if (pos.X < 0 || pos.Y < 0 || pos.X > list.ActualWidth || pos.Y > list.ActualHeight) return;
 
         _rightMenuShownThisGesture = true;
-        // 在松开位置弹菜单(相对卡片定位更稳:用卡片坐标换算)
-        var posInCard = fe.TransformToVisual(null).TransformPoint(new Point(0, 0));
-        var menuPos = new Point(releasePagePoint.X - posInCard.X, releasePagePoint.Y - posInCard.Y);
-        WallpaperContextMenu.ShowAt(fe, new FlyoutShowOptions
+        ScrollViewBackgroundMenu.ShowAt(list, new FlyoutShowOptions
         {
-            Position = menuPos,
+            Position = pos,
             ShowMode = FlyoutShowMode.Standard
         });
     }
 
     /// <summary>命中测试:页面坐标处命中的元素里,向上找 DataContext 是 WallpaperItem 的卡片根。
-    /// 用 FindElementsInHostCoordinates 取该点所有命中元素(含被覆盖的),逐个查祖先链。</summary>
-    private FrameworkElement? FindWallpaperCardAt(Point pagePoint)
+    /// 用 FindElementsInHostCoordinates 取该点所有命中元素(含被覆盖的),逐个查祖先链。
+    /// container 传当前可见模式的列表 ScrollView(三种模式各自独立,不可见的那个没有生成的元素实例)。</summary>
+    private FrameworkElement? FindWallpaperCardAt(Point pagePoint, FrameworkElement container)
     {
-        var hits = VisualTreeHelper.FindElementsInHostCoordinates(pagePoint, WallpapersScrollViewExp);
+        var hits = VisualTreeHelper.FindElementsInHostCoordinates(pagePoint, container);
         foreach (var hit in hits)
         {
             DependencyObject cur = hit;
@@ -3807,7 +3807,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             UpdateMultiSelectCount();
             if (!_isMultiSelectMode)
                 ViewModel.SelectedWallpaper = item;
-            _rightClickedWallpaperElement = element;
         }
     }
     private static void ApplyScaleAnimation(FrameworkElement fe, float targetScale)
@@ -3945,13 +3944,11 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     // 走 NormalToPlaying(0→20) 整段播一遍、播完归位。
     // [为什么不再来回 toggle] 旧写法在 Normal / Playing 之间反复切,只有状态真正【变化】的那次才播动画,
     // 于是每隔一次点击才看得到动画(日志里 Playing / Normal 逐行交替)——改成两段真实状态后,每次按下/松开都是真实切换。
-    private const bool SelectAllIconAnimationProbe = true;   // false = 完全回到改动前(图标静止在第 0 帧,不播动画)
     private CancellationTokenSource? _selectAllIconResetCts;   // 整段播放播完的归位令牌(连点时取消上一次)
     private bool _selectAllIconPointerDriven;                  // 本次点击已由按下/松开驱动,Click 里不再播整段
 
     private async void PlaySelectAllIconAnimation()
     {
-        if (!SelectAllIconAnimationProbe) return;
         // 工具栏按钮的按下/松开已经驱动过动画时不再重复播整段(否则两段会互相打断)
         if (_selectAllIconPointerDriven) return;
         // 工具栏按钮可能被 CommandBar 收进溢出菜单,那种情况下图标还没实化(x:Name 字段为 null),直接跳过
@@ -3959,7 +3956,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         _selectAllIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _selectAllIconResetCts = cts;
-        Log.Information("[动画] 全选图标状态切换 → Playing(整段:第 0→20 帧)");
         AnimatedIcon.SetState(ToolbarSelectAllIcon, "Playing");
         try
         {
@@ -3970,7 +3966,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             return;   // 期间又按下(或又点了一次),交给新的一次接管
         }
         if (cts.IsCancellationRequested) return;
-        Log.Information("[动画] 全选图标状态归位 → Normal");
         AnimatedIcon.SetState(ToolbarSelectAllIcon, "Normal");
     }
 
@@ -4011,6 +4006,33 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     /// <summary>快捷键分支共用核心:页面自身 KeyDown 与窗口分发两条路径都汇到这里,避免逻辑重复。</summary>
     private void Page_KeyDown_Core(KeyRoutedEventArgs e)
     {
+        // [上下文菜单键盘可达 2026-09] 菜单键(物理"应用程序键")/ Shift+F10 / Enter → 在当前焦点卡片上弹壁纸操作菜单。
+        // 排在 if (ctrl) 之前并自带 return:那条链一旦把 ctrl 判真就吞掉整条链(它的 switch 没有 default 分支),
+        // 走不到后面的分支。WinUI 的 KeyRoutedEventArgs **没有** KeyModifiers(那是 Pointer 事件才有的),修饰键只能读
+        // GetKeyStateForCurrentThread —— 而它在本文件的 Pointer 路径上被判"会读到过期状态",所以这里对 Enter/菜单键
+        // 干脆不看任何修饰键,只有 F10 需要判 Shift(单独判,避免 Ctrl 读值过期把三个键一起挡掉)。
+        // 走手动 ShowAt 而不指望系统 ContextFlyout 的键盘链路:2026-09-21 实测三种视图模式按 Shift+F10 都不响应
+        // (那条链路历来挂在 ListViewItem/SelectorItem 这类项控件上,GridView→ItemsRepeater 迁移后就没有了)。
+        // Enter 只在"卡片不消费它"时到得了这里:卡内真按钮会自己吃 Enter 并标记 Handled,页面收不到——正是想要的分工。
+        // 代价是 Enter 从此被"弹菜单"占用,以后要给卡片配"默认动作键"得另选键。
+        if (e.Key == VirtualKey.Menu || e.Key == VirtualKey.Enter
+            || (e.Key == VirtualKey.F10
+                && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down))
+        {
+            // 只有真弹出了才标记 Handled;焦点不在卡片上(停在工具栏/筛选框/外壳导航)时把键原样让出去
+            if (OpenWallpaperContextMenuForFocusedCard()) e.Handled = true;
+            return;
+        }
+
+        // [空格=一次单击 2026-09-21] 空格 = 对焦点卡片按一次鼠标左键(见 ActivateFocusedWallpaperCardByClick)。
+        // 与 Enter 同一条分工原则:焦点停在 CheckBox 上时,空格是勾选框自己的切换键(它消费掉并标记 Handled,
+        // 事件不会冒泡到本页这个处理器),停在真按钮上同理 —— 所以只有"焦点在卡片本身"上时空格才走到这里。
+        if (e.Key == VirtualKey.Space)
+        {
+            if (ActivateFocusedWallpaperCardByClick()) e.Handled = true;
+            return;
+        }
+
         var ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
 
         if (ctrl)
@@ -4075,7 +4097,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                         {
                             var candidate = FocusManager.FindNextElement(navDirection, new FindNextElementOptions
                             {
-                                SearchRoot = WallpapersRepeater,
+                                SearchRoot = GetVisibleWallpaperRepeater() ?? WallpapersRepeater,
                                 XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
                             });
                             moved = candidate is FrameworkElement next && next.Focus(FocusState.Keyboard);
@@ -4112,7 +4134,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             {
                 var rangeCandidate = FocusManager.FindNextElement(rangeNavDirection, new FindNextElementOptions
                 {
-                    SearchRoot = WallpapersRepeater,
+                    SearchRoot = GetVisibleWallpaperRepeater() ?? WallpapersRepeater,
                     XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
                 });
                 rangeMoved = rangeCandidate is FrameworkElement rangeNext && rangeNext.Focus(FocusState.Keyboard);
@@ -4140,13 +4162,133 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         }
     }
 
+    /// <summary>[列表键盘可达 2026-09] 把"当前键盘焦点落在哪张壁纸卡片上"认出来，交给调用方三样东西：
+    /// 持有焦点的元素、卡片(携带 DataContext 的那一层)、壁纸项。两条认定路缺一不可：
+    /// 路 1 沿可视树上溯找 DataContext 是 WallpaperItem 的元素 —— 内容/列表模式的行根设了 DataContext="{x:Bind}"，
+    ///     卡内 CheckBox 也从行根继承得到，所以这两种模式走这条就够；
+    /// 路 2 图标模式的停留点是模板根 ItemContainer，它自己**没设** DataContext(item 在里层 ItemRootGrid 上 ——
+    ///     与 GotFocus 里"日志一律打(无标题)"是同一条坑)，上溯拿不到 → 按 repeater 下标反查 ItemsSource。
+    ///     fromRepeaterIndex 告诉调用方走的是这条(菜单锚点要另选，见 OpenWallpaperContextMenuForFocusedCard)。
+    /// 读焦点必须用带 XamlRoot 的重载：WinUI 3 桌面没有 CoreWindow，无参版本恒返回 null(2026-09-21 实测 ——
+    /// 同一时刻卡片 GotFocus 正常触发，它却给 null)。
+    /// 返回 false 时留一条 Debug 读数：它是"键到了页面、只是认不出卡片"与"键根本没到页面"的分流点。</summary>
+    private bool TryResolveFocusedWallpaperCard(out FrameworkElement? focused, out FrameworkElement? card,
+        [NotNullWhen(true)] out WallpaperItem? item, out bool fromRepeaterIndex)
+    {
+        focused = FocusManager.GetFocusedElement(XamlRoot) as FrameworkElement;
+        card = null;
+        item = null;
+        fromRepeaterIndex = false;
+
+        DependencyObject? cur = focused as DependencyObject;
+        for (int hops = 0; cur != null && hops < 12; hops++)
+        {
+            if (cur is FrameworkElement fe && fe.DataContext is WallpaperItem wi)
+            {
+                card = fe;
+                item = wi;
+                return true;
+            }
+            cur = VisualTreeHelper.GetParent(cur);
+        }
+
+        if (focused is UIElement fel)
+        {
+            try
+            {
+                int idx = WallpapersRepeater.GetElementIndex(fel);
+                // 归属确认：GetElementIndex 只对"本 repeater 生成的容器"有意义,反查回来的容器必须是同一个对象
+                bool owned = idx >= 0 && idx < Wallpapers.Count && ReferenceEquals(WallpapersRepeater.TryGetElement(idx), fel);
+                if (owned)
+                {
+                    card = focused;
+                    item = Wallpapers[idx];
+                    fromRepeaterIndex = true;
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Debug(ex, "[A11y] 按 repeater 下标反查壁纸项抛异常");
+            }
+        }
+
+        // 焦点停在工具栏/筛选框/外壳导航上是常态,不是故障 → 只留 Debug(级别由设置页控制),
+        // 但保留这条:排查"按了没反应"时它是"键到了页面、只是认不出卡片"与"键没到页面"的分流点
+        Serilog.Log.Debug("[A11y] 焦点元素 {Focus} 认不出壁纸卡片", focused?.GetType().Name ?? "null");
+        return false;
+    }
+
+    /// <summary>[上下文菜单键盘可达 2026-09] 在当前持有键盘焦点的壁纸卡片上弹 WallpaperContextMenu(菜单键 / Shift+F10 / Enter)。
+    /// 三种视图模式共用手动弹这一份代码(认定见 TryResolveFocusedWallpaperCard)。返回值 = 是否真的弹了。
+    /// 内容/列表模式卡片上挂着的 ContextFlyout 继续负责鼠标：2026-09-21 实测它不响应键盘，所以键盘这条路只有本方法
+    /// 一个出口，不会同时开火(先前那道 IsOpen 闸门已删 —— 它静默 return，反而可能是"图标模式按了没菜单"的元凶)。</summary>
+    private bool OpenWallpaperContextMenuForFocusedCard()
+    {
+        if (!TryResolveFocusedWallpaperCard(out var focused, out var card, out var item, out var itemFromRepeaterIndex))
+            return false;
+
+        // 与右键同一套选中语义:单选模式下把选择指到这张卡;多选模式不动已有集合(菜单里的命令作用于整组)
+        if (!_isMultiSelectMode && ViewModel.SelectedWallpaper != item)
+            ViewModel.SelectedWallpaper = item;
+
+        // 锚点默认用"真正持有焦点的元素"而不是卡片根:列表模式的行根是整行宽,锚到行根会把菜单弹到行中间(2026-09-21 实测)。
+        // 例外是图标模式(认定走路 2,焦点就是模板根 ItemContainer):改锚到里层设了 DataContext 的 ItemRootGrid,
+        // 因为鼠标右键那条链路证明过 ShowAt 在这个元素上弹得出来,而模板根作为锚点没有实测依据。
+        var anchor = itemFromRepeaterIndex
+            ? (focused as FrameworkElement)?.FindName("ItemRootGrid") as FrameworkElement ?? focused as FrameworkElement
+            : focused as FrameworkElement;
+        var target = anchor ?? card;
+        var options = new FlyoutShowOptions { ShowMode = FlyoutShowMode.Standard };
+        // 行卡(内容/列表模式的整行宽容器)不设 Position 时,菜单按整行居中 → 弹到行中间,肉眼看着就是偏
+        // (2026-09-21 实测)。钉到行的左下角;图标模式的方卡不走这条(它的位置已实测正常)。
+        if (target?.Name is "ContentItemContainer" or "ListItemContainer")
+            options.Position = new Point(0, target.ActualHeight);
+        // 不带 Position → 在锚点元素处弹;ShowMode 用 Standard(与鼠标那条链路一致),保证焦点进到菜单里、方向键能走项
+        WallpaperContextMenu.ShowAt(target, options);
+        Serilog.Log.Information("[A11y] 键盘唤出壁纸菜单: {Title}", item.Title ?? "(无标题)");
+        return true;
+    }
+
+    /// <summary>[空格=一次单击 2026-09-21] 空格对焦点卡片等价于鼠标左键单击一次(按下+松开这一整下):
+    /// 多选模式下切换这一项的勾选,单选模式下把选择指到它并播钻入动画 —— 与 Item_PointerPressed 的左键分支
+    /// 加上 Item_PointerReleased 的结果同语义。不复用鼠标那段代码:它耦合 sender 与 PointerRoutedEventArgs
+    /// (判"命中的是不是 CheckBox"、在容器里找 CheckBox 设不透明度),键盘路径没有这些东西。
+    /// 两点如实交代:单选模式下"焦点即选中"早就把选择做掉了,所以此时按空格多半看不出变化(与鼠标再点一次已选中的
+    /// 同一张卡一模一样);Ctrl+空格(加选)没做,键盘侧已有 Ctrl+方向键累加多选,空格只对应"单击"这一下。</summary>
+    private bool ActivateFocusedWallpaperCardByClick()
+    {
+        if (!TryResolveFocusedWallpaperCard(out _, out _, out var item, out _)) return false;
+
+        if (_isMultiSelectMode)
+        {
+            item.IsSelected = !item.IsSelected;
+            if (item.IsSelected)
+            {
+                if (!SelectedWallpapers.Contains(item)) SelectedWallpapers.Add(item);
+            }
+            else SelectedWallpapers.Remove(item);
+            UpdateMultiSelectCount();
+        }
+        else if (ViewModel.SelectedWallpaper != item)
+        {
+            ViewModel.SelectedWallpaper = item;
+            PlayDrillInAnimation();
+        }
+
+        Serilog.Log.Information("[A11y] 空格=单击: {Title} 多选={Multi} 勾选={Selected}",
+            item.Title ?? "(无标题)", _isMultiSelectMode, item.IsSelected);
+        return true;
+    }
+
     // [列表键盘可达 2026-09] 聚焦某张壁纸卡片的容器(ItemContainer,ElementPrepared 里设成 Tab 停留点的那一层)。
     // 只用 TryGetElement(已实化的容器):用户点得到的卡必然已实化;跨越视口时 GetOrCreateElement 造出的容器
     // 要等一次布局才能接收焦点,那是"方向键一路走通"那一步(方案二)的事,本批不做。
     private bool FocusWallpaperCard(WallpaperItem item, FocusState state)
     {
         var index = Wallpapers.IndexOf(item);
-        if (index >= 0 && WallpapersRepeater.TryGetElement(index) is FrameworkElement card && card.Focus(state))
+        if (index >= 0 && GetVisibleWallpaperRepeater() is { } repeater
+            && repeater.TryGetElement(index) is FrameworkElement card && card.Focus(state))
         {
             _listAnchorIndex = index;
             return true;
@@ -4159,13 +4301,21 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     // 返回值 = 是否真的搬动了焦点(供 Ctrl 划选的一次性令牌判断要不要留,见 _suppressCtrlFocusMultiSelect)。
     private bool FocusWallpaperList()
     {
+        // [内容/列表模式焦点可达 2026-09] 落点按当前可见模式取容器(原先写死图标 repeater,切到内容/列表模式时
+        // 那里一个容器都没实化,Ctrl+L 只会走到"未找到可聚焦的壁纸卡片"那条日志)
+        if (GetVisibleWallpaperRepeater() is not { } repeater)
+        {
+            Serilog.Log.Warning("[A11y] Ctrl+L 取不到可见模式的列表容器");
+            return false;
+        }
+
         if (_listAnchorIndex >= 0 && _listAnchorIndex < Wallpapers.Count
-            && WallpapersRepeater.TryGetElement(_listAnchorIndex) is FrameworkElement anchor && anchor.Focus(FocusState.Keyboard))
+            && repeater.TryGetElement(_listAnchorIndex) is FrameworkElement anchor && anchor.Focus(FocusState.Keyboard))
             return true;
 
         for (int i = 0; i < Wallpapers.Count; i++)
         {
-            if (WallpapersRepeater.TryGetElement(i) is FrameworkElement card && card.Focus(FocusState.Keyboard))
+            if (repeater.TryGetElement(i) is FrameworkElement card && card.Focus(FocusState.Keyboard))
             {
                 _listAnchorIndex = i;
                 return true;
@@ -5256,6 +5406,141 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 LanguageHelper.GetResource("MenuFlyoutItem_UnbackupSelected.Text"), done);
             unbackupItem.IsEnabled = done > 0;
         }
+
+        UpdateDetailBackupButton();
+    }
+
+    // ===================== 详情面板的备份 / 卸载按钮(2026-09-21) =====================
+    // 备份:一枚按钮两用,文案与动作都跟着"当前选中这张壁纸"的备份状态走 —— 已备份 →「取消备份」,未备份 →「备份壁纸」。
+    //     交互按 2026-09-21 的要求收敛成一步:备份直接做、不弹任何窗;取消备份在按钮处弹确认小卡(删东西这一步留一次反悔机会)。
+    //     旧写法一次操作要点两轮(确认对话框 + 结果对话框);批量入口(右键菜单 / 工具条)保留那套,因为批量要报数量。
+    // 卸载:详情面板只作用于单张,同样改成确认小卡;工具条与右键菜单两个批量入口仍走 UninstallSelectedCommand 的模态对话框。
+    // 可用性判据与子菜单同源(工坊来源 + 有 WorkshopID + 有本地目录 + 工坊目录存在),路径无效时按钮禁用而不是点了报错。
+    private WallpaperItem? _detailBackupTarget;
+    private bool _detailBackupTargetBackedUp;
+
+    public bool IsBackupActionEnabled { get; private set; }
+    public string DetailBackupActionText
+        => LanguageHelper.GetResource(_detailBackupTargetBackedUp ? "Detail_Unbackup.Text" : "Detail_Backup.Text");
+
+    /// <summary>刷新详情面板备份按钮的文案与可用性。选中壁纸变化、工坊路径变化、回到本页、一次备份/取消备份做完之后都要调。</summary>
+    private void UpdateDetailBackupButton()
+    {
+        var item = ViewModel?.SelectedWallpaper;
+        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+        bool enabled = item != null
+            && item.Source == "workshop"
+            && !string.IsNullOrEmpty(item.WorkshopID)
+            && !string.IsNullOrEmpty(item.FolderPath)
+            && !string.IsNullOrEmpty(workshopPath)
+            && Directory.Exists(workshopPath);
+
+        _detailBackupTarget = enabled ? item : null;
+        _detailBackupTargetBackedUp = enabled && BackupService.IsBackedUp(workshopPath!, item!.WorkshopID!);
+        IsBackupActionEnabled = enabled;
+
+        OnPropertyChanged(nameof(IsBackupActionEnabled));
+        OnPropertyChanged(nameof(DetailBackupActionText));
+    }
+
+    private async void DetailBackupButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_detailBackupTarget is not { } item) return;
+        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+        // 判据在 UpdateDetailBackupButton 里已经过一遍;这里落成局部量只为把"非空"交给编译器
+        // (属性不受空值流分析追踪,直接传 item.FolderPath 会报 CS8604)
+        string sourceDir = item.FolderPath ?? "";
+        if (string.IsNullOrEmpty(workshopPath) || string.IsNullOrEmpty(item.WorkshopID) || sourceDir.Length == 0) return;
+
+        if (!_detailBackupTargetBackedUp)
+        {
+            var result = BackupService.BackupWallpaperFolder(sourceDir, workshopPath, item.WorkshopID);
+            UpdateDetailBackupButton();   // 先改口:成功时"按钮变成取消备份"本身就是全部反馈,不再弹结果框
+            Log.Information("详情面板备份壁纸: {Title}(跳过已是链接的 {Skipped} 个文件)",
+                item.Title ?? item.WorkshopID, result.Skipped);
+            if (result.Error is not null)
+                await DialogHelper.ShowMessageAsync("备份失败", $"{item.Title ?? item.WorkshopID}: {result.Error}");
+            return;
+        }
+
+        // 取消备份:弹确认小卡。平时只有一句提示;"源文件已被删掉、备份是唯一副本"这种真会丢东西的情况才追加警示行
+        UnbackupFlyoutHint.Text = LanguageHelper.GetResource("Detail_UnbackupFlyout_Hint.Text");
+        UnbackupFlyoutConfirmButton.Content = LanguageHelper.GetResource("Detail_Unbackup.Text");
+        UnbackupFlyoutCancelButton.Content = LanguageHelper.GetResource("Common_Cancel.Text");
+        bool sourceGone = !Directory.Exists(Path.Combine(workshopPath, item.WorkshopID));
+        UnbackupFlyoutWarn.Text = LanguageHelper.GetResource("Detail_UnbackupFlyout_Warn.Text");
+        UnbackupFlyoutWarn.Visibility = sourceGone ? Visibility.Visible : Visibility.Collapsed;
+        UnbackupConfirmFlyout.ShowAt(sender as FrameworkElement ?? DetailBackupButton);
+    }
+
+    private async void UnbackupConfirm_Click(object sender, RoutedEventArgs e)
+    {
+        UnbackupConfirmFlyout.Hide();
+        if (_detailBackupTarget is not { } item) return;
+        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+        if (string.IsNullOrEmpty(workshopPath) || string.IsNullOrEmpty(item.WorkshopID)) return;
+
+        var backupDir = BackupService.GetBackupDir(workshopPath, item.WorkshopID);
+        try
+        {
+            if (Directory.Exists(backupDir)) Directory.Delete(backupDir, true);
+            Log.Information("详情面板取消备份: {Title}", item.Title ?? item.WorkshopID);
+        }
+        catch (Exception ex)
+        {
+            await DialogHelper.ShowMessageAsync("取消备份失败", ex.Message);
+        }
+        UpdateDetailBackupButton();
+    }
+
+    private void DetailUninstallButton_Click(object sender, RoutedEventArgs e)
+    {
+        var item = ViewModel?.SelectedWallpaper;
+        if (item is null) return;
+
+        // 文案按来源分两种:创意工坊要取消订阅,本地壁纸只是删文件 —— 说清楚动的是哪个,别让人以为都能撤回
+        UninstallFlyoutHint.Text = LanguageHelper.GetResource(item.Source == "workshop"
+            ? "Detail_UninstallFlyout_HintWorkshop.Text"
+            : "Detail_UninstallFlyout_HintLocal.Text");
+        UninstallFlyoutConfirmButton.Content = LanguageHelper.GetResource("Detail_Uninstall.Text");
+        UninstallFlyoutCancelButton.Content = LanguageHelper.GetResource("Common_Cancel.Text");
+        UninstallConfirmFlyout.ShowAt(sender as FrameworkElement ?? DetailUninstallButton);
+    }
+
+    private async void UninstallConfirm_Click(object sender, RoutedEventArgs e)
+    {
+        UninstallConfirmFlyout.Hide();
+        var items = UninstallTargets();
+        if (items.Count == 0) return;
+        await UninstallSelectionCoreAsync(items,
+            items.Where(w => w.Source == "workshop").ToList(),
+            items.Where(w => w.Source != "workshop").ToList());
+        UpdateDetailBackupButton();   // 卸载掉的那张没了,按钮状态跟着重算(选中已被清空)
+    }
+
+    /// <summary>小卡上的「取消」按钮:两个弹层共用这一个处理器(同一时刻只可能开着一个,对没开着的那个 Hide 是空操作)。</summary>
+    private void FlyoutDismiss_Click(object sender, RoutedEventArgs e)
+    {
+        UnbackupConfirmFlyout.Hide();
+        UninstallConfirmFlyout.Hide();
+    }
+
+    /// <summary>当前要卸载的壁纸:多选集合优先,否则详情面板选中的那一张。</summary>
+    private List<WallpaperItem> UninstallTargets()
+        => SelectedWallpapers.Count > 0
+            ? SelectedWallpapers.ToList()
+            : ViewModel?.SelectedWallpaper is WallpaperItem wp ? [wp] : [];
+
+    /// <summary>卸载的执行段(不含任何确认弹窗):批量入口在对话框之后调它,详情面板的确认小卡直接调它。</summary>
+    private async Task UninstallSelectionCoreAsync(List<WallpaperItem> items,
+        List<WallpaperItem> workshopItems, List<WallpaperItem> nonWorkshopItems)
+    {
+        await UninstallWallpapersAsync(workshopItems, nonWorkshopItems);
+
+        Log.Information("已卸载 {Count} 个壁纸: {Titles}", items.Count,
+            string.Join("; ", items.Select(w => w.Title ?? w.WorkshopID ?? "未知")));
+
+        ViewModel.SelectedWallpaper = null;
     }
 
     /// <summary>[备份子菜单 2026-09] 命令一:备份选中项里「未备份」的那些(逻辑同原按钮 Click)。</summary>
@@ -5307,6 +5592,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             }
         }
 
+        UpdateDetailBackupButton();   // 备份状态已落盘,详情面板那枚按钮立刻改口为「取消备份」
         var msg = $"备份完成：成功 {success} / {toBackup.Count} 个壁纸";
         if (skippedAll > 0)
             msg += $"\n（其中 {skippedAll} 个文件此前已是链接，自动跳过）";
@@ -5378,32 +5664,11 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             }
         }
 
+        UpdateDetailBackupButton();   // 备份已删除,详情面板那枚按钮立刻改回「备份壁纸」
         var msg = $"取消备份完成：成功 {success} / {toRemove.Count} 个壁纸";
         if (failed > 0)
             msg += "\n\n失败项：\n" + string.Join("\n", failures);
         await DialogHelper.ShowMessageAsync("取消备份完成", msg);
-    }
-
-    private void WallpaperScrollView_ContextRequested(FrameworkElement sender, ContextRequestedEventArgs args)
-    {
-        // 1. 阻止事件进一步冒泡，防止触发多次弹出逻辑
-        args.Handled = true;
-
-        // 2. 获取右键点击的具体坐标
-        if (args.TryGetPosition(sender, out Point p))
-        {
-            // 如果是鼠标右键点击，在点击位置弹出
-            WallpaperContextMenu.ShowAt(sender, new FlyoutShowOptions
-            {
-                Position = p,
-                ShowMode = FlyoutShowMode.Standard
-            });
-        }
-        else
-        {
-            // 如果是通过键盘（Shift+F10）触发，在元素中心弹出
-            WallpaperContextMenu.ShowAt(sender);
-        }
     }
 
     // ... INotifyPropertyChanged 标准实现 ...

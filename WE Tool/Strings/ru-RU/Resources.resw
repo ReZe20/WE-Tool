@@ -1237,6 +1237,27 @@
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>Свойства</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>Создать резервную копию обоев</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>Удалить резервную копию</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>Удаляется только резервная копия в .we_backup (жесткие ссылки); файлы обоев в папке Workshop не затрагиваются.</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>Внимание: исходные файлы этих обоев уже удалены, резервная копия — единственная, она будет утеряна безвозвратно.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>Отпишет от подписки и удалит локальные файлы.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>Удалит локальные файлы напрямую.</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Выбрать все</value>
   </data>

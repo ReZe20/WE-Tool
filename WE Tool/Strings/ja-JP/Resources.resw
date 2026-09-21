@@ -1237,6 +1237,27 @@ project.json とプレビューをコピー
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>プロパティ</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>壁紙をバックアップ</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>バックアップを解除</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>.we_backup 内のバックアップコピー（ハードリンク）のみを削除します。Workshop フォルダ内の壁紙ファイルは影響を受けません。</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>注意: この壁紙の元ファイルはすでに削除されており、バックアップが唯一のコピーです。解除すると完全に失われます。</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>登録を解除し、ローカルファイルを削除します。</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>ローカルファイルを直接削除します。</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>すべて選択</value>
   </data>

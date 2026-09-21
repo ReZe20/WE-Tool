@@ -528,7 +528,7 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBar>
-            <!-- 颜色探针(2026-09-19,同步 Papers):"筛选结果"开关的图标在 .Icon 槽里,AppBarToggleButton 模板的选中色到不了
+            <!-- 颜色取色载体(2026-09-19,同步 Papers;不是诊断探针,删了图标就不跟主题变色):"筛选结果"开关的图标在 .Icon 槽里,AppBarToggleButton 模板的选中色到不了
                  图标(见 InstalledComponents.xaml.cs"筛选结果图标颜色同步");这里借 {ThemeResource} 把该按钮家族在选中/未选中
                  下的两个前景色实例化出来,代码把它同步到图标自己的 Foreground(本地值必生效)。Collapsed 不参与布局。 -->
             <Border x:Name="LeftFilterColorProbeNormal" Grid.Column="1" Visibility="Collapsed"
@@ -1005,7 +1005,8 @@
                                         <ItemsRepeater x:Name="ComponentsContentRepeater"
                                                        ItemsSource="{x:Bind FilteredComponents}">
                                             <ItemsRepeater.Layout>
-                                                <StackLayout Spacing="0" Orientation="Vertical"/>
+                                                <!-- 间距与 Papers 内容模式同步:原先 0 让相邻行卡贴成一块 -->
+                                                <StackLayout Spacing="8" Orientation="Vertical"/>
                                             </ItemsRepeater.Layout>
                                             <ItemsRepeater.ItemTemplate>
 <DataTemplate x:DataType="models:ComponentInfo">
@@ -1056,6 +1057,7 @@
                                                         </Grid>
                                                         <!-- 标题 -->
                                                         <TextBlock Grid.Column="2"
+                                                                   x:Name="ContentTitleText"
                                                                    Text="{x:Bind Title}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="12,0,8,0"
@@ -1166,6 +1168,7 @@
                                                                       HorizontalContentAlignment="Center"
                                                                       VerticalContentAlignment="Center"/>
                                                             <TextBlock Text="{x:Bind Title}"
+                                                                       x:Name="ListTitleText"
                                                                        Grid.Column="1"
                                                                        VerticalAlignment="Center"
                                                                        FontSize="13"

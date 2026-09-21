@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -70,6 +71,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // ===== [右键释放检测,同步 Papers] 右键按下→松开手动弹菜单(绕开系统"右键带移动抑制"手势判定) =====
     private bool _isRightButtonPressed;       // 右键是否按下(按下置位,松开检测消费)
     private bool _rightMenuShownThisGesture;  // 本次右键手势是否已弹菜单(防双弹)
+    private Point _rightPressPagePoint;        // [空白区右键 2026-09-21] 右键按下点(根坐标),空白判定用
     private AppBarButton? _pressedButton; // 当前被按下的 CommandBar 按钮(指针捕获后释放弹回用)
     private bool _isComponentItemTapped;
     private bool _isMultiSelectMode;
@@ -96,7 +98,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     /// <summary>导航徽标是否处于失败(红)状态:失败后保持红色,直到下次提取开始才复位。</summary>
     private bool _navBadgeError;
     private int _lastStackCount;
-    private FrameworkElement? _rightClickedComponentElement;
     private DateTime _lastDrillInAnimationTime;
     private CancellationTokenSource? _filterCts;
     private readonly Service.PickerService _pickerService = new();
@@ -354,6 +355,17 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         return null;
     }
 
+    /// <summary>[内容/列表模式焦点可达 2026-09] 当前可见模式对应的 ItemsRepeater。三个 repeater 绑同一个
+    /// FilteredComponents 列表,下标通用;但"按某下标取容器""XY 焦点搜索范围"必须按可见模式来 ——
+    /// 隐藏模式的容器根本没实化,向其要容器只会拿到 null。</summary>
+    private ItemsRepeater? GetVisibleComponentRepeater()
+    {
+        if (ComponentsScrollViewExp.Visibility == Visibility.Visible) return ComponentsRepeater;
+        if (ComponentsContentScrollViewExp.Visibility == Visibility.Visible) return ComponentsContentRepeater;
+        if (ComponentsListScrollViewExp.Visibility == Visibility.Visible) return ComponentsListRepeater;
+        return null;
+    }
+
     /// <summary>可见模式滚动回顶(分页/刷新后)</summary>
     private void ScrollVisibleComponentGridToTop()
     {
@@ -499,7 +511,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (root.DataContext is ComponentInfo dcItem) item = dcItem;
             else if (e.Index >= 0 && e.Index < FilteredComponents.Count) item = FilteredComponents[e.Index];
             if (item == null) return;
-            // [焦点探针 2026-09,同步 Papers] 见 CardFocusProbe 说明:只挂图标模式这一个 repeater,内容/列表模式不受影响
+            // [焦点探针 2026-09,同步 Papers] 见 CardFocusProbe 说明。[内容/列表模式焦点可达 2026-09]
+            // 另外两个 repeater 的同类接线见下方 PrepareRowCardForFocus
             if (CardFocusProbe)
             {
                 root.IsTabStop = true;               // WinUI3 里 IsTabStop 在 UIElement 上,非 Control 的 Grid 也能进 Tab 序
@@ -529,24 +542,45 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             ApplyComponentPreview(root, item, IconPreviewDecodeWidth);
             UpdateTagBadge(root, item); // 角标按当前标签模式设置
         };
+
+        // [内容/列表模式焦点可达 2026-09,同步 Papers] 把图标模式那套"卡片=Tab 停留点 + 朗读名 + 焦点即选中"
+        // 复制到另外两个 repeater。三种模式共用同一个 FilteredComponents 列表,所以下标与选中逻辑全部复用
+        // CardRoot_GotFocus,这里只补"停留点 + 系统焦点框 + 朗读名 + 标题节点去重"。
+        ComponentsContentRepeater.ElementPrepared += (s, e) => PrepareRowCardForFocus(e, "ContentTitleText");
+        ComponentsListRepeater.ElementPrepared += (s, e) => PrepareRowCardForFocus(e, "ListTitleText");
+
+        void PrepareRowCardForFocus(ItemsRepeaterElementPreparedEventArgs e, string titleNodeName)
+        {
+            if (!CardFocusProbe || e.Element is not FrameworkElement root) return;
+            ComponentInfo? item = e.Index >= 0 && e.Index < FilteredComponents.Count
+                ? FilteredComponents[e.Index]
+                : root.DataContext as ComponentInfo;
+            if (item == null) return;
+
+            root.IsTabStop = true;
+            root.UseSystemFocusVisuals = true;
+            AutomationProperties.SetName(root, string.IsNullOrEmpty(item.Title) ? "(无标题)" : item.Title);
+            // 行根已经念标题,行内的标题文字要设为 Raw,否则讲述人停在行上按方向键会把它再念一遍
+            if (root.FindName(titleNodeName) is TextBlock rowTitleText)
+                AutomationProperties.SetAccessibilityView(rowTitleText, AccessibilityView.Raw);
+            else
+                Log.Warning("[A11y] 未取到行卡标题节点 {Name},朗读去重未生效", titleNodeName);
+            root.GotFocus -= CardRoot_GotFocus;   // 幂等:容器回收复用会重复走到这里
+            root.GotFocus += CardRoot_GotFocus;
+        }
+
         // [焦点探针 2026-09,同步 Papers] 卡片拿到键盘焦点时写一条日志:即使一时听不出讲述人念什么,
         // 也能从 Logs 页确认"Tab 确实停到了卡片上"
         void CardRoot_GotFocus(object sender, RoutedEventArgs e)
         {
-            // 取 item 别看本元素的 DataContext:真正设了 DataContext 的是里层 ItemRootGrid
-            // (DataContext="{x:Bind}"),模板根 ItemContainer 上没设 —— 否则日志一律打"(无标题)",
-            // "焦点即选中"也因取不到 item 而整条判据不成立。改按 repeater 下标从 ItemsSource 取(与 ElementPrepared 同源)。
+            // [内容/列表模式焦点可达 2026-09] item 认定改成三模式通用:内容/列表的行根
+            // (ContentItemContainer/ListItemContainer)自己设了 DataContext="{x:Bind}",图标模式的模板根 ItemContainer
+            // 没设(item 在里层 ItemRootGrid 上)→ 先读本元素 DataContext,读不到再探里层那一格。
+            // 下标不再向某一个 repeater 要:三种模式 ItemsSource 是同一个 FilteredComponents 列表。
             var focusedCard = sender as FrameworkElement;
-            ComponentInfo? focusedItem = null;
-            var focusedIndex = -1;
-            if (focusedCard != null)
-            {
-                focusedIndex = ComponentsRepeater.GetElementIndex(focusedCard);
-                if (focusedIndex >= 0 && focusedIndex < FilteredComponents.Count)
-                    focusedItem = FilteredComponents[focusedIndex];
-                // 兜底:下标取不到时(理论上不该发生)退回里层 ItemRootGrid 的 DataContext
-                focusedItem ??= (focusedCard.FindName("ItemRootGrid") as FrameworkElement)?.DataContext as ComponentInfo;
-            }
+            ComponentInfo? focusedItem = (focusedCard?.DataContext as ComponentInfo)
+                ?? (focusedCard?.FindName("ItemRootGrid") as FrameworkElement)?.DataContext as ComponentInfo;
+            var focusedIndex = focusedItem != null ? FilteredComponents.IndexOf(focusedItem) : -1;
             Log.Information("[A11y] 卡片获得焦点: {Title}", focusedItem?.Title ?? "(无标题)");
             // [列表键盘可达 2026-09] 记住"最后停留过的卡":Ctrl+L 再进列表时回到这里,而不是回列表头
             if (ListKeyboardAccessProbe && focusedIndex >= 0)
@@ -693,6 +727,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             _isRightButtonPressed = true;
             _rightMenuShownThisGesture = false;
+            _rightPressPagePoint = pt.Position;
         }
         // CommandBar 内按钮按下:记录按钮/捕获指针,松开时按需触发图标动画
         // (AddHandler handledEventsToo:true 能收到 Button 内部的 handled 事件;按下缩小反馈已于 2026-09-16 取消)
@@ -745,7 +780,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // 而顶部栏开了 IsDynamicOverflowEnabled、视图按钮排在工具栏靠后,默认窗口宽度下会被收进"溢出"菜单 ——
     // 那时它不在 ToolbarCommands 的视觉子树里,判定落空。挂在按钮自己身上与它在栏内还是在溢出菜单无关都能收到;
     // 另补两处:① PointerCaptureLost;② 溢出菜单 Flyout.Opened(菜单一开就当作这次按压结束,免得图标卡在"按下"姿态)。
-    private const bool ViewIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
 
     private void ViewIcon_WirePointer()
     {
@@ -764,16 +798,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void ViewIcon_SetState(bool pressed, string trigger)
     {
         string target = pressed ? "Pressed" : "Normal";
-        if (!ViewIconAnimationProbe) { Log.Information("[动画] 视图图标跳过({Trigger}):探针已关闭", trigger); return; }
-        if (ToolbarViewIcon is null) { Log.Information("[动画] 视图图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        if (ToolbarViewIcon is null) return;
         string before = ToolbarViewIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            Log.Information("[动画] 视图图标({Trigger}):状态已是 {State},无需切换", trigger, before);
             return;
         }
-        Log.Information("[动画] 视图图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
-            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
         AnimatedIcon.SetState(ToolbarViewIcon, target);
     }
 
@@ -782,7 +812,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // 回退字形仍是 E71D)。按下 = 第 0→10 帧、松开 = 第 10→20 帧。AppBarToggleButton 模板不驱动 AnimatedIcon.State,
     // 且可能被收进溢出菜单,故直接挂按钮自己身上;这枚没有 Flyout,只需按下/松开/CaptureLost 三处。
     // 开关本身的开合(IsChecked ←→ LeftSplitViewPaneOpen)与图标动画无关,两边互不干涉。
-    private const bool LeftFilterIconAnimationProbe = true;
 
     private void LeftFilterIcon_WirePointer()
     {
@@ -795,16 +824,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void LeftFilterIcon_SetState(bool pressed, string trigger)
     {
         string target = pressed ? "Pressed" : "Normal";
-        if (!LeftFilterIconAnimationProbe) { Log.Information("[动画] 筛选结果图标跳过({Trigger}):探针已关闭", trigger); return; }
-        if (LeftToggleFilterIcon is null) { Log.Information("[动画] 筛选结果图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        if (LeftToggleFilterIcon is null) return;
         string before = LeftToggleFilterIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            Log.Information("[动画] 筛选结果图标({Trigger}):状态已是 {State},无需切换", trigger, before);
             return;
         }
-        Log.Information("[动画] 筛选结果图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
-            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
         AnimatedIcon.SetState(LeftToggleFilterIcon, target);
     }
 
@@ -812,7 +837,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // [为什么需要] AppBarToggleButton 模板的选中前景用 VisualState 设到图标宿主 Content 与 TextLabel,但 .Icon 槽里
     // IconElement.Foreground 实测拿不到该值(选中后图标始终只有未选中的白)。右侧普通 ToggleButton 的模板用 Storyboard
     // 驱动 ContentPresenter.Foreground 所以那枚一直正常。[怎么修] 选中态变化时把色值显式设到图标自己的 Foreground
-    // (本地值必然生效,深浅主题自动跟)。色值不硬编码:XAML 里两个 Collapsed 探针用 {ThemeResource} 让框架解析。
+    // (本地值必然生效,深浅主题自动跟)。色值不硬编码:借 XAML 里两个 Collapsed Border(LeftFilterColorProbe*)用 {ThemeResource} 让框架解析。
     private bool _leftFilterColorHooked;
 
     private void LeftFilterIcon_WireColor()
@@ -843,7 +868,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // 排序按钮图标由静态字形 E8CB 换成 Lottie(素材 = WE_Tool.AnimatedVisuals.SortIcon;回退字形仍是 E8CB)。
     // 第 0→10 帧字形两半飞散、第 10→20 帧反向飞回归位;时间轴 20 帧(0.333s)。按下切 Pressed、松开切 Normal,
     // 钩子直接挂按钮自己身上(同视图,可能被收进溢出菜单),另补 PointerCaptureLost 与 Flyout.Opened 两处兜底。
-    private const bool SortIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
 
     private void SortIcon_WirePointer()
     {
@@ -862,16 +886,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private void SortIcon_SetState(bool pressed, string trigger)
     {
         string target = pressed ? "Pressed" : "Normal";
-        if (!SortIconAnimationProbe) { Log.Information("[动画] 排序图标跳过({Trigger}):探针已关闭", trigger); return; }
-        if (ToolbarSortIcon is null) { Log.Information("[动画] 排序图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        if (ToolbarSortIcon is null) return;
         string before = ToolbarSortIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            Log.Information("[动画] 排序图标({Trigger}):状态已是 {State},无需切换", trigger, before);
             return;
         }
-        Log.Information("[动画] 排序图标状态切换({Trigger})→ {State}({Seg})", trigger, target,
-            pressed ? "按下:第 0→10 帧" : "松开:第 10→20 帧");
         AnimatedIcon.SetState(ToolbarSortIcon, target);
     }
 
@@ -880,7 +900,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // 按当前方向二选一:SortDirectionAscIcon(起=升序 → 终=降序)/ SortDirectionDescIcon(起=降序 → 终=升序)。
     // 时序:① 按下切 Pressed(第 0→10 帧压平);② 松开切 Normal(第 10→20 帧张开成新方向),按下段没播完就排队;
     // ③ 两段播完画面 = 新素材第 0 帧时换 Source(无感)并归零;④ 过渡期间再按下排队;⑤ 按住不放停在第 10 帧等松开。
-    private const bool SortDirectionIconAnimationProbe = true;
     private const int SortDirectionIconFrameMs = 17;
     private const int SortDirectionIconPressMs = 10 * SortDirectionIconFrameMs;     // 按下段 第 0→10 帧
     private const int SortDirectionIconReleaseMs = 10 * SortDirectionIconFrameMs;   // 松开段 第 10→20 帧
@@ -908,8 +927,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (_sortDirectionIconCycleActive)
         {
             _sortDirectionIconPendingPress = true;
-            if (SortDirectionIconAnimationProbe)
-                Log.Information("[动画] 排序方向图标按下:本轮过渡还在播,已排队等播完");
             return;
         }
         SortDirectionIcon_StartCycle("按下");
@@ -920,9 +937,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         if (!_sortDirectionIconCycleActive)
         {
-            if (SortDirectionIconAnimationProbe)
-                Log.Information("[动画] 排序方向图标松开:当前没有过渡周期,忽略");
-            return;
+            return;   // 当前没有过渡周期,松开不参与
         }
         if (_sortDirectionIconPressedSegDone)
         {
@@ -930,8 +945,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             return;
         }
         _sortDirectionIconPendingRelease = true;
-        if (SortDirectionIconAnimationProbe)
-            Log.Information("[动画] 排序方向图标松开:按下段还在播,已排队等它播完再播第二段");
     }
 
     /// <summary>一轮过渡:先确认起点素材 = 当前方向(换源无感),再播按下段第 0→10 帧。</summary>
@@ -972,10 +985,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             _sortDirectionIconPendingRelease = false;
             SortDirectionIcon_PlayReleaseSegment("松开(排队)");
-        }
-        else if (SortDirectionIconAnimationProbe)
-        {
-            Log.Information("[动画] 排序方向图标按下段播完:仍按住,停在第 10 帧等松开");
         }
     }
 
@@ -1019,16 +1028,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
         SortDirectionIcon_ResetToFirstFrame(trigger);   // 归零:换源后把画面拨回起手帧(第 0 帧 = 当前方向)
         DispatcherQueue.TryEnqueue(() => { if (!_sortDirectionIconCycleActive) SortDirectionIcon_ResetToFirstFrame(trigger + "(隔拍)"); });
-        if (SortDirectionIconAnimationProbe)
-            Log.Information("[动画] 排序方向图标换源({Trigger}):{Dir} → {Class} 回退字形={Glyph}", trigger,
-                ascending ? "升序(尖朝下)" : "降序(尖朝上)", wanted.GetType().Name, ascending ? "E70D" : "E70E");
         return true;
     }
 
     /// <summary>归零:把画面拨回素材第 0 帧(= 起手帧 = 当前方向)。零长度标记 NormalToReset / ResetToNormal。</summary>
     private void SortDirectionIcon_ResetToFirstFrame(string trigger)
     {
-        if (!SortDirectionIconAnimationProbe) return;
         if (ToolbarSortDirectionIcon is null) return;
         SortDirectionIcon_SetState("Reset", "归零:拨回第 0 帧(画面不动)", trigger);
         SortDirectionIcon_SetState("Normal", "归零后恢复状态名", trigger);
@@ -1037,15 +1042,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     /// <summary>切 AnimatedIcon 状态;状态没变化时 AnimatedIcon 不会播,故记一行。</summary>
     private void SortDirectionIcon_SetState(string target, string seg, string trigger)
     {
-        if (!SortDirectionIconAnimationProbe) { Log.Information("[动画] 排序方向图标跳过({Trigger}):探针已关闭", trigger); return; }
-        if (ToolbarSortDirectionIcon is null) { Log.Information("[动画] 排序方向图标跳过({Trigger}):图标实例为 null", trigger); return; }
+        if (ToolbarSortDirectionIcon is null) return;
         string before = ToolbarSortDirectionIcon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            Log.Information("[动画] 排序方向图标({Trigger}):状态已是 {State},无需切换", trigger, before);
             return;
         }
-        Log.Information("[动画] 排序方向图标状态切换({Trigger})→ {State}({Seg})", trigger, target, seg);
         AnimatedIcon.SetState(ToolbarSortDirectionIcon, target);
     }
 
@@ -1058,7 +1060,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // PointerOver/Pressed/Disabled 三个 Setter **驱动图标状态**,框架自己排队播放 —— 我们不该插手 SetState。
     // 唯一例外是"详情面板"开关(ToggleButton,模板无那三个 Setter)由代码切(RightToggleIcon_* 那套,含排队);
     // 复制按钮只记时间戳(供勾动画"等两段播完"),状态仍由按钮模板驱动。
-    private const bool DetailIconAnimationProbe = true;   // false = 只记日志不做事(排查用)
     private const int DetailIconFrameMs = 17;
     private const int DetailIconSegMs = 10 * DetailIconFrameMs;   // 每段 10 帧 ≈ 170ms
 
@@ -1084,7 +1085,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         _detailCopyPressAt = DateTime.Now;
         _detailCopyPressed = true;
         _detailCopyReleased = false;
-        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标按下:已记时刻(状态由按钮模板驱动,按下播第 0→10 帧)");
     }
 
     private void DetailCopyIcon_NoteRelease()
@@ -1092,7 +1092,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (!_detailCopyPressed || _detailCopyReleased) return;
         _detailCopyReleased = true;
         _detailCopyReleaseAt = DateTime.Now;
-        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标松开:已记时刻(在按钮上松开播第 10→20 帧,在按钮外倒放回第 0 帧)");
     }
 
     /// <summary>复制按钮用:等这一轮(按下段 + 松开段)播完 —— 勾动画要等它播完再开始。</summary>
@@ -1104,7 +1103,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         DateTime pressEnd = pressAt.AddMilliseconds(DetailIconSegMs);
         DateTime releaseStart = releaseAt > pressEnd ? releaseAt : pressEnd;
         int waitMs = (int)Math.Max(0, (releaseStart.AddMilliseconds(DetailIconSegMs) - DateTime.Now).TotalMilliseconds);
-        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标:等本轮播完再播勾(还需 {Wait}ms)", waitMs);
         if (waitMs > 0) await Task.Delay(waitMs);
         _detailCopyPressed = false;
         _detailCopyReleased = false;
@@ -1133,15 +1131,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     /// <summary>切 AnimatedIcon 状态;只给"详情面板开关"(框架不驱动的那枚)和复制按钮的归零用。</summary>
     private void DetailIcon_SetState(AnimatedIcon icon, string name, string target, string seg, string trigger)
     {
-        if (!DetailIconAnimationProbe) { Log.Information("[动画] {Name}图标跳过({Trigger}):开关已关", name, trigger); return; }
-        if (icon is null) { Log.Information("[动画] {Name}图标跳过({Trigger}):图标实例为 null", name, trigger); return; }
+        if (icon is null) return;
         string before = icon.GetValue(AnimatedIcon.StateProperty) as string ?? "(未设置)";
         if (string.Equals(before, target, StringComparison.Ordinal))
         {
-            Log.Information("[动画] {Name}图标({Trigger}):状态已是 {State},无需切换", name, trigger, before);
             return;
         }
-        Log.Information("[动画] {Name}图标状态切换({Trigger})→ {State}({Seg})", name, trigger, target, seg);
         AnimatedIcon.SetState(icon, target);
     }
 
@@ -1157,7 +1152,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (_rightToggleIconCycleActive)
         {
             _rightToggleIconPendingPress = true;
-            if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关按下:本轮过渡还在播,已排队等播完");
             return;
         }
         RightToggleIcon_StartCycle("按下");
@@ -1167,7 +1161,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         if (!_rightToggleIconCycleActive)
         {
-            if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关松开:当前没有过渡周期,忽略");
             return;
         }
         if (_rightToggleIconPressSegDone)
@@ -1176,7 +1169,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             return;
         }
         _rightToggleIconPendingRelease = true;
-        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关松开:按下段还在播,已排队等它播完再播第二段");
     }
 
     private void RightToggleIcon_StartCycle(string trigger)
@@ -1202,7 +1194,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             _ = RightToggleIcon_PlayReleaseSegmentAsync("松开(排队后)");
             return;
         }
-        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关:按下段播完,停在第 10 帧等松开");
     }
 
     private async Task RightToggleIcon_PlayReleaseSegmentAsync(string trigger)
@@ -1215,7 +1206,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (token.IsCancellationRequested) return;
         _rightToggleIconCycleActive = false;
         _rightToggleIconPressSegDone = false;
-        if (DetailIconAnimationProbe) Log.Information("[动画] 详情面板开关:一轮播完(第 20 帧)");
         if (_rightToggleIconPendingPress)
         {
             _rightToggleIconPendingPress = false;
@@ -1249,7 +1239,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             _toolbarCopyPressed = true;
             _toolbarCopyReleased = false;
         }
-        Log.Information("[动画] {Name}图标状态切换 → Pressed(按下:第 0→10 帧)", SegmentsIconName(icon));
         AnimatedIcon.SetState(icon, "Pressed");
     }
 
@@ -1270,8 +1259,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             case InvertSelection: _invertSelectionIconPointerDriven = false; break;
             case DeleteIcon: _deleteIconPointerDriven = false; break;
         }
-        Log.Information("[动画] {Name}图标状态切换 → {State}({Seg})", SegmentsIconName(icon),
-            inside ? "PointerOver" : "Normal", inside ? "松开:第 10→末尾帧" : "松开在按钮外:倒放回第 0 帧");
         AnimatedIcon.SetState(icon, inside ? "PointerOver" : "Normal");
     }
 
@@ -1281,16 +1268,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         var icon = AnimatedIconPlayer.FindAnimatedIcon(btn);
         return icon?.Source is RefreshIcon or SelectAllIcon or InvertSelection or DeleteIcon or CopyIcon ? icon : null;
     }
-
-    private static string SegmentsIconName(AnimatedIcon icon) => icon.Source switch
-    {
-        RefreshIcon => "刷新",
-        SelectAllIcon => "全选",
-        InvertSelection => "反选",
-        DeleteIcon => "删除",
-        CopyIcon => "复制",
-        _ => "?",
-    };
 
     /// <summary>松开点是否落在按钮区域内(判定"在按钮上松开"还是"点空")。</summary>
     private static bool IsReleaseInsideButton(FrameworkElement el, PointerRoutedEventArgs e)
@@ -1317,7 +1294,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         DateTime pressEnd = pressAt.AddMilliseconds(DetailIconSegMs);
         DateTime releaseStart = releaseAt > pressEnd ? releaseAt : pressEnd;
         int waitMs = (int)Math.Max(0, (releaseStart.AddMilliseconds(DetailIconSegMs) - DateTime.Now).TotalMilliseconds);
-        if (DetailIconAnimationProbe) Log.Information("[动画] 复制图标(工具栏):等本轮播完再播勾(还需 {Wait}ms)", waitMs);
         if (waitMs > 0) await Task.Delay(waitMs);
         _toolbarCopyPressed = false;
         _toolbarCopyReleased = false;
@@ -2295,7 +2271,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         // 删除图标动画:工具条那枚由按下/松开两段驱动(标志 _deleteIconPointerDriven),整段播一遍据此跳过;
         // 详情面板普通 Button 宿主 PlayOnce 内部本就跳过(避免与两段重复);右键菜单/弹窗工具条没有"按住"概念,照旧整段播一遍。
-        if (!_deleteIconPointerDriven) AnimatedIconPlayer.PlayOnce(sender, "卸载");
+        if (!_deleteIconPointerDriven) AnimatedIconPlayer.PlayOnce(sender);
         // 照抄 Papers：执行前先收起右键菜单，避免菜单停留在确认对话框上方
         try
         {
@@ -2614,6 +2590,28 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     /// <summary>快捷键分支共用核心:页面自身 KeyDown 与窗口分发两条路径都汇到这里,避免逻辑重复。</summary>
     private void Page_KeyDown_Core(KeyRoutedEventArgs e)
     {
+        // [上下文菜单键盘可达 2026-09,同步 Papers] 菜单键(物理"应用程序键")/ Shift+F10 / Enter → 在当前焦点卡片上
+        // 弹组件操作菜单。排在 if (ctrl) 之前并自带 return:那条链一旦把 ctrl 判真就吞掉整条链(它的 switch 没有
+        // default 分支)。WinUI 的 KeyRoutedEventArgs **没有** KeyModifiers(那是 Pointer 事件才有的),修饰键只能读
+        // GetKeyStateForCurrentThread,而它在部分环境读到过期状态 → 这里对 Enter/菜单键不看任何修饰键,只有 F10 判 Shift。
+        // 手动 ShowAt,不指望系统 ContextFlyout 的键盘链路(2026-09-21 实测三模式按 Shift+F10 都不响应)。
+        if (e.Key == VirtualKey.Menu || e.Key == VirtualKey.Enter
+            || (e.Key == VirtualKey.F10
+                && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down))
+        {
+            if (OpenComponentContextMenuForFocusedCard()) e.Handled = true;
+            return;
+        }
+
+        // [空格=一次单击 2026-09-21,同步 Papers] 空格 = 对焦点卡片按一次鼠标左键(见 ActivateFocusedComponentCardByClick)。
+        // 与 Enter 同一条分工原则:焦点停在 CheckBox 上时空格是勾选框自己的切换键(被消费掉,不会冒泡到本页处理器),
+        // 停在真按钮上同理 —— 只有"焦点在卡片本身"上时空格才走到这里。
+        if (e.Key == VirtualKey.Space)
+        {
+            if (ActivateFocusedComponentCardByClick()) e.Handled = true;
+            return;
+        }
+
         var ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
 
         if (ctrl)
@@ -2678,7 +2676,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                         {
                             var candidate = FocusManager.FindNextElement(navDirection, new FindNextElementOptions
                             {
-                                SearchRoot = ComponentsRepeater,
+                                SearchRoot = GetVisibleComponentRepeater() ?? ComponentsRepeater,
                                 XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
                             });
                             moved = candidate is FrameworkElement next && next.Focus(FocusState.Keyboard);
@@ -2714,7 +2712,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             {
                 var rangeCandidate = FocusManager.FindNextElement(rangeNavDirection, new FindNextElementOptions
                 {
-                    SearchRoot = ComponentsRepeater,
+                    SearchRoot = GetVisibleComponentRepeater() ?? ComponentsRepeater,
                     XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
                 });
                 rangeMoved = rangeCandidate is FrameworkElement rangeNext && rangeNext.Focus(FocusState.Keyboard);
@@ -2741,13 +2739,124 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         }
     }
 
+    /// <summary>[列表键盘可达 2026-09,同步 Papers] 把"当前键盘焦点落在哪张组件卡片上"认出来,交给调用方:
+    /// 持有焦点的元素、卡片(携带 DataContext 的那一层)、组件项。两条认定路:上溯找 DataContext 覆盖内容/列表模式
+    /// (行根设了 DataContext="{x:Bind}");按 repeater 下标反查覆盖图标模式(模板根 ItemContainer 不设 DataContext,
+    /// item 在里层 ItemRootGrid 上),fromRepeaterIndex 告诉调用方走的是这条。
+    /// 读焦点必须用带 XamlRoot 的重载:WinUI 3 桌面没有 CoreWindow,无参版本恒返回 null(2026-09-21 在 Papers 页实测)。
+    /// 返回 false 时留一条 Debug 读数：它是"键到了页面、只是认不出卡片"与"键根本没到页面"的分流点。</summary>
+    private bool TryResolveFocusedComponentCard(out FrameworkElement? focused, out FrameworkElement? card,
+        [NotNullWhen(true)] out ComponentInfo? item, out bool fromRepeaterIndex)
+    {
+        focused = FocusManager.GetFocusedElement(XamlRoot) as FrameworkElement;
+        card = null;
+        item = null;
+        fromRepeaterIndex = false;
+
+        DependencyObject? cur = focused as DependencyObject;
+        for (int hops = 0; cur != null && hops < 12; hops++)
+        {
+            if (cur is FrameworkElement fe && fe.DataContext is ComponentInfo ci)
+            {
+                card = fe;
+                item = ci;
+                return true;
+            }
+            cur = VisualTreeHelper.GetParent(cur);
+        }
+
+        if (focused is UIElement fel)
+        {
+            try
+            {
+                int idx = ComponentsRepeater.GetElementIndex(fel);
+                // 归属确认:GetElementIndex 只对"本 repeater 生成的容器"有意义,反查回来的容器必须是同一个对象
+                bool owned = idx >= 0 && idx < FilteredComponents.Count && ReferenceEquals(ComponentsRepeater.TryGetElement(idx), fel);
+                if (owned)
+                {
+                    card = focused;
+                    item = FilteredComponents[idx];
+                    fromRepeaterIndex = true;
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "[A11y] 按 repeater 下标反查组件项抛异常");
+            }
+        }
+
+        // 焦点停在工具栏/筛选框/外壳导航上是常态,不是故障 → 只留 Debug(级别由设置页控制),
+        // 但保留这条:排查"按了没反应"时它是"键到了页面、只是认不出卡片"与"键没到页面"的分流点
+        Log.Debug("[A11y] 焦点元素 {Focus} 认不出组件卡片", focused?.GetType().Name ?? "null");
+        return false;
+    }
+
+    /// <summary>[上下文菜单键盘可达 2026-09,同步 Papers] 在当前持有键盘焦点的组件卡片上弹 ComponentContextMenuFlyout。
+    /// 返回值 = 是否真的弹了。内容/列表模式卡片上挂着的 ContextFlyout 继续管鼠标;实测它不响应键盘,所以键盘
+    /// 只有本方法一个出口,不会同时开火(IsOpen 闸门已删,它静默 return 反而可能正是"图标模式按了没菜单"的元凶)。</summary>
+    private bool OpenComponentContextMenuForFocusedCard()
+    {
+        if (!TryResolveFocusedComponentCard(out var focused, out var card, out var item, out var itemFromRepeaterIndex))
+            return false;
+
+        // 与右键同一套选中语义:单选模式下把选择指到这张卡;多选模式不动已有集合(菜单里的命令作用于整组)
+        if (!_isMultiSelectMode && SelectedComponent != item)
+            SelectedComponent = item;
+
+        // 锚点默认用"真正持有焦点的元素":内容/列表模式的行是整行宽,不设 Position 时菜单按整行居中 → 弹到行中间
+        // (2026-09-21 实测),所以这两种模式把菜单钉到行的左下角。图标模式(认定走路 2,焦点即模板根 ItemContainer)
+        // 改锚到里层设了 DataContext 的 ItemRootGrid —— 鼠标右键那条链路证明过 ShowAt 在这个元素上弹得出来,
+        // 而它的位置已实测正常,故不加 Position。
+        var target = itemFromRepeaterIndex
+            ? (focused as FrameworkElement)?.FindName("ItemRootGrid") as FrameworkElement ?? focused as FrameworkElement ?? card
+            : focused as FrameworkElement ?? card;
+        var options = new FlyoutShowOptions { ShowMode = FlyoutShowMode.Standard };
+        if (target?.Name is "ContentItemContainer" or "ListItemContainer")
+            options.Position = new Point(0, target.ActualHeight);
+        ComponentContextMenuFlyout.ShowAt(target, options);
+        Log.Information("[A11y] 键盘唤出组件菜单: {Title}", item.Title ?? "(无标题)");
+        return true;
+    }
+
+    /// <summary>[空格=一次单击 2026-09-21,同步 Papers] 空格对焦点组件卡片等价于鼠标左键单击一次(按下+松开这一整下):
+    /// 多选模式下切换这一项的勾选,单选模式下把选择指到它并播钻入动画 —— 与 Item_PointerPressed 的左键分支加上
+    /// Item_PointerReleased 的结果同语义。不复用鼠标那段代码:它耦合 sender 与 PointerRoutedEventArgs。
+    /// 单选模式下"焦点即选中"早就把选择做掉了,所以此时按空格多半看不出变化(与鼠标再点一次已选中的同一张卡一致);
+    /// Ctrl+空格(加选)没做,键盘侧已有 Ctrl+方向键累加多选,空格只对应"单击"这一下。</summary>
+    private bool ActivateFocusedComponentCardByClick()
+    {
+        if (!TryResolveFocusedComponentCard(out _, out _, out var item, out _)) return false;
+
+        if (_isMultiSelectMode)
+        {
+            item.IsSelected = !item.IsSelected;
+            if (item.IsSelected)
+            {
+                if (!SelectedComponents.Contains(item)) SelectedComponents.Add(item);
+            }
+            else SelectedComponents.Remove(item);
+            UpdateMultiSelectCount();
+        }
+        else if (SelectedComponent != item)
+        {
+            SelectedComponent = item;
+            PlayDrillInAnimation();
+        }
+
+        Log.Information("[A11y] 空格=单击: {Title} 多选={Multi} 勾选={Selected}",
+            item.Title ?? "(无标题)", _isMultiSelectMode, item.IsSelected);
+        return true;
+    }
+
     // [列表键盘可达 2026-09,同步 Papers] 聚焦某张组件卡片的容器(ItemContainer,ElementPrepared 里设成 Tab 停留点的那一层)。
     // 只用 TryGetElement(已实化的容器):用户点得到的卡必然已实化;跨越视口时 GetOrCreateElement 造出的容器
     // 要等一次布局才能接收焦点,那是"方向键一路走通"那一步(方案二)的事,本批不做。
     private bool FocusComponentCard(ComponentInfo item, FocusState state)
     {
         var index = FilteredComponents.IndexOf(item);
-        if (index >= 0 && ComponentsRepeater.TryGetElement(index) is FrameworkElement card && card.Focus(state))
+        if (index >= 0 && GetVisibleComponentRepeater() is { } repeater
+            && repeater.TryGetElement(index) is FrameworkElement card && card.Focus(state))
         {
             _listAnchorIndex = index;
             return true;
@@ -2760,13 +2869,21 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // 返回值 = 是否真的搬动了焦点(供 Ctrl 划选的一次性令牌判断要不要留,见 _suppressCtrlFocusMultiSelect)。
     private bool FocusComponentList()
     {
+        // [内容/列表模式焦点可达 2026-09] 落点按当前可见模式取容器(原先写死图标 repeater,切到内容/列表模式时
+        // 那里一个容器都没实化,Ctrl+L 只会落到"未找到可聚焦的组件卡片"那条日志)
+        if (GetVisibleComponentRepeater() is not { } repeater)
+        {
+            Log.Warning("[A11y] Ctrl+L 取不到可见模式的列表容器");
+            return false;
+        }
+
         if (_listAnchorIndex >= 0 && _listAnchorIndex < FilteredComponents.Count
-            && ComponentsRepeater.TryGetElement(_listAnchorIndex) is FrameworkElement anchor && anchor.Focus(FocusState.Keyboard))
+            && repeater.TryGetElement(_listAnchorIndex) is FrameworkElement anchor && anchor.Focus(FocusState.Keyboard))
             return true;
 
         for (int i = 0; i < FilteredComponents.Count; i++)
         {
-            if (ComponentsRepeater.TryGetElement(i) is FrameworkElement card && card.Focus(FocusState.Keyboard))
+            if (repeater.TryGetElement(i) is FrameworkElement card && card.Focus(FocusState.Keyboard))
             {
                 _listAnchorIndex = i;
                 return true;
@@ -2850,13 +2967,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // 否则松开会倒放;菜单项/快捷键入口照旧走 NormalToPlaying(0→20) 整段播一遍、播完归位。
     // [为什么不再来回 toggle] 旧写法在 Normal / Playing 之间反复切,只有状态真正【变化】的那次才播动画,
     // 于是每隔一次点击才看得到动画(日志里 Playing / Normal 逐行交替)——改成两段真实状态后,每次按下/松开都是真实切换。
-    private const bool SelectAllIconAnimationProbe = true;   // false = 完全回到改动前(图标静止在第 0 帧,不播动画)
     private CancellationTokenSource? _selectAllIconResetCts;   // 整段播放播完的归位令牌(连点时取消上一次)
     private bool _selectAllIconPointerDriven;                  // 本次点击已由按下/松开驱动,Click 里不再播整段
 
     private async void PlaySelectAllIconAnimation()
     {
-        if (!SelectAllIconAnimationProbe) return;
         // 工具栏按钮的按下/松开已经驱动过动画时不再重复播整段(否则两段会互相打断)
         if (_selectAllIconPointerDriven) return;
         // 工具栏按钮可能被 CommandBar 收进溢出菜单,那种情况下图标还没实化(x:Name 字段为 null),直接跳过
@@ -2864,7 +2979,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         _selectAllIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _selectAllIconResetCts = cts;
-        Log.Information("[动画] 全选图标状态切换 → Playing(整段:第 0→20 帧)");
         AnimatedIcon.SetState(ToolbarSelectAllIcon, "Playing");
         try
         {
@@ -2875,7 +2989,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             return;   // 期间又按下(或又点了一次),交给新的一次接管
         }
         if (cts.IsCancellationRequested) return;
-        Log.Information("[动画] 全选图标状态归位 → Normal");
         AnimatedIcon.SetState(ToolbarSelectAllIcon, "Normal");
     }
 
@@ -2912,13 +3025,11 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     // 触发点:工具条那枚由按下/松开两段驱动(见"工具栏四组图标"区块);其余入口(弹出工具条 / 右键菜单 / Ctrl+I)
     // 汇入 InvertSelection_Click(),在那里对工具条图标整段播一遍(Playing 对:第 0→30 帧),播完归位。
     // [为什么播完要归位] 状态只有真正变化时才播动画:播完切回 Normal,下一次点击才是真实切换。
-    private const bool InvertSelectionIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
     private CancellationTokenSource? _invertSelectionIconResetCts;  // 整段播完的归位令牌(连点时取消上一次)
 
     /// <summary>播一遍反选动画(整段:第 0→30 帧),播完归位 Normal。工具条按下/松开驱动过时会跳过。</summary>
     private async void PlayInvertSelectionIconAnimation()
     {
-        if (!InvertSelectionIconAnimationProbe) return;
         // 工具条那枚已由按下/松开驱动时不再播整段(否则两段之后又整段重播一遍)
         if (_invertSelectionIconPointerDriven) return;
         // 工具栏按钮可能被 CommandBar 收进溢出菜单,那种情况下图标还没实化(x:Name 字段为 null),直接跳过
@@ -2926,7 +3037,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         _invertSelectionIconResetCts?.Cancel();
         var cts = new CancellationTokenSource();
         _invertSelectionIconResetCts = cts;
-        Log.Information("[动画] 反选图标状态切换 → Playing(整段:第 0→30 帧)");
         AnimatedIcon.SetState(ToolbarInvertSelectionIcon, "Playing");
         try
         {
@@ -2937,7 +3047,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             return;   // 期间又点了一次反选,交给新的一次接管
         }
         if (cts.IsCancellationRequested) return;
-        Log.Information("[动画] 反选图标状态归位 → Normal");
         AnimatedIcon.SetState(ToolbarInvertSelectionIcon, "Normal");
     }
 
@@ -3095,6 +3204,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         {
             _isComponentItemTapped = true;
 
+            // [内容/列表模式焦点可达 2026-09,同步图标模式 Item_PointerPressed] 点谁就把键盘焦点交给谁,
+            // 此后的方向键/Enter 唤菜单都从这一行起算。图标模式一直有这段,内容/列表模式(本处理器)漏了。
+            if (ListKeyboardAccessProbe && !_isLeftMouseButtonPressed && !_shiftDragActive
+                && sender is FrameworkElement pressedRow && pressedRow.DataContext is ComponentInfo pressedRowItem)
+                FocusComponentCard(pressedRowItem, FocusState.Pointer);
+
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             visual.CenterPoint = new Vector3((float)grid.ActualWidth / 2, (float)grid.ActualHeight / 2, 0f);
 
@@ -3186,7 +3301,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         if (sender is FrameworkElement element && element.DataContext is ComponentInfo item)
         {
-            _rightClickedComponentElement = element;
             if (!_isMultiSelectMode)
             {
                 SelectedComponent = item;
@@ -3491,53 +3605,80 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                     PlayDrillInAnimation();
                 }
             }
-            _rightClickedComponentElement = element;
         }
     }
 
     // [右键释放检测,同步 Papers] 松开点命中图标卡片 → 选中 + 手动弹菜单。
-    // 只处理图标模式(ItemsRepeater);内容/列表 GridView 卡片仍走各自 ContextFlyout。
+    // [空白区右键 2026-09-21] 三种视图模式的列表容器都参与判定:命中卡片 → 卡片菜单;命中空白 → 背景菜单。
     private void HandleRightReleaseOpenMenu(Point releasePagePoint)
     {
         if (_rightMenuShownThisGesture) return; // 已弹过,防双弹
 
-        // 仅图标模式可见时命中图标卡片
-        if (ComponentsScrollViewExp.Visibility != Visibility.Visible
-            || ComponentsScrollViewExp.ActualWidth <= 0) return;
+        var list = GetVisibleComponentScrollView();
+        if (list == null || list.ActualWidth <= 0) return;
 
-        FrameworkElement? card = FindComponentCardAt(releasePagePoint);
-        // 只认松开点命中的卡片:拖出卡片/列表外松开不弹(符合常理)
-        if (card == null) return;
-        if (card is not FrameworkElement fe || fe.DataContext is not ComponentInfo item) return;
+        FrameworkElement? card = FindComponentCardAt(releasePagePoint, list);
 
-        // 与右键菜单语义一致:选中逻辑(多选模式不切单选指针)
-        if (!_isMultiSelectMode)
+        // 命中卡片:只图标模式手动弹(绕开系统"移动抑制");内容/列表模式仍走卡片自己的 ContextFlyout,
+        // 这里必须让开,否则松开时会和系统弹出的卡片菜单叠成两层。
+        if (card != null)
         {
-            if (SelectedComponent != item)
+            if (!ReferenceEquals(list, ComponentsScrollViewExp)) return;
+            if (card is not FrameworkElement fe || fe.DataContext is not ComponentInfo item) return;
+
+            // 与右键菜单语义一致:选中逻辑(多选模式不切单选指针)
+            if (!_isMultiSelectMode)
             {
-                SelectedComponent = item;
-                PlayDrillInAnimation();
+                if (SelectedComponent != item)
+                {
+                    SelectedComponent = item;
+                    PlayDrillInAnimation();
+                }
             }
+            if (!_isMultiSelectMode)
+                SelectedComponent = item;
+
+            _rightMenuShownThisGesture = true;
+            // 在松开位置弹菜单(相对卡片定位)
+            var posInCard = fe.TransformToVisual(null).TransformPoint(new Point(0, 0));
+            var menuPos = new Point(releasePagePoint.X - posInCard.X, releasePagePoint.Y - posInCard.Y);
+            ComponentContextMenuFlyout.ShowAt(fe, new FlyoutShowOptions
+            {
+                Position = menuPos,
+                ShowMode = FlyoutShowMode.Standard
+            });
+            return;
         }
-        if (!_isMultiSelectMode)
-            SelectedComponent = item;
-        _rightClickedComponentElement = fe;
+
+        // 空白处松开 → 弹背景菜单。再要求按下点也不落在卡片上:按住卡片拖到空白松开不该弹背景菜单
+        if (FindComponentCardAt(_rightPressPagePoint, list) != null) return;
+        ShowBackgroundMenuAt(releasePagePoint, list);
+    }
+
+    /// <summary>[空白区右键 2026-09-21] 松开点落在列表可视区内且未命中卡片 → 弹 ScrollViewBackgroundMenu。
+    /// 走右键释放这条手动链路而不是挂 ContextFlyout:系统弹出在右键按下与松开之间移动哪怕 1px 也会被输入层
+    /// 抑制。这个菜单原先挂在内容/列表模式的 GridView 上,v0.8.0 把 GridView 迁成 ScrollView+ItemsRepeater
+    /// (2db62c4)时属性随控件一起丢了,资源本身一直留在 Page.Resources 里。</summary>
+    private void ShowBackgroundMenuAt(Point releasePagePoint, FrameworkElement list)
+    {
+        // 换算到列表容器坐标,顺带用作"松开点是否在列表区内"的判定
+        var listTopLeft = list.TransformToVisual(null).TransformPoint(new Point(0, 0));
+        var pos = new Point(releasePagePoint.X - listTopLeft.X, releasePagePoint.Y - listTopLeft.Y);
+        if (pos.X < 0 || pos.Y < 0 || pos.X > list.ActualWidth || pos.Y > list.ActualHeight) return;
 
         _rightMenuShownThisGesture = true;
-        // 在松开位置弹菜单(相对卡片定位)
-        var posInCard = fe.TransformToVisual(null).TransformPoint(new Point(0, 0));
-        var menuPos = new Point(releasePagePoint.X - posInCard.X, releasePagePoint.Y - posInCard.Y);
-        ComponentContextMenuFlyout.ShowAt(fe, new FlyoutShowOptions
+        ScrollViewBackgroundMenu.ShowAt(list, new FlyoutShowOptions
         {
-            Position = menuPos,
+            Position = pos,
             ShowMode = FlyoutShowMode.Standard
         });
     }
 
-    /// <summary>命中测试:页面坐标处命中的元素里,向上找 DataContext 是 ComponentInfo 的卡片根。</summary>
-    private FrameworkElement? FindComponentCardAt(Point pagePoint)
+    /// <summary>命中测试:页面坐标处命中的元素里,向上找 DataContext 是 ComponentInfo 的卡片根。
+    /// container 传当前可见模式的列表 ScrollView。</summary>
+    private FrameworkElement? FindComponentCardAt(Point pagePoint, FrameworkElement container)
     {
-        var hits = VisualTreeHelper.FindElementsInHostCoordinates(pagePoint, ComponentsScrollViewExp);
+        var hits = VisualTreeHelper.FindElementsInHostCoordinates(pagePoint, container);
         foreach (var hit in hits)
         {
             DependencyObject cur = hit;

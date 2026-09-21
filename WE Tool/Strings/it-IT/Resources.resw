@@ -1237,6 +1237,27 @@ Nota: Abilitare insieme a Output completo può causare disordine.</value>
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>Proprietà</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>Esegui backup sfondo</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>Rimuovi backup</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>Rimuove solo la copia di backup in .we_backup (collegamenti fisici); gli sfondi nella cartella Workshop non vengono toccati.</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>Attenzione: i file originali di questo sfondo sono già stati eliminati, il backup è l'unica copia e andrà perduto definitivamente.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>Annullerà l'iscrizione ed eliminerà i file locali.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>Eliminerà direttamente i file locali.</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>Annulla</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Seleziona tutto</value>
   </data>

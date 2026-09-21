@@ -1237,6 +1237,27 @@ Nota: Habilitar esto junto con Salida completa puede causar desorden.</value>
   <data name="Detail_Properties.Text" xml:space="preserve">
     <value>Propiedades</value>
   </data>
+  <data name="Detail_Backup.Text" xml:space="preserve">
+    <value>Crear copia de seguridad</value>
+  </data>
+  <data name="Detail_Unbackup.Text" xml:space="preserve">
+    <value>Eliminar copia de seguridad</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Hint.Text" xml:space="preserve">
+    <value>Solo se elimina la copia de seguridad de .we_backup (enlaces físicos); los fondos de la carpeta de Workshop no se ven afectados.</value>
+  </data>
+  <data name="Detail_UnbackupFlyout_Warn.Text" xml:space="preserve">
+    <value>Atención: los archivos originales de este fondo ya se eliminaron; la copia de seguridad es la única que queda y se perderá definitivamente.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintWorkshop.Text" xml:space="preserve">
+    <value>Cancelará la suscripción y eliminará los archivos locales.</value>
+  </data>
+  <data name="Detail_UninstallFlyout_HintLocal.Text" xml:space="preserve">
+    <value>Eliminará directamente los archivos locales.</value>
+  </data>
+  <data name="Common_Cancel.Text" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Seleccionar todo</value>
   </data>
