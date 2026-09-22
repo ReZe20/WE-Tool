@@ -468,6 +468,17 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return false;
         }
     }
+
+    /// <summary>「转为移动版」可用性:选中项里至少有一张场景壁纸——只有场景包有 .pkg,也只有它能打包成 mpkg。</summary>
+    public bool IsConvertToMobileEnabled
+    {
+        get
+        {
+            if (ViewModel?.SelectedWallpapers is { Count: > 0 } selected)
+                return selected.Any(i => i.IsTypeScene);
+            return ViewModel?.SelectedWallpaper?.IsTypeScene ?? false;
+        }
+    }
     public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
 
     /// <summary>多壁纸提取进行中列表数据源:每项 = 一个正在提取的壁纸(名称/预览图/实时进度)</summary>
@@ -602,6 +613,10 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     btn.RequestedTheme = theme;
             }
             UpdateBackupButtonState();
+            // resw 附加属性经 x:Uid 在 WinUI3 不生效(已知限制),ToolTip 在菜单打开时显式挂
+            if (ConvertToMobileButton is AppBarButton convertBtn)
+                ToolTipService.SetToolTip(convertBtn,
+                    LanguageHelper.GetResource("AppBarButton_ConvertToMobile.ToolTipService.ToolTip"));
         };
 
         ViewModel.PropertyChanged += (s, e) =>
@@ -619,6 +634,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 {
                     OnPropertyChanged(nameof(IsUninstallEnabled));
                     OnPropertyChanged(nameof(IsImportToEditorEnabled));
+                    OnPropertyChanged(nameof(IsConvertToMobileEnabled));
                     UpdateDetailBackupButton();   // [详情面板备份按钮 2026-09-21] 换选中项 → 文案/可用性重算
                     // 多选模式下详情面板的显示/提示由 ToggleMultiSelectVisuals 全权接管:
                     // 此处不得重新点亮无选择提示(否则勾选引发的 SelectedWallpaper 变动会把提示盖回堆叠视图上)
@@ -967,6 +983,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         RefreshDisplayedSelectedWallpapers();
         UpdateStackVisuals();
         OnPropertyChanged(nameof(IsUninstallEnabled));
+        OnPropertyChanged(nameof(IsConvertToMobileEnabled));
     }
     private int _lastStackCount; // 上次布局的卡片数,用于识别"新增了卡片"
 
@@ -5145,6 +5162,162 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         _extractProgressByName = [];
         ExtractProgressItems.Clear();
         // 导航栏徽标:提取结束(完成/停止)隐藏;失败 → 红色保留剩余数(像 InfoBar 错误条)
+        if (_navBadgeError)
+            NavBadgeService.SetBadge("Papers", Math.Max(1, _extractTotalCount - _extractCompletedCount), NavBadgeState.Error);
+        else
+            NavBadgeService.SetBadge("Papers", null);
+    }
+
+    // ===================== 转为移动版(pkg → mpkg,2026-09-22) =====================
+    // 与 ExtractSelectedWallpapersAsync 共用进度面板的全部状态字段,差别只有三处:
+    // 走 RepkgCliService.ConvertToMobileAsync(manifest mode=mpkg)、恒用多壁纸列表视图
+    // (一张壁纸产出一个 .mpkg,没有"单壁纸大图"可看)、收尾文案是"转换"而不是"提取"。
+    private async void ConvertToMobile_Click(object sender, RoutedEventArgs e)
+    {
+        HideWallpaperContextMenu();
+        await ConvertSelectedToMobileAsync();
+    }
+
+    private async Task ConvertSelectedToMobileAsync()
+    {
+        var itemsToConvert = ViewModel.SelectedWallpapers.Count > 0
+            ? SelectedWallpapers.ToList()
+            : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
+
+        if (itemsToConvert.Count == 0)
+        {
+            await DialogHelper.ShowMessageAsync("提示", "请选择要转换的壁纸。");
+            return;
+        }
+
+        // 提取与转换共用输出根:转出来的 .mpkg 就在提取产物旁边,不用再记第二个目录
+        var outputPath = ViewModel.PathManagementVM.DownloadPath;
+        if (string.IsNullOrEmpty(outputPath))
+            outputPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "WE_OutPut");
+
+        try
+        {
+            IsExtracting = true;
+            ExtractState = ExtractState.Running;
+            _extractTotalCount = itemsToConvert.Count;
+            _extractCompletedCount = 0;
+            _extractCompletedNames = [];
+            _extractProgressByName = [];
+            ExtractProgressItems.Clear();
+            ExtractProgress = 0;
+            ExtractStatus = "正在转换...";
+            TaskbarProgressService.SetProgress(0);
+            _navBadgeError = false;
+            NavBadgeService.SetBadge("Papers", itemsToConvert.Count);
+
+            _isSingleExtract = false;
+            ExtractWallpaperList.Visibility = Visibility.Visible;
+            OnPropertyChanged(nameof(ExtractPreviewVisibility));
+            ExtractSubText = $"已完成 0/{itemsToConvert.Count} 个壁纸";
+            ExtractEntryText = "";
+            OnPropertyChanged(nameof(ExtractEntryVisibility));
+
+            _extractService = new RepkgCliService();
+            _extractCts = new CancellationTokenSource();
+
+            var extractNameToItem = new Dictionary<string, WallpaperItem>(itemsToConvert.Count);
+            foreach (var w in itemsToConvert)
+                extractNameToItem[w.Title ?? w.WorkshopID ?? (w.FolderPath != null ? new DirectoryInfo(w.FolderPath).Name : "?")] = w;
+
+            Action<string> onProgress = msg =>
+            {
+                var parts = msg.Split('|');
+                var name = parts[0];
+                // 汇总类消息("转换完成，共 N 个壁纸")不含 '|',防御性取默认值,避免越界崩溃
+                var action = parts.Length > 1 ? parts[1] : "";
+                double pct = parts.Length > 2 && double.TryParse(parts[2], out var parsed) ? parsed : 0;
+
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+                {
+                    if ((action == "开始" || action == "解析PKG") && !_extractCompletedNames.Contains(name))
+                    {
+                        if (!_extractProgressByName.TryGetValue(name, out var progressItem))
+                        {
+                            progressItem = new ExtractProgressItem
+                            {
+                                Name = name,
+                                Preview = extractNameToItem.TryGetValue(name, out var w) ? w.Preview : null
+                            };
+                            _extractProgressByName[name] = progressItem;
+                            ExtractProgressItems.Add(progressItem);
+                        }
+                        progressItem.Progress = pct; // 0.5% 阈值防抖在 setter 内
+                    }
+                    else if ((action == "完成" || action == "失败") && _extractCompletedNames.Add(name))
+                    {
+                        // 失败同样算"这张处理完了":否则选中项里没有 pkg 的那些永远不进计数,进度卡在 N-1/N
+                        if (_extractProgressByName.Remove(name, out var item))
+                            ExtractProgressItems.Remove(item);
+                        _extractCompletedCount++;
+                        ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
+                        ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
+                        OnPropertyChanged(nameof(ExtractProgressText));
+                        TaskbarProgressService.SetProgress(ExtractProgress);
+                        NavBadgeService.SetBadge("Papers", _extractTotalCount - _extractCompletedCount);
+                    }
+                });
+            };
+
+            RepkgCliService.SetProcessPriorityLevel(ViewModel.ProcessPriority);
+
+            // 一张壁纸一个子文件夹,且总是重做而不是跳过已有产物;包名跟着输出设置里的二选一
+            var mobileSettings = new ExtractSettings
+            {
+                UseProjectName = true,
+                OneFolder = 0,
+                CoverAllFiles = true,
+                MpkgNameMode = ViewModel.MpkgNameMode,
+            };
+
+            await _extractService.ConvertToMobileAsync(itemsToConvert, outputPath, mobileSettings, onProgress, _extractCts.Token);
+
+            if (!_extractCts.IsCancellationRequested)
+            {
+                ExtractProgress = 100;
+                ExtractState = ExtractState.Completed;
+                IsExtracting = false;
+                ExtractStatus = "转换完成";
+                TaskbarProgressService.SetProgress(100);
+                ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
+                Log.Information("[转为移动版] 转换完成: {Count} 个壁纸 → {Output}", itemsToConvert.Count, outputPath);
+                NotificationService.NotifyIfUnfocused("转换完成", $".mpkg 已输出到 {outputPath}");
+            }
+            else
+            {
+                ExtractState = ExtractState.Completed;
+                IsExtracting = false;
+                ExtractStatus = "转换已停止";
+                TaskbarProgressService.Clear();
+                Log.Information("[转为移动版] 用户停止");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            ExtractStatus = "转换已停止";
+            ExtractState = ExtractState.Completed;
+            IsExtracting = false;
+            TaskbarProgressService.Clear();
+            Log.Information("[转为移动版] 用户停止");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[转为移动版] 转换失败");
+            ExtractState = ExtractState.Completed;
+            IsExtracting = false;
+            ExtractStatus = "转换失败，请查看日志";
+            ExtractProgress = 0;
+            TaskbarProgressService.SetError();
+            _navBadgeError = true;
+            NotificationService.NotifyIfUnfocused("转换失败", "转换失败，请查看日志");
+        }
+
+        _extractProgressByName = [];
+        ExtractProgressItems.Clear();
         if (_navBadgeError)
             NavBadgeService.SetBadge("Papers", Math.Max(1, _extractTotalCount - _extractCompletedCount), NavBadgeState.Error);
         else

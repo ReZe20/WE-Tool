@@ -546,6 +546,19 @@
                                     </RadioButtons>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
+                            <!-- [转为移动版 2026-09-22] 只管右键「转为移动版」产出的 .mpkg 叫什么名字;
+                                 重命名由 repkg 做(它清洗非法字符,并在一个壁纸出多个包时缀上源包名) -->
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <RadioButtons SelectedIndex="{x:Bind ViewModel.MpkgNameMode, Mode=TwoWay}" MaxColumns="2">
+                                        <RadioButtons.Header>
+                                            <TextBlock x:Uid="Settings_MpkgName_Header" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                        </RadioButtons.Header>
+                                        <RadioButton x:Uid="Settings_MpkgName_ByTitle"/>
+                                        <RadioButton x:Uid="Settings_MpkgName_ByWorkshopId"/>
+                                    </RadioButtons>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
                     <!-- [导入解包输出设置 2026-09] 与上面「已安装壁纸页面输出设置」同构的独立一套:只对导入解包页(导入 .pkg 解包)的提取生效,读写 AppSettings.ImportExtract;默认值 = 该页原先写死的"编辑器同款"配方 -->

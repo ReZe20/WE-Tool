@@ -1057,6 +1057,15 @@
   <data name="Settings_FlattenStructure.Content" xml:space="preserve">
     <value>所有文件存于同一文件夹</value>
   </data>
+  <data name="Settings_MpkgName_Header.Text" xml:space="preserve">
+    <value>移动版包名</value>
+  </data>
+  <data name="Settings_MpkgName_ByTitle.Content" xml:space="preserve">
+    <value>用壁纸标题</value>
+  </data>
+  <data name="Settings_MpkgName_ByWorkshopId.Content" xml:space="preserve">
+    <value>用创意工坊 ID</value>
+  </data>
   <data name="Settings_SceneHeader.Text" xml:space="preserve">
     <value>场景壁纸目录结构</value>
   </data>
@@ -1200,6 +1209,12 @@
   </data>
   <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
     <value>导入项目</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.Label" xml:space="preserve">
+    <value>转为移动版</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
+    <value>打包成手机版 Wallpaper Engine 能导入的 .mpkg，输出到提取目录</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>选择一张或多张壁纸</value>

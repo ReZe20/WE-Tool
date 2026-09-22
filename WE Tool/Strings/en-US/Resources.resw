@@ -1057,6 +1057,15 @@
   <data name="Settings_FlattenStructure.Content" xml:space="preserve">
     <value>All files in the same folder</value>
   </data>
+  <data name="Settings_MpkgName_Header.Text" xml:space="preserve">
+    <value>Mobile package name</value>
+  </data>
+  <data name="Settings_MpkgName_ByTitle.Content" xml:space="preserve">
+    <value>Wallpaper title</value>
+  </data>
+  <data name="Settings_MpkgName_ByWorkshopId.Content" xml:space="preserve">
+    <value>Workshop ID</value>
+  </data>
   <data name="Settings_SceneHeader.Text" xml:space="preserve">
     <value>Scene Wallpapers</value>
   </data>
@@ -1200,6 +1209,12 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   </data>
   <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
     <value>Import to Editor</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.Label" xml:space="preserve">
+    <value>Convert to Mobile</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pack this scene wallpaper into a .mpkg that Wallpaper Engine for Android can import; output goes to the extract folder</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>Select one or more wallpapers</value>

@@ -120,6 +120,14 @@
                         <FontIcon Glyph="&#xE70F;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
+                <AppBarButton x:Name="ConvertToMobileButton"
+                              x:Uid="AppBarButton_ConvertToMobile"
+                              Click="ConvertToMobile_Click"
+                              IsEnabled="{x:Bind IsConvertToMobileEnabled, Mode=OneWay}">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8EA;"/>
+                    </AppBarButton.Icon>
+                </AppBarButton>
                 <AppBarSeparator/>
                 <AppBarButton x:Uid="AppBarButton_SelectAll" 
                               Click="SelectAllWallpapers_Click_ByCommandBarFlyout"

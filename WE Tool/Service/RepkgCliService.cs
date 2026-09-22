@@ -152,6 +152,82 @@ public class RepkgCliService
         return cleaned;
     }
 
+    /// <summary>壁纸级并发上限,与 repkg MpkgRunner.MaxWallpaperConcurrency 一致:单条物化后的 RGBA8 最大 250MB,按核数并发会吃穿内存。</summary>
+    private const int MaxMobileConcurrency = 2;
+
+    /// <summary>
+    /// pkg → mpkg(移动版)转换:复用 batch 的进程协议、事件路由与崩溃重启循环,manifest 换成 mode=mpkg。
+    /// settings 只需要三格有值:OneFolder/UseProjectName 决定输出布局,MpkgNameMode 决定 .mpkg 叫什么;
+    /// 提取侧的过滤条件在这里一律不适用。不做提取侧的后处理——project.json/预览图由 repkg 直接打进包里,
+    /// 再补文件反而会在包旁留下副本。
+    /// </summary>
+    public async Task ConvertToMobileAsync(
+        IReadOnlyList<WallpaperItem> wallpapers,
+        string outputRoot,
+        ExtractSettings settings,
+        Action<string>? onProgress = null,
+        CancellationToken ct = default)
+    {
+        int total = wallpapers.Count;
+        if (total == 0) return;
+
+        void ReportProgress(string msg) => onProgress?.Invoke(msg);
+
+        var pending = new List<WallpaperItem>();
+        foreach (var wallpaper in wallpapers)
+        {
+            var path = wallpaper.FolderPath;
+            if (string.IsNullOrEmpty(path) || (!File.Exists(path) && !Directory.Exists(path))) continue;
+
+            if (HasPcPackage(path!))
+                pending.Add(wallpaper);
+            else
+                ReportProgress($"{NameOf(wallpaper)}|失败|100");
+        }
+
+        if (pending.Count == 0) return;
+
+        int crashed, gaveUpRemaining;
+        try
+        {
+            (crashed, gaveUpRemaining) = await RunBatchWithRestartAsync(
+                pending, outputRoot, settings, MaxMobileConcurrency, ReportProgress, ct, mobile: true);
+        }
+        catch (OperationCanceledException)
+        {
+            var cleaned = CleanupUnprocessedOutputFolders(pending, outputRoot, settings);
+            if (cleaned > 0)
+                Log.Information("[repkg] 已清理 {Count} 个空输出文件夹", cleaned);
+            throw;
+        }
+
+        if (!ct.IsCancellationRequested)
+        {
+            if (gaveUpRemaining > 0)
+                ReportProgress($"转换失败:批处理连续崩溃,剩余 {gaveUpRemaining} 个壁纸未转换");
+            else if (crashed > 0)
+                ReportProgress($"转换完成，共 {total} 个壁纸(因崩溃跳过 {crashed} 个)");
+            else
+                ReportProgress($"转换完成，共 {total} 个壁纸");
+        }
+    }
+
+    /// <summary>转换的输入判据:得有 PC 的 .pkg。只有 .mpkg 的壁纸没什么可再打包的。</summary>
+    private static bool HasPcPackage(string path)
+    {
+        try
+        {
+            // "*.pkg" 不匹配 .mpkg,正好是这里要的语义
+            if (File.Exists(path)) return path.EndsWith(".pkg", StringComparison.OrdinalIgnoreCase);
+            return new DirectoryInfo(path).EnumerateFiles("*.pkg", SearchOption.AllDirectories).Any();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "检查壁纸 pkg 失败,按不可转换处理: {Path}", path);
+            return false;
+        }
+    }
+
     /// <summary>
     /// 单进程 batch 提取:所有 pkg 壁纸交给一个 RePKG_Re.exe batch 进程(内部多线程),
     /// 非 pkg 壁纸(HTML 等)由本服务直接复制;进程崩溃自动重启(第二击跳壁纸,最多 3 次)。
@@ -250,7 +326,8 @@ public class RepkgCliService
         ExtractSettings settings,
         int maxThreads,
         Action<string> reportProgress,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool mobile = false)
     {
         var items = wallpapers.Select((w, i) => new BatchItem { Id = i.ToString(), Wallpaper = w }).ToList();
         var idToItem = items.ToDictionary(x => x.Id, StringComparer.Ordinal);
@@ -270,7 +347,7 @@ public class RepkgCliService
 
             var manifestPath = WriteManifest(
                 items.Where(x => pending.Contains(x.Id)).ToList(), outputRoot, settings, maxThreads,
-                out var outputPathsById);
+                out var outputPathsById, mobile);
 
             BatchRunResult result;
             try
@@ -287,7 +364,9 @@ public class RepkgCliService
             // 已完成的壁纸:移出 pending + 后处理(project.json/预览图/平铺重命名)
             foreach (var id in result.DoneIds)
             {
-                if (pending.Remove(id) && idToItem.TryGetValue(id, out var doneItem))
+                if (!pending.Remove(id)) continue;
+                // 转换模式没有后处理这一步:project.json/预览图已经作为条目写进 .mpkg 里了
+                if (!mobile && idToItem.TryGetValue(id, out var doneItem))
                     PostProcessWallpaper(doneItem.Wallpaper, GetOutputPath(outputRoot, doneItem.Wallpaper, settings), settings);
             }
 
@@ -505,34 +584,59 @@ public class RepkgCliService
     [UnconditionalSuppressMessage("AotAnalysis", "IL3050", Justification = "JsonNode DOM 节点创建不涉及运行时反射")]
     private static string WriteManifest(
         List<BatchItem> items, string outputRoot, ExtractSettings settings, int threads,
-        out Dictionary<string, string> outputPathsById)
+        out Dictionary<string, string> outputPathsById, bool mobile = false)
     {
         // JsonNode 手写构造(DOM 零反射,AOT 安全):键名须保持小写与 repkg CLI 协议一致
         var wallpapersNode = new System.Text.Json.Nodes.JsonArray();
         outputPathsById = new Dictionary<string, string>(items.Count, StringComparer.Ordinal);
+        var usedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var x in items)
         {
             var outputPath = GetOutputPath(outputRoot, x.Wallpaper, settings);
+            if (mobile) outputPath = MakeUniqueInBatch(outputPath, usedPaths);
             outputPathsById[x.Id] = outputPath;
-            wallpapersNode.Add(new System.Text.Json.Nodes.JsonObject
+            var job = new System.Text.Json.Nodes.JsonObject
             {
                 ["id"] = x.Id,
                 ["input"] = x.Wallpaper.FolderPath,
                 ["output"] = outputPath
-            });
+            };
+            // repkg 按这个主干命名产出的 .mpkg(它负责清洗非法字符,并在一个壁纸出多个包时消歧)
+            if (mobile) job["outputName"] = GetMpkgStem(x.Wallpaper, settings);
+            wallpapersNode.Add(job);
         }
 
-        var manifest = new System.Text.Json.Nodes.JsonObject
-        {
-            ["threads"] = threads,
-            ["wallpapers"] = wallpapersNode,
-            ["options"] = BuildManifestOptions(settings)
-        };
+        var manifest = new System.Text.Json.Nodes.JsonObject();
+        if (mobile) manifest["mode"] = "mpkg";
+        manifest["threads"] = threads;
+        manifest["wallpapers"] = wallpapersNode;
+        manifest["options"] = mobile ? BuildMobileManifestOptions(settings) : BuildManifestOptions(settings);
 
         var path = Path.Combine(Path.GetTempPath(),
             $"repkg_batch_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}.json");
         File.WriteAllText(path, manifest.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
         return path;
+    }
+
+    /// <summary>mode=mpkg 的 manifest options:提取侧的扩展名/目录过滤在这里都不适用,只留打包开关。</summary>
+    private static System.Text.Json.Nodes.JsonObject BuildMobileManifestOptions(ExtractSettings settings) => new()
+    {
+        ["overwrite"] = settings.CoverAllFiles,
+        ["mpkgMagic"] = "PKGM0019",
+        // 移动端不消费壁纸音频(2/2 真机复现:手机上是静音的),留着只涨体积
+        ["keepAudio"] = false,
+        ["noLz4"] = false
+    };
+
+    /// <summary>同批两张标题相同的壁纸会撞进同一个输出文件夹、写出同名 .mpkg 互相覆盖 —— 撞了就加序号(只在本批内去重,重转同一张壁纸仍走 overwrite)。</summary>
+    private static string MakeUniqueInBatch(string outputPath, HashSet<string> used)
+    {
+        if (used.Add(outputPath)) return outputPath;
+        for (int seq = 2; ; seq++)
+        {
+            var candidate = $"{outputPath}_{seq}";
+            if (used.Add(candidate)) return candidate;
+        }
     }
 
     /// <summary>manifest options:与旧 BuildArgs 的分支逻辑 1:1 对应。返回 JsonObject 使 WriteManifest 免于 Dictionary&lt;string,object?&gt; 的 AOT 多态开销。</summary>
@@ -702,6 +806,21 @@ public class RepkgCliService
                 ? Path.GetFileNameWithoutExtension(wallpaper.FolderPath!)
                 : new DirectoryInfo(wallpaper.FolderPath!).Name;
         return Path.Combine(outputRoot, sub!);
+    }
+
+    /// <summary>
+    /// .mpkg 的文件名主干:MpkgNameMode==1 用创意工坊 ID(自制/导入的壁纸没有 ID,退回标题),否则用标题。
+    /// 非法文件名字符交给 repkg 清洗,这里只保证给出一个有意义的非空主干。
+    /// </summary>
+    private static string GetMpkgStem(WallpaperItem wallpaper, ExtractSettings settings)
+    {
+        if (settings.MpkgNameMode == 1 && !string.IsNullOrEmpty(wallpaper.WorkshopID)) return wallpaper.WorkshopID;
+        if (!string.IsNullOrEmpty(wallpaper.Title)) return wallpaper.Title;
+        if (!string.IsNullOrEmpty(wallpaper.WorkshopID)) return wallpaper.WorkshopID;
+        var path = (wallpaper.FolderPath ?? "").TrimEnd('\\', '/');
+        return File.Exists(wallpaper.FolderPath)
+            ? Path.GetFileNameWithoutExtension(path)
+            : Path.GetFileName(path);
     }
 
     private static string GetSafeName(string name)

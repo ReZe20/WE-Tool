@@ -144,6 +144,8 @@ namespace WE_Tool.Models
         public bool CoverAllFiles { get; set; } = true;
         /// <summary>平铺输出时的文件命名模式：0=保持原文件名, 1=按壁纸名命名（重复加序号）</summary>
         public int FlatFileNamingMode { get; set; } = 0;
+        /// <summary>转为移动版（mode=mpkg）产出的 .mpkg 文件名：0=壁纸标题, 1=创意工坊 ID（无 ID 时退回标题）</summary>
+        public int MpkgNameMode { get; set; } = 0;
         /// <summary>子文件夹模式下保持源目录结构：0=保持, 1=打平</summary>
         public int KeepSubfolderStructure { get; set; } = 1;
 

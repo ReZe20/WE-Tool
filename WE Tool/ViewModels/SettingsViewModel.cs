@@ -120,6 +120,10 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial int FlatFileNamingMode { get; set; }
 
+        /// <summary>转为移动版产出的 .mpkg 文件名：0=壁纸标题, 1=创意工坊 ID（无 ID 时退回标题）</summary>
+        [ObservableProperty]
+        public partial int MpkgNameMode { get; set; }
+
         /// <summary>子文件夹模式下保持源目录结构：0=保持, 1=打平</summary>
         [ObservableProperty]
         public partial int KeepSubfolderStructure { get; set; }
@@ -539,6 +543,7 @@ namespace WE_Tool.ViewModels
             OutProjectJSON = _settings.Extract.OutProjectJSON;
             UseProjectName = _settings.Extract.UseProjectName;
             FlatFileNamingMode = _settings.Extract.FlatFileNamingMode;
+            MpkgNameMode = _settings.Extract.MpkgNameMode;
             KeepSubfolderStructure = _settings.Extract.KeepSubfolderStructure;
             OutputMode = _settings.Extract.OutputMode;
             CoverAllFiles = _settings.Extract.CoverAllFiles;
@@ -918,6 +923,7 @@ namespace WE_Tool.ViewModels
                     _settings.Extract.OutProjectJSON = OutProjectJSON;
                     _settings.Extract.UseProjectName = UseProjectName;
                     _settings.Extract.FlatFileNamingMode = FlatFileNamingMode;
+                    _settings.Extract.MpkgNameMode = MpkgNameMode;
                     _settings.Extract.KeepSubfolderStructure = KeepSubfolderStructure;
                     _settings.Extract.CoverAllFiles = OverwriteMode == 0;
                     _settings.Extract.TexExportMode = TexExportMode;
