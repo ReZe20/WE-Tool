@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
@@ -18,6 +19,8 @@ using WE_Tool.Controls;
 using WE_Tool.Helper;
 using WE_Tool.Service;
 using WE_Tool.ViewModels;
+using Windows.System;
+using Windows.UI.Core;
 
 namespace WE_Tool.Views;
 
@@ -33,14 +36,20 @@ public sealed partial class WallpaperBackup : Page
     private bool _isBackingUp;    // 「立即备份」进行中(防重入)
     private CancellationTokenSource? _saveDebounceCts; // 配置变更防抖:500ms 只写最后一次
 
-    // [a11y 2026-09,同步 Papers 的 CardFocusProbe] 讲述人支持:备份卡片能不能成为 Tab 停留点、能不能被读出名字。
-    // true  → ElementPrepared 里给卡片根 Grid 设 IsTabStop + UseSystemFocusVisuals + 朗读名(=标题),
-    //         并把卡片里的标题 TextBlock 归到 Raw 视图(避免同一条信息被念两遍),另挂 GotFocus 日志便于核对。
-    //         预期观感:Tab 从上方工具栏进入列表时停在第一张卡;方向键在卡片之间移动焦点
-    //         (ItemsRepeater 官方文档写明它的 XYFocusKeyboardNavigation 默认就是 Enabled,不用另写代码)。
-    // false → 完全不碰卡片的焦点与朗读名,行为与改动前一致(等于撤销本改动)。
+    // [a11y 2026-09,同步 Papers] 讲述人支持:备份卡片是 Tab 停留点,并能被读出名字。
+    // ElementPrepared 里给卡片根 Grid 设 IsTabStop + UseSystemFocusVisuals + 朗读名(=标题),
+    // 并把卡片里的标题 TextBlock 归到 Raw 视图(避免同一条信息被念两遍)。
+    // 观感:Tab 从上方工具栏进入列表时停在第一张卡;方向键在卡片之间移动焦点
+    // (ItemsRepeater 官方文档写明它的 XYFocusKeyboardNavigation 默认就是 Enabled,不用另写代码)。
     // 范围:只做讲述人这一件事——不接管 Ctrl/Shift 等快捷键,也不做"焦点即选中"(本页没有选中模型)。
-    private const bool CardFocusProbe = true;
+
+    // [列表键盘可达 2026-09-21,同步 Papers] 进列表的快捷键 + 本页特有的一层"深入卡片"焦点模型:
+    //   Ctrl+L            → 焦点从工具栏/自动备份面板/外壳导航直接落到备份卡片(优先回到上次停留那张);
+    //   Enter / 空格      → 焦点在卡片本身时,把焦点交给这张卡里的两个按钮(顺序同 Tab 序:删除、打开备份目录);
+    //   Esc               → 焦点在卡内按钮上时退回该卡片。
+    // 分层是天然的:按钮自己会消费 Enter/空格(那是"执行这个按钮"),页面只可能收到"焦点在卡片上"时按下的这两个键。
+    // 本页没有选中模型(卡片不对应"选中项"),所以不做 Papers 那套"焦点即选中"。
+    private int _listAnchorIndex = -1;   // 列表里最后停留过的卡下标:Ctrl+L 的落点
 
     /// <summary>自动备份配置(页面持有副本,变化时回写 config.json)。</summary>
     private Models.AutoBackupConfig? _autoCfg;
@@ -349,32 +358,52 @@ public sealed partial class WallpaperBackup : Page
     {
         if (args.Element is not FrameworkElement content) return;
 
+        // [列表键盘可达 2026-09-22] item 认定改成 Papers 同法(DataContext 优先、回退 args.Index):
+        // ElementPrepared 时 DataContext 可能还没推送(见 Papers.xaml.cs:680 的同一处教训),原先这道
+        // `if (content.DataContext is not BackupItemViewModel) return;` 就发生在设置 IsTabStop 之前
+        // → 卡片从来没成为 Tab 停留点,Ctrl+L/Tab 只能落到卡里那两个按钮上(日志里"备份卡片获得焦点"零条读数)。
+        BackupItemViewModel? vm = content.DataContext as BackupItemViewModel
+            ?? (args.Index >= 0 && args.Index < BackupItems.Count ? BackupItems[args.Index] : null);
+
         // resw 附加属性经 x:Uid 在 WinUI3 不生效(已知限制),tooltip 需代码显式设置
         // 两个图标按钮只看图标看不出语义,悬浮时给出对应提示(见 Papers.xaml.cs 同法)
+        // [列表键盘可达 2026-09] 同一份文案同时用作朗读名:Enter/空格 会把焦点送进这两个按钮,
+        // 而纯图标按钮没有文本,讲述人停在上面只会念"按钮" —— 键盘到达后必须听得懂到达了什么。
         if (content.FindName("CardDeleteButton") is Button cardDelBtn)
-            ToolTipService.SetToolTip(cardDelBtn, L("BackupPage_CardDelete.ToolTipService.ToolTip"));
-        if (content.FindName("CardOpenFolderButton") is Button cardOpenBtn)
-            ToolTipService.SetToolTip(cardOpenBtn, L("BackupPage_CardOpenFolder.ToolTipService.ToolTip"));
-
-        if (content.DataContext is not BackupItemViewModel vm) return;
-
-        // [a11y 2026-09] 见 CardFocusProbe:让备份卡片可被 Tab 聚焦,并由讲述人读出标题
-        if (CardFocusProbe)
         {
-            content.IsTabStop = true;               // WinUI3 里 IsTabStop 在 UIElement 上,非 Control 的 Grid 也能进 Tab 序
-            content.UseSystemFocusVisuals = true;   // 让系统画焦点框
-            AutomationProperties.SetName(content, string.IsNullOrEmpty(vm.Title) ? "(无标题)" : vm.Title); // 探针阶段硬编码中文,留用需走 resw
-            // 卡片根已带朗读名(=标题),卡片里的标题 TextBlock 仍是独立可读节点:讲述人停在卡片上按方向键会把它再念一遍
-            // → 一项读两次。官方文档原话就是"composed UI 会引入 duplicate 节点,用 AccessibilityView 归置",
-            // 故把这条文字设为 Raw(只留在 raw 视图,不进讲述人主要遍历的 control/content 视图)。
-            // 只动 UIA 树:渲染/布局/点击/悬停/tooltip 都不受影响;其余三行补充信息(工坊 ID/大小/备份时间)保持可读。
-            if (content.FindName("ItemTitleText") is TextBlock cardTitleText)
-                AutomationProperties.SetAccessibilityView(cardTitleText, AccessibilityView.Raw);
-            else
-                Log.Warning("[A11y] 未取到备份卡片标题节点 ItemTitleText,朗读去重未生效");
-            content.GotFocus -= BackupCard_GotFocus;   // 幂等:容器回收复用会重复走到这里,先减后加避免日志叠加
-            content.GotFocus += BackupCard_GotFocus;
+            var tip = L("BackupPage_CardDelete.ToolTipService.ToolTip");
+            ToolTipService.SetToolTip(cardDelBtn, tip);
+            AutomationProperties.SetName(cardDelBtn, tip);
         }
+        if (content.FindName("CardOpenFolderButton") is Button cardOpenBtn)
+        {
+            var tip = L("BackupPage_CardOpenFolder.ToolTipService.ToolTip");
+            ToolTipService.SetToolTip(cardOpenBtn, tip);
+            AutomationProperties.SetName(cardOpenBtn, tip);
+        }
+
+        if (vm is null)
+        {
+            // 不静默跳过:焦点停留点与 GIF 预览都依赖数据项,拿不到就是页面列表与 ItemsSource 对不上
+            Log.Warning("[备份列表] 卡片第 {Index} 项取不到数据项,焦点停留点与 GIF 预览均未设置", args.Index);
+            return;
+        }
+
+        // [a11y 2026-09] 让备份卡片可被 Tab 聚焦,并由讲述人读出标题
+        content.IsTabStop = true;               // WinUI3 里 IsTabStop 在 UIElement 上,非 Control 的 Grid 也能进 Tab 序
+        content.UseSystemFocusVisuals = true;   // 让系统画焦点框
+        // 朗读名用壁纸标题(数据,非文案),不走 resw
+        AutomationProperties.SetName(content, string.IsNullOrEmpty(vm.Title) ? "(无标题)" : vm.Title);
+        // 卡片根已带朗读名(=标题),卡片里的标题 TextBlock 仍是独立可读节点:讲述人停在卡片上按方向键会把它再念一遍
+        // → 一项读两次。官方文档原话就是"composed UI 会引入 duplicate 节点,用 AccessibilityView 归置",
+        // 故把这条文字设为 Raw(只留在 raw 视图,不进讲述人主要遍历的 control/content 视图)。
+        // 只动 UIA 树:渲染/布局/点击/悬停/tooltip 都不受影响;其余三行补充信息(工坊 ID/大小/备份时间)保持可读。
+        if (content.FindName("ItemTitleText") is TextBlock cardTitleText)
+            AutomationProperties.SetAccessibilityView(cardTitleText, AccessibilityView.Raw);
+        else
+            Log.Warning("[备份列表] 未取到卡片标题节点 ItemTitleText,朗读去重未生效");
+        content.GotFocus -= BackupCard_GotFocus;   // 幂等:容器回收复用会重复走到这里,先减后加避免订阅叠加
+        content.GotFocus += BackupCard_GotFocus;
 
         var img = content.FindName("PreviewImage") as Image;
         var skia = content.FindName("PreviewSkiaGif") as SkiaGifView;
@@ -402,12 +431,121 @@ public sealed partial class WallpaperBackup : Page
         }
     }
 
-    // [a11y 2026-09] 卡片拿到键盘焦点时写一条日志:即使一时听不出讲述人念什么,
-    // 也能从 Logs 页确认"Tab 确实停到了备份卡片上"(这就是本探针的客观读数)。
+    /// <summary>记住"最后停留过的卡":Ctrl+L 再进列表时回到这里,而不是回列表头。</summary>
     private void BackupCard_GotFocus(object sender, RoutedEventArgs e)
     {
-        var title = (sender as FrameworkElement)?.DataContext is BackupItemViewModel vm ? vm.Title : null;
-        Log.Information("[A11y] 备份卡片获得焦点: {Title}", title ?? "(无标题)");
+        int idx = CardIndex(sender as UIElement);
+        if (idx >= 0) _listAnchorIndex = idx;
+    }
+
+    // ===================== 列表键盘可达(2026-09-21) =====================
+    // 与 Papers/组件页同一套进入方式(Ctrl+L + 卡片是 Tab 停留点),但本页没有选中模型 —— 卡片里没有勾选框,
+    // 动作全在卡内那两个按钮上。所以本页的"选中项操作"用一层深入的焦点模型来表达:
+    //   卡片(读标题/ID/大小/时间) --Enter 或 空格--> 卡内按钮(删除备份 / 打开备份目录) --Esc--> 卡片。
+    // 分层靠事件消费顺序天然成立:按钮会自己消费 Enter/空格并标记已处理,那一下就是"执行按钮";
+    // 只有卡片持有焦点时这两个键才会冒泡到页面,由页面把焦点送进按钮里。
+    private void Page_KeyDown(object sender, KeyRoutedEventArgs e) => Page_KeyDown_Core(e);
+
+    /// <summary>供 MainWindow 在焦点不在本页子树内(例如停在外壳导航栏)时分发快捷键,与 Papers 同法。</summary>
+    public void HandleShortcutKey(KeyRoutedEventArgs e) => Page_KeyDown_Core(e);
+
+    private void Page_KeyDown_Core(KeyRoutedEventArgs e)
+    {
+        if (e.Key is not (VirtualKey.L or VirtualKey.Enter or VirtualKey.Space or VirtualKey.Escape)) return;
+        // 读焦点必须用带 XamlRoot 的重载:无参版本在 WinUI 3 桌面恒返回 null(Papers 那边实测过)
+        var focused = FocusManager.GetFocusedElement(XamlRoot) as FrameworkElement;
+        bool ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down)
+            == CoreVirtualKeyStates.Down;
+
+        if (e.Key == VirtualKey.L && ctrl)
+        {
+            if (FocusBackupList()) e.Handled = true;
+            return;
+        }
+
+        if (e.Key is VirtualKey.Enter or VirtualKey.Space && FindOwnCard(focused) is { } card)
+        {
+            if (EnterCardButtons(card)) e.Handled = true;
+            return;
+        }
+
+        // Esc 只在"焦点停在某张卡里的按钮上"时接管(退回卡片);别处的 Esc 原样交出去(关弹层/后退)
+        if (e.Key == VirtualKey.Escape && focused is Button && FindOwnCard(focused) is { } ownCard)
+        {
+            if (ownCard.Focus(FocusState.Keyboard)) e.Handled = true;
+            return;
+        }
+    }
+
+    /// <summary>焦点元素是不是"某张卡片的容器根本身":是则返回下标,否则 -1。
+    /// 只认容器根本身 —— 卡内按钮的 DataContext 与卡片同一个(按钮从卡片继承),凡按 DataContext 反查都会把
+    /// 按钮误判成卡片,那样 Esc 就"退回"到自己身上、退不出去。</summary>
+    private int CardIndex(UIElement? el)
+    {
+        if (el is null) return -1;
+        try
+        {
+            // GetElementIndex 对"容器后代"的语义文档没承诺(可能给祖先下标、可能抛),所以要再比对身份确认它给的就是这一格
+            int idx = BackupRepeater.GetElementIndex(el);
+            if (idx >= 0 && ReferenceEquals(BackupRepeater.TryGetElement(idx), el)) return idx;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "[备份列表] 反查卡片下标异常");
+        }
+        // 兜底:实化容器逐个比身份(未实化的下标 TryGetElement 直接给 null,很便宜)
+        for (int i = 0; i < BackupItems.Count; i++)
+            if (ReferenceEquals(BackupRepeater.TryGetElement(i), el)) return i;
+        return -1;
+    }
+
+    /// <summary>从焦点元素上溯,找它所属的那张卡片(按钮→卡片);不在任何卡片内则返回 null。</summary>
+    private FrameworkElement? FindOwnCard(FrameworkElement? from)
+    {
+        DependencyObject? cur = from;
+        for (int hops = 0; cur != null && hops < 8; hops++)
+        {
+            if (cur is FrameworkElement fe && CardIndex(fe) >= 0) return fe;
+            cur = VisualTreeHelper.GetParent(cur);
+        }
+        return null;
+    }
+
+    /// <summary>Enter/空格的"深入一层":把焦点交给这张卡的第一个按钮(删除备份),之后 Tab/Shift+Tab 在两按钮间走。</summary>
+    private bool EnterCardButtons(FrameworkElement card)
+    {
+        // 顺序按 XAML 里的 Tab 序:删除备份在前、打开备份目录在后
+        if ((card.FindName("CardDeleteButton") as Button ?? card.FindName("CardOpenFolderButton") as Button) is not Button first)
+        {
+            Log.Warning("[备份列表] 进入卡片按钮失败: 第 {Index} 张卡里找不到 CardDeleteButton/CardOpenFolderButton", CardIndex(card));
+            return false;
+        }
+        return first.Focus(FocusState.Keyboard);
+    }
+
+    /// <summary>Ctrl+L 的落点:优先回到上次停留过的卡,其次第一张已实化的卡;都没有就写日志,不静默失败。</summary>
+    private bool FocusBackupList()
+    {
+        if (_listAnchorIndex >= 0 && _listAnchorIndex < BackupItems.Count
+            && BackupRepeater.TryGetElement(_listAnchorIndex) is FrameworkElement anchor
+            && anchor.Focus(FocusState.Keyboard)) return true;
+        if (FocusFirstRealizedCard()) return true;
+
+        Log.Warning("[备份列表] Ctrl+L 未找到可聚焦的备份卡片(列表为空或容器全部未实化)");
+        return false;
+    }
+
+    private bool FocusFirstRealizedCard()
+    {
+        for (int i = 0; i < BackupItems.Count; i++)
+        {
+            if (BackupRepeater.TryGetElement(i) is FrameworkElement card && card.Focus(FocusState.Keyboard))
+            {
+                _listAnchorIndex = i;
+                return true;
+            }
+        }
+        return false;
     }
 
     // 元素移出(回收/滚动走远):停 GIF

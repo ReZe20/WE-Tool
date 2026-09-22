@@ -936,7 +936,7 @@
                                                             <skia:SkiaGifView x:Name="SkiaGifCanvas" Visibility="Collapsed"/>
 
                                                             <Grid VerticalAlignment="Bottom" Height="45" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
-                                                                <!-- [A11y 2026-09,同步 Papers] x:Name 供 ElementPrepared 做朗读去重(讲述人不重复念同一张卡):见 InstalledComponents.xaml.cs 的 CardFocusProbe -->
+                                                                <!-- [A11y 2026-09,同步 Papers] x:Name 供 ElementPrepared 做朗读去重(讲述人不重复念同一张卡),见 InstalledComponents.xaml.cs -->
                                                                 <TextBlock Text="{x:Bind Title}"
                                                                            x:Name="ItemTitleText"
                                                                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"

@@ -527,6 +527,10 @@ namespace WE_Tool
                 papersPage.HandleShortcutKey(e);
             else if (contentFrame.Content is InstalledComponents componentsPage)
                 componentsPage.HandleShortcutKey(e);
+            else if (contentFrame.Content is WallpaperBackup backupPage)
+                backupPage.HandleShortcutKey(e);
+            else if (contentFrame.Content is Cleanup cleanupPage)
+                cleanupPage.HandleShortcutKey(e);
         }
 
         /// <summary>焦点跟踪:提取等后台事件仅在主窗口无焦点时弹系统通知(Deactivated = 失去焦点)</summary>

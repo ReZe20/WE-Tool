@@ -68,6 +68,9 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private ComponentInfo? _shiftAnchorItem;   // Shift 区间锚点(按下处)
     private bool _shiftDragActive;             // Shift 区间刷选进行中
     private bool _suppressItemReleased;        // 区间刷选结束抑制 Item 单选释放
+    // [区间改追加 2026-09-22,同步 Papers] 本次区间手势"自己亲手加进去"的项:区间往回缩时只回收这些,
+    // 手势开始前就已选中的(全选/Ctrl 攒下的)一概不动 —— 这就是"追加"与旧的"替换"的分界。
+    private readonly HashSet<ComponentInfo> _shiftRangePicked = new();
     // ===== [右键释放检测,同步 Papers] 右键按下→松开手动弹菜单(绕开系统"右键带移动抑制"手势判定) =====
     private bool _isRightButtonPressed;       // 右键是否按下(按下置位,松开检测消费)
     private bool _rightMenuShownThisGesture;  // 本次右键手势是否已弹菜单(防双弹)
@@ -77,22 +80,15 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     private bool _isMultiSelectMode;
     private bool _isBatchUpdating;
 
-    // ===================== [a11y 2026-09,同步 Papers] 焦点探针 + 列表键盘可达 =====================
-    // 五个开关与 Papers.xaml.cs 同名同义(默认值=旧行为,改 false 即完全回到改动前):
-    //   CardFocusProbe               卡片进 Tab 序 + 设朗读名(=标题) + 挂 GotFocus 探针 + 标题去重
-    //   ListKeyboardAccessProbe      点击卡片把键盘焦点交给该卡;Ctrl+L 直达列表(落点=上次停留过的卡)
-    //   FocusSelectsCardInSingleMode 键盘焦点落到哪张卡,单选模式下就选中哪张
-    //   CtrlFocusMultiSelect         按住 Ctrl 移焦点 = 逐张加选(键盘版 Ctrl+点击);只加选不取反
-    //   ShiftFocusRangeSelect        按住 Shift 移焦点 = 从锚点延伸区间(键盘版 Shift+拖动);替换选择
-    // 依赖:ListKeyboardAccessProbe / FocusSelects* / Ctrl* / Shift* 都要求 CardFocusProbe=true
-    // (卡片不是 Tab 停留点时 Focus() 直接返回 false)。
-    private const bool CardFocusProbe = true;
-    private const bool ListKeyboardAccessProbe = true;
+    // ===================== [a11y 2026-09,同步 Papers] 列表键盘可达 =====================
+    // 这一组行为合起来构成"纯键盘 + 讲述人"可用的列表(实现与 Papers.xaml.cs 同名同法):
+    //   卡片进 Tab 序            卡片是停留点,带朗读名(=标题),卡内标题文字归 Raw 视图免重复朗读
+    //   点击卡片交焦点 / Ctrl+L  点谁焦点就落谁;Ctrl+L 从导航栏/工具栏直达列表,落点=上次停留过的卡
+    //   焦点即选中               单选模式下键盘焦点落到哪张卡就选中哪张
+    //   Ctrl+方向键 / Shift+方向键 逐张加选 / 从锚点延伸区间(区间是追加,不抹已有选择)
+    // 相互依赖:后三条都要"卡片是 Tab 停留点",否则 Focus() 直接返回 false。
     private int _listAnchorIndex = -1;   // 列表里最后停留过的卡下标:供 Ctrl+L 使用
-    private const bool FocusSelectsCardInSingleMode = true;
-    private const bool CtrlFocusMultiSelect = true;
     private bool _suppressCtrlFocusMultiSelect;   // Ctrl+L 程序化搬焦点这一下,不当作 Ctrl 划选
-    private const bool ShiftFocusRangeSelect = true;
     private ComponentInfo? _shiftKeyAnchorItem;   // 键盘区间锚点:Shift 没按住时,每聚焦一张就刷新成这张
 
     /// <summary>导航徽标是否处于失败(红)状态:失败后保持红色,直到下次提取开始才复位。</summary>
@@ -511,24 +507,22 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (root.DataContext is ComponentInfo dcItem) item = dcItem;
             else if (e.Index >= 0 && e.Index < FilteredComponents.Count) item = FilteredComponents[e.Index];
             if (item == null) return;
-            // [焦点探针 2026-09,同步 Papers] 见 CardFocusProbe 说明。[内容/列表模式焦点可达 2026-09]
-            // 另外两个 repeater 的同类接线见下方 PrepareRowCardForFocus
-            if (CardFocusProbe)
-            {
-                root.IsTabStop = true;               // WinUI3 里 IsTabStop 在 UIElement 上,非 Control 的 Grid 也能进 Tab 序
-                root.UseSystemFocusVisuals = true;   // 让系统画焦点框(非 Control 到底画不画,正是本实验要看的第一件事)
-                AutomationProperties.SetName(root, string.IsNullOrEmpty(item.Title) ? "(无标题)" : item.Title); // 探针阶段硬编码中文,留用需走 resw
-                // [去重 2026-09] 卡片根已带朗读名(=标题),卡片里的标题 TextBlock 仍是独立可读节点:
-                // 讲述人停在卡片上按方向键会把它再念一遍 → 一项读两次。官方文档原话就是"composed UI 会引入
-                // duplicate 节点,用 AccessibilityView 归置",故把这条文字设为 Raw(只留在 raw 视图,
-                // 不进讲述人主要遍历的 control/content 视图)。只动 UIA 树:渲染/布局/点击/悬停/右键/多选框都不受影响。
-                if (root.FindName("ItemTitleText") is TextBlock iconTitleText)
-                    AutomationProperties.SetAccessibilityView(iconTitleText, AccessibilityView.Raw);
-                else
-                    Log.Warning("[A11y] 未取到卡片标题节点 ItemTitleText,朗读去重未生效");
-                root.GotFocus -= CardRoot_GotFocus;  // 幂等:容器回收复用会重复走到这里,先减后加避免日志与订阅叠加
-                root.GotFocus += CardRoot_GotFocus;
-            }
+            // [a11y 2026-09,同步 Papers] 卡片 = Tab 停留点 + 朗读名 + 标题去重。
+            // [内容/列表模式焦点可达 2026-09] 另外两个 repeater 的同类接线见下方 PrepareRowCardForFocus
+            root.IsTabStop = true;               // WinUI3 里 IsTabStop 在 UIElement 上,非 Control 的 Grid 也能进 Tab 序
+            root.UseSystemFocusVisuals = true;   // 让系统画焦点框
+            // 朗读名用组件标题(数据,非文案),不走 resw
+            AutomationProperties.SetName(root, string.IsNullOrEmpty(item.Title) ? "(无标题)" : item.Title);
+            // [去重 2026-09] 卡片根已带朗读名(=标题),卡片里的标题 TextBlock 仍是独立可读节点:
+            // 讲述人停在卡片上按方向键会把它再念一遍 → 一项读两次。官方文档原话就是"composed UI 会引入
+            // duplicate 节点,用 AccessibilityView 归置",故把这条文字设为 Raw(只留在 raw 视图,
+            // 不进讲述人主要遍历的 control/content 视图)。只动 UIA 树:渲染/布局/点击/悬停/右键/多选框都不受影响。
+            if (root.FindName("ItemTitleText") is TextBlock iconTitleText)
+                AutomationProperties.SetAccessibilityView(iconTitleText, AccessibilityView.Raw);
+            else
+                Log.Warning("[A11y] 未取到卡片标题节点 ItemTitleText,朗读去重未生效");
+            root.GotFocus -= CardRoot_GotFocus;  // 幂等:容器回收复用会重复走到这里,先减后加避免订阅叠加
+            root.GotFocus += CardRoot_GotFocus;
             // [外观] ThemeShadow 初始化(原 ShadowRect_Loaded 的阴影部分):ItemRootGrid 投影到 ShadowCastGrid
             if (root.FindName("ItemRootGrid") is Grid itemRootGrid && itemRootGrid.Shadow is not ThemeShadow)
             {
@@ -551,7 +545,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
         void PrepareRowCardForFocus(ItemsRepeaterElementPreparedEventArgs e, string titleNodeName)
         {
-            if (!CardFocusProbe || e.Element is not FrameworkElement root) return;
+            if (e.Element is not FrameworkElement root) return;
             ComponentInfo? item = e.Index >= 0 && e.Index < FilteredComponents.Count
                 ? FilteredComponents[e.Index]
                 : root.DataContext as ComponentInfo;
@@ -569,8 +563,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             root.GotFocus += CardRoot_GotFocus;
         }
 
-        // [焦点探针 2026-09,同步 Papers] 卡片拿到键盘焦点时写一条日志:即使一时听不出讲述人念什么,
-        // 也能从 Logs 页确认"Tab 确实停到了卡片上"
+        // [a11y 2026-09,同步 Papers] 焦点落在哪张卡 = 键盘"当前位置":记住锚点,并按模式驱动选中。
         void CardRoot_GotFocus(object sender, RoutedEventArgs e)
         {
             // [内容/列表模式焦点可达 2026-09] item 认定改成三模式通用:内容/列表的行根
@@ -581,10 +574,8 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             ComponentInfo? focusedItem = (focusedCard?.DataContext as ComponentInfo)
                 ?? (focusedCard?.FindName("ItemRootGrid") as FrameworkElement)?.DataContext as ComponentInfo;
             var focusedIndex = focusedItem != null ? FilteredComponents.IndexOf(focusedItem) : -1;
-            Log.Information("[A11y] 卡片获得焦点: {Title}", focusedItem?.Title ?? "(无标题)");
             // [列表键盘可达 2026-09] 记住"最后停留过的卡":Ctrl+L 再进列表时回到这里,而不是回列表头
-            if (ListKeyboardAccessProbe && focusedIndex >= 0)
-                _listAnchorIndex = focusedIndex;
+            if (focusedIndex >= 0) _listAnchorIndex = focusedIndex;
             // [Ctrl 焦点多选 2026-09] Ctrl+L 的一次性屏蔽令牌在这里消费:GotFocus 是异步事件(官方文档明示),
             // 所以不能用"Focus() 调用前后复位"来屏蔽,只能由下一次 GotFocus 自己清零。
             var suppressCtrlSelectOnce = _suppressCtrlFocusMultiSelect;
@@ -592,17 +583,20 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
             // Ctrl/Shift 状态用 GetKeyStateForCurrentThread:本路径是键盘引起的聚焦,读到的是实时按键状态
             // (文件里那条"会读到过期状态"的告诫针对 Pointer 事件);指针路径已被下面的 FocusState 判据排除。
-            var ctrlHeldOnFocus = CtrlFocusMultiSelect && !suppressCtrlSelectOnce
+            var ctrlHeldOnFocus = !suppressCtrlSelectOnce
                 && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
-            var shiftHeldOnFocus = ShiftFocusRangeSelect
-                && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+            var shiftHeldOnFocus = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
 
             // 区间锚点维护:Shift 没按住时,锚点 = 刚聚焦的这张(所以 Ctrl 连选之后再按 Shift,锚点落在 Ctrl 停住的那张,
             // 而不是 Ctrl 之前那张);Shift 按住时不动锚点,区间才始终是"锚点 → 当前焦点"这一段。
             if (focusedItem != null && !shiftHeldOnFocus)
+            {
                 _shiftKeyAnchorItem = focusedItem;
+                // 锚点一换 = 下一段区间是新的一轮:回收集清零,上一轮手势加进去的项从此归用户管
+                _shiftRangePicked.Clear();
+            }
 
-            // [Shift 焦点区间 2026-09] 按住 Shift 移焦点 = 从锚点延伸区间(替换选择,同 Shift+拖动)。
+            // [Shift 焦点区间 2026-09] 按住 Shift 移焦点 = 从锚点延伸区间(追加,同 Shift+拖动)。
             // 本分支显式排除 Ctrl 同按(!ctrlHeldOnFocus):Ctrl+Shift 按 Ctrl 处理(逐张加选,不动已有选择集合)。
             // 判据保留 FocusState != Pointer:Shift+点击/Shift+拖动走的是鼠标那条老路(Item_PointerPressed 的 shift 分支),
             // 这里不抢,否则区间会被算两遍。
@@ -611,16 +605,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             {
                 var rangeAnchor = _shiftKeyAnchorItem;   // 先落局部变量:可空分析对字段比对局部保守
                 if (rangeAnchor != null && !ReferenceEquals(rangeAnchor, focusedItem))
-                {
                     SelectShiftRange(rangeAnchor, focusedItem);
-                    Log.Information("[A11y] Shift 焦点区间: {Anchor} → {End}",
-                        rangeAnchor.Title ?? "(无标题)", focusedItem.Title ?? "(无标题)");
-                }
-                else
-                {
-                    Log.Debug("[A11y] Shift 焦点区间跳过: 有锚点={HasAnchor} 锚点即本项={Same}",
-                        _shiftKeyAnchorItem != null, ReferenceEquals(_shiftKeyAnchorItem, focusedItem));
-                }
                 return;
             }
             // [Ctrl 焦点多选 2026-09] 按住 Ctrl 移焦点 = 累加多选(键盘版 Ctrl+点击 / Ctrl+划过)。
@@ -629,45 +614,25 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             if (ctrlHeldOnFocus && focusedCard != null && focusedItem != null
                 && focusedCard.FocusState != FocusState.Pointer)
             {
-                bool newlySelected = false;
-                if (!focusedItem.IsSelected)
-                {
-                    focusedItem.IsSelected = true;
-                    newlySelected = true;
-                }
-                if (!SelectedComponents.Contains(focusedItem))
-                {
-                    SelectedComponents.Add(focusedItem);
-                    newlySelected = true;
-                }
+                if (!focusedItem.IsSelected) focusedItem.IsSelected = true;
+                if (!SelectedComponents.Contains(focusedItem)) SelectedComponents.Add(focusedItem);
                 UpdateMultiSelectCount();
                 if (!_isMultiSelectMode)
                 {
                     IsMultiSelectMode = true;
                 }
-                Log.Information("[A11y] Ctrl 焦点多选: {Title} (新增={Added})",
-                    focusedItem.Title ?? "(无标题)", newlySelected);
                 return;
             }
 
             // [焦点即选中 2026-09] 焦点即选中(只看单选模式):Tab/方向键/Ctrl+L 走到哪张卡,右侧详情面板就切到哪张。
             // 判据用 FocusState != Pointer:指针交互引起的聚焦由 Item_PointerReleased 那条老路负责(带钻入动画),
             // 这里不重复处理,否则"点击某张卡"会因为选中已成事实而丢掉钻入动画。
-            if (FocusSelectsCardInSingleMode && ListKeyboardAccessProbe && !_isMultiSelectMode
+            if (!_isMultiSelectMode
                 && focusedCard != null && focusedItem != null
                 && focusedCard.FocusState != FocusState.Pointer
                 && SelectedComponent != focusedItem)
             {
                 SelectedComponent = focusedItem;
-                Log.Information("[A11y] 焦点即选中: {Title}", focusedItem.Title ?? "(无标题)");
-            }
-            else if (FocusSelectsCardInSingleMode && ListKeyboardAccessProbe)
-            {
-                Log.Debug("[A11y] 焦点即选中跳过: 多选={Multi} 指针焦点={Ptr} 取到item={Got} 已是本项={Same}",
-                    _isMultiSelectMode,
-                    focusedCard?.FocusState == FocusState.Pointer,
-                    focusedItem != null,
-                    focusedItem != null && SelectedComponent == focusedItem);
             }
         }
         // 元素移出(回收/滚动走远):停 GIF
@@ -750,6 +715,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         _isLeftMouseButtonPressed = false;
         _shiftDragActive = false; // [Shift 区间刷选,同步 Papers] 释放结束区间模式
+        _shiftRangePicked.Clear();  // [区间改追加,同步 Papers] 手势结束:这一轮加的项不再被后续区间回收
 
         // [右键释放检测,同步 Papers] 右键松开:命中测试找卡片 → 手动弹菜单
         var relPt = e.GetCurrentPoint(null);
@@ -2635,21 +2601,18 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                     e.Handled = true;
                     return;
                 case VirtualKey.L:
-                    // [列表键盘可达 2026-09,同步 Papers] Ctrl+L 直达组件列表(见 ListKeyboardAccessProbe):
+                    // [列表键盘可达 2026-09,同步 Papers] Ctrl+L 直达组件列表:
                     // 列表上方有多个工具栏停留点,再加左侧筛选面板与外壳导航栏,按 Tab 到列表要按很多下。
-                    if (ListKeyboardAccessProbe)
+                    // [Ctrl 焦点多选 2026-09] Ctrl+L 里的 Ctrl 是复合键的一部分:程序化搬焦点时要屏蔽"Ctrl 划选",
+                    // 否则一按 Ctrl+L 就会平白进多选。注意 GotFocus 是异步事件(官方文档明示),不能用
+                    // "Focus() 前后 try/finally 复位"——改成一次性令牌,由下一次 GotFocus 自己消费清零;
+                    // 没搬动焦点(返回 false)就当场清掉,别让令牌悬着。
+                    _suppressCtrlFocusMultiSelect = true;
+                    if (!FocusComponentList())
                     {
-                        // [Ctrl 焦点多选 2026-09] Ctrl+L 里的 Ctrl 是复合键的一部分:程序化搬焦点时要屏蔽"Ctrl 划选",
-                        // 否则一按 Ctrl+L 就会平白进多选。注意 GotFocus 是异步事件(官方文档明示),不能用
-                        // "Focus() 前后 try/finally 复位"——改成一次性令牌,由下一次 GotFocus 自己消费清零;
-                        // 没搬动焦点(返回 false)就当场清掉,别让令牌悬着。
-                        _suppressCtrlFocusMultiSelect = true;
-                        if (!FocusComponentList())
-                        {
-                            _suppressCtrlFocusMultiSelect = false;
-                        }
-                        e.Handled = true;
+                        _suppressCtrlFocusMultiSelect = false;
                     }
+                    e.Handled = true;
                     return;
                 // [Ctrl 焦点多选 2026-09] Ctrl+方向键:自己搬焦点,不赌"按住 Ctrl 时框架还做不做 2D 方向导航"这件事
                 // (带修饰键的方向键会不会被框架消费,官方文档没给承诺)。SearchRoot 把候选限在列表内,
@@ -2662,42 +2625,37 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 case VirtualKey.Right:
                 case VirtualKey.Up:
                 case VirtualKey.Down:
-                    if (CtrlFocusMultiSelect)
+                {
+                    var navDirection = e.Key switch
                     {
-                        var navDirection = e.Key switch
+                        VirtualKey.Left => FocusNavigationDirection.Left,
+                        VirtualKey.Right => FocusNavigationDirection.Right,
+                        VirtualKey.Up => FocusNavigationDirection.Up,
+                        _ => FocusNavigationDirection.Down,
+                    };
+                    try
+                    {
+                        var candidate = FocusManager.FindNextElement(navDirection, new FindNextElementOptions
                         {
-                            VirtualKey.Left => FocusNavigationDirection.Left,
-                            VirtualKey.Right => FocusNavigationDirection.Right,
-                            VirtualKey.Up => FocusNavigationDirection.Up,
-                            _ => FocusNavigationDirection.Down,
-                        };
-                        bool moved;
-                        try
-                        {
-                            var candidate = FocusManager.FindNextElement(navDirection, new FindNextElementOptions
-                            {
-                                SearchRoot = GetVisibleComponentRepeater() ?? ComponentsRepeater,
-                                XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
-                            });
-                            moved = candidate is FrameworkElement next && next.Focus(FocusState.Keyboard);
-                        }
-                        catch (Exception ex)
-                        {
-                            moved = false;
-                            Log.Warning(ex, "[A11y] Ctrl+方向键 手动搬焦点异常");
-                        }
-                        e.Handled = true;
-                        Log.Information("[A11y] Ctrl+{Key} 手动搬焦点: {Moved}", e.Key, moved);
+                            SearchRoot = GetVisibleComponentRepeater() ?? ComponentsRepeater,
+                            XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
+                        });
+                        if (candidate is FrameworkElement next) next.Focus(FocusState.Keyboard);
                     }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "[A11y] Ctrl+方向键 手动搬焦点异常");
+                    }
+                    e.Handled = true;
                     return;
+                }
             }
         }
         // [Shift 焦点区间 2026-09] Shift+方向键:同样自己搬焦点(理由同上面 Ctrl 分支——带修饰键的方向键框架管不管,
         // 官方没承诺),搬完标记 Handled 免得框架再搬一次跳两格。选中区间不在这里做:焦点一变,就由 GotFocus 里的
         // Shift 分支按"锚点 → 当前焦点"重算(与 Ctrl 那条路径同构,选中逻辑只留一处)。
         // 注意 Ctrl+Shift+方向键到不了这里:上面 if (ctrl) 已先接管(GotFocus 里 Shift 分支也排除了 Ctrl 同按)。
-        else if (ShiftFocusRangeSelect
-            && (e.Key is VirtualKey.Left or VirtualKey.Right or VirtualKey.Up or VirtualKey.Down)
+        else if (e.Key is VirtualKey.Left or VirtualKey.Right or VirtualKey.Up or VirtualKey.Down
             && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
         {
             var rangeNavDirection = e.Key switch
@@ -2707,7 +2665,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 VirtualKey.Up => FocusNavigationDirection.Up,
                 _ => FocusNavigationDirection.Down,
             };
-            bool rangeMoved;
             try
             {
                 var rangeCandidate = FocusManager.FindNextElement(rangeNavDirection, new FindNextElementOptions
@@ -2715,15 +2672,13 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                     SearchRoot = GetVisibleComponentRepeater() ?? ComponentsRepeater,
                     XYFocusNavigationStrategyOverride = XYFocusNavigationStrategyOverride.Projection,
                 });
-                rangeMoved = rangeCandidate is FrameworkElement rangeNext && rangeNext.Focus(FocusState.Keyboard);
+                if (rangeCandidate is FrameworkElement rangeNext) rangeNext.Focus(FocusState.Keyboard);
             }
             catch (Exception ex)
             {
-                rangeMoved = false;
                 Log.Warning(ex, "[A11y] Shift+方向键 手动搬焦点异常");
             }
             e.Handled = true;
-            Log.Information("[A11y] Shift+{Key} 手动搬焦点: {Moved}", e.Key, rangeMoved);
             return;
         }
         else if (e.Key == VirtualKey.Delete)
@@ -2786,9 +2741,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             }
         }
 
-        // 焦点停在工具栏/筛选框/外壳导航上是常态,不是故障 → 只留 Debug(级别由设置页控制),
-        // 但保留这条:排查"按了没反应"时它是"键到了页面、只是认不出卡片"与"键没到页面"的分流点
-        Log.Debug("[A11y] 焦点元素 {Focus} 认不出组件卡片", focused?.GetType().Name ?? "null");
+        // 焦点停在工具栏/筛选框/外壳导航上是常态,不是故障:认不出卡片就什么也不做
         return false;
     }
 
@@ -2815,7 +2768,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         if (target?.Name is "ContentItemContainer" or "ListItemContainer")
             options.Position = new Point(0, target.ActualHeight);
         ComponentContextMenuFlyout.ShowAt(target, options);
-        Log.Information("[A11y] 键盘唤出组件菜单: {Title}", item.Title ?? "(无标题)");
         return true;
     }
 
@@ -2844,8 +2796,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             PlayDrillInAnimation();
         }
 
-        Log.Information("[A11y] 空格=单击: {Title} 多选={Multi} 勾选={Selected}",
-            item.Title ?? "(无标题)", _isMultiSelectMode, item.IsSelected);
         return true;
     }
 
@@ -3206,7 +3156,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
             // [内容/列表模式焦点可达 2026-09,同步图标模式 Item_PointerPressed] 点谁就把键盘焦点交给谁,
             // 此后的方向键/Enter 唤菜单都从这一行起算。图标模式一直有这段,内容/列表模式(本处理器)漏了。
-            if (ListKeyboardAccessProbe && !_isLeftMouseButtonPressed && !_shiftDragActive
+            if (!_isLeftMouseButtonPressed && !_shiftDragActive
                 && sender is FrameworkElement pressedRow && pressedRow.DataContext is ComponentInfo pressedRowItem)
                 FocusComponentCard(pressedRowItem, FocusState.Pointer);
 
@@ -3320,7 +3270,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             // 按下拖动经过:左键按住 + 移动经过本卡片(仅选择逻辑,无视觉置顶/放大)
             if (_isLeftMouseButtonPressed && grid.DataContext is ComponentInfo item)
             {
-                // [Shift 区间刷选,同步 Papers] Shift+拖动:从锚点向当前卡片延伸连续区间(替换选择)
+                // [Shift 区间刷选,同步 Papers] Shift+拖动:从锚点向当前卡片延伸连续区间(追加,不抹已有选择)
                 if (_shiftDragActive)
                 {
                     ExtendShiftRange(item);
@@ -3514,7 +3464,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             // [列表键盘可达 2026-09,同步 Papers] 点谁就把键盘焦点交给谁:此后的方向键/Shift+Tab 都从这张卡起算,
             // 而不是从上次停过的工具栏继续往下走。传 Pointer(不是 Programmatic)以免鼠标点击后冒出键盘焦点框。
             // 左键按住划过(拖拽刷选/区间延伸)时不重复挪焦点:一条手势只认最开始按下那张卡。
-            if (ListKeyboardAccessProbe && !_isLeftMouseButtonPressed && !_shiftDragActive
+            if (!_isLeftMouseButtonPressed && !_shiftDragActive
                 && sender is FrameworkElement pressedEl && pressedEl.DataContext is ComponentInfo pressedItem)
                 FocusComponentCard(pressedItem, FocusState.Pointer);
 
@@ -3527,6 +3477,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                     _shiftAnchorItem = shiftItem;
                     _shiftDragActive = true;
                     _suppressItemReleased = true; // 区间刷选期间抑制释放单选
+                    _shiftRangePicked.Clear();    // [区间改追加,同步 Papers] 新手势开始:回收集只记这一轮自己加的项
                     // 立即选中锚点(区间起点),后续拖动延伸
                     SelectShiftRange(shiftItem, shiftItem);
                     return; // 不进入常规选择逻辑
@@ -3809,9 +3760,12 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         OnPropertyChanged(nameof(IsComponentButtonEnabled));
     }
 
-    // ===== [Shift 区间刷选,同步 Papers] 图标模式:Shift+拖动从锚点延伸连续区间(替换选择) =====
+    // ===== [Shift 区间刷选,同步 Papers] 图标模式:Shift+拖动从锚点延伸连续区间(追加,不抹掉已有选择) =====
 
-    /// <summary>选中 [anchor, end] 区间(含两端)并替换当前选择。按 FilteredComponents(当前筛选列表)索引计算。</summary>
+    /// <summary>选中 [anchor, end] 区间(含两端)并**追加**到当前选择。按 FilteredComponents(当前筛选列表)索引计算。
+    /// [区间改追加 2026-09-22,同步 Papers] 旧实现先清空"当前列表内已选项"再选区间 → 全选之后 Shift+拖一下,
+    /// 整片全选就被抹掉只剩这一小段。现在只回收 _shiftRangePicked(本次手势自己加进去的项):
+    /// 既有选择保留,来回拖动时区间照样正确收缩,不会留下刷过的尾巴。</summary>
     private void SelectShiftRange(ComponentInfo anchor, ComponentInfo end)
     {
         int a = FilteredComponents.IndexOf(anchor);
@@ -3820,24 +3774,26 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
         int lo = Math.Min(a, b);
         int hi = Math.Max(a, b);
 
-        // 清空现有选择(只清当前列表内已选的,避免破坏列表外多选)
-        foreach (var sel in SelectedComponents.ToList())
-        {
-            if (FilteredComponents.Contains(sel))
-            {
-                sel.IsSelected = false;
-                SelectedComponents.Remove(sel);
-            }
-        }
-        // 选中区间
+        // 选中区间(只加不动已有:原来就选着的项不进回收集,区间缩小时也不会被它取消)
+        var inRange = new HashSet<ComponentInfo>();
         for (int i = lo; i <= hi; i++)
         {
             var item = FilteredComponents[i];
+            inRange.Add(item);
             if (!item.IsSelected)
             {
                 item.IsSelected = true;
-                SelectedComponents.Add(item);
+                if (!SelectedComponents.Contains(item)) SelectedComponents.Add(item);
+                _shiftRangePicked.Add(item);   // 本手势亲手加进去的,才允许被本手势回收
             }
+        }
+        // 回收:本手势早前加入、这次已落在区间外的项(往回拖时区间照样跟着缩,不留刷过的尾巴)
+        foreach (var prev in _shiftRangePicked.ToList())
+        {
+            if (inRange.Contains(prev)) continue;
+            prev.IsSelected = false;
+            SelectedComponents.Remove(prev);
+            _shiftRangePicked.Remove(prev);
         }
         UpdateMultiSelectCount();
         if (SelectedComponents.Count > 1 && !IsMultiSelectMode)

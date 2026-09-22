@@ -6,6 +6,7 @@
     xmlns:wetool="using:WE_Tool.Controls"
     xmlns:animatedvisuals="using:WE_Tool.AnimatedVisuals"
     x:Name="PageRoot"
+    KeyDown="Page_KeyDown"
     NavigationCacheMode="Enabled">
 
     <Grid Padding="24" RowSpacing="12">
@@ -81,7 +82,8 @@
                   HorizontalScrollMode="Disabled"
                   SizeChanged="ResultScrollView_SizeChanged">
             <ItemsRepeater x:Name="ResultRepeater"
-                           Margin="0,0,10,0">
+                           Margin="0,0,10,0"
+                           ElementPrepared="ResultRepeater_ElementPrepared">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout x:Name="ResultUniformLayout"
                         MinItemWidth="270"
@@ -111,6 +113,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{x:Bind FolderId}" FontWeight="SemiBold"
+                                               x:Name="CardFolderIdText"
                                                TextTrimming="CharacterEllipsis"
                                                ToolTipService.ToolTip="{x:Bind FullPath}"/>
                                     <Border Grid.Column="1" CornerRadius="4"
@@ -154,17 +157,21 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <CheckBox MinWidth="0"
+                                              x:Name="CardSelectBox"
                                               VerticalAlignment="Center"
                                               IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
                                               Click="SelectCheckBox_Click"
                                               Tag="{x:Bind}"/>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal"
                                                 HorizontalAlignment="Right" Spacing="8">
-                                        <Button x:Uid="Cleanup_OpenFolder" Click="OpenFolder_Click"
+                                        <Button x:Uid="Cleanup_OpenFolder" x:Name="CardOpenFolderButton"
+                                                Click="OpenFolder_Click"
                                                 CommandParameter="{x:Bind}"/>
-                                        <Button x:Uid="Cleanup_Whitelist" Click="WhitelistCard_Click"
+                                        <Button x:Uid="Cleanup_Whitelist" x:Name="CardWhitelistButton"
+                                                Click="WhitelistCard_Click"
                                                 CommandParameter="{x:Bind}"/>
-                                        <Button x:Uid="Cleanup_Delete" Click="CleanCard_Click"
+                                        <Button x:Uid="Cleanup_Delete" x:Name="CardDeleteButton"
+                                                Click="CleanCard_Click"
                                                 CommandParameter="{x:Bind}"
                                                 Style="{StaticResource AccentButtonStyle}"/>
                                     </StackPanel>

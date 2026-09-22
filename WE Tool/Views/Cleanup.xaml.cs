@@ -10,13 +10,20 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using CommunityToolkit.WinUI.Controls;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media;
 using Serilog;
 using WE_Tool.ViewModels;
 using WE_Tool.Helper;
 using WE_Tool.Json;
+using Windows.System;
+using Windows.UI.Core;
 
 namespace WE_Tool.Views;
 
@@ -40,6 +47,14 @@ public sealed partial class Cleanup : Page
     private bool _initialScanDone;
 
     public ObservableCollection<CleanupCardViewModel> Cards { get; } = new();
+
+    // [列表键盘可达 2026-09-22,同步 Papers/壁纸备份页] 与那两页同一套两层焦点模型:
+    //   Ctrl+L           → 焦点从工具栏/底部命令栏/外壳导航落到残留卡片(优先回到上次停留那张);
+    //   Enter / 空格     → 焦点在卡片上时,深入一层交给卡内第一个控件(勾选框;没有它则"打开文件夹");
+    //                      之后 Tab/Shift+Tab 在勾选框与三个按钮之间走,空格=切换勾选,Enter=执行按钮;
+    //   Esc              → 焦点在卡内控件上时退回该卡片。
+    // 分层靠事件消费顺序天然成立:勾选框/按钮自己消费 Enter·空格,页面只可能收到"焦点在卡片上"时按下的这两个键。
+    private int _listAnchorIndex = -1;   // 列表里最后停留过的卡下标:Ctrl+L 的落点
 
     public Cleanup()
     {
@@ -594,6 +609,150 @@ public sealed partial class Cleanup : Page
             EmptyStateDesc.Visibility = Visibility.Visible;
         }
         UpdateSummary();
+    }
+
+    // ---------- 列表键盘可达(2026-09-22) ----------
+
+    /// <summary>容器就绪即把卡片设成 Tab/方向键停留点并给朗读名(与壁纸备份页同法)。</summary>
+    private void ResultRepeater_ElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs args)
+    {
+        if (args.Element is not FrameworkElement card) return;
+
+        // item 认定与 Papers 同法(DataContext 优先、回退 args.Index):ElementPrepared 时 DataContext 可能还没推送,
+        // 壁纸备份页就是因为只认 DataContext,每次实化都提前 return,卡片从来没成为过 Tab 停留点。
+        CleanupCardViewModel? vm = card.DataContext as CleanupCardViewModel
+            ?? (args.Index >= 0 && args.Index < Cards.Count ? Cards[args.Index] : null);
+        if (vm is null)
+        {
+            Log.Warning("[残留清理] 卡片第 {Index} 项取不到数据项,焦点停留点与朗读名均未设置", args.Index);
+            return;
+        }
+
+        card.IsTabStop = true;
+        card.UseSystemFocusVisuals = true;
+        AutomationProperties.SetName(card, vm.FolderId);   // 朗读名用工坊 ID(非文案),不需要走 resw
+        // 卡片根已念 FolderId,卡内那行 FolderId 文字设为 Raw,否则讲述人停在卡上按方向键会读两遍
+        if (card.FindName("CardFolderIdText") is TextBlock folderIdText)
+            AutomationProperties.SetAccessibilityView(folderIdText, AccessibilityView.Raw);
+        else
+            Log.Warning("[残留清理] 未取到卡片标题节点 CardFolderIdText,朗读去重未生效");
+        // 勾选框没有文字内容(纯框),不给名字讲述人只会念"复选框";用同一个 FolderId 当它的朗读名
+        if (card.FindName("CardSelectBox") is CheckBox selectBox)
+            AutomationProperties.SetName(selectBox, vm.FolderId);
+
+        card.GotFocus -= CleanupCard_GotFocus;   // 幂等:容器回收复用会重复走到这里
+        card.GotFocus += CleanupCard_GotFocus;
+    }
+
+    /// <summary>记住"最后停留过的卡":Ctrl+L 再进列表时回到这里,而不是回列表头。</summary>
+    private void CleanupCard_GotFocus(object sender, RoutedEventArgs e)
+    {
+        int idx = CardIndex(sender as UIElement);
+        if (idx >= 0) _listAnchorIndex = idx;
+    }
+
+    private void Page_KeyDown(object sender, KeyRoutedEventArgs e) => Page_KeyDown_Core(e);
+
+    /// <summary>供 MainWindow 在焦点不在本页子树内(例如停在外壳导航栏)时分发快捷键,与 Papers 同法。</summary>
+    public void HandleShortcutKey(KeyRoutedEventArgs e) => Page_KeyDown_Core(e);
+
+    private void Page_KeyDown_Core(KeyRoutedEventArgs e)
+    {
+        if (e.Key is not (VirtualKey.L or VirtualKey.Enter or VirtualKey.Space or VirtualKey.Escape)) return;
+        // 读焦点必须用带 XamlRoot 的重载:无参版本在 WinUI 3 桌面恒返回 null
+        var focused = FocusManager.GetFocusedElement(XamlRoot) as FrameworkElement;
+        bool ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down)
+            == CoreVirtualKeyStates.Down;
+
+        if (e.Key == VirtualKey.L && ctrl)
+        {
+            if (FocusCleanupList()) e.Handled = true;
+            return;
+        }
+
+        if (e.Key is VirtualKey.Enter or VirtualKey.Space && FindOwnCard(focused) is { } card)
+        {
+            if (EnterCardControls(card)) e.Handled = true;
+            return;
+        }
+
+        // Esc 只在"焦点停在某张卡的控件上"时接管(退回卡片);别处的 Esc 原样交出去(关弹层/后退)
+        // ButtonBase 覆盖这一页会用到 Enter 的三种控件:CheckBox(继承 ToggleButton)、Button、AppBarButton
+        if (e.Key == VirtualKey.Escape && focused is ButtonBase && FindOwnCard(focused) is { } ownCard)
+        {
+            if (ownCard.Focus(FocusState.Keyboard)) e.Handled = true;
+            return;
+        }
+    }
+
+    /// <summary>焦点元素是不是"某张卡片的容器根本身":是则返回下标,否则 -1。
+    /// 只认容器根本身 —— 卡内控件的 DataContext 与卡片同一个,按 DataContext 反查会把控件误判成卡片。</summary>
+    private int CardIndex(UIElement? el)
+    {
+        if (el is null) return -1;
+        try
+        {
+            int idx = ResultRepeater.GetElementIndex(el);
+            if (idx >= 0 && ReferenceEquals(ResultRepeater.TryGetElement(idx), el)) return idx;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "[残留清理] 反查卡片下标异常");
+        }
+        for (int i = 0; i < Cards.Count; i++)
+            if (ReferenceEquals(ResultRepeater.TryGetElement(i), el)) return i;
+        return -1;
+    }
+
+    /// <summary>从焦点元素上溯,找它所属的那张卡片(卡内控件→卡片);不在任何卡片内则返回 null。</summary>
+    private FrameworkElement? FindOwnCard(FrameworkElement? from)
+    {
+        DependencyObject? cur = from;
+        for (int hops = 0; cur != null && hops < 8; hops++)
+        {
+            if (cur is FrameworkElement fe && CardIndex(fe) >= 0) return fe;
+            cur = VisualTreeHelper.GetParent(cur);
+        }
+        return null;
+    }
+
+    /// <summary>Enter/空格的"深入一层":把焦点交给这张卡的第一个控件(勾选框),之后 Tab 在勾选框与三按钮间走。</summary>
+    private bool EnterCardControls(FrameworkElement card)
+    {
+        // 顺序按 XAML 里的 Tab 序:勾选框 → 打开文件夹 → 加入白名单 → 删除
+        ButtonBase? first = card.FindName("CardSelectBox") as ButtonBase
+            ?? card.FindName("CardOpenFolderButton") as ButtonBase;
+        if (first is null)
+        {
+            Log.Warning("[残留清理] 进入卡内控件失败: 第 {Index} 张卡里找不到 CardSelectBox/CardOpenFolderButton", CardIndex(card));
+            return false;
+        }
+        return first.Focus(FocusState.Keyboard);
+    }
+
+    /// <summary>Ctrl+L 的落点:优先回到上次停留过的卡,其次第一张已实化的卡;都没有就写日志,不静默失败。</summary>
+    private bool FocusCleanupList()
+    {
+        if (_listAnchorIndex >= 0 && _listAnchorIndex < Cards.Count
+            && ResultRepeater.TryGetElement(_listAnchorIndex) is FrameworkElement anchor
+            && anchor.Focus(FocusState.Keyboard)) return true;
+        if (FocusFirstRealizedCard()) return true;
+
+        Log.Warning("[残留清理] Ctrl+L 未找到可聚焦的卡片(列表为空或容器全部未实化)");
+        return false;
+    }
+
+    private bool FocusFirstRealizedCard()
+    {
+        for (int i = 0; i < Cards.Count; i++)
+        {
+            if (ResultRepeater.TryGetElement(i) is FrameworkElement card && card.Focus(FocusState.Keyboard))
+            {
+                _listAnchorIndex = i;
+                return true;
+            }
+        }
+        return false;
     }
 
     // ---------- 排序 ----------

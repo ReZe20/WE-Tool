@@ -1079,7 +1079,7 @@
                                                                     <ColumnDefinition Width="*"/>
                                                                     <ColumnDefinition Width="Auto"/>
                                                                 </Grid.ColumnDefinitions>
-                                                                <!-- [A11y 2026-09] x:Name 供 ElementPrepared 做朗读去重(讲述人不重复念同一张卡):见 Papers.xaml.cs 的 CardFocusProbe -->
+                                                                <!-- [A11y 2026-09] x:Name 供 ElementPrepared 做朗读去重(讲述人不重复念同一张卡),见 Papers.xaml.cs -->
                                                                 <TextBlock Grid.Column="0"
                                                                            x:Name="ItemTitleText"
                                                                            Text="{x:Bind Title}" 
