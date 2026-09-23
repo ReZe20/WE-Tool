@@ -464,6 +464,15 @@ namespace WE_Tool.ViewModels
         {
             OnPropertyChanged(nameof(SortDirectionGlyph));
             OnPropertyChanged(nameof(SortDirectionAutomationName));
+            OnPropertyChanged(nameof(IsSortDescending));
+        }
+
+        /// <summary>排序菜单「递减」项的勾选态:IsSortAscending 的反面,让 RadioMenuFlyoutItem 能直接双向绑定。
+        /// 工具栏的方向按钮翻转 IsSortAscending 时,这一项的勾选也跟着变。</summary>
+        public bool IsSortDescending
+        {
+            get => !IsSortAscending;
+            set => IsSortAscending = !value;
         }
 
         public string SortDirectionGlyph => IsSortAscending ? "\uE70D" : "\uE70E";

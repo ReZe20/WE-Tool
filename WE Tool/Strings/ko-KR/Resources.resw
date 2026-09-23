@@ -312,6 +312,12 @@
   <data name="SortDirection_Descending.Text" xml:space="preserve">
     <value>내림차순</value>
   </data>
+  <data name="SortDirection_Increase.Text" xml:space="preserve">
+    <value>오름차순</value>
+  </data>
+  <data name="SortDirection_Decrease.Text" xml:space="preserve">
+    <value>내림차순</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>세부 정보 패널</value>
   </data>
@@ -1200,6 +1206,12 @@ project.json 및 미리보기 복사
   </data>
   <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
     <value>프로젝트 가져오기</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.Label" xml:space="preserve">
+    <value>모바일 버전으로 변환</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
+    <value>이 씬 벽지를 Wallpaper Engine 안드로이드판이 가져올 수 있는 .mpkg로 패키징합니다. 출력은 추출 폴더에 저장됩니다</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>하나 이상의 배경화면을 선택하세요</value>

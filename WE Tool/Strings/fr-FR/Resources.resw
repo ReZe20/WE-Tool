@@ -312,6 +312,12 @@
   <data name="SortDirection_Descending.Text" xml:space="preserve">
     <value>Décroissant</value>
   </data>
+  <data name="SortDirection_Increase.Text" xml:space="preserve">
+    <value>Croissant</value>
+  </data>
+  <data name="SortDirection_Decrease.Text" xml:space="preserve">
+    <value>Décroissant</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>Détails</value>
   </data>
@@ -1200,6 +1206,12 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
   </data>
   <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
     <value>Importer le projet</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.Label" xml:space="preserve">
+    <value>Convertir en version mobile</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Empaque ce fond d'écran de scène dans un fichier .mpkg que Wallpaper Engine pour Android peut importer ; la sortie est placée dans le dossier d'extraction</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>Sélectionnez un ou plusieurs fonds d'écran</value>

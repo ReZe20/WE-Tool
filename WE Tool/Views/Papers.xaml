@@ -275,6 +275,15 @@
                                          Click="OnTagDisplayChanged"
                                          IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoneDisplayInTag, Mode=TwoWay}"/>
                 </MenuFlyoutSubItem>
+                <!-- 预览模糊:与顶部"查看"菜单同一份开关(BlurEveryone/Teen/Adult) -->
+                <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_PreviewBlur">
+                    <ToggleMenuFlyoutItem x:Uid="Blur_Everyone"
+                                         IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.BlurEveryone, Mode=TwoWay}"/>
+                    <ToggleMenuFlyoutItem x:Uid="Blur_Teen"
+                                         IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.BlurTeen, Mode=TwoWay}"/>
+                    <ToggleMenuFlyoutItem x:Uid="Blur_Adult"
+                                         IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.BlurAdult, Mode=TwoWay}"/>
+                </MenuFlyoutSubItem>
                 <MenuFlyoutSubItem x:Uid="Pagination">
                         <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_None"
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.NoPaginationItem, Mode=TwoWay}"/>
@@ -318,6 +327,14 @@
                                      Click="ChangeSort"
                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByFileSize,Mode=TwoWay}"
                                      GroupName="MenuSortGroup"/>
+                <MenuFlyoutSeparator/>
+                <!-- 排序方向:与工具栏 SortDirectionButton 同一份状态(IsSortAscending),两条入口互相跟着变 -->
+                <RadioMenuFlyoutItem x:Uid="SortDirection_Increase"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending,Mode=TwoWay}"
+                                     GroupName="MenuSortDirectionGroup"/>
+                <RadioMenuFlyoutItem x:Uid="SortDirection_Decrease"
+                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortDescending,Mode=TwoWay}"
+                                     GroupName="MenuSortDirectionGroup"/>
             </MenuFlyoutSubItem>
         </MenuFlyout>
         <MenuFlyout x:Key="FilterExpanderContextMenu" Opening="FilterExpanderContextMenu_Opening">
@@ -615,6 +632,16 @@
                                                  Click="ChangeSort"
                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.SortByFileSize, Mode=TwoWay}">
                             </RadioMenuFlyoutItem>
+                            <MenuFlyoutSeparator/>
+                            <!-- 排序方向:与空白菜单同两项,也与旁边的 SortDirectionButton 共用 IsSortAscending -->
+                            <RadioMenuFlyoutItem GroupName="SortDirectionGroup"
+                                                 x:Uid="SortDirection_Increase"
+                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortAscending, Mode=TwoWay}">
+                            </RadioMenuFlyoutItem>
+                            <RadioMenuFlyoutItem GroupName="SortDirectionGroup"
+                                                 x:Uid="SortDirection_Decrease"
+                                                 IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsSortDescending, Mode=TwoWay}">
+                            </RadioMenuFlyoutItem>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
@@ -775,7 +802,9 @@
                                     </Button>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
-                                    <Button x:Name="DetailImportToEditorButton" Click="ImportToEditor_Click">
+                                    <Button x:Name="DetailImportToEditorButton"
+                                            Click="ImportToEditor_Click"
+                                            IsEnabled="{x:Bind IsImportToEditorEnabled, Mode=OneWay}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <wetool:ThemedAnimatedIcon x:Name="DetailImportToEditorIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
                                                 <wetool:ThemedAnimatedIcon.Source>

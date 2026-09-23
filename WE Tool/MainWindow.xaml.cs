@@ -76,7 +76,6 @@ namespace WE_Tool
         // 会看出"跳到第 10 帧"。所以让每一段都完整播完再切:点一下看到的是靠拢(0.17s)+ 复位(0.17s)。
         private const int PapersNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
         private const int PapersNavReleaseMs = 167;   // 第 10→20 帧(10 帧 @60fps;新版素材时间轴只有 20 帧)
-        private const bool PapersNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
         private bool _papersNavPressed;               // 当前是否已切到"按下"态
         private long _papersNavBusyUntil;             // 当前片段预计播完的时刻(0=空闲)
         private CancellationTokenSource? _papersNavCts;
@@ -96,7 +95,7 @@ namespace WE_Tool
         /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 20 帧(复位)。</summary>
         private async void PapersNavSwitchAsync(bool pressed)
         {
-            if (!PapersNavIconAnimationProbe || PapersNavIcon is null) return;
+            if (PapersNavIcon is null) return;
             if (pressed == _papersNavPressed) return;   // 目标态 = 当前态
             var current = PapersNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
             if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
@@ -118,7 +117,6 @@ namespace WE_Tool
             }
             if (cts.IsCancellationRequested) return;
             _papersNavBusyUntil = Environment.TickCount64 + (pressed ? PapersNavPressMs : PapersNavReleaseMs);
-            Log.Information("[动画] Papers 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→20 帧)");
             AnimatedIcon.SetState(PapersNavIcon, pressed ? "Pressed" : "Normal");
         }
 
@@ -133,7 +131,6 @@ namespace WE_Tool
         // 交互:鼠标按下 → 播前 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
         private const int InstalledComponentsNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
         private const int InstalledComponentsNavReleaseMs = 167;   // 第 10→20 帧(10 帧 @60fps;新版素材时间轴只有 20 帧)
-        private const bool InstalledComponentsNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
         private bool _installedComponentsNavPressed;    // 当前是否已切到"按下"态
         private long _installedComponentsNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
         private CancellationTokenSource? _installedComponentsNavCts;
@@ -153,7 +150,7 @@ namespace WE_Tool
         /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 20 帧(复位)。</summary>
         private async void InstalledComponentsNavSwitchAsync(bool pressed)
         {
-            if (!InstalledComponentsNavIconAnimationProbe || InstalledComponentsNavIcon is null) return;
+            if (InstalledComponentsNavIcon is null) return;
             if (pressed == _installedComponentsNavPressed) return;   // 目标态 = 当前态
             var current = InstalledComponentsNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
             if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
@@ -175,7 +172,6 @@ namespace WE_Tool
             }
             if (cts.IsCancellationRequested) return;
             _installedComponentsNavBusyUntil = Environment.TickCount64 + (pressed ? InstalledComponentsNavPressMs : InstalledComponentsNavReleaseMs);
-            Log.Information("[动画] 已安装组件 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→20 帧)");
             AnimatedIcon.SetState(InstalledComponentsNavIcon, pressed ? "Pressed" : "Normal");
         }
 
@@ -190,7 +186,6 @@ namespace WE_Tool
         // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
         private const int LoadPapersNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
         private const int LoadPapersNavReleaseMs = 167;   // 第 10→20 帧(10 帧 @60fps;新版素材时间轴只有 20 帧)
-        private const bool LoadPapersNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
         private bool _loadPapersNavPressed;    // 当前是否已切到"按下"态
         private long _loadPapersNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
         private CancellationTokenSource? _loadPapersNavCts;
@@ -210,7 +205,7 @@ namespace WE_Tool
         /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 20 帧(复位)。</summary>
         private async void LoadPapersNavSwitchAsync(bool pressed)
         {
-            if (!LoadPapersNavIconAnimationProbe || LoadPapersNavIcon is null) return;
+            if (LoadPapersNavIcon is null) return;
             if (pressed == _loadPapersNavPressed) return;   // 目标态 = 当前态
             var current = LoadPapersNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
             if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
@@ -232,7 +227,6 @@ namespace WE_Tool
             }
             if (cts.IsCancellationRequested) return;
             _loadPapersNavBusyUntil = Environment.TickCount64 + (pressed ? LoadPapersNavPressMs : LoadPapersNavReleaseMs);
-            Log.Information("[动画] 导入壁纸 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→20 帧)");
             AnimatedIcon.SetState(LoadPapersNavIcon, pressed ? "Pressed" : "Normal");
         }
 
@@ -248,7 +242,6 @@ namespace WE_Tool
         // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
         private const int WallpaperBackupNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
         private const int WallpaperBackupNavReleaseMs = 500;   // 第 10→40 帧(30 帧 @60fps)
-        private const bool WallpaperBackupNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
         private bool _wallpaperBackupNavPressed;    // 当前是否已切到"按下"态
         private long _wallpaperBackupNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
         private CancellationTokenSource? _wallpaperBackupNavCts;
@@ -268,7 +261,7 @@ namespace WE_Tool
         /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 40 帧(复位)。</summary>
         private async void WallpaperBackupNavSwitchAsync(bool pressed)
         {
-            if (!WallpaperBackupNavIconAnimationProbe || WallpaperBackupNavIcon is null) return;
+            if (WallpaperBackupNavIcon is null) return;
             if (pressed == _wallpaperBackupNavPressed) return;   // 目标态 = 当前态
             var current = WallpaperBackupNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
             if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
@@ -290,7 +283,6 @@ namespace WE_Tool
             }
             if (cts.IsCancellationRequested) return;
             _wallpaperBackupNavBusyUntil = Environment.TickCount64 + (pressed ? WallpaperBackupNavPressMs : WallpaperBackupNavReleaseMs);
-            Log.Information("[动画] 壁纸备份 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→40 帧)");
             AnimatedIcon.SetState(WallpaperBackupNavIcon, pressed ? "Pressed" : "Normal");
         }
 
@@ -305,7 +297,6 @@ namespace WE_Tool
         // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
         private const int LogsNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
         private const int LogsNavReleaseMs = 500;   // 第 10→40 帧(30 帧 @60fps)
-        private const bool LogsNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
         private bool _logsNavPressed;    // 当前是否已切到"按下"态
         private long _logsNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
         private CancellationTokenSource? _logsNavCts;
@@ -325,7 +316,7 @@ namespace WE_Tool
         /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 40 帧(复位)。</summary>
         private async void LogsNavSwitchAsync(bool pressed)
         {
-            if (!LogsNavIconAnimationProbe || LogsNavIcon is null) return;
+            if (LogsNavIcon is null) return;
             if (pressed == _logsNavPressed) return;   // 目标态 = 当前态
             var current = LogsNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
             if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
@@ -347,7 +338,6 @@ namespace WE_Tool
             }
             if (cts.IsCancellationRequested) return;
             _logsNavBusyUntil = Environment.TickCount64 + (pressed ? LogsNavPressMs : LogsNavReleaseMs);
-            Log.Information("[动画] 日志 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→40 帧)");
             AnimatedIcon.SetState(LogsNavIcon, pressed ? "Pressed" : "Normal");
         }
 
@@ -366,7 +356,6 @@ namespace WE_Tool
         // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
         private const int CleanupNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
         private const int CleanupNavReleaseMs = 167;   // 第 10→20 帧(含倒放回退;10 帧 @60fps)
-        private const bool CleanupNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
         private bool _cleanupNavPressed;    // 当前是否已切到"按下"态
         private long _cleanupNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
         private CancellationTokenSource? _cleanupNavCts;
@@ -386,7 +375,7 @@ namespace WE_Tool
         /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 20 帧(复位)。</summary>
         private async void CleanupNavSwitchAsync(bool pressed)
         {
-            if (!CleanupNavIconAnimationProbe || CleanupNavIcon is null) return;
+            if (CleanupNavIcon is null) return;
             if (pressed == _cleanupNavPressed) return;   // 目标态 = 当前态
             var current = CleanupNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
             if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
@@ -408,7 +397,6 @@ namespace WE_Tool
             }
             if (cts.IsCancellationRequested) return;
             _cleanupNavBusyUntil = Environment.TickCount64 + (pressed ? CleanupNavPressMs : CleanupNavReleaseMs);
-            Log.Information("[动画] 清理 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→20 帧)");
             AnimatedIcon.SetState(CleanupNavIcon, pressed ? "Pressed" : "Normal");
         }
         // ===================== 信息 导航项图标动画(2026-09) =====================
@@ -423,7 +411,6 @@ namespace WE_Tool
         // 交互(用户口径):鼠标按下 → 播到第 10 帧;松开 → 从第 10 帧继续播完并复位(每段播完再切,避免"跳一下")。
         private const int InfoNavPressMs = 167;     // 第 0→10 帧(10 帧 @60fps)
         private const int InfoNavReleaseMs = 333;   // 第 10→30 帧(20 帧 @60fps)
-        private const bool InfoNavIconAnimationProbe = true;   // false = 回到"静止图标"(不播动画)
         private bool _infoNavPressed;    // 当前是否已切到"按下"态
         private long _infoNavBusyUntil;  // 当前片段预计播完的时刻(0=空闲)
         private CancellationTokenSource? _infoNavCts;
@@ -443,7 +430,7 @@ namespace WE_Tool
         /// <summary>按下→播第 0→10 帧;松开→从第 10 帧继续播到第 30 帧(复位)。</summary>
         private async void InfoNavSwitchAsync(bool pressed)
         {
-            if (!InfoNavIconAnimationProbe || InfoNavIcon is null) return;
+            if (InfoNavIcon is null) return;
             if (pressed == _infoNavPressed) return;   // 目标态 = 当前态
             var current = InfoNavIcon.GetValue(AnimatedIcon.StateProperty) as string;
             if (!pressed && !string.Equals(current, "Pressed", StringComparison.Ordinal))
@@ -465,7 +452,6 @@ namespace WE_Tool
             }
             if (cts.IsCancellationRequested) return;
             _infoNavBusyUntil = Environment.TickCount64 + (pressed ? InfoNavPressMs : InfoNavReleaseMs);
-            Log.Information("[动画] 信息 导航项图标状态切换 → {State}", pressed ? "Pressed(第 0→10 帧)" : "Normal(第 10→30 帧)");
             AnimatedIcon.SetState(InfoNavIcon, pressed ? "Pressed" : "Normal");
         }
 

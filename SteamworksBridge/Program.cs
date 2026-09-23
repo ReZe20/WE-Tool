@@ -84,18 +84,15 @@ internal static class Program
                 switch (root.GetProperty("op").GetString())
                 {
                     case "status":
-                        Reply(JsonSerializer.Serialize(new
-                        {
-                            op = "status",
-                            ok = true,
-                            user = SteamClient.Name,
-                            steamId = SteamClient.SteamId.ToString(),
-                        }));
+                        Reply(JsonSerializer.Serialize(new StatusReply(
+                            "status", true, SteamClient.Name, SteamClient.SteamId.ToString()),
+                            BridgeReplyJsonContext.Default.StatusReply));
                         break;
 
                     case "unsubscribe":
                         var ok = Unsubscribe(root.GetProperty("workshopId").GetString());
-                        Reply(JsonSerializer.Serialize(new { op = "unsubscribe", ok }));
+                        Reply(JsonSerializer.Serialize(new UnsubscribeReply("unsubscribe", ok),
+                            BridgeReplyJsonContext.Default.UnsubscribeReply));
                         break;
 
                     case "exit":
@@ -103,7 +100,9 @@ internal static class Program
 
                     default:
                         // 未知 op:回 error,让父进程明确感知(不静默)
-                        Reply(JsonSerializer.Serialize(new { op = "error", message = $"未知 op: {root.GetProperty("op").GetString()}" }));
+                        Reply(JsonSerializer.Serialize(new ErrorReply("error",
+                                $"未知 op: {root.GetProperty("op").GetString()}"),
+                            BridgeReplyJsonContext.Default.ErrorReply));
                         break;
                 }
             }
@@ -117,7 +116,8 @@ internal static class Program
             catch (Exception ex)
             {
                 Log($"请求处理异常: {ex}");
-                Reply(JsonSerializer.Serialize(new { op = "error", message = ex.Message }));
+                Reply(JsonSerializer.Serialize(new ErrorReply("error", ex.Message),
+                    BridgeReplyJsonContext.Default.ErrorReply));
             }
         }
     }
@@ -205,8 +205,10 @@ internal static class Program
             lock (LogLock)
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
-                // 超过上限截断重写,防止日志无限增长
-                if (new FileInfo(LogPath).Length > MaxLogSize)
+                // FileInfo.Length 对不存在的文件抛 FileNotFoundException,而这里是 Log() 里第一处
+                // 磁盘访问:不先判存在就必然抛出、被外层 catch 吞掉,导致日志文件永远创建不出来
+                var log = new FileInfo(LogPath);
+                if (log.Exists && log.Length > MaxLogSize)
                     File.WriteAllText(LogPath, string.Empty);
                 File.AppendAllText(LogPath,
                     $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} [{message.Split(' ')[0]}] {message}{Environment.NewLine}");

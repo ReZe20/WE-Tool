@@ -67,6 +67,33 @@ namespace WE_Tool
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        private string _projectDirTip = "";
+        private string _papersExportDirTip = "";
+
+        /// <summary>预设按钮 LoadPapers_ProjectDir 的 ToolTip:点下去填入的完整路径,未设置时显示"未设置"。</summary>
+        public string ProjectDirTip
+        {
+            get => _projectDirTip;
+            private set
+            {
+                if (_projectDirTip == value) return;
+                _projectDirTip = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>预设按钮 LoadPapers_ExportDir 的 ToolTip,同上。</summary>
+        public string PapersExportDirTip
+        {
+            get => _papersExportDirTip;
+            private set
+            {
+                if (_papersExportDirTip == value) return;
+                _papersExportDirTip = value;
+                OnPropertyChanged();
+            }
+        }
+
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
@@ -221,7 +248,7 @@ namespace WE_Tool
         private void ClearQueue_Click(object sender, RoutedEventArgs e)
         {
             if (_isExtracting) return;
-            AnimatedIconPlayer.PlayOnce(sender, "清空");   // [删除图标动画 2026-09]
+            AnimatedIconPlayer.PlayOnce(sender);   // [删除图标动画 2026-09]
             QueueItems.Clear();
             ImportInfoBar.IsOpen = false;
         }
@@ -258,7 +285,7 @@ namespace WE_Tool
                 outputRoot = settings.Path?.DownloadPath ?? "";
             if (string.IsNullOrEmpty(outputRoot) || !Directory.Exists(outputRoot))
             {
-                ShowInfoBar("导出目录为空或不存在,请点击\"导出目录\"按钮设置", InfoBarSeverity.Warning);
+                ShowInfoBar("导出目录为空或不存在,请在\"设置导出目录\"中选择", InfoBarSeverity.Warning);
                 return;
             }
 
@@ -557,11 +584,31 @@ namespace WE_Tool
         }
 
         /// <summary>Flyout 打开时把焦点给文本框(WinUI 3 坑:Flyout 内容的键盘焦点不会自动落到 TextBox,不聚焦则无法输入)。</summary>
-        private void ExportDirFlyout_Opened(object sender, object e)
+        private async void ExportDirFlyout_Opened(object sender, object e)
         {
             // 弹层不自动继承主窗口运行时主题,打开时显式应用(公共逻辑见 App.ApplyFlyoutTheme)
             App.ApplyFlyoutTheme(sender, e);
             ExportPathBox.Focus(FocusState.Programmatic);
+            await RefreshPresetTipsAsync();
+        }
+
+        /// <summary>读出两个预设按钮将要填入的路径,作为它们的 ToolTip(ConfigService 有进程内缓存,不重复读盘)。</summary>
+        private async Task RefreshPresetTipsAsync()
+        {
+            string project = "", download = "";
+            try
+            {
+                var s = await _configService.LoadAsync();
+                project = s.Path?.ProjectPath ?? "";
+                download = s.Path?.DownloadPath ?? "";
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[导入解包] 读取预设目录失败");
+            }
+            string unset = LanguageHelper.GetResource("LoadPapers_PresetUnset");
+            ProjectDirTip = string.IsNullOrEmpty(project) ? unset : project;
+            PapersExportDirTip = string.IsNullOrEmpty(download) ? unset : download;
         }
 
         // ==================== 导出目录持久化(500ms 防抖) ====================

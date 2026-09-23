@@ -559,6 +559,27 @@
                                     </RadioButtons>
                                 </controls:SettingsCard.Header>
                             </controls:SettingsCard>
+                            <!-- [纹理缩小 2026-09-22] 三档对应 WE 移动版的 原始/2×/4×,除数由 repkg 侧算(先整除截断再补到 4 的倍数),
+                                 同时把 texturereduction 写进 scene.json 的 general 块 —— 手机靠这个键决定采样口径 -->
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <RadioButtons SelectedIndex="{x:Bind ViewModel.MpkgReductionMode, Mode=TwoWay}" MaxColumns="3">
+                                        <RadioButtons.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock x:Uid="Settings_MpkgReduction_Header" FontWeight="SemiBold" Margin="28,12,0,12" Style="{ThemeResource BodyLargeTextBlockStyle}"/>
+                                                <FontIcon Glyph="&#xE9CE;" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0">
+                                                    <ToolTipService.ToolTip>
+                                                        <ToolTip x:Uid="Settings_MpkgReduction_Tip"/>
+                                                    </ToolTipService.ToolTip>
+                                                </FontIcon>
+                                            </StackPanel>
+                                        </RadioButtons.Header>
+                                        <RadioButton x:Uid="Settings_MpkgReduction_None"/>
+                                        <RadioButton x:Uid="Settings_MpkgReduction_X2"/>
+                                        <RadioButton x:Uid="Settings_MpkgReduction_X4"/>
+                                    </RadioButtons>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
                     <!-- [导入解包输出设置 2026-09] 与上面「已安装壁纸页面输出设置」同构的独立一套:只对导入解包页(导入 .pkg 解包)的提取生效,读写 AppSettings.ImportExtract;默认值 = 该页原先写死的"编辑器同款"配方 -->

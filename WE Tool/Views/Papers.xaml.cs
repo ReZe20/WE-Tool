@@ -5265,13 +5265,14 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
             RepkgCliService.SetProcessPriorityLevel(ViewModel.ProcessPriority);
 
-            // 一张壁纸一个子文件夹,且总是重做而不是跳过已有产物;包名跟着输出设置里的二选一
+            // 一张壁纸一个子文件夹,且总是重做而不是跳过已有产物;包名和纹理缩小档位跟着输出设置里的选择
             var mobileSettings = new ExtractSettings
             {
                 UseProjectName = true,
                 OneFolder = 0,
                 CoverAllFiles = true,
                 MpkgNameMode = ViewModel.MpkgNameMode,
+                MpkgReductionMode = ViewModel.MpkgReductionMode,
             };
 
             await _extractService.ConvertToMobileAsync(itemsToConvert, outputPath, mobileSettings, onProgress, _extractCts.Token);

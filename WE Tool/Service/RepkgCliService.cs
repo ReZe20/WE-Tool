@@ -157,7 +157,8 @@ public class RepkgCliService
 
     /// <summary>
     /// pkg → mpkg(移动版)转换:复用 batch 的进程协议、事件路由与崩溃重启循环,manifest 换成 mode=mpkg。
-    /// settings 只需要三格有值:OneFolder/UseProjectName 决定输出布局,MpkgNameMode 决定 .mpkg 叫什么;
+    /// settings 只需要四格有值:OneFolder/UseProjectName 决定输出布局,MpkgNameMode 决定 .mpkg 叫什么,
+    /// MpkgReductionMode 决定纹理缩多少;
     /// 提取侧的过滤条件在这里一律不适用。不做提取侧的后处理——project.json/预览图由 repkg 直接打进包里,
     /// 再补文件反而会在包旁留下副本。
     /// </summary>
@@ -625,7 +626,13 @@ public class RepkgCliService
         ["mpkgMagic"] = "PKGM0019",
         // 移动端不消费壁纸音频(2/2 真机复现:手机上是静音的),留着只涨体积
         ["keepAudio"] = false,
-        ["noLz4"] = false
+        ["noLz4"] = false,
+        // WE 的下拉只有三档,除数只有 1/2/4 三种取值
+        ["mpkgReduction"] = settings.MpkgReductionMode switch { 1 => 2, 2 => 4, _ => 1 },
+        // 跟着缩小档走,不给独立开关:WE 自己就是「原始档发 RGBA8、2× 起把物化纹理转 ETC2(fmt5)」。
+        // 真机验过 ÷2+fmt5(平均通道误差 0.39/PSNR 41.6dB,优于 WE 同档的 2.36/24.2dB),体积再降约 4 倍。
+        // 原始档保持不编:那条路是逐字节对齐真机包的形态。
+        ["mpkgEtc2"] = settings.MpkgReductionMode > 0
     };
 
     /// <summary>同批两张标题相同的壁纸会撞进同一个输出文件夹、写出同名 .mpkg 互相覆盖 —— 撞了就加序号(只在本批内去重,重转同一张壁纸仍走 overwrite)。</summary>

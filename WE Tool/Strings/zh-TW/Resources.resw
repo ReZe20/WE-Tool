@@ -312,6 +312,12 @@
   <data name="SortDirection_Descending.Text" xml:space="preserve">
     <value>遞減</value>
   </data>
+  <data name="SortDirection_Increase.Text" xml:space="preserve">
+    <value>遞增</value>
+  </data>
+  <data name="SortDirection_Decrease.Text" xml:space="preserve">
+    <value>遞減</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>詳情面板</value>
   </data>
@@ -1200,6 +1206,12 @@
   </data>
   <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
     <value>匯入專案</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.Label" xml:space="preserve">
+    <value>轉為行動版</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
+    <value>打包成行動版 Wallpaper Engine 能匯入的 .mpkg，輸出到擷取目錄</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>選擇一張或多張桌布</value>

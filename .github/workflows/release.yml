@@ -20,7 +20,11 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    # AutoBackupService.vcxproj 钉的是 PlatformToolset v145(VS 2026 / MSVC 14.5x),它由
+    # $(VCTargetsPath)\Platforms\Win32\PlatformToolsets\v145\Toolset.props 是否存在来判定;
+    # 普通 windows-2025 镜像只装 VS 2022(VCTargets=v170,最高 v143),编这个工程直接 MSB8020。
+    # vs2026 镜像与前者同为 Windows SDK 10.0.26100.0,只是多一套 VS 2026,不改变其余构建行为。
+    runs-on: windows-2025-vs2026
     steps:
       - uses: actions/checkout@v4
 

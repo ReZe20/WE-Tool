@@ -312,6 +312,12 @@
   <data name="SortDirection_Descending.Text" xml:space="preserve">
     <value>По убыванию</value>
   </data>
+  <data name="SortDirection_Increase.Text" xml:space="preserve">
+    <value>По возрастанию</value>
+  </data>
+  <data name="SortDirection_Decrease.Text" xml:space="preserve">
+    <value>По убыванию</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>Детали</value>
   </data>
@@ -1200,6 +1206,12 @@
   </data>
   <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
     <value>Импорт проекта</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.Label" xml:space="preserve">
+    <value>Преобразовать в мобильную версию</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Упаковывает обои этой сцены в .mpkg, который может импортировать Wallpaper Engine для Android; результат сохраняется в папку извлечения</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>Выберите одну или несколько обоев</value>

@@ -252,7 +252,7 @@ public sealed partial class WallpaperBackup : Page
     private async void DeleteBackup_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button btn || btn.CommandParameter is not BackupItemViewModel item) return;
-        AnimatedIconPlayer.PlayOnce(sender, "删除");   // [删除图标动画 2026-09] 卡片上的删除按钮
+        AnimatedIconPlayer.PlayOnce(sender);   // [删除图标动画 2026-09] 卡片上的删除按钮
         if (string.IsNullOrEmpty(item.FullPath) || !Directory.Exists(item.FullPath)) return;
 
         bool confirmed = await DialogHelper.ShowConfirmDialogAsync("删除备份",
@@ -320,7 +320,7 @@ public sealed partial class WallpaperBackup : Page
     private async void DeleteAll_Click(object sender, RoutedEventArgs e)
     {
         if (_allItems.Count == 0) return;
-        AnimatedIconPlayer.PlayOnce(sender, "删除全部");   // [删除图标动画 2026-09]
+        AnimatedIconPlayer.PlayOnce(sender);   // [删除图标动画 2026-09]
 
         bool confirmed = await DialogHelper.ShowConfirmDialogAsync("删除全部备份",
             $"确定要删除全部 {_allItems.Count} 个备份吗？\n\n删除后无法恢复。",

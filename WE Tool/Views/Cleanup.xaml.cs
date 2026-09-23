@@ -123,25 +123,19 @@ public sealed partial class Cleanup : Page
             // 应用当前排序
             ApplySort();
 
-            bool has = Cards.Count > 0;
-            ResultScrollView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
-            EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
-            ActionBar.Visibility = Visibility.Visible;
-            if (has) { UpdateResultLayoutMinWidth(); UpdateSummary(); }
-            else
+            if (Cards.Count == 0)
             {
                 // [2026-09] 扫描完成无残留:显示"未发现残留"提示(此前此场景无文案,空态空白)
                 EmptyStateText.Text = L("Cleanup_NoResidue");
                 EmptyStateDesc.Visibility = Visibility.Visible;
             }
+            SyncView();
         }
         catch (Exception ex)
         {
-            EmptyState.Visibility = Visibility.Visible;
-            ResultScrollView.Visibility = Visibility.Collapsed;
-            ActionBar.Visibility = Visibility.Collapsed;
             EmptyStateText.Text = L("Cleanup_ScanFailed", ex.Message);
             EmptyStateDesc.Visibility = Visibility.Collapsed; // 失败≠无残留,隐藏副描述
+            SyncView();   // 失败态同样保留命令栏,否则无法重试扫描
         }
         finally
         {
@@ -302,10 +296,7 @@ public sealed partial class Cleanup : Page
 
         Cards.Add(card);
         ApplySort();
-        ResultScrollView.Visibility = Visibility.Visible;
-        EmptyState.Visibility = Visibility.Collapsed;
-        ActionBar.Visibility = Visibility.Visible;
-        UpdateResultLayoutMinWidth();
+        SyncView();
     }
 
     private HashSet<string> GetStdFiles(string dir)
@@ -433,7 +424,7 @@ public sealed partial class Cleanup : Page
     {
         var selected = Cards.Where(c => c.IsSelected).ToList();
         if (selected.Count == 0) return;
-        AnimatedIconPlayer.PlayOnce(sender, "批量删除");   // [删除图标动画 2026-09]
+        AnimatedIconPlayer.PlayOnce(sender);   // [删除图标动画 2026-09]
 
         int totalFiles = selected.Sum(c => c.Files.Count);
         var dlg = new ContentDialog
@@ -515,7 +506,12 @@ public sealed partial class Cleanup : Page
                 foreach (var card in list)
                     Cards.Add(card);
                 ApplySort();
-                UpdateSummary();
+                if (Cards.Count == 0)
+                {
+                    EmptyStateText.Text = L("Cleanup_NoResidue");
+                    EmptyStateDesc.Visibility = Visibility.Visible;
+                }
+                SyncView();
             });
         };
         win.Activate();
@@ -524,7 +520,7 @@ public sealed partial class Cleanup : Page
     private async void DeleteAllButton_Click(object sender, RoutedEventArgs e)
     {
         if (Cards.Count == 0) return;
-        AnimatedIconPlayer.PlayOnce(sender, "全部删除");   // [删除图标动画 2026-09]
+        AnimatedIconPlayer.PlayOnce(sender);   // [删除图标动画 2026-09]
 
         int totalFiles = 0;
         foreach (var c in Cards)
@@ -560,13 +556,9 @@ public sealed partial class Cleanup : Page
             catch { failed++; }
         }
 
-        bool has = Cards.Count > 0;
-        ResultScrollView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
-        EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
         EmptyStateText.Text = L("Cleanup_CleanedComplete", ok);
         EmptyStateDesc.Visibility = Visibility.Collapsed; // 清理完成场景不显示"未发现残留"副描述
-        if (!has) ActionBar.Visibility = Visibility.Collapsed;
-        UpdateSummary();
+        SyncView();
 
         if (failed > 0)
         {
@@ -580,6 +572,23 @@ public sealed partial class Cleanup : Page
             };
             await err.ShowAsync();
         }
+    }
+
+    /// <summary>卡片数 → 列表/空态/按钮可用性的唯一同步点。空态文案由调用方先设。</summary>
+    private void SyncView()
+    {
+        bool has = Cards.Count > 0;
+        ResultScrollView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+        EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
+        // [2026-09-22] 命令栏不再随列表清空而折叠(见 XAML):整条隐藏会让"白名单/重新扫描"
+        // 再无入口——页面有缓存且 _initialScanDone 不再自动重扫,用户会被困在空态。
+        // 需要卡片才能执行的按钮改为按项数禁用。
+        DeleteAllButton.IsEnabled = has;
+        UpdateBatchButtons();
+        UpdateResultLayoutMinWidth();
+        UpdateSummary();
+        Log.Debug("[残留清理] 视图同步:卡片 {Count} 项,空态 {Empty},清理全部可用 {DeleteAllEnabled}",
+            Cards.Count, !has, has);
     }
 
     /// <summary>更新总结:总项数·总大小。</summary>
@@ -598,17 +607,13 @@ public sealed partial class Cleanup : Page
     private void RemoveCard(CleanupCardViewModel card)
     {
         Cards.Remove(card);
-        bool has = Cards.Count > 0;
-        ResultScrollView.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
-        EmptyState.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
-        if (!has)
+        if (Cards.Count == 0)
         {
-            ActionBar.Visibility = Visibility.Collapsed;
             // [2026-09] 卡被移空(白名单/单卡清理后):回到"无残留"空态文案
             EmptyStateText.Text = L("Cleanup_NoResidue");
             EmptyStateDesc.Visibility = Visibility.Visible;
         }
-        UpdateSummary();
+        SyncView();
     }
 
     // ---------- 列表键盘可达(2026-09-22) ----------

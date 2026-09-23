@@ -38,8 +38,6 @@ namespace WE_Tool.Controls
         private readonly Dictionary<CompositionColorBrush, Color> _originalColors = new();
         private XamlRoot? _xamlRoot;
         private FrameworkElement? _themeRoot;
-        private Color? _appliedColor;
-        private bool _appliedOnce;
         private bool _trustForeground;
 
         public ThemedAnimatedIcon()
@@ -48,12 +46,12 @@ namespace WE_Tool.Controls
             {
                 Register();
                 HookThemeRoot();
-                ApplyColor("Loaded");
-                DispatcherQueue.TryEnqueue(() => { HookThemeRoot(); ApplyColor("Loaded+队列"); });
+                ApplyColor();
+                DispatcherQueue.TryEnqueue(() => { HookThemeRoot(); ApplyColor(); });
             };
             Unloaded += (_, _) => Unregister();
-            RegisterPropertyChangedCallback(IconElement.ForegroundProperty, (_, _) => ApplyColor("Foreground"));
-            ActualThemeChanged += (_, _) => ApplyColor("Theme(自身)");
+            RegisterPropertyChangedCallback(IconElement.ForegroundProperty, (_, _) => ApplyColor());
+            ActualThemeChanged += (_, _) => ApplyColor();
         }
 
         /// <summary>
@@ -64,8 +62,8 @@ namespace WE_Tool.Controls
         /// </summary>
         public void RefreshColorAfterSourceChange()
         {
-            ApplyColor("Source");
-            DispatcherQueue.TryEnqueue(() => ApplyColor("Source+队列"));   // 合成树可能要到本帧末才挂上,再补一次
+            ApplyColor();
+            DispatcherQueue.TryEnqueue(ApplyColor);   // 合成树可能要到本帧末才挂上,再补一次
         }
 
         /// <summary>
@@ -82,7 +80,7 @@ namespace WE_Tool.Controls
             {
                 if (_trustForeground == value) return;
                 _trustForeground = value;
-                ApplyColor("TrustForeground");
+                ApplyColor();
             }
         }
 
@@ -108,7 +106,7 @@ namespace WE_Tool.Controls
 
         private void OnXamlRootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => HookThemeRoot();
 
-        private void OnThemeRootChanged(FrameworkElement sender, object args) => ApplyColor("Theme(根元素)");
+        private void OnThemeRootChanged(FrameworkElement sender, object args) => ApplyColor();
 
         private void Register()
         {
@@ -135,7 +133,7 @@ namespace WE_Tool.Controls
         {
             for (int i = _live.Count - 1; i >= 0; i--)
             {
-                if (_live[i].TryGetTarget(out var icon)) icon.ApplyColor("Tick");
+                if (_live[i].TryGetTarget(out var icon)) icon.ApplyColor();
                 else _live.RemoveAt(i);
             }
         }
@@ -179,27 +177,14 @@ namespace WE_Tool.Controls
             return dark ? null : LightThemeColor;
         }
 
-        private void ApplyColor(string trigger)
+        private void ApplyColor()
         {
-            bool dark = IsDarkTheme();
-            Color? target = ResolveTarget(dark);
-            bool changed = !_appliedOnce || target != _appliedColor;
-            bool verbose = changed || trigger != "Tick";   // 轮询取色没变时不刷日志
-
-            _appliedColor = target;
-            _appliedOnce = true;
-            string fg = Foreground is SolidColorBrush s ? s.Color.ToString() : (Foreground?.GetType().Name ?? "null");
+            Color? target = ResolveTarget(IsDarkTheme());
             try
             {
                 var visualRoot = ElementCompositionPreview.GetElementVisual(this);
-                int shapes = 0, painted = 0;
-                var result = "";
                 if (visualRoot is not null) Apply(visualRoot, target);
-                // 轮询取色没变时不打日志;但每次都要真的走一遍重涂 —— 合成树被框架重建后画笔会变回素材原色
-                if (verbose)
-                    // 带实例名(x:Name;未命名记"(无名)")——多条图标日志交织时靠它区分,排查用
-                    Log.Information("[图标主题] 图标={Icon} 触发={T} 深色={Dark} 前景={Fg} → 目标={Target} | 形状={Shapes} 画笔={Painted} {Result}",
-                        string.IsNullOrEmpty(Name) ? "(无名)" : Name, trigger, dark, fg, target?.ToString() ?? "素材原色", shapes, painted, result);
+                // 每次都要真的走一遍重涂:合成树被框架重建后画笔会变回素材原色(幂等,开销就是遍历几个图形)
 
                 void Apply(Visual visual, Color? color)
                 {
@@ -224,7 +209,6 @@ namespace WE_Tool.Controls
                         return;
                     }
                     if (shape is not CompositionSpriteShape sprite) return;
-                    shapes++;
                     Paint(sprite.FillBrush, color);
                     Paint(sprite.StrokeBrush, color);
                 }
@@ -239,8 +223,6 @@ namespace WE_Tool.Controls
                     }
                     var wanted = color ?? original;
                     if (colorBrush.Color != wanted) colorBrush.Color = wanted;
-                    if (painted == 0) result = $"原色={original} 现色={colorBrush.Color}";
-                    painted++;
                 }
             }
             catch (Exception ex)

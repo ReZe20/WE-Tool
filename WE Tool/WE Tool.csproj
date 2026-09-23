@@ -77,6 +77,10 @@
   </ItemGroup>
   <!-- SteamworksBridge 部署:应用对桥接无编译期引用(仅进程调用),不能 ProjectReference
        (自包含发布会报 NETSDK1150);构建/发布时构建桥接并把输出拷进目标目录 -->
+  <PropertyGroup>
+    <BridgeAotPublishDir>$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\publish-aot</BridgeAotPublishDir>
+    <BridgeUseAot Condition="'$(Configuration)' != 'Debug' And Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\Properties\PublishProfiles\AotWinX64.pubxml')">true</BridgeUseAot>
+  </PropertyGroup>
   <Target Name="CopySteamworksBridge" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher" Condition="Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj')">
     <!-- 桥接把 OutputPath 钉成不含平台段(为了引用解析稳定,见其 csproj 注释),所以 x64 与 ARM64 两次
          构建写进的是同一个目录、后编的赢:用 dotnet build WE Tool.slnx 时 slnx 里的 ARM64 平台会把
@@ -89,16 +93,27 @@
          所以不去猜路径,直接向子项目的 Build 目标要 TargetOutputs(它返回真实主输出路径),取其目录再 glob。
          只拷本次真正产出的那一份,历史 bin 里的其他形状一律不参与。 -->
     <RemoveDir Directories="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\" ContinueOnError="WarnAndContinue" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform)">
+    <!-- [AOT 2026-09-20] Release 走 AOT 自包含发布(单 exe 2.89MB + steam_api64.dll,目标机免 .NET 运行时);
+         Debug 仍是普通 Build,保证 F5 直跑。实测 Facepunch.Steamworks 2.3.3 在 AOT 下可用:
+         SteamClient.Init/Name/SteamId/Item.Unsubscribe 全部正常,唯一必须改的是回包 JSON ——
+         匿名类型走反射序列化,AOT 下抛 InvalidOperationException(现改用源生成上下文,见 BridgeReplies.cs)。
+         profile 缺失时自动退回框架依赖(旧行为),与 BuildRepkg 的 RepkgUseAot 同一套形状。 -->
+    <RemoveDir Condition="'$(BridgeUseAot)' == 'true'" Directories="$(BridgeAotPublishDir)\" ContinueOnError="WarnAndContinue" />
+    <Exec Condition="'$(BridgeUseAot)' == 'true'"
+          Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj&quot; -c Release -p:PublishProfile=AotWinX64" />
+    <ItemGroup Condition="'$(BridgeUseAot)' == 'true'">
+      <BridgeOutput Include="$(BridgeAotPublishDir)\**\*" />
+    </ItemGroup>
+    <MSBuild Condition="'$(BridgeUseAot)' != 'true'" Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform)">
       <Output TaskParameter="TargetOutputs" ItemName="BridgeBuiltAssembly" />
     </MSBuild>
     <PropertyGroup>
       <BridgeOutDir Condition="'@(BridgeBuiltAssembly)' != ''">$([System.IO.Path]::GetDirectoryName('%(BridgeBuiltAssembly.FullPath)'))\</BridgeOutDir>
     </PropertyGroup>
-    <ItemGroup Condition="'$(BridgeOutDir)' != ''">
+    <ItemGroup Condition="'$(BridgeUseAot)' != 'true' And '$(BridgeOutDir)' != ''">
       <BridgeOutput Include="$(BridgeOutDir)**\*" Exclude="$(BridgeOutDir)*.pdb" />
     </ItemGroup>
-    <ItemGroup Condition="'$(BridgeOutDir)' == ''">
+    <ItemGroup Condition="'$(BridgeUseAot)' != 'true' And '$(BridgeOutDir)' == ''">
       <!-- 兜底:TargetOutputs 取不到时仍按主路径形状找(排除任何 win-* 子目录残留) -->
       <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\**\*"
                     Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\*.pdb;$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\win-*\**" />
@@ -479,6 +494,17 @@
       <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.Management.Deployment.Projection.dll" />
       <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.Media.Capture.Projection.dll" />
       <_PublishUnneeded Include="$(PublishDir)**\System.Numerics.Tensors.dll" />
+      <!-- [AOT 桥接 2026-09-20] 桥接为 AOT 单 exe 后,以下全是应消失的旧形态文件:
+           Facepunch 包装 dll + host 元数据(deps/runtimeconfig/托管 dll)是上一轮框架依赖发布留在
+           publish 目录里的残留(AOT 版不产出它们,但 RemoveDir 只管桥接自己的 bin,不清 publish 目录);
+           WinRT.Runtime.dll 是桥接 glob 顺带搬进来的投影(529KB),主程序 AOT 不需要。
+           不删 → 本地包比 CI 全新检出多这些文件,包体积不可复现。
+           Condition 必要:BridgeUseAot 为假(回退框架依赖)时这些正是桥接运行所需。 -->
+      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\Facepunch.Steamworks.Win64.dll" />
+      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\WinRT.Runtime.dll" />
+      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\SteamworksBridge.deps.json" />
+      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\SteamworksBridge.runtimeconfig.json" />
+      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\SteamworksBridge.dll" />
     </ItemGroup>
     <Delete Files="@(_PublishUnneeded)" />
     <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (AOT 主程序,无 launcher) (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />

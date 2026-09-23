@@ -312,6 +312,12 @@
   <data name="SortDirection_Descending.Text" xml:space="preserve">
     <value>Descending</value>
   </data>
+  <data name="SortDirection_Increase.Text" xml:space="preserve">
+    <value>Ascending</value>
+  </data>
+  <data name="SortDirection_Decrease.Text" xml:space="preserve">
+    <value>Descending</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>Details</value>
   </data>
@@ -1065,6 +1071,21 @@
   </data>
   <data name="Settings_MpkgName_ByWorkshopId.Content" xml:space="preserve">
     <value>Workshop ID</value>
+  </data>
+  <data name="Settings_MpkgReduction_Header.Text" xml:space="preserve">
+    <value>Texture reduction</value>
+  </data>
+  <data name="Settings_MpkgReduction_Tip.Content" xml:space="preserve">
+    <value>Applies only to the right-click "Convert to mobile" action; presets match Wallpaper Engine mobile</value>
+  </data>
+  <data name="Settings_MpkgReduction_None.Content" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Settings_MpkgReduction_X2.Content" xml:space="preserve">
+    <value>2x</value>
+  </data>
+  <data name="Settings_MpkgReduction_X4.Content" xml:space="preserve">
+    <value>4x</value>
   </data>
   <data name="Settings_SceneHeader.Text" xml:space="preserve">
     <value>Scene Wallpapers</value>

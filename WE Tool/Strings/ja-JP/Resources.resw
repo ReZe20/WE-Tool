@@ -312,6 +312,12 @@
   <data name="SortDirection_Descending.Text" xml:space="preserve">
     <value>降順</value>
   </data>
+  <data name="SortDirection_Increase.Text" xml:space="preserve">
+    <value>昇順</value>
+  </data>
+  <data name="SortDirection_Decrease.Text" xml:space="preserve">
+    <value>降順</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>詳細パネル</value>
   </data>
@@ -1200,6 +1206,12 @@ project.json とプレビューをコピー
   </data>
   <data name="AppBarButton_ImportToEditor.Label" xml:space="preserve">
     <value>プロジェクトをインポート</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.Label" xml:space="preserve">
+    <value>モバイル版に変換</value>
+  </data>
+  <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
+    <value>このシーン壁紙を、Wallpaper Engine Android 版がインポートできる .mpkg にパックします。出力は抽出フォルダーに保存されます</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>壁紙を1枚以上選択してください</value>

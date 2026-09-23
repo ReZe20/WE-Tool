@@ -312,6 +312,12 @@
   <data name="SortDirection_Descending.Text" xml:space="preserve">
     <value>降序</value>
   </data>
+  <data name="SortDirection_Increase.Text" xml:space="preserve">
+    <value>递增</value>
+  </data>
+  <data name="SortDirection_Decrease.Text" xml:space="preserve">
+    <value>递减</value>
+  </data>
   <data name="DetailsPanel.Text" xml:space="preserve">
     <value>详情面板</value>
   </data>
@@ -1066,6 +1072,21 @@
   <data name="Settings_MpkgName_ByWorkshopId.Content" xml:space="preserve">
     <value>用创意工坊 ID</value>
   </data>
+  <data name="Settings_MpkgReduction_Header.Text" xml:space="preserve">
+    <value>纹理缩小</value>
+  </data>
+  <data name="Settings_MpkgReduction_Tip.Content" xml:space="preserve">
+    <value>只对右键「转为移动版」生效，档位与 Wallpaper Engine 移动版的纹理缩小一致</value>
+  </data>
+  <data name="Settings_MpkgReduction_None.Content" xml:space="preserve">
+    <value>原始</value>
+  </data>
+  <data name="Settings_MpkgReduction_X2.Content" xml:space="preserve">
+    <value>2×</value>
+  </data>
+  <data name="Settings_MpkgReduction_X4.Content" xml:space="preserve">
+    <value>4×</value>
+  </data>
   <data name="Settings_SceneHeader.Text" xml:space="preserve">
     <value>场景壁纸目录结构</value>
   </data>
@@ -1656,13 +1677,16 @@
     <value>停止</value>
   </data>
   <data name="LoadPapers_ProjectDir.Content" xml:space="preserve">
-    <value>项目目录</value>
+    <value>用“项目目录”</value>
   </data>
   <data name="LoadPapers_ExportDir.Content" xml:space="preserve">
-    <value>导出目录</value>
+    <value>用“导出目录”</value>
   </data>
   <data name="LoadPapers_BrowseFolder.Content" xml:space="preserve">
     <value>选择文件夹</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>未设置</value>
   </data>
   <data name="LoadPapers_Resume.Label" xml:space="preserve">
     <value>恢复</value>

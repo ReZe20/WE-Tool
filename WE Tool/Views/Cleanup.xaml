@@ -183,12 +183,13 @@
             </ItemsRepeater>
         </wetool:CtrlAwareScrollView>
 
-        <!-- 底部 CommandBar: 重新扫描 + 清理全部 -->
+        <!-- 底部 CommandBar: 批量白名单/批量删除 | 白名单管理/重新扫描 | 清理全部
+             [2026-09-22] 常驻不折叠:列表清空时若隐藏整条,"白名单/重新扫描"就再无入口。
+             按钮可用性由 code-behind 的 SyncView 按卡片数决定。 -->
         <CommandBar x:Name="ActionBar" Grid.Row="2"
                     HorizontalAlignment="Right"
                     Background="Transparent"
-                    DefaultLabelPosition="Right"
-                    Visibility="Collapsed">
+                    DefaultLabelPosition="Right">
             <CommandBar.PrimaryCommands>
                 <!-- [分界 2026-09] 按功能分组:选区批量操作 | 常规操作 | 危险操作 -->
                 <!-- 多选操作(选中时显示) -->
@@ -220,7 +221,7 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton x:Uid="Cleanup_DeleteAll" Click="DeleteAllButton_Click">
+                <AppBarButton x:Name="DeleteAllButton" x:Uid="Cleanup_DeleteAll" Click="DeleteAllButton_Click" IsEnabled="False">
                     <AppBarButton.Icon>
                         <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="16" Height="16">
                             <wetool:ThemedAnimatedIcon.Source>

@@ -124,6 +124,10 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial int MpkgNameMode { get; set; }
 
+        /// <summary>转为移动版的纹理缩小档位：0=原始, 1=2×, 2=4×</summary>
+        [ObservableProperty]
+        public partial int MpkgReductionMode { get; set; }
+
         /// <summary>子文件夹模式下保持源目录结构：0=保持, 1=打平</summary>
         [ObservableProperty]
         public partial int KeepSubfolderStructure { get; set; }
@@ -544,6 +548,7 @@ namespace WE_Tool.ViewModels
             UseProjectName = _settings.Extract.UseProjectName;
             FlatFileNamingMode = _settings.Extract.FlatFileNamingMode;
             MpkgNameMode = _settings.Extract.MpkgNameMode;
+            MpkgReductionMode = _settings.Extract.MpkgReductionMode;
             KeepSubfolderStructure = _settings.Extract.KeepSubfolderStructure;
             OutputMode = _settings.Extract.OutputMode;
             CoverAllFiles = _settings.Extract.CoverAllFiles;
@@ -924,6 +929,7 @@ namespace WE_Tool.ViewModels
                     _settings.Extract.UseProjectName = UseProjectName;
                     _settings.Extract.FlatFileNamingMode = FlatFileNamingMode;
                     _settings.Extract.MpkgNameMode = MpkgNameMode;
+                    _settings.Extract.MpkgReductionMode = MpkgReductionMode;
                     _settings.Extract.KeepSubfolderStructure = KeepSubfolderStructure;
                     _settings.Extract.CoverAllFiles = OverwriteMode == 0;
                     _settings.Extract.TexExportMode = TexExportMode;
