@@ -912,9 +912,8 @@
                                             </ItemsRepeater.Layout>
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="models:ComponentInfo">
-                                                    <!-- 与 Papers 图标卡片一致:阴影层+圆角8卡片+图+title 条+角标+checkbox -->
+                                                    <!-- 与 Papers 图标卡片一致:圆角8卡片+图+title 条+角标+checkbox([去阴影 2026-09-26] 阴影层与 Translation 抬高已撤) -->
                                                     <Grid x:Name="ItemContainer">
-                                                        <Grid x:Name="ShadowCastGrid" Background="Transparent"/>
                                                         <Grid CornerRadius="8"
                                                               Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                                               PointerEntered="Item_PointerEntered"
@@ -924,7 +923,6 @@
                                                               RenderTransformOrigin="0.5,0.5"
                                                               x:Name="ItemRootGrid"
                                                               DataContext="{x:Bind}"
-                                                              Translation="0,0,64"
                                                               Loaded="ShadowRect_Loaded"
                                                               RightTapped="ComponentItem_RightTapped">
                                                             <!-- 布局撑高:UniformGridLayout 拉伸填满,Viewbox 占位保比例 -->

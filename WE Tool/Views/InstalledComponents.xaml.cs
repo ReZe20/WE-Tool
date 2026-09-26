@@ -497,7 +497,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
             DispatcherQueue.TryEnqueue(() => SortDirectionIcon_SyncSource("Loaded+队列"));
         };
 
-        // [同步 Papers] ItemsRepeater 容器就绪:设 Image.Source + Skia GIF 切换 + 阴影/角标初始化。
+        // [同步 Papers] ItemsRepeater 容器就绪:设 Image.Source + Skia GIF 切换 + 焦点与朗读接线。
         // 替代原 GridView 的 ContainerContentChanging。元素回收复用也触发。
         ComponentsRepeater.ElementPrepared += (s, e) =>
         {
@@ -523,14 +523,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 Log.Warning("[A11y] 未取到卡片标题节点 ItemTitleText,朗读去重未生效");
             root.GotFocus -= CardRoot_GotFocus;  // 幂等:容器回收复用会重复走到这里,先减后加避免订阅叠加
             root.GotFocus += CardRoot_GotFocus;
-            // [外观] ThemeShadow 初始化(原 ShadowRect_Loaded 的阴影部分):ItemRootGrid 投影到 ShadowCastGrid
-            if (root.FindName("ItemRootGrid") is Grid itemRootGrid && itemRootGrid.Shadow is not ThemeShadow)
-            {
-                var shadow = new ThemeShadow();
-                if (root.FindName("ShadowCastGrid") is Grid shadowCastGrid)
-                    shadow.Receivers.Add(shadowCastGrid);
-                itemRootGrid.Shadow = shadow;
-            }
             // [同步 Papers 2026-09] 卡片图源统一装载(GIF → Skia 流式播放,静态图 → 按卡片尺寸解码);
             // 图标模式与内容模式走同一实现,仅解码宽度不同。
             ApplyComponentPreview(root, item, IconPreviewDecodeWidth);
@@ -3052,21 +3044,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
     {
         if (sender is FrameworkElement casterElement)
         {
-            if (casterElement.Shadow is ThemeShadow themeShadow)
-            {
-                if (VisualTreeHelper.GetParent(casterElement) is Grid parentContainer)
-                {
-                    var receiverGrid = parentContainer.FindName("ShadowCastGrid") as Grid;
-
-                    if (receiverGrid != null)
-                    {
-                        if (!themeShadow.Receivers.Contains(receiverGrid))
-                        {
-                            themeShadow.Receivers.Add(receiverGrid);
-                        }
-                    }
-                }
-            }
             if (casterElement is Grid grid && grid.DataContext is ComponentInfo item)
             {
                 UpdateItemCheckBoxOpacity(grid, item);
@@ -3347,7 +3324,7 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 scaleAnimation.DampingRatio = 0.6f;
                 scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
                 visual.StartAnimation("Scale", scaleAnimation);
-                // [悬停阴影,同步 Papers] 不添加悬停阴影层:ElementPrepared 常驻阴影一层
+                // [悬停,同步 Papers] 悬停只做 Scale 放大:卡片本身不再有投影层(2026-09-26 撤掉),不再叠悬停阴影
 
                 Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
                 if (itemVisual?.Parent is ContainerVisual parentVisual)
@@ -3368,8 +3345,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
 
             ApplyScaleAnimation(grid, 1.0f);
             UpdateItemCheckBoxOpacity(grid, item);
-
-            // [阴影常驻,同步 Papers] 不再移除阴影(ElementPrepared 常驻创建)
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -3406,7 +3381,6 @@ public sealed partial class InstalledComponents : Page, INotifyPropertyChanged
                 {
                     Canvas.SetZIndex(capturedUiElement, 0);
                 }
-                grid.Translation = new Vector3(0f, 0f, 64f);
             });
         }
     }

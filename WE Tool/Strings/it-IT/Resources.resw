@@ -1958,4 +1958,133 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>L'unità che contiene la libreria Workshop non è NTFS. Il backup automatico (hard link) non funziona su questa unità, quindi non è stato installato.</value>
   </data>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} in coda</value>
+  </data>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>Sfondi da convertire</value>
+  </data>
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
+    <value>Riduzione texture</value>
+  </data>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>Imposta la riduzione per tutti gli sfondi</value>
+  </data>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Qualunque livello scegli con questo slider, tutti gli sfondi nella lista verranno ridotti a quel livello. Poi potrai comunque ritoccare un singolo sfondo.</value>
+  </data>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Riduzione texture di questo sfondo</value>
+  </data>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>Rimuovi questo sfondo dalla lista</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Toglie questo sfondo dalla lista, senza eliminare i file sul PC.</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>La riduzione decide anche come vengono salvate le texture: a 1× non vengono né ridotte né compresse; a 2× e 4× prima si riducono, poi si comprimono in formato ETC2.</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>Svuota la lista</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>Avvia conversione</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>Parametri personalizzati</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Se lo attivi, in ogni riga compare una freccetta: cliccala per impostare da solo i parametri di quello sfondo (oltre alla riduzione ce ne sono altri sette). Se lo disattivi, tutte le righe si richiudono e i parametri impostati singolarmente vengono cancellati.</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>Espandi i parametri di questo sfondo</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Modifica i parametri solo di questo sfondo, senza toccare gli altri.</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>Conserva i file audio</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Mette nel pacchetto anche i file audio dello sfondo. Sul telefono l'audio degli sfondi non si sente, quindi attivarlo serve solo a ingrandire il pacchetto: di solito si usa per fare un confronto.</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>Comprimi texture (LZ4)</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Se lo disattivi le texture non vengono compresse e il pacchetto di solito diventa varie volte più grande. Se è attivo si decide texture per texture: quelle che non si rimpiccioliscono restano senza compressione, così le immagini piccole non crescono senza motivo.</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>Correggi sintassi shader</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Se lo disattivi, gli shader vengono salvati nel pacchetto con la scrittura della versione PC. Il telefono controlla in modo più severo, quindi potrebbero non compilare e il livello corrispondente a schermo diventerebbe un riquadro bianco. Ti conviene lasciarlo attivo.</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>Compressione ETC2</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Comprime in formato ETC2 anche le texture già ridotte: il pacchetto può ridursi ancora di circa quattro volte e il telefono lo riconosce senza problemi.</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>Prima imposta la riduzione su 2× o 4×: senza ridurre le texture la compressione ETC2 non si può usare.</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>Ripristina predefiniti</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Cancella i parametri impostati da soli per questo sfondo e lo riporta a seguire l'impostazione comune che trovi in fondo alla lista. La sua riduzione non cambia.</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>Copia texture originali</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Le texture non cambiano nemmeno in un byte: il pacchetto che ottieni ha solo un contenitore diverso e a schermo è identico alla versione PC. Serve per i confronti: quando il telefono mostra male le immagini, inizia da qui per capire se il problema viene dalle texture. Se è attivo la riduzione non ha effetto (la conversione te lo segnala), mentre la correzione degli shader procede come sempre.</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>Riduci anche le texture DXT</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Le texture in formato DXT di default restano originali, perché occupano già meno dei formati senza compressione. Se lo attivi, anche queste vengono decodificate, ridotte e salvate di nuovo; se lo attivi da solo, senza la compressione ETC2, il pacchetto può persino diventare più grande.</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>Nome del file</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>Titolo</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>Questo sfondo non ha un ID Workshop (gli sfondi importati o caricati a mano non ce l'hanno), quindi il file può prendere il nome solo dal titolo.</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Cambia solo il nome del file .mpkg sul PC, non il contenuto del pacchetto. Il nome che vedi sul telefono viene dalle informazioni dentro il pacchetto, non dal nome del file; gli sfondi senza ID Workshop passano da soli al titolo.</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>Una volta scelto, tutti gli sfondi nella lista prendono il nome in questo modo; se avevi cambiato il nome a qualcuno di essi, ora torna a seguire questa impostazione. Cambia solo il nome dei file sul PC, non il contenuto dei pacchetti.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>Con le impostazioni attuali, nessuna delle {0} texture di questo sfondo si ridurrà (le texture in formato DXT sono circa il {1}% del loro peso totale). Per farlo davvero diminuire, attiva "Riduci anche le texture DXT" oppure scegli una riduzione con compressione ETC2.</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>"Copia texture originali" è attivo: le {0} texture vengono messe nel pacchetto con i dati di partenza, senza ricodifica (le texture in formato DXT sono circa il {1}% del loro peso totale).</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>Con le impostazioni attuali di questo sfondo si ridurranno solo {0} texture (su {1} in totale); le altre restano come sono.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>Nessuna texture ridotta</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>Texture copiate integralmente</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>Solo {0}/{1} texture ridotte</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>Non impostato</value>
+  </data>
 </root>

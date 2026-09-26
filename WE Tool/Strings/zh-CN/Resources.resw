@@ -306,7 +306,7 @@
   <data name="SortBySubTime.Text" xml:space="preserve">
     <value>订阅时间</value>
   </data>
-<data name="SortDirection_Ascending.Text" xml:space="preserve">
+  <data name="SortDirection_Ascending.Text" xml:space="preserve">
     <value>升序</value>
   </data>
   <data name="SortDirection_Descending.Text" xml:space="preserve">
@@ -651,7 +651,6 @@
   <data name="Dark.Content" xml:space="preserve">
     <value>深色</value>
   </data>
-
   <data name="NavigationMode.Header" xml:space="preserve">
     <value>导航模式</value>
   </data>
@@ -1063,29 +1062,38 @@
   <data name="Settings_FlattenStructure.Content" xml:space="preserve">
     <value>所有文件存于同一文件夹</value>
   </data>
-  <data name="Settings_MpkgName_Header.Text" xml:space="preserve">
-    <value>移动版包名</value>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>待转换的壁纸</value>
   </data>
-  <data name="Settings_MpkgName_ByTitle.Content" xml:space="preserve">
-    <value>用壁纸标题</value>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} 项待转</value>
   </data>
-  <data name="Settings_MpkgName_ByWorkshopId.Content" xml:space="preserve">
-    <value>用创意工坊 ID</value>
-  </data>
-  <data name="Settings_MpkgReduction_Header.Text" xml:space="preserve">
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
     <value>纹理缩小</value>
   </data>
-  <data name="Settings_MpkgReduction_Tip.Content" xml:space="preserve">
-    <value>只对右键「转为移动版」生效，档位与 Wallpaper Engine 移动版的纹理缩小一致</value>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>统一设置所有壁纸的缩小倍数</value>
   </data>
-  <data name="Settings_MpkgReduction_None.Content" xml:space="preserve">
-    <value>原始</value>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>把这个滑块调到哪一档，列表里所有壁纸就都按那一档缩小。之后仍然可以单独调整其中某一张。</value>
   </data>
-  <data name="Settings_MpkgReduction_X2.Content" xml:space="preserve">
-    <value>2×</value>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>这张壁纸的纹理缩小倍数</value>
   </data>
-  <data name="Settings_MpkgReduction_X4.Content" xml:space="preserve">
-    <value>4×</value>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>从列表中移除这张壁纸</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>把这张壁纸移出列表，不会删除电脑上的文件。</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>缩小倍数同时决定纹理用什么方式保存：1× 不缩小也不压缩；2× 和 4× 会先把纹理缩小，再压缩成 ETC2 格式。</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>清空列表</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>开始转换</value>
   </data>
   <data name="Settings_SceneHeader.Text" xml:space="preserve">
     <value>场景壁纸目录结构</value>
@@ -1235,7 +1243,7 @@
     <value>转为移动版</value>
   </data>
   <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
-    <value>打包成手机版 Wallpaper Engine 能导入的 .mpkg，输出到提取目录</value>
+    <value>把选中的壁纸加进待转队列，选好档位后打包成手机版 Wallpaper Engine 能导入的 .mpkg（输出到提取目录）</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>选择一张或多张壁纸</value>
@@ -1955,23 +1963,18 @@
   <data name="BackupPage_CardOpenFolder.ToolTipService.ToolTip" xml:space="preserve">
     <value>打开此备份的目录</value>
   </data>
-
   <data name="Settings_OutputType_ImageOnly.Text" xml:space="preserve">
     <value>仅输出媒体文件</value>
   </data>
-
   <data name="Settings_MediaExportImages.Text" xml:space="preserve">
     <value>图片/动图</value>
   </data>
-
   <data name="Settings_MediaExportVideos.Text" xml:space="preserve">
     <value>视频</value>
   </data>
-
   <data name="Settings_MediaExportAudios.Text" xml:space="preserve">
     <value>音频</value>
   </data>
-
   <data name="Settings_MediaFilterTransparent.Text" xml:space="preserve">
     <value>过滤透明图片</value>
   </data>
@@ -1983,5 +1986,98 @@
   </data>
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>创意工坊库所在磁盘不是 NTFS 格式，自动备份（硬链接）无法在该磁盘上工作，因此未安装。</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>自定义参数</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>打开后，每张壁纸那一行会出现一个箭头，点它可以单独设置这张壁纸的参数（缩小倍数以外还有七项）。关闭时所有行会一起收起，这些单独设置过的参数也会一并清除。</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>展开这张壁纸的详细参数</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>单独设置这张壁纸的参数，只影响这一张。</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>保留音频文件</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>压缩纹理（LZ4）</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>修正着色器写法</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>ETC2 压缩</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>需要先把缩小倍数调到 2× 或 4×。纹理不缩小时用不了 ETC2 压缩。</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>恢复默认</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>把壁纸自带的音频文件一起放进移动包。手机上壁纸的音频不会发声，所以打开它只是让包变大，一般在需要对照测试时才用。</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>关闭后纹理不再压缩，包通常会大好几倍。打开时按每张纹理分别判断：压不小下来的就不压缩，所以小图不会白白变大。</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>关闭后着色器按电脑版的写法原样打包。手机的判断更严格，这类写法可能通不过编译，画面上对应的那一层会变成一块白色。建议保持打开。</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>把缩小之后的纹理再压缩成 ETC2 格式，包的大小可以再降到约四分之一，手机可以正常识别。</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>清除这张壁纸上单独设置过的参数，改回跟随列表底部的统一设置。它的缩小倍数保持不变。</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>纹理原样保留</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>纹理一个字节都不改，画面跟电脑版一致。手机上显示不对时，先用它判断问题是不是出在纹理上。开着时「缩小倍数」「ETC2 压缩」「同时缩小 DXT 纹理」「压缩纹理（LZ4）」都不生效，关掉会恢复你原先的选项。</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>同时缩小 DXT 纹理</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>DXT 格式的纹理默认原样保留，因为它本身已经比未压缩的格式省空间。打开后这一类纹理也会解压、缩小再重新保存；不配合 ETC2 压缩单独打开时，包反而可能变大。</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>命名方式</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>标题</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>这张壁纸没有创意工坊 ID（自行导入或自己上传的壁纸都没有），只能按壁纸标题命名。</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>只改电脑上这个 .mpkg 文件的名称，不影响包里的内容。手机上显示的壁纸名来自包内自带的信息，与文件名无关；没有创意工坊 ID 的壁纸会自动改用标题。</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>选定后，列表里所有壁纸都按这个方式命名，某一张之前单独改过的名称会恢复成跟随这里。它只改电脑上的文件名，不影响包里的内容。</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>按现在的设置，这张壁纸的 {0} 张纹理一张都不会缩小（其中 DXT 格式的纹理约占总纹理体积的 {1}%）。想让它真正变小，请打开「同时缩小 DXT 纹理」，或者改用带 ETC2 压缩的倍数。</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>已打开「纹理原样保留」：{0} 张纹理按原始数据打包，不重新编码（其中 DXT 格式的纹理约占总纹理体积的 {1}%）。</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>按现在的设置，这张壁纸只能缩小 {0} 张纹理（共 {1} 张），其余的按原样保留。</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>不会缩小任何纹理</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>纹理原样打包</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>只有 {0}/{1} 张纹理会缩小</value>
   </data>
 </root>

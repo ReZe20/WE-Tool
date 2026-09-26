@@ -1063,29 +1063,38 @@
   <data name="Settings_FlattenStructure.Content" xml:space="preserve">
     <value>All files in the same folder</value>
   </data>
-  <data name="Settings_MpkgName_Header.Text" xml:space="preserve">
-    <value>Mobile package name</value>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>Mobile conversion queue</value>
   </data>
-  <data name="Settings_MpkgName_ByTitle.Content" xml:space="preserve">
-    <value>Wallpaper title</value>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} queued</value>
   </data>
-  <data name="Settings_MpkgName_ByWorkshopId.Content" xml:space="preserve">
-    <value>Workshop ID</value>
-  </data>
-  <data name="Settings_MpkgReduction_Header.Text" xml:space="preserve">
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
     <value>Texture reduction</value>
   </data>
-  <data name="Settings_MpkgReduction_Tip.Content" xml:space="preserve">
-    <value>Applies only to the right-click "Convert to mobile" action; presets match Wallpaper Engine mobile</value>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>Set the preset for every queued wallpaper</value>
   </data>
-  <data name="Settings_MpkgReduction_None.Content" xml:space="preserve">
-    <value>Original</value>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Moving this applies the preset to all rows in the queue; you can still tweak each row afterwards</value>
   </data>
-  <data name="Settings_MpkgReduction_X2.Content" xml:space="preserve">
-    <value>2x</value>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Texture reduction preset</value>
   </data>
-  <data name="Settings_MpkgReduction_X4.Content" xml:space="preserve">
-    <value>4x</value>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>Remove from queue</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Remove this wallpaper from the queue</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>The preset also changes the format: Original keeps RGBA8, 2x/4x re-encode textures to ETC2</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>Convert</value>
   </data>
   <data name="Settings_SceneHeader.Text" xml:space="preserve">
     <value>Scene Wallpapers</value>
@@ -1235,7 +1244,7 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
     <value>Convert to Mobile</value>
   </data>
   <data name="AppBarButton_ConvertToMobile.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Pack this scene wallpaper into a .mpkg that Wallpaper Engine for Android can import; output goes to the extract folder</value>
+    <value>Add the selected wallpapers to the conversion queue; they get packed into .mpkg files that Wallpaper Engine for Android can import, in the extract folder</value>
   </data>
   <data name="NoSelectionHint.Text" xml:space="preserve">
     <value>Select one or more wallpapers</value>
@@ -1980,5 +1989,101 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>The drive containing the workshop library is not NTFS. Auto-backup (hard links) cannot work on this drive, so it was not installed.</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Adds a chevron to every row: expand it to change that wallpaper's packing parameters - the seven switches beyond the tier. Turning this off collapses every row and clears those per-row overrides.</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>Show packing options for this row</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Packing options for this wallpaper only</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>Keep audio</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>LZ4-compress textures</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>Shader compatibility rewrite</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>ETC2 texture encoding</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>ETC2 is only selectable at 2x/4x: the original tier ships RGBA8, byte-aligned with real device packages.</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>Reset to global</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keeps sounds/*.mp3 in the package. Wallpaper audio is silent on the phone (2/2 device repro), so this only makes the file larger — use it to compare dropped vs kept.</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Off stops compressing textures and the package is usually 5-8x larger. On means per-entry best-of: anything that does not shrink is written with lz=0, which is what WE does for 180x180 icons.</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Off sends desktop GLSL verbatim. An integer literal in a float context fails to compile on mobile, and that material layer falls back to its base texture - it renders as a white block.</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Encodes the reduced pixels as ETC2 RGBA8 (fmt5, 1 byte/pixel), about 4x smaller again. On the device-verified texture: mean channel error 0.39 / PSNR 41.6dB, against WE's own 2.36 / 24.2dB at the same tier.</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Clears every per-row override on this row and goes back to the global values. The tier slider keeps its own setting.</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>Copy textures (no materialize)</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keeps every texture byte for byte, so the picture matches the PC version. When something looks wrong on the phone, use this to tell whether the textures are the cause. While it is on, the reduction preset, ETC2 texture encoding, Downscale DXT textures and LZ4-compress textures do nothing; turn it off and your earlier picks come back.</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>Downscale DXT textures</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Decodes and resizes DXT1/3/5 payloads too, still emitting RGBA8. By default DXT is only resized together with ETC2 - that pairing is the phone-verified one. DXT costs fewer bytes per pixel than RGBA8, so with ETC2 off this alone can make the package bigger than it started.</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>Rename file</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>This wallpaper has no workshop ID (imported and local ones never do), so it can only be named by title.</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Changes only the .mpkg file name on disk, never the package contents. The name shown on the phone comes from the project.json inside the package, not from here; rows without an ID fall back to the title by themselves.</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>Puts every row back to "follow the master" and makes this choice the default. It only affects the produced file name, not the package contents.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>This tier cannot shrink any texture: all {0} .tex entries are in formats that are copied unchanged (DXT accounts for {1}% of the bytes). To include them, enable "Downscale DXT textures" or pick a tier that encodes to ETC2.</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>"Copy textures" is enabled: all {0} .tex entries keep their original bytes and are not re-encoded (DXT accounts for {1}% of the bytes).</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>This tier shrinks only {0}/{1} texture entries; the rest are kept unchanged.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>No textures can be shrunk</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>Textures copied as-is</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>Only {0}/{1} textures shrink</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>Not set</value>
   </data>
 </root>

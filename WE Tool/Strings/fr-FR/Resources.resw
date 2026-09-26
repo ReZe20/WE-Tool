@@ -1768,7 +1768,7 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
     <value>Retirer la sélection ({0})</value>
   </data>
   <data name="ScanCache.Description" xml:space="preserve">
-    <value>Le cache d'analyse accélère le扫描 du programme</value>
+    <value>Le cache de scan accélère le scan du programme</value>
   </data>
   <data name="WindowBehavior.Header" xml:space="preserve">
     <value>Comportement de la fenêtre</value>
@@ -1957,5 +1957,134 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   </data>
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>Le lecteur contenant la bibliothèque Workshop n'est pas en NTFS. La sauvegarde automatique (liens physiques) ne fonctionne pas sur ce lecteur ; elle n'a donc pas été installée.</value>
+  </data>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} en attente</value>
+  </data>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>Fonds d'écran à convertir</value>
+  </data>
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
+    <value>Réduction des textures</value>
+  </data>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>Appliquer la même réduction à tous les fonds d'écran</value>
+  </data>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Le palier choisi ici s'applique à tous les fonds d'écran de la liste ; vous pourrez ensuite affiner chaque ligne séparément.</value>
+  </data>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Facteur de réduction des textures de ce fond d'écran</value>
+  </data>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>Retirer ce fond d'écran de la liste</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Retire ce fond d'écran de la liste, sans supprimer les fichiers sur votre PC.</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>Le facteur de réduction détermine aussi le format des textures : 1× = ni réduction ni compression ; 2× et 4× = textures réduites puis compressées en ETC2.</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>Vider la liste</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>Démarrer la conversion</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>Paramètres personnalisés</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Une flèche apparaît alors sur chaque ligne pour régler ce fond d'écran à part (sept options en plus du facteur de réduction). En refermant, toutes les lignes se replient et ces réglages individuels sont effacés.</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>Afficher les réglages détaillés de ce fond d'écran</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Réglez ce fond d'écran individuellement, sans toucher aux autres.</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>Conserver l'audio</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ajoute les fichiers audio du fond d'écran au paquet mobile. Sur téléphone, l'audio d'un fond d'écran reste muet : cette option ne fait qu'alourdir le fichier et sert surtout aux tests comparatifs.</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>Compresser les textures (LZ4)</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Sans cette option, les textures ne sont plus compressées et le paquet est souvent plusieurs fois plus gros. Avec, chaque texture est jugée séparément : celles qui n'y gagnent rien ne sont pas compressées, donc les petites images ne grossissent pas pour rien.</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>Corriger les shaders</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Désactivée, les shaders sont empaquetés tels quels, à la manière PC. Le compilateur mobile est plus strict et ce type d'écriture peut échouer : la couche concernée s'affiche alors en blanc. Mieux vaut la laisser activée.</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>Compression ETC2</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Compresse les textures déjà réduites au format ETC2 : le paquet peut encore descendre à environ un quart de sa taille, et le téléphone les lit correctement.</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>Placez d'abord la réduction sur 2× ou 4× : sans réduction, la compression ETC2 est impossible.</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>Revenir aux valeurs par défaut</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Efface les réglages individuels de ce fond d'écran, qui suit de nouveau le réglage commun en bas de la liste. Son facteur de réduction reste inchangé.</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>Textures à l'identique</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pas un octet des textures n'est modifié : seul le contenant change et le rendu reste identique à la version PC. Sert de référence : si l'affichage est incorrect sur téléphone, cela permet de voir si le problème vient bien des textures. Activée, le facteur de réduction ne s'applique plus (un message le signale pendant la conversion), la correction des shaders se poursuit normalement.</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>Réduire aussi les DXT</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Par défaut, les textures DXT restent telles quelles, car elles occupent déjà moins de place qu'un format non compressé. Activée, elles sont décompressées, réduites puis enregistrées de nouveau ; sans la compression ETC2 à côté, le paquet peut au contraire grossir.</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>Nom du fichier</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>Titre</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>Aucun ID Atelier pour ce fond d'écran (ni les imports ni les envois personnels n'en ont) : seul le titre peut servir de nom.</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Change uniquement le nom du fichier .mpkg sur votre PC, jamais le contenu du paquet. Le nom affiché sur téléphone vient des informations contenues dans le paquet, pas du nom de fichier ; un fond d'écran sans ID Atelier reprend son titre automatiquement.</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>Tous les fonds d'écran de la liste utilisent ce mode de nommage, et un nom réglé à part revient le suivre ici. Seuls les noms de fichiers sur votre PC changent, le contenu des paquets reste inchangé.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>Avec ces réglages, aucune des {0} textures de ce fond d'écran ne sera réduite (les DXT représentent environ {1} % du poids des textures). Pour les réduire vraiment, activez « Réduire aussi les DXT » ou choisissez un palier avec compression ETC2.</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>« Textures à l'identique » est activé : les {0} textures sont empaquetées avec leurs octets d'origine, sans réencodage (les DXT représentent environ {1} % du poids des textures).</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>Avec ces réglages, seules {0} textures sur {1} seront réduites ; les autres restent telles quelles.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>Aucune texture réduite</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>Textures à l'identique</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>Seules {0}/{1} textures réduites</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>Non défini</value>
   </data>
 </root>

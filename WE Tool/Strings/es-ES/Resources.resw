@@ -1958,4 +1958,133 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>La unidad que contiene la biblioteca del Workshop no es NTFS. La copia de seguridad automática (vínculos físicos) no funciona en esta unidad, por lo que no se instaló.</value>
   </data>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} en cola</value>
+  </data>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>Fondos por convertir</value>
+  </data>
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
+    <value>Reducción de texturas</value>
+  </data>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>Definir el nivel de reducción para todos los fondos</value>
+  </data>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>El nivel que seleccione aquí se aplica a todos los fondos de la lista; después podrá ajustar cada fondo por separado.</value>
+  </data>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Nivel de reducción de texturas de este fondo</value>
+  </data>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>Quitar este fondo de la lista</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Quita este fondo de la lista. No se elimina ningún archivo del equipo.</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>El nivel también decide cómo se guardan las texturas: 1× no reduce ni comprime; 2× y 4× reducen la textura y la comprimen en formato ETC2.</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>Vaciar la lista</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>Iniciar conversión</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>Parámetros personalizados</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Al activarlo aparece una flecha en cada fila de la lista; ábrala para ajustar los parámetros de ese fondo (siete opciones además del nivel de reducción). Al desactivarlo se cierran todas las filas y se eliminan esos ajustes personalizados.</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>Mostrar los parámetros de este fondo</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ajusta los parámetros solo de este fondo.</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>Conservar audio</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>Comprimir texturas (LZ4)</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>Corregir shaders</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>Compresión ETC2</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>Seleccione antes 2× o 4×. Con las texturas sin reducir no se puede comprimir en ETC2.</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>Restablecer</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Incluye en el paquete móvil los archivos de audio del fondo. En el móvil el audio del fondo no suena, así que activarlo solo aumenta el tamaño; úselo para comparar resultados.</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Si lo desactiva, las texturas dejan de comprimirse y el paquete suele multiplicar su tamaño por varias veces. Al activarlo se comprueba textura por textura: la que no se reduce se guarda sin comprimir, así que las imágenes pequeñas no crecen sin motivo.</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Si lo desactiva, los shaders se empaquetan tal cual están en la versión de PC. El móvil comprueba el código con más rigor y puede rechazarlo; la capa afectada se vería como un bloque blanco. Conviene mantenerlo activado.</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Vuelve a comprimir en ETC2 las texturas ya reducidas: el tamaño del paquete puede bajar a aproximadamente una cuarta parte. El móvil lo reconoce correctamente.</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Elimina los ajustes personalizados de este fondo y vuelve a seguir el valor común de la lista. Su nivel de reducción no cambia.</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>Copiar texturas tal cual</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>No cambia ni un byte de las texturas: el paquete solo cambia de contenedor y la imagen se ve igual que en el PC. Sirve como referencia: si el fondo se ve mal en el móvil, compruebe primero si el problema está en las texturas. Con esto activado el nivel de reducción no tiene efecto (se avisa al convertir) y los shaders se siguen corrigiendo.</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>Reducir también DXT</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Por defecto las texturas DXT se guardan sin cambios, porque ya ocupan menos que las no comprimidas. Si lo activa, estas texturas también se descomprimen, se reducen y se vuelven a guardar; sin compresión ETC2 puede que el paquete quede más grande.</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>Nombre del archivo</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>Título</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>Este fondo no tiene ID del Taller (tampoco lo tienen los importados ni los subidos por el usuario), así que solo se puede nombrar con el título.</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Solo cambia el nombre del archivo .mpkg en el equipo, no el contenido del paquete. El nombre que se ve en el móvil sale de la información incluida dentro del paquete, no del nombre del archivo; los fondos sin ID del Taller pasan automáticamente al título.</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>Todos los fondos de la lista se nombrarán con este método; los nombres ajustados de forma individual volverán a seguir esta opción. Solo cambia el nombre del archivo en el equipo, no el contenido del paquete.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>Con la configuración actual no se reducirá ninguna de las {0} texturas de este fondo (las DXT suponen alrededor del {1}% del tamaño total de las texturas). Para que baje de verdad, active "Reducir también DXT" o elija un nivel con compresión ETC2.</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>Está activada la opción "Copiar texturas tal cual": las {0} texturas se empaquetan con sus datos originales, sin recodificar (las DXT suponen alrededor del {1}% del tamaño total de las texturas).</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>Con la configuración actual solo se reducirán {0} texturas de este fondo (de {1} en total); las demás se mantienen sin cambios.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>No reduce ninguna textura</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>Texturas tal cual</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>Solo {0}/{1} texturas se reducen</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>Sin configurar</value>
+  </data>
 </root>

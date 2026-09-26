@@ -152,14 +152,25 @@ public class RepkgCliService
         return cleaned;
     }
 
-    /// <summary>壁纸级并发上限,与 repkg MpkgRunner.MaxWallpaperConcurrency 一致:单条物化后的 RGBA8 最大 250MB,按核数并发会吃穿内存。</summary>
-    private const int MaxMobileConcurrency = 2;
+    /// <summary>
+    /// 并发口径的唯一来源:设置里 0/未设 = 按核数。提取与移动版转换共用同一个数,别再各写一遍三元式。
+    ///
+    /// 移动版以前写死 2,理由是"壁纸级并发 × 单条物化 250MB 会把内存吃穿"。那条理由已经随 repkg 的
+    /// 条目级并行改造失效:现在同时在产的字节由"窗口 + >1MB 落盘"框住,驻留实测不随核数涨(75MB→73MB)。
+    /// 上限由 repkg 自己收(16),这里传多大都不会越过它。
+    /// </summary>
+    private static int ResolveThreads(ExtractSettings settings) =>
+        settings.MaxConcurrentExtractions > 0 ? settings.MaxConcurrentExtractions : Environment.ProcessorCount;
 
     /// <summary>
     /// pkg → mpkg(移动版)转换:复用 batch 的进程协议、事件路由与崩溃重启循环,manifest 换成 mode=mpkg。
-    /// settings 只需要四格有值:OneFolder/UseProjectName 决定输出布局,MpkgNameMode 决定 .mpkg 叫什么,
-    /// MpkgReductionMode 决定纹理缩多少;
-    /// 提取侧的过滤条件在这里一律不适用。不做提取侧的后处理——project.json/预览图由 repkg 直接打进包里,
+    /// settings 在这里只用两格:CoverAllFiles(=覆盖还是跳过)与 MaxConcurrentExtractions(并发);
+    /// 输出布局是固定的平铺 —— 每张壁纸的 .mpkg 直接落在 <paramref name="outputRoot"/> 下,不再一张一个子文件夹,
+    /// 同名靠 wallpapers[].outputName 加批内序号消歧。档位在每条自己的 options 里,默认值见 MpkgPackingDefaults。
+    /// mobileOptions 给的是逐壁纸的打包参数(队列面板每行自己挑的那档 + 自定义模式里动过的键),
+    /// 写了的键才进 wallpapers[].options,其余由 repkg 逐键回落全局 —— 所以整条队列一批发完,不再按档切批;
+    /// 提取侧的过滤条件在这里一律不适用。并发走 <see cref="ResolveThreads"/>（= 设置里"性能"那格，与提取同一个数）。
+    /// 不做提取侧的后处理——project.json/预览图由 repkg 直接打进包里,
     /// 再补文件反而会在包旁留下副本。
     /// </summary>
     public async Task ConvertToMobileAsync(
@@ -167,7 +178,8 @@ public class RepkgCliService
         string outputRoot,
         ExtractSettings settings,
         Action<string>? onProgress = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        IReadOnlyDictionary<WallpaperItem, MpkgEntryOptions>? mobileOptions = null)
     {
         int total = wallpapers.Count;
         if (total == 0) return;
@@ -192,13 +204,13 @@ public class RepkgCliService
         try
         {
             (crashed, gaveUpRemaining) = await RunBatchWithRestartAsync(
-                pending, outputRoot, settings, MaxMobileConcurrency, ReportProgress, ct, mobile: true);
+                pending, outputRoot, settings, ResolveThreads(settings), ReportProgress, ct,
+                mobile: true, mobileOptions: mobileOptions);
         }
         catch (OperationCanceledException)
         {
-            var cleaned = CleanupUnprocessedOutputFolders(pending, outputRoot, settings);
-            if (cleaned > 0)
-                Log.Information("[repkg] 已清理 {Count} 个空输出文件夹", cleaned);
+            // 不做提取侧那套"删掉没开始的空输出文件夹":平铺布局下没有每壁纸一个文件夹这回事,
+            // 唯一的路径就是输出根本身,删它等于删用户的目录。
             throw;
         }
 
@@ -211,6 +223,201 @@ public class RepkgCliService
             else
                 ReportProgress($"转换完成，共 {total} 个壁纸");
         }
+    }
+
+    /// <summary>
+    /// 只读探测:让 repkg 以 <c>mode: inspect</c> 扫一遍这些壁纸的包结构,回答"这一行选的档位到底会缩几条纹理"。
+    /// 它一个字节都不写(清单里连 output 都不给),也不参与转换的成败判定 —— 探不到就少一句提示,
+    /// 绝不能因为它而挡住、拖慢或弄坏"开始转换"。
+    /// <paramref name="rows"/> 的 Key 由调用方给定并原样回显,好把结果贴回对应的那一行。
+    /// </summary>
+    public async Task<Dictionary<string, MpkgProbe>> ProbeMobileAsync(
+        IReadOnlyList<(string Key, WallpaperItem Wallpaper, MpkgEntryOptions Options)> rows,
+        CancellationToken ct = default)
+    {
+        var result = new Dictionary<string, MpkgProbe>(StringComparer.Ordinal);
+        if (rows.Count == 0) return result;
+
+        var accum = new Dictionary<string, ProbeAccumulator>(StringComparer.Ordinal);
+        var gate = new object();
+        string? manifestPath = null;
+
+        try
+        {
+            manifestPath = WriteProbeManifest(rows);
+
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = Path.Combine(_repkgDir, "RePKG_Re.exe"),
+                    Arguments = $"batch --manifest \"{manifestPath}\"",
+                    WorkingDirectory = _repkgDir,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8
+                },
+                EnableRaisingEvents = true
+            };
+
+            process.OutputDataReceived += (_, e) =>
+            {
+                var line = e.Data;
+                if (string.IsNullOrEmpty(line) || !line.StartsWith('{')) return;
+                try
+                {
+                    using var doc = JsonDocument.Parse(line);
+                    lock (gate) ReadProbeEvent(doc.RootElement, accum);
+                }
+                catch (Exception ex) { Log.Debug(ex, "[mpkg探测] 事件行读不动: {Line}", line); }
+            };
+            // repkg 的 stderr 是它的读数(含 gate 那行),探测不需要它,但留着能解释"为什么一个结论都没有"
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data)) Log.Debug("[mpkg探测] {Msg}", e.Data);
+            };
+
+            process.Start();
+            var pid = process.Id;
+            _runningProcesses[pid] = process;
+            JobObjectManager.AddProcess(process.Handle);
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            try
+            {
+                await process.WaitForExitAsync(ct);
+            }
+            catch (OperationCanceledException)
+            {
+                if (!process.HasExited) process.Kill();
+                throw;
+            }
+            finally
+            {
+                _runningProcesses.TryRemove(pid, out _);
+                process.Dispose();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;  // 用户停了就是一停了,不装作"探测失败"
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[mpkg探测] 没跑成,这一轮不显示档位提示");
+        }
+        finally
+        {
+            if (manifestPath != null) try { File.Delete(manifestPath); } catch { }
+        }
+
+        lock (gate)
+        {
+            foreach (var (key, a) in accum) result[key] = a.ToResult();
+        }
+
+        Log.Information("[mpkg探测] 送 {Rows} 行 → 有结论 {Got} 行(其中 {Stuck} 行缩不动)",
+            rows.Count, result.Count,
+            result.Values.Count(p => p.Tex > 0 && p.WouldReduce == 0 && !p.Failed));
+        return result;
+    }
+
+    /// <summary>一行 repkg inspect 事件 → 累到对应壁纸的聚合器上(一个壁纸可能出好几个包)。</summary>
+    private static void ReadProbeEvent(JsonElement root, Dictionary<string, ProbeAccumulator> accum)
+    {
+        var type = root.TryGetProperty("type", out var tp) ? tp.GetString() : null;
+        var id = root.TryGetProperty("id", out var ip) ? ip.GetString() : null;
+        if (id is null) return;
+
+        if (type == "error")
+        {
+            // 表读不动 / 一个包都没找到:标记一下,这一行就不给档位结论了(转换自己会报同一件事)
+            GetAccum(accum, id).Failed = true;
+            return;
+        }
+
+        if (type != "inspect") return;
+        var a = GetAccum(accum, id);
+        a.Packages++;
+        a.Tex += GetInt(root, "tex");
+        a.WouldReduce += GetInt(root, "wouldReduce");
+        a.Dxt += GetInt(root, "dxt");
+        a.DxtBytes += GetLong(root, "dxtBytes");
+        a.Bytes += GetLong(root, "bytes");
+        if (GetBool(root, "failed")) a.Failed = true;
+    }
+
+    private static ProbeAccumulator GetAccum(Dictionary<string, ProbeAccumulator> accum, string id)
+    {
+        if (!accum.TryGetValue(id, out var a)) accum[id] = a = new ProbeAccumulator();
+        return a;
+    }
+
+    private static int GetInt(JsonElement root, string name)
+        => root.TryGetProperty(name, out var v) && v.TryGetInt32(out var n) ? n : 0;
+
+    private static long GetLong(JsonElement root, string name)
+        => root.TryGetProperty(name, out var v) && v.TryGetInt64(out var n) ? n : 0;
+
+    private static bool GetBool(JsonElement root, string name)
+        => root.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.True;
+
+    /// <summary>探测清单:每行带自己的档位口径。全局那一块故意什么都不写 —— 探测只按条目回答。</summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonNode DOM 手写构造零反射,AOT 安全")]
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050", Justification = "JsonNode DOM 节点创建不涉及运行时反射")]
+    private static string WriteProbeManifest(
+        IReadOnlyList<(string Key, WallpaperItem Wallpaper, MpkgEntryOptions Options)> rows)
+    {
+        var wallpapersNode = new System.Text.Json.Nodes.JsonArray();
+        foreach (var (key, wallpaper, options) in rows)
+        {
+            wallpapersNode.Add(new System.Text.Json.Nodes.JsonObject
+            {
+                ["id"] = key,
+                ["input"] = wallpaper.FolderPath,
+                ["options"] = BuildMobileEntryOptions(options)
+            });
+        }
+
+        var manifest = new System.Text.Json.Nodes.JsonObject
+        {
+            // threads 故意不写:探测是只读、不物化像素的,让 repkg 按核数自己定 —— 这里再钉一个常数
+            // 就是给一条本来不占内存的路径加一道人工闸,而且它和转换那条路径的口径会分叉。
+            ["mode"] = "inspect",
+            ["wallpapers"] = wallpapersNode
+        };
+
+        var path = Path.Combine(Path.GetTempPath(),
+            $"repkg_probe_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, manifest.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        return path;
+    }
+
+    /// <summary>探测期间的逐包累加器(事件在输出线程上到达,所以只在锁内用)。</summary>
+    private sealed class ProbeAccumulator
+    {
+        public int Packages;
+        public int Tex;
+        public int WouldReduce;
+        public int Dxt;
+        public long DxtBytes;
+        public long Bytes;
+        public bool Failed;
+
+        public MpkgProbe ToResult() => new()
+        {
+            Packages = Packages,
+            Tex = Tex,
+            WouldReduce = WouldReduce,
+            Dxt = Dxt,
+            DxtBytes = DxtBytes,
+            Bytes = Bytes,
+            Failed = Failed,
+        };
     }
 
     /// <summary>转换的输入判据:得有 PC 的 .pkg。只有 .mpkg 的壁纸没什么可再打包的。</summary>
@@ -279,9 +486,7 @@ public class RepkgCliService
         var pkgWallpapers = pending.Where(w => HasPkgFiles(w.FolderPath!)).ToList();
         var copyWallpapers = pending.Where(w => !HasPkgFiles(w.FolderPath!)).ToList();
 
-        int maxThreads = settings.MaxConcurrentExtractions > 0
-            ? settings.MaxConcurrentExtractions
-            : Environment.ProcessorCount;
+        int maxThreads = ResolveThreads(settings);
 
         var batchTask = pkgWallpapers.Count > 0
             ? RunBatchWithRestartAsync(pkgWallpapers, outputRoot, settings, maxThreads, ReportProgress, ct)
@@ -328,9 +533,15 @@ public class RepkgCliService
         int maxThreads,
         Action<string> reportProgress,
         CancellationToken ct,
-        bool mobile = false)
+        bool mobile = false,
+        IReadOnlyDictionary<WallpaperItem, MpkgEntryOptions>? mobileOptions = null)
     {
-        var items = wallpapers.Select((w, i) => new BatchItem { Id = i.ToString(), Wallpaper = w }).ToList();
+        var items = wallpapers.Select((w, i) => new BatchItem
+        {
+            Id = i.ToString(),
+            Wallpaper = w,
+            EntryOptions = mobileOptions is not null && mobileOptions.TryGetValue(w, out var options) ? options : null
+        }).ToList();
         var idToItem = items.ToDictionary(x => x.Id, StringComparer.Ordinal);
         var pending = new HashSet<string>(items.Select(x => x.Id), StringComparer.Ordinal);
 
@@ -590,11 +801,11 @@ public class RepkgCliService
         // JsonNode 手写构造(DOM 零反射,AOT 安全):键名须保持小写与 repkg CLI 协议一致
         var wallpapersNode = new System.Text.Json.Nodes.JsonArray();
         outputPathsById = new Dictionary<string, string>(items.Count, StringComparer.Ordinal);
-        var usedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var usedStems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var x in items)
         {
-            var outputPath = GetOutputPath(outputRoot, x.Wallpaper, settings);
-            if (mobile) outputPath = MakeUniqueInBatch(outputPath, usedPaths);
+            // 移动版是平铺布局:.mpkg 直接落在输出根下,不再一张壁纸一个子文件夹
+            var outputPath = mobile ? outputRoot : GetOutputPath(outputRoot, x.Wallpaper, settings);
             outputPathsById[x.Id] = outputPath;
             var job = new System.Text.Json.Nodes.JsonObject
             {
@@ -602,8 +813,13 @@ public class RepkgCliService
                 ["input"] = x.Wallpaper.FolderPath,
                 ["output"] = outputPath
             };
-            // repkg 按这个主干命名产出的 .mpkg(它负责清洗非法字符,并在一个壁纸出多个包时消歧)
-            if (mobile) job["outputName"] = GetMpkgStem(x.Wallpaper, settings);
+            // repkg 按这个主干命名产出的 .mpkg(它负责清洗非法字符,并在一个壁纸出多个包时消歧)。
+            // 用标题还是用创意工坊 ID 可以逐行改,所以覆盖值取自这一行自己的 options。
+            // 平铺之后主干就是磁盘上唯一的区分,所以同批撞名在这里加序号 —— 以前由子文件夹隔开。
+            // 先按 repkg 那套字符清洗洗一遍再比,否则两个"洗完全一样"的标题会漏进同一格。
+            if (mobile) job["outputName"] = MakeUniqueStem(GetSafeName(GetMpkgStem(x.Wallpaper, x.EntryOptions?.NameMode)), usedStems);
+            // 条目级覆盖:队列面板「自定义模式」里动过的键才会出现在这里
+            if (mobile && x.EntryOptions is { } options) job["options"] = BuildMobileEntryOptions(options);
             wallpapersNode.Add(job);
         }
 
@@ -612,6 +828,12 @@ public class RepkgCliService
         manifest["threads"] = threads;
         manifest["wallpapers"] = wallpapersNode;
         manifest["options"] = mobile ? BuildMobileManifestOptions(settings) : BuildManifestOptions(settings);
+        if (mobile)
+            Log.Information("[mpkg清单] {Total} 条,{Override} 条带逐行覆盖,{Tier} 条非默认档,平铺输出到 {Output}",
+                items.Count,
+                items.Count(x => x.EntryOptions?.HasOverride == true),
+                items.Count(x => x.EntryOptions is { } o && o.Tier != MpkgPackingDefaults.Tier),
+                outputRoot);
 
         var path = Path.Combine(Path.GetTempPath(),
             $"repkg_batch_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}.json");
@@ -619,29 +841,52 @@ public class RepkgCliService
         return path;
     }
 
+    /// <summary>
+    /// 档位序号(0/1/2) → repkg 的档位预设名。三档"是什么"由 repkg 的 MpkgPresets 定,
+    /// 我们只报名字 —— 这条派生以前在两端各写一份(这里算一遍、repkg 校验时再算一遍)。
+    /// </summary>
+    private static string MpkgPresetName(int tier) => tier switch { 1 => "2x", 2 => "4x", _ => "1x" };
+
+    /// <summary>
+    /// 条目级 options:档位发预设名;其余键只有他真改过才写(没写的 repkg 逐键回落全局)。
+    /// ETC2 是例外中的例外 —— 预设本来就会带它,只有覆盖值才需要显式压过预设那一格。
+    /// 包名主干(<c>NameMode</c>)不在这里:它不是 repkg 的键,是我们自己算 <c>outputName</c> 时的一个输入。
+    /// </summary>
+    private static System.Text.Json.Nodes.JsonObject BuildMobileEntryOptions(MpkgEntryOptions o)
+    {
+        var node = new System.Text.Json.Nodes.JsonObject { ["preset"] = MpkgPresetName(o.Tier) };
+        if (o.EncodeEtc2 is { } etc2) node["mpkgEtc2"] = etc2;
+        if (o.KeepAudio is { } keepAudio) node["keepAudio"] = keepAudio;
+        if (o.UseLz4 is { } useLz4) node["noLz4"] = !useLz4;
+        if (o.ShaderCompat is { } shaderCompat) node["mpkgNoShaderCompat"] = !shaderCompat;
+        // 这两颗是正向说法 → repkg 的否定键,取反就在这一行,别再挪到别处去
+        if (o.CopyTextures is { } copyTextures) node["mpkgNoDematerialize"] = copyTextures;
+        if (o.ShrinkDx is { } shrinkDx) node["mpkgShrinkDx"] = shrinkDx;
+        return node;
+    }
+
     /// <summary>mode=mpkg 的 manifest options:提取侧的扩展名/目录过滤在这里都不适用,只留打包开关。</summary>
     private static System.Text.Json.Nodes.JsonObject BuildMobileManifestOptions(ExtractSettings settings) => new()
     {
         ["overwrite"] = settings.CoverAllFiles,
-        ["mpkgMagic"] = "PKGM0019",
+        ["mpkgMagic"] = MpkgPackingDefaults.Magic,
         // 移动端不消费壁纸音频(2/2 真机复现:手机上是静音的),留着只涨体积
-        ["keepAudio"] = false,
-        ["noLz4"] = false,
-        // WE 的下拉只有三档,除数只有 1/2/4 三种取值
-        ["mpkgReduction"] = settings.MpkgReductionMode switch { 1 => 2, 2 => 4, _ => 1 },
-        // 跟着缩小档走,不给独立开关:WE 自己就是「原始档发 RGBA8、2× 起把物化纹理转 ETC2(fmt5)」。
-        // 真机验过 ÷2+fmt5(平均通道误差 0.39/PSNR 41.6dB,优于 WE 同档的 2.36/24.2dB),体积再降约 4 倍。
-        // 原始档保持不编:那条路是逐字节对齐真机包的形态。
-        ["mpkgEtc2"] = settings.MpkgReductionMode > 0
+        ["keepAudio"] = MpkgPackingDefaults.KeepAudio,
+        ["noLz4"] = !MpkgPackingDefaults.UseLz4,
+        // WE 的下拉只有三档,直接报档名:除数与"要不要编 ETC2"的配对规则住在 repkg 里。
+        // 每条壁纸都会自带 preset,这一格只是"万一哪条没带上"的兜底。
+        ["preset"] = MpkgPresetName(MpkgPackingDefaults.Tier),
+        // 默认开改写 → 键本就是 false,写出来只为了让"全局这套"在清单里可读
+        ["mpkgNoShaderCompat"] = !MpkgPackingDefaults.ShaderCompat
     };
 
-    /// <summary>同批两张标题相同的壁纸会撞进同一个输出文件夹、写出同名 .mpkg 互相覆盖 —— 撞了就加序号(只在本批内去重,重转同一张壁纸仍走 overwrite)。</summary>
-    private static string MakeUniqueInBatch(string outputPath, HashSet<string> used)
+    /// <summary>平铺布局下同名壁纸会写出同一个 .mpkg 互相覆盖 —— 撞了就给主干加序号(只在本批内去重,重转同一张壁纸仍走 overwrite)。</summary>
+    private static string MakeUniqueStem(string stem, HashSet<string> used)
     {
-        if (used.Add(outputPath)) return outputPath;
+        if (used.Add(stem)) return stem;
         for (int seq = 2; ; seq++)
         {
-            var candidate = $"{outputPath}_{seq}";
+            var candidate = $"{stem}_{seq}";
             if (used.Add(candidate)) return candidate;
         }
     }
@@ -816,12 +1061,14 @@ public class RepkgCliService
     }
 
     /// <summary>
-    /// .mpkg 的文件名主干:MpkgNameMode==1 用创意工坊 ID(自制/导入的壁纸没有 ID,退回标题),否则用标题。
+    /// .mpkg 的文件名主干:nameMode==1 用创意工坊 ID(自制/导入的壁纸没有 ID,退回标题),否则用标题。
+    /// <paramref name="nameModeOverride"/> 是队列面板那一行的逐行覆盖,null = 用面板总控那一档。
     /// 非法文件名字符交给 repkg 清洗,这里只保证给出一个有意义的非空主干。
     /// </summary>
-    private static string GetMpkgStem(WallpaperItem wallpaper, ExtractSettings settings)
+    private static string GetMpkgStem(WallpaperItem wallpaper, int? nameModeOverride = null)
     {
-        if (settings.MpkgNameMode == 1 && !string.IsNullOrEmpty(wallpaper.WorkshopID)) return wallpaper.WorkshopID;
+        if ((nameModeOverride ?? MpkgPackingDefaults.NameMode) == 1 && !string.IsNullOrEmpty(wallpaper.WorkshopID))
+            return wallpaper.WorkshopID;
         if (!string.IsNullOrEmpty(wallpaper.Title)) return wallpaper.Title;
         if (!string.IsNullOrEmpty(wallpaper.WorkshopID)) return wallpaper.WorkshopID;
         var path = (wallpaper.FolderPath ?? "").TrimEnd('\\', '/');
@@ -1035,6 +1282,9 @@ public class RepkgCliService
     {
         public string Id { get; init; } = "";
         public WallpaperItem Wallpaper { get; init; } = null!;
+
+        /// <summary>mode=mpkg 的条目级覆盖(队列面板「自定义模式」里挑的那几个键);null = 这条全用全局值。</summary>
+        public MpkgEntryOptions? EntryOptions { get; init; }
     }
 
     /// <summary>单次 batch 进程的运行结果(崩溃检测与恢复依据)。</summary>

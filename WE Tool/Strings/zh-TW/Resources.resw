@@ -1958,4 +1958,133 @@
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>創意工坊庫所在磁碟不是 NTFS 格式，自動備份（硬連結）無法在該磁碟上運作，因此未安裝。</value>
   </data>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} 項待轉</value>
+  </data>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>待轉換的壁紙</value>
+  </data>
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
+    <value>紋理縮小</value>
+  </data>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>統一設定所有壁紙的縮小倍數</value>
+  </data>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>把這個滑桿調到哪一個倍數，清單裡所有壁紙就都按那個倍數縮小。之後仍然可以單獨調整其中一張。</value>
+  </data>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>這張壁紙的紋理縮小倍數</value>
+  </data>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>從清單中移除這張壁紙</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>把這張壁紙移出清單，不會刪除電腦上的檔案。</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>縮小倍數同時決定紋理用什麼方式儲存：1× 不縮小也不壓縮；2× 和 4× 會先把紋理縮小，再壓縮成 ETC2 格式。</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>清空清單</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>開始轉換</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>自訂參數</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>開啟後，每張壁紙那一行會出現一個箭頭，點它可以單獨設定這張壁紙的參數（縮小倍數以外還有七項）。關閉時所有行會一起收起，這些單獨設定過的參數也會一併清除。</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>展開這張壁紙的詳細參數</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>單獨設定這張壁紙的參數，只影響這一張。</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>保留音訊檔案</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>壓縮紋理（LZ4）</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>修正著色器寫法</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>ETC2 壓縮</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>需要先把縮小倍數調到 2× 或 4×。紋理不縮小時用不了 ETC2 壓縮。</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>恢復預設</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>把壁紙自帶的音訊檔案一併放進手機版封包。手機上壁紙的音訊不會發聲，所以開啟它只是讓封包變大，一般在需要對照測試時才用。</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>關閉後紋理不再壓縮，封包通常會大好幾倍。開啟時按每張紋理分別判斷：壓不小下來的就不壓縮，所以小圖不會白白變大。</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>關閉後著色器會按電腦版的寫法原樣打包。手機的判斷更嚴格，這類寫法可能通不過編譯，畫面上對應的那一層會變成一塊白色。建議保持開啟。</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>把縮小之後的紋理再壓縮成 ETC2 格式，封包大小可以再降到約四分之一，手機可以正常辨識。</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>清除這張壁紙上單獨設定過的參數，改回跟隨清單底部的統一設定。它的縮小倍數保持不變。</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>紋理原樣保留</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>紋理一個位元組都不改，輸出的封包只換了外殼，畫面與電腦版完全相同，用來做對照：手機上畫面顯示不對時，可以先用它判斷問題是不是出在紋理上。開啟時縮小倍數不會生效（轉換時會給出提示），著色器的修正照常進行。</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>同時縮小 DXT 紋理</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>DXT 格式的紋理預設原樣保留，因為它本身已經比未壓縮的格式省空間。開啟後這一類紋理也會解壓縮、縮小再重新儲存；不搭配 ETC2 壓縮單獨開啟時，封包反而可能變大。</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>命名方式</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>標題</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>這張壁紙沒有創意工坊 ID（自行匯入或自己上傳的壁紙都沒有），只能按壁紙標題命名。</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>只改電腦上這個 .mpkg 檔案的名稱，不影響封包裡的內容。手機上顯示的壁紙名來自封包內建的資訊，與檔案名稱無關；沒有創意工坊 ID 的壁紙會自動改用標題。</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>選定後，清單裡所有壁紙都按這個方式命名，某張之前單獨改過的名稱會恢復成跟隨這裡。它只改電腦上的檔案名稱，不影響封包裡的內容。</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>按現在的設定，這張壁紙的 {0} 張紋理一張都不會縮小（其中 DXT 格式的紋理約佔全部紋理體積的 {1}%）。想讓它真正變小，請開啟「同時縮小 DXT 紋理」，或改用帶 ETC2 壓縮的倍數。</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>已開啟「紋理原樣保留」：{0} 張紋理按原始資料打包，不重新編碼（其中 DXT 格式的紋理約佔全部紋理體積的 {1}%）。</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>按現在的設定，這張壁紙只能縮小 {0} 張紋理（共 {1} 張），其餘的原樣保留。</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>不會縮小任何紋理</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>紋理原樣打包</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>只有 {0}/{1} 張紋理會縮小</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>未設置</value>
+  </data>
 </root>

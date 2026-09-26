@@ -1958,4 +1958,133 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>A unidade que contém a biblioteca do Workshop não é NTFS. O backup automático (links físicos) não funciona nesta unidade, portanto não foi instalado.</value>
   </data>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} na fila</value>
+  </data>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>Papéis de parede para converter</value>
+  </data>
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
+    <value>Redução de texturas</value>
+  </data>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>Definir o fator de redução para todos os papéis de parede</value>
+  </data>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Qualquer nível que você escolher neste controle será aplicado a todos os papéis de parede da lista. Depois ainda dá para ajustar cada um individualmente.</value>
+  </data>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Fator de redução de texturas deste papel de parede</value>
+  </data>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>Remover este papel de parede da lista</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Tira este papel de parede da lista, sem apagar nenhum arquivo do computador.</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>O fator de redução também define como as texturas são salvas: 1× não reduz nem comprime; 2× e 4× primeiro reduzem as texturas e depois as comprimem no formato ETC2.</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>Limpar lista</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>Iniciar conversão</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>Parâmetros personalizados</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Quando ativado, cada linha da lista ganha uma seta; clique nela para ajustar os parâmetros daquele papel de parede (além do fator de redução, são mais sete). Ao desativar, todas as linhas se recolhem e esses ajustes individuais são apagados junto.</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>Mostrar os parâmetros detalhados deste papel de parede</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ajusta os parâmetros só deste papel de parede; não afeta nenhum outro.</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>Manter arquivos de áudio</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Inclui no pacote para celular os arquivos de áudio que vêm com o papel de parede. No celular o áudio do papel de parede não faz som, então ativar isso só aumenta o pacote; normalmente só vale para testes comparativos.</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>Comprimir texturas (LZ4)</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Desativado, as texturas deixam de ser comprimidas e o pacote costuma ficar várias vezes maior. Ativado, a decisão é tomada textura por textura: o que não diminui fica sem compressão, então imagens pequenas não incham à toa.</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>Corrigir sintaxe do sombreador</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Desativado, os sombreadores são empacotados exatamente como escritos para o PC. O celular é mais rigoroso na validação, e esse tipo de código pode não compilar — a camada correspondente aparece como um bloco branco na tela. Recomendado deixar ativado.</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>Compressão ETC2</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Depois de reduzidas, as texturas ainda são comprimidas no formato ETC2: o tamanho do pacote pode cair a cerca de um quarto, e o celular reconhece tudo normalmente.</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>Primeiro ajuste o fator de redução para 2× ou 4×. Sem reduzir as texturas, a compressão ETC2 fica indisponível.</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>Restaurar padrão</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Apaga os parâmetros ajustados só neste papel de parede e o devolve para a configuração unificada no fim da lista. O fator de redução dele continua igual.</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>Manter texturas originais</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Nenhuma textura muda nem um byte: o pacote gerado é só uma casca nova, com a imagem idêntica à do PC, e serve de comparação. Quando a tela sair errada no celular, comece por aqui para ver se o problema está nas texturas. Ativado, o fator de redução não tem efeito (a conversão avisa), e a correção dos sombreadores continua normal.</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>Reduzir também as texturas DXT</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Por padrão as texturas DXT ficam como estão, porque já ocupam menos espaço que as sem compressão. Ativado, essas texturas também são descomprimidas, reduzidas e salvas de novo; sem a compressão ETC2 junto, ativar só isso pode deixar o pacote maior do que era.</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>Nome do arquivo</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>Título</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>Este papel de parede não tem ID da Oficina (importados por conta própria ou enviados por você nunca têm), então só dá para nomeá-lo pelo título.</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Muda apenas o nome do arquivo .mpkg no computador, sem afetar o conteúdo do pacote. O nome exibido no celular vem das informações que vão dentro do pacote, não do nome do arquivo; papéis de parede sem ID da Oficina passam a usar o título automaticamente.</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>Ao escolher aqui, todos os papéis de parede da lista passam a usar esse tipo de nome, e um que tenha sido renomeado individualmente volta a seguir esta escolha. Muda só o nome do arquivo no computador, sem afetar o conteúdo do pacote.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>Com as configurações atuais, nenhuma das {0} texturas deste papel de parede será reduzida (as texturas DXT respondem por cerca de {1}% do volume total de texturas). Para que o pacote realmente diminua, ative "Reduzir também as texturas DXT" ou escolha um fator com compressão ETC2.</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>"Manter texturas originais" está ativado: as {0} texturas são empacotadas com os dados originais, sem recodificação (as texturas DXT respondem por cerca de {1}% do volume total de texturas).</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>Com as configurações atuais, só {0} texturas deste papel de parede serão reduzidas (são {1} no total); as demais ficam como estão.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>Nenhuma textura será reduzida</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>Texturas copiadas sem mudança</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>Só {0}/{1} texturas serão reduzidas</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>Não definido</value>
+  </data>
 </root>

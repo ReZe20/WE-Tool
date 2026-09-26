@@ -384,6 +384,24 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         }
     }
 
+    private Visibility _mpkgQueueOverlayVisibility = Visibility.Collapsed;
+    public Visibility MpkgQueueOverlayVisibility
+    {
+        get => _mpkgQueueOverlayVisibility;
+        set
+        {
+            if (_mpkgQueueOverlayVisibility == value) return;
+            _mpkgQueueOverlayVisibility = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>待转 mpkg 队列:「转为移动版」先入队到这里,每行单独选缩小档位,再统一开转。</summary>
+    public ObservableCollection<MpkgQueueItem> MpkgQueueItems { get; } = [];
+
+    // 入队去重用的键集,内容始终与 MpkgQueueItems 一一对应(移除/清空两边一起动)
+    private readonly HashSet<string> _mpkgQueueKeys = new(StringComparer.OrdinalIgnoreCase);
+
     private string _extractStatus = string.Empty;
     public string ExtractStatus
     {
@@ -700,14 +718,6 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 Serilog.Log.Warning("[A11y] 未取到卡片标题节点 ItemTitleText,朗读去重未生效");
             root.GotFocus -= CardRoot_GotFocus;  // 幂等:容器回收复用会重复走到这里,先减后加避免订阅叠加
             root.GotFocus += CardRoot_GotFocus;
-            // [外观] ThemeShadow 初始化(原 ShadowRect_Loaded 的阴影部分):ItemRootGrid 投影到 ShadowCastGrid
-            if (root.FindName("ItemRootGrid") is Grid itemRootGrid && itemRootGrid.Shadow is not ThemeShadow)
-            {
-                var shadow = new ThemeShadow();
-                if (root.FindName("ShadowCastGrid") is Grid shadowCastGrid)
-                    shadow.Receivers.Add(shadowCastGrid);
-                itemRootGrid.Shadow = shadow;
-            }
             // [性能 2026-09] 先判类型再决定走哪条图路:Skia 接管的 GIF 不再建 BitmapImage。
             // 原实现无条件 new BitmapImage 解一遍、紧接着又 Collapsed 把它藏起来 —— 库里 247 张 GIF
             // 每次实化都白解一次(WIC 解码 + 驻留),纯浪费。
@@ -3017,22 +3027,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 UpdateItemBlur(itemRootGrid, blurItem);
             }
 
-            if (casterElement.Shadow is ThemeShadow themeShadow)
-            {
-
-                if (VisualTreeHelper.GetParent(casterElement) is Grid parentContainer)
-                {
-                    var receiverGrid = parentContainer.FindName("ShadowCastGrid") as Grid;
-
-                    if (receiverGrid != null)
-                    {
-                        if (!themeShadow.Receivers.Contains(receiverGrid))
-                        {
-                            themeShadow.Receivers.Add(receiverGrid);
-                        }
-                    }
-                }
-            }
             if (casterElement is Grid grid && grid.DataContext is WallpaperItem item)
             {
                 UpdateItemCheckBoxOpacity(grid, item);
@@ -3473,8 +3467,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 scaleAnimation.DampingRatio = 0.6f;
                 scaleAnimation.Period = TimeSpan.FromMilliseconds(50);
                 visual.StartAnimation("Scale", scaleAnimation);
-                // [悬停阴影 2026-09] 不添加悬停阴影层:ElementPrepared 常驻阴影一层,
-                // 悬停只做 Scale 放大(阴影随卡片放大自然增强),避免两层阴影叠加
+                // [悬停 2026-09] 悬停只做 Scale 放大:卡片本身不再有投影层(2026-09-26 撤掉),不再叠悬停阴影
 
                 Visual itemVisual = ElementCompositionPreview.GetElementVisual(grid);
                 if (itemVisual?.Parent is ContainerVisual parentVisual)
@@ -3494,8 +3487,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
             ApplyScaleAnimation(grid, 1.0f);
             UpdateItemCheckBoxOpacity(grid, item);
-
-            // [阴影常驻] 不再移除阴影(ElementPrepared 常驻创建;鼠标经过浮起效果保留阴影观感)
 
             Visual visual = ElementCompositionPreview.GetElementVisual(grid);
             Compositor compositor = visual.Compositor;
@@ -3532,7 +3523,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 {
                     Canvas.SetZIndex(capturedUiElement, 0);
                 }
-                grid.Translation = new System.Numerics.Vector3(0f, 0f, 64f);
             });
 
         }
@@ -3988,6 +3978,17 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         // (那条链路历来挂在 ListViewItem/SelectorItem 这类项控件上,GridView→ItemsRepeater 迁移后就没有了)。
         // Enter 只在"卡片不消费它"时到得了这里:卡内真按钮会自己吃 Enter 并标记 Handled,页面收不到——正是想要的分工。
         // 代价是 Enter 从此被"弹菜单"占用,以后要给卡片配"默认动作键"得另选键。
+        // [队列面板闸门 2026-09-24] 待转 mpkg 面板开着时页面级键一律不放行:Enter/菜单键会在覆盖层之上再叠一层
+        // 壁纸右键菜单,Ctrl+A/Ctrl+I 改的是被挡住的壁纸网格。Esc 由面板自己的 MpkgQueueOverlay_KeyDown 吃掉。
+        if (MpkgQueueOverlayVisibility == Visibility.Visible)
+        {
+            var ctrlDown = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control)
+                & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+            if (ctrlDown || e.Key is VirtualKey.Enter or VirtualKey.Menu or VirtualKey.F10 or VirtualKey.Space)
+                Log.Information("[mpkg队列] 页面键 {Key} 被面板闸门挡下(队列开着时网格键一律不响应)", e.Key);
+            return;
+        }
+
         if (e.Key == VirtualKey.Menu || e.Key == VirtualKey.Enter
             || (e.Key == VirtualKey.F10
                 && (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down))
@@ -5168,27 +5169,483 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             NavBadgeService.SetBadge("Papers", null);
     }
 
-    // ===================== 转为移动版(pkg → mpkg,2026-09-22) =====================
+    // ===================== 转为移动版(pkg → mpkg,2026-09-22;2026-09-24 改成先入队) =====================
+    // 入口不再直接开转:把选中的包放进 MpkgQueueItems,每行三个单选各挑自己的缩小档位,点「开始转换」才走批量。
     // 与 ExtractSelectedWallpapersAsync 共用进度面板的全部状态字段,差别只有三处:
     // 走 RepkgCliService.ConvertToMobileAsync(manifest mode=mpkg)、恒用多壁纸列表视图
     // (一张壁纸产出一个 .mpkg,没有"单壁纸大图"可看)、收尾文案是"转换"而不是"提取"。
-    private async void ConvertToMobile_Click(object sender, RoutedEventArgs e)
+    private void ConvertToMobile_Click(object sender, RoutedEventArgs e)
     {
         HideWallpaperContextMenu();
-        await ConvertSelectedToMobileAsync();
+        EnqueueSelectedForMobile();
     }
 
-    private async Task ConvertSelectedToMobileAsync()
+    private void EnqueueSelectedForMobile()
     {
-        var itemsToConvert = ViewModel.SelectedWallpapers.Count > 0
+        var selected = ViewModel.SelectedWallpapers.Count > 0
             ? SelectedWallpapers.ToList()
             : ViewModel.SelectedWallpaper is not null ? [ViewModel.SelectedWallpaper] : [];
 
-        if (itemsToConvert.Count == 0)
+        if (selected.Count == 0)
         {
-            await DialogHelper.ShowMessageAsync("提示", "请选择要转换的壁纸。");
+            Log.Warning("[mpkg队列] 入队取消:没有选中任何壁纸");
+            _ = DialogHelper.ShowMessageAsync("提示", "请选择要转换的壁纸。");
             return;
         }
+
+        int added = 0, skipped = 0;
+        foreach (var wallpaper in selected)
+        {
+            var item = new MpkgQueueItem(wallpaper);
+            if (!_mpkgQueueKeys.Add(item.Key))
+            {
+                skipped++;
+                continue;
+            }
+            // 新行取那份默认档;之后按行改,不影响后面入队的行
+            item.Tier = MpkgPackingDefaults.Tier;
+            item.SettingsVisibility = IsCustomMode ? Visibility.Visible : Visibility.Collapsed;
+            // 读数挂在模型的 PropertyChanged 上而不是控件事件上:拖动、方向键、点轨道这三条改档路径都会走到这里
+            item.PropertyChanged += (_, ev) =>
+            {
+                switch (ev.PropertyName)
+                {
+                    case nameof(MpkgQueueItem.Tier):
+                        if (_applyingMasterControl) return;
+                        // 单行降回原始档时,那条 ETC2 覆盖是被护栏吃掉的,不说就成了静默改动
+                        Log.Information("[mpkg队列] 档位: {Name} → {Tier}({Text}){Cleared} {Flags}",
+                            item.Name, item.EffectiveTier, item.TierText,
+                            item.TakeTierClearedEtc2() ? ", 顺带清掉该行的 ETC2 覆盖" : "", item.FlagsReadout);
+                        ScheduleMpkgProbe();
+                        return;
+                    case nameof(MpkgQueueItem.KeepAudioOn):
+                    case nameof(MpkgQueueItem.UseLz4On):
+                    case nameof(MpkgQueueItem.ShaderCompatOn):
+                    case nameof(MpkgQueueItem.Etc2On):
+                    case nameof(MpkgQueueItem.CopyTexturesOn):
+                    case nameof(MpkgQueueItem.ShrinkDxOn):
+                        // 总控套档会连带改一批 ETC2,那种场合由总控那一条读数汇总,别一行刷一条
+                        if (_applyingMasterControl) return;
+                        Log.Information("[mpkg队列] 逐行 {Flag}: {Name} → {Value} {Flags}",
+                            ev.PropertyName, item.Name, FlagOf(item, ev.PropertyName) ? "开" : "关",
+                            item.FlagsReadout);
+                        // 只有会影响"缩几条"的两颗键才值得重探一次;音频/LZ4/兼容改写改的是别的条目
+                        if (ev.PropertyName is nameof(MpkgQueueItem.Etc2On) or nameof(MpkgQueueItem.CopyTexturesOn)
+                            or nameof(MpkgQueueItem.ShrinkDxOn))
+                            ScheduleMpkgProbe();
+                        return;
+                    case nameof(MpkgQueueItem.NameModeIndex):
+                        // 这格不进 repkg 的 options(名字是我们算好交给 outputName 的),但它改的是产物文件名,所以照样报一条
+                        Log.Information("[mpkg队列] 逐行 文件重命名: {Name} → {Mode}", item.Name, item.NameModeReadout);
+                        return;
+                }
+            };
+            MpkgQueueItems.Add(item);
+            added++;
+        }
+
+        Log.Information("[mpkg队列] 入队: 选中 {Selected} 新增 {Added} 重复跳过 {Skipped} 队列共 {Total}",
+            selected.Count, added, skipped, MpkgQueueItems.Count);
+        // 一条不新也照常展开:不然用户以为按钮没反应,而且要看清是"重复"还是"没选中"
+        // (探测由 OpenMpkgQueue 统一发起,别再在两条路径上各写一遍)
+        OpenMpkgQueue();
+    }
+
+    private static bool FlagOf(MpkgQueueItem item, string? flag) => flag switch
+    {
+        nameof(MpkgQueueItem.KeepAudioOn) => item.KeepAudioOn,
+        nameof(MpkgQueueItem.UseLz4On) => item.UseLz4On,
+        nameof(MpkgQueueItem.ShaderCompatOn) => item.ShaderCompatOn,
+        nameof(MpkgQueueItem.CopyTexturesOn) => item.CopyTexturesOn,
+        nameof(MpkgQueueItem.ShrinkDxOn) => item.ShrinkDxOn,
+        _ => item.Etc2On,
+    };
+
+    // ---------- 只读探测:这一档到底会不会缩 ----------
+
+    // repkg 的 mode:inspect 一个字节都不写,它回答的是"这一行的档位真会缩几条纹理"。
+    // 值得单独问一遍,是因为转换器对"照搬"什么都不说:一张全是 DXT5 的壁纸,选 1× 和选 4× 产物一样大,
+    // 而那件事原本只有等转换跑完、对着两个同样大小的文件才看得出来。
+    // 全限定:这个文件里 Windows.System 也在作用域内,裸写 DispatcherQueueTimer 会挑错那一个
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _mpkgProbeDebounce;
+    private CancellationTokenSource? _mpkgProbeCts;
+
+    // 行键 → 已探过的那套档位口径。签名没变就不重探:一次探测是一个进程,几十行的队列不能每拖一下 slider 就来一遍。
+    private readonly Dictionary<string, string> _mpkgProbeSeen = new(StringComparer.Ordinal);
+
+    /// <summary>把改动的行攒一攒再探:拖 slider / 连开几格开关只触发一次进程。</summary>
+    private void ScheduleMpkgProbe()
+    {
+        if (MpkgQueueItems.Count == 0) return;
+
+        if (_mpkgProbeDebounce is null)
+        {
+            var timer = DispatcherQueue.CreateTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(600);
+            timer.IsRepeating = false;
+            timer.Tick += (_, _) => _ = RunMpkgProbeAsync();
+            _mpkgProbeDebounce = timer;
+        }
+
+        _mpkgProbeDebounce.Stop();
+        _mpkgProbeDebounce.Start();
+    }
+
+    private async Task RunMpkgProbeAsync()
+    {
+        var rows = new List<MpkgQueueItem>();
+        foreach (var item in MpkgQueueItems)
+        {
+            if (string.IsNullOrEmpty(item.Wallpaper.FolderPath)) continue;
+            if (_mpkgProbeSeen.TryGetValue(item.Key, out var seen) && seen == item.ProbeSignature) continue;
+            rows.Add(item);
+        }
+
+        if (rows.Count == 0) return;
+
+        // 上一轮还没跑完就再改档位:取消它。探测结果按签名贴回,慢回来的那一批只会被丢掉。
+        _mpkgProbeCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _mpkgProbeCts = cts;
+
+        try
+        {
+            _extractService ??= new RepkgCliService();
+            var probes = await _extractService.ProbeMobileAsync(
+                rows.Select(r => (r.Key, r.Wallpaper, r.Snapshot())).ToList(), cts.Token);
+
+            int warned = 0;
+            foreach (var row in rows)
+            {
+                if (!probes.TryGetValue(row.Key, out var probe)) continue;
+                _mpkgProbeSeen[row.Key] = row.ProbeSignature;
+                ApplyProbe(row, probe);
+                if (row.ProbeIsWarning) warned++;
+            }
+
+            Log.Information("[mpkg探测] 本轮 {Rows} 行有结论,其中 {Warn} 行标了\"该档位无法缩小纹理\"",
+                probes.Count, warned);
+        }
+        catch (OperationCanceledException)
+        {
+            Log.Information("[mpkg探测] 口径又变了,丢掉这一轮结果");
+        }
+        catch (Exception ex)
+        {
+            // 探测只是让界面多一句话。它坏了不能挡转换,也不能在界面上留下半个字。
+            Log.Warning(ex, "[mpkg探测] 这一轮没跑成,队列上不显示档位提示");
+        }
+        finally
+        {
+            if (ReferenceEquals(_mpkgProbeCts, cts)) cts.Dispose();
+            _mpkgProbeCts = null;
+        }
+    }
+
+    private static void ApplyProbe(MpkgQueueItem row, MpkgProbe probe)
+    {
+        row.ProbeIsWarning = false;
+
+        // 每条分支都要同时落"短词 + 长句":短词摆在名称下面,长句进那颗 i 的 ToolTip。
+        // 同一件事写两种长度,是因为一列几十行装不下整句话(会把行高顶开、把名称挤成两行)。
+        if (probe.Packages == 0 || probe.Failed || probe.Tex == 0)
+        {
+            // 读不动的包由转换自己报错;没有 .tex 的壁纸本来就没什么可缩。这里都不该抢话
+            row.ProbeShort = null;
+            row.ProbeNote = null;
+            return;
+        }
+
+        // 三种"没缩"要分开说:开关是你开的、素材本来就不缩、还是只缩了一部分。
+        // 合成一句的话,"照搬"这条就永远看不出是哪种,而它的处理办法完全不同。
+        if (row.CopyTexturesOn)
+        {
+            row.ProbeShort = LanguageHelper.GetResource("MpkgQueue_ProbeCopiedShort.Text");
+            row.ProbeNote = string.Format(LanguageHelper.GetResource("MpkgQueue_ProbeCopied.Text"),
+                probe.Tex, probe.DxtSharePercent);
+            return;
+        }
+
+        if (row.Tier > 0 && probe.WouldReduce == 0)
+        {
+            row.ProbeIsWarning = true;
+            row.ProbeShort = LanguageHelper.GetResource("MpkgQueue_ProbeStuckShort.Text");
+            row.ProbeNote = string.Format(LanguageHelper.GetResource("MpkgQueue_ProbeStuck.Text"),
+                probe.Tex, probe.DxtSharePercent);
+            return;
+        }
+
+        if (row.Tier > 0 && probe.WouldReduce < probe.Tex)
+        {
+            row.ProbeShort = string.Format(LanguageHelper.GetResource("MpkgQueue_ProbePartialShort.Text"),
+                probe.WouldReduce, probe.Tex);
+            row.ProbeNote = string.Format(LanguageHelper.GetResource("MpkgQueue_ProbePartial.Text"),
+                probe.WouldReduce, probe.Tex);
+            return;
+        }
+
+        // 原始档本来就什么都不做,不必报"一条都没缩";全缩到了也不用报告成功
+        row.ProbeShort = null;
+        row.ProbeNote = null;
+    }
+
+    private double _masterTierValue;
+
+    /// <summary>
+    /// 表头那根总控 slider 的绑定面:它不表示队列的某种状态,只负责"把这一档套到所有行",
+    /// 所以初值就是默认的 1×,而且套完之后也不回头去显示什么"统一档位"。
+    /// </summary>
+    public double MasterTierValue
+    {
+        get => _masterTierValue;
+        set
+        {
+            if (_masterTierValue.Equals(value)) return;
+            _masterTierValue = value;
+            OnPropertyChanged(nameof(MasterTierText));
+            ApplyTierToAll(value);
+        }
+    }
+
+    /// <summary>总控 slider 右边的倍数文字,和队列每行那一格同样式;它跟的是总控自己那根 thumb 的位置。</summary>
+    public string MasterTierText => MpkgQueueItem.TierLabel((int)Math.Round(_masterTierValue));
+
+    // -1 = 这一轮还没人碰过重命名总控,那时生效值是 MpkgPackingDefaults.NameMode 那份默认(0=标题)
+    private int _masterNameModeValue = -1;
+
+    /// <summary>
+    /// 档位下面那根「文件重命名」总控。它改的是<b>磁盘上 .mpkg 的文件名</b> —— 手机读的是包内
+    /// project.json 的 title,与文件名无关(WE 自家的移动导出就是拿创意工坊 ID 当文件名)。
+    /// 挪它做两件事:把默认换成这一档 + 让所有行回到"跟随总控"。故意不给每行写死值,
+    /// 那样一整批行都会亮"已改"角标,而那个角标的用处就是扫出少数例外行。
+    /// </summary>
+    public int MasterNameModeValue
+    {
+        get => _masterNameModeValue >= 0 ? _masterNameModeValue : MpkgPackingDefaults.NameMode;
+        set
+        {
+            if (value is < 0 or > 1) return;   // RadioButtons 清空时会递 -1 过来,那不是任何一种模式
+            if (_masterNameModeValue == value) return;
+            _masterNameModeValue = value;
+            MpkgPackingDefaults.NameMode = value;
+
+            int followed = 0;
+            _applyingMasterControl = true;
+            try
+            {
+                foreach (var item in MpkgQueueItems)
+                {
+                    item.RefreshGlobalDefaults();
+                    if (item.FollowMasterNameMode()) followed++;
+                }
+            }
+            finally
+            {
+                _applyingMasterControl = false;
+            }
+
+            Log.Information("[mpkg队列] 重命名总控 → {Mode}, {Followed} 行回到跟随总控, 队列共 {Count} 行",
+                value == 1 ? "ID" : "标题", followed, MpkgQueueItems.Count);
+        }
+    }
+
+    // 总控(档位或重命名)一次性改一批行时压掉每行那条读数,不然几十行队列会刷出几十行日志
+    private bool _applyingMasterControl;
+
+    private void ApplyTierToAll(double tierValue)
+    {
+        var tier = (int)Math.Round(tierValue);
+        if (MpkgQueueItems.Count == 0)
+        {
+            Log.Warning("[mpkg队列] 总控移到 {Tier},但队列为空,没有可套用的行", MpkgQueueItem.TierLabel(tier));
+            return;
+        }
+
+        _applyingMasterControl = true;
+        try
+        {
+            foreach (var item in MpkgQueueItems) item.Tier = tier;
+        }
+        finally
+        {
+            _applyingMasterControl = false;
+        }
+
+        // 套到原始档会把「ETC2 强制开」这类非法覆盖吃掉(护栏在 MpkgQueueItem.Tier 里),这条不能不说:
+        // 否则用户会以为总控只改了倍数,其实顺手清掉了他逐行写下的编码选择。
+        int cleared = MpkgQueueItems.Count(item => item.TakeTierClearedEtc2());
+        // 开着照搬的行收到的是"意图",发出去的还是原始档 —— 不同步说一声,总控那一条读数就成了假话。
+        int copied = tier > 0 ? MpkgQueueItems.Count(item => item.CopyTexturesOn) : 0;
+        Log.Information("[mpkg队列] 总控 → {Tier}, 已同步 {Count} 行{Cleared}{Copied}",
+            MpkgQueueItem.TierLabel(tier), MpkgQueueItems.Count,
+            cleared > 0 ? $", 顺带清掉 {cleared} 行的 ETC2 覆盖" : "",
+            copied > 0 ? $", {copied} 行开着照搬所以仍按 1× 发" : "");
+        // 一批一起探:整条队列换档只需要一次进程,不是每行一次
+        ScheduleMpkgProbe();
+    }
+
+    // ---------- 自定义模式:逐行覆盖 音频 / LZ4 / 着色器改写 / ETC2 / 纹理照搬 / 缩小 DXT / 包名 ----------
+
+    private bool _isCustomMode;
+
+    /// <summary>底部那个「自定义」开关。它是整页的模式,不是某一行的状态。</summary>
+    public bool IsCustomMode
+    {
+        get => _isCustomMode;
+        set
+        {
+            if (_isCustomMode == value) return;
+            _isCustomMode = value;
+            OnPropertyChanged();
+
+            var show = value ? Visibility.Visible : Visibility.Collapsed;
+            int dropped = 0;
+            foreach (var item in MpkgQueueItems)
+            {
+                item.SettingsVisibility = show;
+                if (!value && item.HasOverride)
+                {
+                    item.ResetOverrides();
+                    dropped++;
+                }
+            }
+
+            // 行内多出一个箭头按钮就把整行内容往左挤,总控那根 slider 的右边得跟着让,否则它不再压在各行 slider 上。
+            // 44 = 那颗按钮的宽度(与移除按钮同风格)+ StackPanel 的 4px 间距;和原本的 86 一样是写死的数,
+            // 只能靠眼睛校 —— 所以把值打进读数,看着不对直接报一个数就行。
+            MpkgQueueMasterRow.Margin = new Thickness(0, 10, value ? 130 : 86, 0);
+            // 关掉就把覆盖清空(ToolTip 里承诺了这一点):留着的话下次再开会出现"界面上看不见、清单里却带着"的幽灵覆盖
+            Log.Information("[mpkg队列] 自定义模式 {State}, 逐行覆盖清空 {Dropped} 行, 队列共 {Count} 行, 总控右边距 {Margin}",
+                value ? "开" : "关", dropped, MpkgQueueItems.Count, value ? 130 : 86);
+            // 只有清空了覆盖才值得重探:开着的时候切模式不动任何选项,提示也就没有变化
+            if (dropped > 0) ScheduleMpkgProbe();
+        }
+    }
+
+    private void MpkgQueueCustom_Changed(object sender, RoutedEventArgs e)
+        => IsCustomMode = MpkgQueueCustomButton.IsChecked == true;
+
+    private void MpkgQueueRowExpand_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: MpkgQueueItem item })
+        {
+            Log.Warning("[mpkg队列] 展开逐行参数失败:拿不到行数据");
+            return;
+        }
+        item.IsExpanded = !item.IsExpanded;
+        Log.Information("[mpkg队列] {State}逐行参数条: {Name} 档位={Tier} {Flags}",
+            item.IsExpanded ? "展开" : "收起", item.Name, item.TierText, item.FlagsReadout);
+    }
+
+    private void MpkgQueueRowReset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: MpkgQueueItem item })
+        {
+            Log.Warning("[mpkg队列] 重置逐行参数失败:拿不到行数据");
+            return;
+        }
+        item.ResetOverrides();
+        Log.Information("[mpkg队列] 逐行参数重置为全局: {Name} {Flags}", item.Name, item.FlagsReadout);
+    }
+
+    private void OpenMpkgQueue()
+    {
+        UpdateMpkgQueueCountText();
+        // 补探:上一轮被收起打断的那些行签名还没记下,这里一次补回来(已探过的行按签名跳过)
+        ScheduleMpkgProbe();
+        if (MpkgQueueOverlayVisibility == Visibility.Visible) return;
+        MpkgQueueOverlayVisibility = Visibility.Visible;
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            AnimatePanelOpen(MpkgQueuePanel, MpkgQueueOverlayBackground);
+            // 焦点必须落进面板:一是 Esc 只在焦点子树内冒泡,停在命令栏就收不到面板的 KeyDown;
+            // 二是页面级 Enter/菜单键会去弹壁纸右键菜单(见 Page_KeyDown_Core 的队列闸门)。
+            var focused = MpkgQueueStartButton.Focus(FocusState.Programmatic);
+            Log.Information("[mpkg队列] 面板展开 起始焦点={Focused}", focused);
+        });
+    }
+
+    private void CloseMpkgQueue()
+    {
+        if (MpkgQueueOverlayVisibility == Visibility.Collapsed)
+        {
+            Log.Warning("[mpkg队列] 关闭请求无效:面板未展开");
+            return;
+        }
+        // 面板都收起了还留着探测进程没有意义:关掉去抖、掐掉在跑的那一轮。
+        // 已经贴上去的提示不清 —— 收起不等于放弃队列。
+        _mpkgProbeDebounce?.Stop();
+        _mpkgProbeCts?.Cancel();
+        AnimatePanelClose(MpkgQueuePanel, MpkgQueueOverlayBackground, () =>
+            MpkgQueueOverlayVisibility = Visibility.Collapsed);
+        Log.Information("[mpkg队列] 面板收起, 队列保留 {Total} 项", MpkgQueueItems.Count);
+    }
+
+    private void UpdateMpkgQueueCountText()
+        => MpkgQueueCountText.Text = string.Format(
+            LanguageHelper.GetResource("MpkgQueue_Count.Text"), MpkgQueueItems.Count);
+
+    private void MpkgQueueRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: MpkgQueueItem item })
+        {
+            Log.Warning("[mpkg队列] 移除失败:拿不到行数据");
+            return;
+        }
+        MpkgQueueItems.Remove(item);
+        _mpkgQueueKeys.Remove(item.Key);
+        _mpkgProbeSeen.Remove(item.Key);
+        UpdateMpkgQueueCountText();
+        Log.Information("[mpkg队列] 移除 {Name}, 队列剩 {Total}", item.Name, MpkgQueueItems.Count);
+    }
+
+    private void MpkgQueueClear_Click(object sender, RoutedEventArgs e)
+    {
+        Log.Information("[mpkg队列] 清空 {Total} 项", MpkgQueueItems.Count);
+        MpkgQueueItems.Clear();
+        _mpkgQueueKeys.Clear();
+        _mpkgProbeSeen.Clear();
+        UpdateMpkgQueueCountText();
+    }
+
+    private void MpkgQueueClose_Click(object sender, RoutedEventArgs e) => CloseMpkgQueue();
+
+    private void MpkgQueueOverlay_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Escape) return;
+        CloseMpkgQueue();
+        e.Handled = true;
+    }
+
+    private async void MpkgQueueStart_Click(object sender, RoutedEventArgs e)
+    {
+        if (MpkgQueueItems.Count == 0)
+        {
+            Log.Warning("[mpkg队列] 开始转换被拒:队列为空");
+            await DialogHelper.ShowMessageAsync("提示", "队列为空。");
+            return;
+        }
+        if (IsExtracting)
+        {
+            Log.Warning("[mpkg队列] 开始转换被拒:已有提取/转换在跑");
+            return;
+        }
+
+        var queue = MpkgQueueItems.ToList();
+        // 探测是另一个 repkg 进程,和转换抢同一批核。开转之前先把它停了:转换期不再需要队列上的那句提示。
+        _mpkgProbeDebounce?.Stop();
+        _mpkgProbeCts?.Cancel();
+        // 直接收起而不调 CloseMpkgQueue:转换面板紧跟着要展开,两层动画交叠会看出闪
+        MpkgQueueOverlayVisibility = Visibility.Collapsed;
+        await RunMobileConversionAsync(queue);
+    }
+
+    /// <summary>跑完一批就把转成功的行移出队列(停止/异常时整条队列原样保留)。</summary>
+    private async Task RunMobileConversionAsync(IReadOnlyList<MpkgQueueItem> queue)
+    {
+        // 只用于那句"档位分布"读数:现在一批走完全队,档位数不再决定批数。
+        // 统计的是生效档位 —— 开着照搬的行发出去的就是 1×,按意图分布报会让人对不上清单。
+        var tiers = queue.GroupBy(i => i.EffectiveTier).OrderBy(g => g.Key).ToList();
 
         // 提取与转换共用输出根:转出来的 .mpkg 就在提取产物旁边,不用再记第二个目录
         var outputPath = ViewModel.PathManagementVM.DownloadPath;
@@ -5199,7 +5656,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         {
             IsExtracting = true;
             ExtractState = ExtractState.Running;
-            _extractTotalCount = itemsToConvert.Count;
+            _extractTotalCount = queue.Count;
             _extractCompletedCount = 0;
             _extractCompletedNames = [];
             _extractProgressByName = [];
@@ -5208,21 +5665,34 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             ExtractStatus = "正在转换...";
             TaskbarProgressService.SetProgress(0);
             _navBadgeError = false;
-            NavBadgeService.SetBadge("Papers", itemsToConvert.Count);
+            NavBadgeService.SetBadge("Papers", queue.Count);
 
             _isSingleExtract = false;
             ExtractWallpaperList.Visibility = Visibility.Visible;
             OnPropertyChanged(nameof(ExtractPreviewVisibility));
-            ExtractSubText = $"已完成 0/{itemsToConvert.Count} 个壁纸";
+            ExtractSubText = $"已完成 0/{queue.Count} 个壁纸";
             ExtractEntryText = "";
             OnPropertyChanged(nameof(ExtractEntryVisibility));
 
             _extractService = new RepkgCliService();
             _extractCts = new CancellationTokenSource();
 
-            var extractNameToItem = new Dictionary<string, WallpaperItem>(itemsToConvert.Count);
-            foreach (var w in itemsToConvert)
-                extractNameToItem[w.Title ?? w.WorkshopID ?? (w.FolderPath != null ? new DirectoryInfo(w.FolderPath).Name : "?")] = w;
+            // 整条队列一次性铺进进度面板:以前是"转到哪个才出现哪一行",几十行的队列看着像只有两张在动。
+            // repkg 的进度消息按壁纸名回报,所以同名行只跟得住第一行 —— 差额由下面那条 warning 说明。
+            foreach (var item in queue)
+            {
+                var row = new ExtractProgressItem { Name = item.Name, Preview = item.Wallpaper.Preview };
+                if (!_extractProgressByName.TryAdd(item.Name, row))
+                {
+                    Log.Warning("[mpkg队列] 队列里有同名壁纸 {Name},进度面板只跟第一行", item.Name);
+                    continue;
+                }
+                ExtractProgressItems.Add(row);
+            }
+            Log.Information("[mpkg队列] 进度面板一次铺 {Rows} 行,队列共 {Queue} 项", ExtractProgressItems.Count, queue.Count);
+
+            // 没包的壁纸在 Service 里直接报「失败」,不记下来就会被一起当成转完
+            var failedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             Action<string> onProgress = msg =>
             {
@@ -5234,19 +5704,15 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
                 {
+                    if (action == "失败") failedNames.Add(name);
                     if ((action == "开始" || action == "解析PKG") && !_extractCompletedNames.Contains(name))
                     {
-                        if (!_extractProgressByName.TryGetValue(name, out var progressItem))
-                        {
-                            progressItem = new ExtractProgressItem
-                            {
-                                Name = name,
-                                Preview = extractNameToItem.TryGetValue(name, out var w) ? w.Preview : null
-                            };
-                            _extractProgressByName[name] = progressItem;
-                            ExtractProgressItems.Add(progressItem);
-                        }
-                        progressItem.Progress = pct; // 0.5% 阈值防抖在 setter 内
+                        // 行在开转前就铺好了(上面那段 seeding),这里只往已有的行上填进度。
+                        // 名字对不上是协议层面的意外,报出来而不是悄悄丢掉 —— 否则那张壁纸在面板上永远不动。
+                        if (_extractProgressByName.TryGetValue(name, out var progressItem))
+                            progressItem.Progress = pct; // 0.5% 阈值防抖在 setter 内
+                        else
+                            Log.Warning("[mpkg队列] 进度消息里的 {Name} 不在队列行里,这一行的进度条不会动", name);
                     }
                     else if ((action == "完成" || action == "失败") && _extractCompletedNames.Add(name))
                     {
@@ -5265,17 +5731,24 @@ private void ToggleMultiSelectVisuals(bool isMulti)
 
             RepkgCliService.SetProcessPriorityLevel(ViewModel.ProcessPriority);
 
-            // 一张壁纸一个子文件夹,且总是重做而不是跳过已有产物;包名和纹理缩小档位跟着输出设置里的选择
-            var mobileSettings = new ExtractSettings
-            {
-                UseProjectName = true,
-                OneFolder = 0,
-                CoverAllFiles = true,
-                MpkgNameMode = ViewModel.MpkgNameMode,
-                MpkgReductionMode = ViewModel.MpkgReductionMode,
-            };
+            // 整条队列一批发完:每行的档位(+ 自定义模式下动过的那几个键)写进 wallpapers[].options,
+            // 由 repkg 逐条覆盖全局(以前一个档一批,一批一次进程)。产物平铺在输出根下、一张一个文件,
+            // 且总是重做而不是跳过已有产物。
+            var mobileOptions = new Dictionary<WallpaperItem, MpkgEntryOptions>(queue.Count);
+            foreach (var item in queue) mobileOptions[item.Wallpaper] = item.Snapshot();
+            Log.Information("[mpkg队列] 一批 {Count} 张, 档位分布 {Tiers}, 逐行覆盖 {Override} 张",
+                queue.Count,
+                string.Join(" ", tiers.Select(g => $"{MpkgQueueItem.TierLabel(g.Key)}×{g.Count()}")),
+                queue.Count(i => i.HasOverride));
 
-            await _extractService.ConvertToMobileAsync(itemsToConvert, outputPath, mobileSettings, onProgress, _extractCts.Token);
+            await _extractService.ConvertToMobileAsync(
+                queue.Select(i => i.Wallpaper).ToList(), outputPath,
+                new ExtractSettings
+                {
+                    // 转换模式只从这里读两格:覆盖已有产物,以及并发上限(没设 = 按核数)
+                    CoverAllFiles = true,
+                },
+                onProgress, _extractCts.Token, mobileOptions);
 
             if (!_extractCts.IsCancellationRequested)
             {
@@ -5285,8 +5758,26 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 ExtractStatus = "转换完成";
                 TaskbarProgressService.SetProgress(100);
                 ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
-                Log.Information("[转为移动版] 转换完成: {Count} 个壁纸 → {Output}", itemsToConvert.Count, outputPath);
+                Log.Information("[转为移动版] 转换完成: {Count} 个壁纸 / {Groups} 档 → {Output}",
+                    queue.Count, tiers.Count, outputPath);
                 NotificationService.NotifyIfUnfocused("转换完成", $".mpkg 已输出到 {outputPath}");
+
+                // 转成功的移出队列,失败的留着:改了档位或换了包可以直接对剩下的再点一次「开始转换」。
+                // 按这一批自己的行删(而不是扫整个队列),否则转换期间新入队的行会被连带清掉。
+                int kept = 0, removed = 0;
+                foreach (var row in queue)
+                {
+                    if (failedNames.Contains(row.Name)) { kept++; continue; }
+                    if (MpkgQueueItems.Remove(row))
+                    {
+                        _mpkgQueueKeys.Remove(row.Key);
+                        _mpkgProbeSeen.Remove(row.Key);
+                        removed++;
+                    }
+                }
+                UpdateMpkgQueueCountText();
+                Log.Information("[mpkg队列] 整批跑完: 转出 {Removed} 项, 失败保留 {Kept} 项, 队列剩 {Total} 项",
+                    removed, kept, MpkgQueueItems.Count);
             }
             else
             {
@@ -5294,7 +5785,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 IsExtracting = false;
                 ExtractStatus = "转换已停止";
                 TaskbarProgressService.Clear();
-                Log.Information("[转为移动版] 用户停止");
+                Log.Information("[转为移动版] 用户停止, 队列保留 {Total} 项可重开", MpkgQueueItems.Count);
             }
         }
         catch (OperationCanceledException)
@@ -5303,7 +5794,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             ExtractState = ExtractState.Completed;
             IsExtracting = false;
             TaskbarProgressService.Clear();
-            Log.Information("[转为移动版] 用户停止");
+            Log.Information("[转为移动版] 用户停止(异常路径), 队列保留 {Total} 项可重开", MpkgQueueItems.Count);
         }
         catch (Exception ex)
         {
@@ -5314,6 +5805,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             ExtractProgress = 0;
             TaskbarProgressService.SetError();
             _navBadgeError = true;
+            Log.Information("[mpkg队列] 异常终止, 队列保留 {Total} 项可重开", MpkgQueueItems.Count);
             NotificationService.NotifyIfUnfocused("转换失败", "转换失败，请查看日志");
         }
 

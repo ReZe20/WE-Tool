@@ -1958,4 +1958,133 @@
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>Диск с библиотекой Workshop не является NTFS. Автоматическое резервное копирование (жёсткие ссылки) не работает на этом диске, поэтому служба не была установлена.</value>
   </data>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} в очереди</value>
+  </data>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>Обои для конвертации</value>
+  </data>
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
+    <value>Уменьшение текстур</value>
+  </data>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>Общий уровень уменьшения для всех обоев</value>
+  </data>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Этот ползунок задаёт уровень уменьшения сразу для всех обоев в списке. После этого любую строку по-прежнему можно настроить отдельно.</value>
+  </data>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Уровень уменьшения текстур этих обоев</value>
+  </data>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>Убрать эти обои из списка</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Убирает эти обои из списка; файлы на компьютере не удаляются.</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>Уровень уменьшения также определяет, в каком виде сохраняются текстуры: 1× — без уменьшения и сжатия; 2× и 4× — текстуры сначала уменьшаются, а затем сжимаются в формат ETC2.</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>Очистить список</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>Начать конвертацию</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>Индивидуальные параметры</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Когда включено, в каждой строке появляется стрелка: нажав её, можно настроить параметры именно этих обоев (кроме уровня уменьшения, там ещё семь параметров). Когда выключено, все строки сворачиваются, а отдельно заданные параметры сбрасываются.</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>Показать подробные параметры этих обоев</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Настройка параметров только для этих обоев, остальные строки не изменятся.</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>Сохранять аудиофайлы</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Добавляет аудиозаписи обоев в мобильный пакет. На телефоне обои не звучат, поэтому включение только увеличит пакет — обычно это нужно для сравнительной проверки.</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>Сжатие текстур (LZ4)</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Если выключить, текстуры не сжимаются, и пакет обычно становится в несколько раз больше. Когда включено, каждая текстура проверяется отдельно: то, что не удаётся сжать, остаётся несжатым, поэтому мелкие изображения зря не растут.</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>Исправление синтаксиса шейдеров</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Если выключить, шейдеры упаковываются точно в таком же виде, как в компьютерной версии. Телефон проверяет строже, и такой код может не скомпилироваться — соответствующий слой на экране станет белым. Лучше оставить включённым.</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>Сжатие ETC2</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Уменьшенные текстуры дополнительно сжимаются в формат ETC2: размер пакета падает примерно ещё в четыре раза, и телефон читает их без проблем.</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>Сначала поставьте уровень уменьшения 2× или 4×: без уменьшения текстур сжатие ETC2 недоступно.</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>По умолчанию</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Сбрасывает отдельно заданные параметры этих обоев — строка снова следует общим настройкам внизу списка. Её уровень уменьшения остаётся прежним.</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>Копировать текстуры как есть</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ни один байт текстур не меняется: пакет получает лишь новую оболочку, и картинка полностью совпадает с компьютерной. Это контрольный вариант — если на телефоне изображение отображается неверно, по нему видно, связано ли это с текстурами. Когда включено, уровень уменьшения не действует (об этом предупредят при конвертации), а шейдеры исправляются как обычно.</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>Уменьшать и текстуры DXT</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Текстуры формата DXT по умолчанию остаются как есть: они и так занимают меньше места, чем несжатые. Когда включено, такие текстуры тоже раскодируются, уменьшаются и сохраняются заново; если включить это без сжатия ETC2, пакет может стать даже больше.</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>Имя файла</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>По названию</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>По ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>У этих обоев нет ID Workshop (он отсутствует у импортированных и загруженных вручную), поэтому файл можно назвать только по названию.</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Меняет только имя файла .mpkg на компьютере и не влияет на содержимое пакета. Название обоев на телефоне берётся из сведений внутри пакета, а не из имени файла; обои без ID Workshop автоматически называются по названию.</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>Все обои в списке будут названы этим способом, а строки, где имя раньше меняли отдельно, снова следуют общей настройке. Меняется только имя файла на компьютере, содержимое пакета остаётся прежним.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>При текущих настройках ни одна из {0} текстур этих обоев не уменьшится (текстуры DXT занимают около {1}% от объёма всех текстур). Чтобы пакет действительно стал меньше, включите «Уменьшать и текстуры DXT» или выберите уровень со сжатием ETC2.</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>Включено «Копировать текстуры как есть»: {0} текстур упакованы в исходном виде, без перекодирования (текстуры DXT занимают около {1}% от объёма всех текстур).</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>При текущих настройках у этих обоев уменьшатся только {0} текстур (всего их {1}); остальные останутся как есть.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>Текстуры не уменьшатся</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>Текстуры как есть</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>Уменьшатся только {0}/{1} текстур</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>Не задано</value>
+  </data>
 </root>

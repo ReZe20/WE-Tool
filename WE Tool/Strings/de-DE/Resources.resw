@@ -1958,4 +1958,133 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>Das Laufwerk mit der Workshop-Bibliothek ist nicht NTFS. Die automatische Sicherung (Hardlinks) funktioniert auf diesem Laufwerk nicht und wurde daher nicht installiert.</value>
   </data>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>{0} in der Warteschlange</value>
+  </data>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>Zu umwandelnde Hintergrundbilder</value>
+  </data>
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
+    <value>Texturverkleinerung</value>
+  </data>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>Verkleinerungsstufe für alle Hintergrundbilder einheitlich festlegen</value>
+  </data>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Die Stufe, die Sie hier einstellen, gilt zunächst für alle Hintergrundbilder in der Liste. Anschließend können Sie einzelne davon weiterhin abweichend einstellen.</value>
+  </data>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>Verkleinerungsstufe für dieses Hintergrundbild</value>
+  </data>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>Dieses Hintergrundbild aus der Liste entfernen</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Entfernt das Hintergrundbild nur aus der Liste; die Dateien auf Ihrem Computer werden nicht gelöscht.</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>Die Stufe bestimmt auch, wie die Texturen gespeichert werden: 1× ohne Verkleinerung und ohne Komprimierung, 2× und 4× verkleinern zuerst und komprimieren dann nach ETC2.</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>Liste leeren</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>Umwandlung starten</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>Eigene Parameter</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Aktiviert erscheint in jeder Zeile ein Pfeil, mit dem Sie die Parameter dieses Hintergrundbilds einzeln festlegen können – neben der Verkleinerungsstufe noch sieben weitere. Wenn Sie die Option deaktivieren, klappen alle Zeilen zu und diese individuellen Einstellungen werden gelöscht.</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>Detailparameter dieses Hintergrundbilds ausklappen</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Parameter nur für dieses Hintergrundbild festlegen; die anderen bleiben unberührt.</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>Audiodateien beibehalten</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>Texturen komprimieren (LZ4)</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>Shader-Syntax korrigieren</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>ETC2-Komprimierung</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>Zuerst die Verkleinerungsstufe auf 2× oder 4× stellen; ohne Verkleinerung steht die ETC2-Komprimierung nicht zur Verfügung.</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>Standard wiederherstellen</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Nimmt die zum Hintergrundbild gehörenden Audiodateien in das Mobilpaket auf. Auf Mobilgeräten geben die Audioquellen nichts von sich, die Option macht das Paket also nur größer – sie dient höchstens Vergleichstests.</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ohne diese Option werden die Texturen gar nicht mehr komprimiert und das Paket ist meist um ein Vielfaches größer. Aktiv wird jede Textur einzeln geprüft: Was sich nicht verkleinern lässt, bleibt unkomprimiert, kleine Bilder wachsen also nicht unnötig.</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ausgeschaltet werden die Shader im Wortlaut der Desktopversion verpackt. Mobilgeräte prüfen strenger, solche Schreibweisen schlagen beim Kompilieren fehl und die betreffende Ebene erscheint weiß. Lassen Sie die Option aktiviert.</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Komprimiert die verkleinerten Texturen zusätzlich nach ETC2. Die Paketgröße sinkt damit auf etwa ein Viertel, und Mobilgeräte erkennen das Format einwandfrei.</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Löscht die einzeln gesetzten Parameter dieses Hintergrundbilds, danach gilt wieder die einheitliche Einstellung unten in der Liste. Die Verkleinerungsstufe dieses Bilds bleibt unverändert.</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>Texturen unverändert übernehmen</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Kein Byte der Texturen wird verändert; das Paket tauscht gewissermaßen nur die Hülle und zeigt exakt dasselbe Bild wie die Desktopversion. Das dient dem Vergleich: Wenn auf einem Mobilgerät etwas falsch aussieht, prüfen Sie damit zuerst, ob es an den Texturen liegt. Aktiv ignoriert diese Option die Verkleinerungsstufe (die Umwandlung weist darauf hin), die Korrektur der Shader läuft unverändert weiter.</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>DXT-Texturen ebenfalls verkleinern</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>DXT-Texturen bleiben standardmäßig unverändert, weil sie ohnehin weniger Platz beanspruchen als unkomprimierte Formate. Aktiv werden auch sie dekodiert, verkleinert und neu gespeichert; ohne zusätzliche ETC2-Komprimierung kann das Paket dadurch größer werden als zuvor.</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>Benennung</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>Titel</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>Dieses Hintergrundbild hat keine Workshop-ID (bei selbst importierten und eigenen Bildern fehlt sie), es lässt sich nur nach dem Titel benennen.</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ändert nur den Namen dieser .mpkg-Datei auf Ihrem Computer, nicht den Inhalt des Pakets. Der auf dem Mobilgerät angezeigte Name stammt aus den Informationen im Paket und ist unabhängig vom Dateinamen; Hintergrundbilder ohne Workshop-ID werden automatisch nach dem Titel benannt.</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>Alle Hintergrundbilder der Liste werden nach dieser Vorgabe benannt, ein zuvor einzeln geänderter Name folgt wieder ihr. Betrifft nur den Dateinamen auf dem Computer, nicht den Inhalt des Pakets.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>Nach der aktuellen Einstellung wird keine der {0} Texturen dieses Hintergrundbilds verkleinert (DXT-Texturen machen etwa {1}% der gesamten Texturgröße aus). Damit das Paket wirklich kleiner wird, aktivieren Sie „DXT-Texturen ebenfalls verkleinern“ oder wählen Sie eine Stufe mit ETC2-Komprimierung.</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>„Texturen unverändert übernehmen“ ist aktiv: Alle {0} Texturen werden mit den Originaldaten verpackt und nicht neu kodiert (DXT-Texturen machen etwa {1}% der gesamten Texturgröße aus).</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>Nach der aktuellen Einstellung werden nur {0} von {1} Texturen dieses Hintergrundbilds verkleinert; die übrigen bleiben unverändert.</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>Keine Textur wird verkleinert</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>Texturen unverändert verpackt</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>Nur {0}/{1} Texturen werden verkleinert</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>Nicht festgelegt</value>
+  </data>
 </root>

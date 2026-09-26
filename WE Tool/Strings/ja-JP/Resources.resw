@@ -1958,4 +1958,133 @@ project.json とプレビューをコピー
   <data name="AutoBackup_NotNtfs" xml:space="preserve">
     <value>ワークショップライブラリのドライブが NTFS ではありません。自動バックアップ（ハードリンク）はこのドライブでは動作しないため、インストールされませんでした。</value>
   </data>
+  <data name="MpkgQueue_Count.Text" xml:space="preserve">
+    <value>変換待ち {0} 件</value>
+  </data>
+  <data name="MpkgQueueTitle.Text" xml:space="preserve">
+    <value>変換待ちの壁紙</value>
+  </data>
+  <data name="MpkgQueue_ColReduction.Text" xml:space="preserve">
+    <value>テクスチャ縮小</value>
+  </data>
+  <data name="MpkgQueue_Master.AutomationProperties.Name" xml:space="preserve">
+    <value>すべての壁紙の縮小倍率をまとめて設定</value>
+  </data>
+  <data name="MpkgQueue_Master.ToolTipService.ToolTip" xml:space="preserve">
+    <value>このスライダーを合わせた倍率に一覧のすべての壁紙が設定されます。あとから個別の壁紙だけを変更することもできます。</value>
+  </data>
+  <data name="MpkgQueue_TierSlider.AutomationProperties.Name" xml:space="preserve">
+    <value>この壁紙のテクスチャ縮小倍率</value>
+  </data>
+  <data name="MpkgQueue_Remove.AutomationProperties.Name" xml:space="preserve">
+    <value>この壁紙を一覧から削除</value>
+  </data>
+  <data name="MpkgQueue_Remove.ToolTipService.ToolTip" xml:space="preserve">
+    <value>壁紙を一覧から外します。PC 上のファイルは削除されません。</value>
+  </data>
+  <data name="MpkgQueue_ReductionTip.Content" xml:space="preserve">
+    <value>縮小倍率はテクスチャの保存形式も決めます。1× は縮小も圧縮もしません。2× と 4× はテクスチャを縮小してから ETC2 に圧縮します。</value>
+  </data>
+  <data name="MpkgQueue_Clear.Content" xml:space="preserve">
+    <value>一覧をクリア</value>
+  </data>
+  <data name="MpkgQueue_Start.Content" xml:space="preserve">
+    <value>変換を開始</value>
+  </data>
+  <data name="MpkgQueue_Custom.Content" xml:space="preserve">
+    <value>詳細設定</value>
+  </data>
+  <data name="MpkgQueue_Custom.ToolTipService.ToolTip" xml:space="preserve">
+    <value>オンにすると各壁紙の行に矢印が表示され、クリックするとその壁紙だけのパラメータを設定できます（縮小倍率のほか 7 項目）。オフにするとすべての行が折りたたまれ、個別設定も解除されます。</value>
+  </data>
+  <data name="MpkgQueue_Expand.AutomationProperties.Name" xml:space="preserve">
+    <value>この壁紙の詳細設定を開く</value>
+  </data>
+  <data name="MpkgQueue_Expand.ToolTipService.ToolTip" xml:space="preserve">
+    <value>この壁紙だけのパラメータを設定します。他の壁紙には影響しません。</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.Header" xml:space="preserve">
+    <value>音声ファイルを保持</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.Header" xml:space="preserve">
+    <value>テクスチャを圧縮（LZ4）</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.Header" xml:space="preserve">
+    <value>シェーダーの記述を修正</value>
+  </data>
+  <data name="MpkgQueue_Etc2.Text" xml:space="preserve">
+    <value>ETC2 圧縮</value>
+  </data>
+  <data name="MpkgQueue_Etc2Reason.Text" xml:space="preserve">
+    <value>先に縮小倍率を 2× または 4× に設定してください。テクスチャを縮小しない場合は ETC2 圧縮を使えません。</value>
+  </data>
+  <data name="MpkgQueue_Reset.Content" xml:space="preserve">
+    <value>既定に戻す</value>
+  </data>
+  <data name="MpkgQueue_KeepAudio.ToolTipService.ToolTip" xml:space="preserve">
+    <value>壁紙に同梱されている音声ファイルもスマホ用パッケージに入れます。スマートフォンでは壁紙の音が鳴らないため、オンにするとサイズが大きくなるだけです。比較テストをする場合に使ってください。</value>
+  </data>
+  <data name="MpkgQueue_UseLz4.ToolTipService.ToolTip" xml:space="preserve">
+    <value>オフにするとテクスチャを圧縮せず、パッケージは通常数倍大きくなります。オンの場合はテクスチャごとに判断し、圧縮しても小さくならないものは無圧縮で保存するため、小さい画像が無駄に大きくなることはありません。</value>
+  </data>
+  <data name="MpkgQueue_ShaderCompat.ToolTipService.ToolTip" xml:space="preserve">
+    <value>オフにするとシェーダーは PC 版の記述のまま出力されます。スマートフォン側は検証が厳格なため、この記述はコンパイルに失敗し、該当レイヤーが白色表示になることがあります。オンのままを推奨します。</value>
+  </data>
+  <data name="MpkgQueue_Etc2Card.ToolTipService.ToolTip" xml:space="preserve">
+    <value>縮小後のテクスチャをさらに ETC2 形式に圧縮します。サイズは約 4 分の 1 まで削減でき、スマートフォンでも正常に読み込めます。</value>
+  </data>
+  <data name="MpkgQueue_Reset.ToolTipService.ToolTip" xml:space="preserve">
+    <value>この壁紙の個別設定を解除し、一覧下部の共通設定に戻します。縮小倍率は変更されません。</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.Header" xml:space="preserve">
+    <value>テクスチャをそのまま使用</value>
+  </data>
+  <data name="MpkgQueue_CopyTextures.ToolTipService.ToolTip" xml:space="preserve">
+    <value>テクスチャは一切変更せず、出力はコンテナの差し替えのみになるため、画面は PC 版と完全に同一です。比較用に使ってください。スマートフォンで表示が不正な場合、原因がテクスチャにあるかどうかを切り分けられます。オンのときは縮小倍率は適用されず（変換時にメッセージを表示）、シェーダーの修正はそのまま行います。</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.Header" xml:space="preserve">
+    <value>DXT テクスチャも縮小</value>
+  </data>
+  <data name="MpkgQueue_ShrinkDx.ToolTipService.ToolTip" xml:space="preserve">
+    <value>DXT 形式のテクスチャは無圧縮形式より容量がすでに小さいため、既定ではそのまま使用します。オンにするとこの形式も展開して縮小し、保存し直します。ETC2 圧縮を併用せずにこれだけオンにすると、パッケージがむしろ大きくなることがあります。</value>
+  </data>
+  <data name="MpkgQueue_RenameFile.Text" xml:space="preserve">
+    <value>名前付け</value>
+  </data>
+  <data name="MpkgQueue_NameByTitle.Content" xml:space="preserve">
+    <value>タイトル</value>
+  </data>
+  <data name="MpkgQueue_NameById.Content" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="MpkgQueue_RenameFileReason.Text" xml:space="preserve">
+    <value>この壁紙にはワークショップ ID がありません（手動で読み込んだ自作の壁紙には付与されません）。タイトルの名前付けになります。</value>
+  </data>
+  <data name="MpkgQueue_RenameFileCard.ToolTipService.ToolTip" xml:space="preserve">
+    <value>PC 上のこの .mpkg ファイル名だけを変更し、中身は変更しません。スマートフォンに表示される壁紙名はパッケージ内の情報から取得されるため、ファイル名とは無関係です。ワークショップ ID がない壁紙は自動的にタイトルを使います。</value>
+  </data>
+  <data name="MpkgQueue_MasterRenameTip.Content" xml:space="preserve">
+    <value>選択すると一覧のすべての壁紙がこの方法で名前付けされ、個別に変更した壁紙の設定もこちらに追従します。PC 上のファイル名のみを変更し、パッケージの内容は変更しません。</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuck.Text" xml:space="preserve">
+    <value>現在の設定では、この壁紙のテクスチャ {0} 枚は 1 枚も縮小されません（うち DXT 形式がテクスチャ全体の約 {1}% を占めています）。実際に縮小するには「DXT テクスチャも縮小」をオンにするか、ETC2 圧縮を使う倍率を選んでください。</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopied.Text" xml:space="preserve">
+    <value>「テクスチャをそのまま使用」がオンです：テクスチャ {0} 枚を元データのまま出力し、再エンコードしません（うち DXT 形式がテクスチャ全体の約 {1}% を占めています）。</value>
+  </data>
+  <data name="MpkgQueue_ProbePartial.Text" xml:space="preserve">
+    <value>現在の設定では、この壁紙のテクスチャ {0} 枚のみ縮小されます（全 {1} 枚）。残りはそのままです。</value>
+  </data>
+  <data name="MpkgQueue_ProbeStuckShort.Text" xml:space="preserve">
+    <value>テクスチャは縮小されません</value>
+  </data>
+  <data name="MpkgQueue_ProbeCopiedShort.Text" xml:space="preserve">
+    <value>テクスチャはそのまま</value>
+  </data>
+  <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
+    <value>縮小されるのは {0}/{1} 枚のみ</value>
+  </data>
+  <data name="LoadPapers_PresetUnset" xml:space="preserve">
+    <value>未設定</value>
+  </data>
 </root>
