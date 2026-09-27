@@ -49,54 +49,49 @@ namespace WE_Tool
         public static Window? MainWindowInstance { get; private set; }
         // 捕获启动时的系统首选 UI 语言（如 "zh-CN"/"en-US"），跟随系统时用作 PrimaryLanguageOverride
         public static readonly string SystemLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
+        private static Json.PropertyWindowSnapshot? _launchSnapshot;
+        private static Json.WhitelistWindowSnapshot? _launchWhitelistSnapshot;
+        /// <summary>当前进程是属性副窗口子进程(母进程带 --properties-window 自我启动)</summary>
+        public static bool IsPropertiesWindowChild => _launchSnapshot != null;
+        public static Json.PropertyWindowSnapshot? PropertiesWindowLaunch => _launchSnapshot;
+        /// <summary>当前进程是白名单副窗口子进程(母进程带 --whitelist-window 自我启动)</summary>
+        public static Json.WhitelistWindowSnapshot? WhitelistWindowLaunch => _launchWhitelistSnapshot;
+        /// <summary>用户数据根,InitLogging 里定值(日志/配置/缓存同根)</summary>
+        public static string AppDataRoot { get; private set; } = "";
 
         public App()
         {
+            // 副窗口子进程要在建主 VM 之前分流:主窗口那条启动链会读配置(文件缺失/旧版还会写回盘)、
+            // 拉起 SteamworksBridge、全盘扫描并写 wallpaper_cache.json、注册 HKCU 通知——
+            // 子进程一样都不需要,且与母进程并发全量覆写同一批文件必丢更新。
+            var launchKind = Service.PropertyWindowLink.ReadLaunchKind(out string payloadPath);
+            if (launchKind == Service.PropertyWindowLink.WindowKind.Properties)
+                _launchSnapshot = Service.PropertyWindowLink.ReadPropertiesPayload(payloadPath);
+            else if (launchKind == Service.PropertyWindowLink.WindowKind.Whitelist)
+                _launchWhitelistSnapshot = Service.PropertyWindowLink.ReadWhitelistPayload(payloadPath);
+
+            if (_launchSnapshot != null || _launchWhitelistSnapshot != null)
+            {
+                bool isWhitelist = _launchWhitelistSnapshot != null;
+                ViewModel = null!; // 副模式不构建主 VM:两类副窗口都只吃快照,不再引用它
+                ApplyLanguage(isWhitelist ? _launchWhitelistSnapshot!.Language : _launchSnapshot!.Language);
+                this.InitializeComponent();
+                InitLogging(childProcess: true, forcedLevel:
+                    isWhitelist ? _launchWhitelistSnapshot!.LogLevel : _launchSnapshot!.LogLevel,
+                    childLogFile: isWhitelist ? "whitelist.txt" : "properties.txt");
+                HookGlobalExceptionHandlers();
+                Log.Information("===={Child}子进程已启动。Pid={Pid}====",
+                    isWhitelist ? "白名单副窗口" : "属性副窗口", Environment.ProcessId);
+                return;
+            }
+
             ViewModel = new SettingsViewModel(new ConfigService(), new PickerService());
             LoadInitialLanguage();
             this.InitializeComponent();
-            string appDataRoot = GetAppDataRoot();
-            string logPath = System.IO.Path.Combine(appDataRoot, "logs", "log.txt");
+            InitLogging(childProcess: false);
+            HookGlobalExceptionHandlers();
 
-            // 日志文件规范化:固定单文件 logs/log.txt,不做滚动(滚动会把活跃文件改成 log_001.txt,
-            // 导致 Info 页日志面板读不到)。超 5MB 在启动时截断重写,防止无限增长。
-            try
-            {
-                var logDir = System.IO.Path.GetDirectoryName(logPath) ?? appDataRoot;
-                Directory.CreateDirectory(logDir);
-                // 清理历史遗留的滚动序号文件(旧版本 rollOnFileSizeLimit 产生),保持目录只有 log.txt
-                foreach (var f in Directory.GetFiles(logDir, "log_*.txt"))
-                    try { File.Delete(f); } catch { }
-                if (new FileInfo(logPath).Length > 5 * 1024 * 1024)
-                    File.WriteAllText(logPath, string.Empty);
-            }
-            catch { /* 日志初始化失败不阻塞启动 */ }
-
-            // 日志级别从配置预读:让启动横幅(下方第一条日志)起就受设置约束(含"关闭")。
-            // 正式加载在 ScanWallpaperWhenStart(ConfigService 进程内缓存,只真读一次盘);
-            // 此处时机早于 Log.Logger 赋值,LoadAsync 自身的日志打给 Serilog 默认静默器,不会落盘。
-            try
-            {
-                var bootSettings = new ConfigService().LoadAsync().GetAwaiter().GetResult();
-                if (bootSettings?.LogLevel == "Off")
-                    LogLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
-                else if (Enum.TryParse<LogEventLevel>(bootSettings?.LogLevel, true, out var bootLevel))
-                    LogLevelSwitch.MinimumLevel = bootLevel;
-            }
-            catch { /* 预读失败不阻塞启动,保持默认级别 */ }
-
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(LogLevelSwitch) // 级别由设置页控制,运行时即时生效
-                .WriteTo.File(logPath, fileSizeLimitBytes: 5 * 1024 * 1024,
-                    rollOnFileSizeLimit: false)
-                .CreateLogger();
-
-            // 全局异常日志:任何线程的未处理异常都记录到 log.txt;
-            // Steamworks 回调循环的异常(关闭 Steam 时管道断开)不杀死应用
-            UnhandledException += OnUnhandledException;
-            AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
-
-            Log.Information($"====应用程序已启动。路径：{appDataRoot}====", appDataRoot);
+            Log.Information($"====应用程序已启动。路径：{AppDataRoot}====", AppDataRoot);
 
             // 进程退出时释放 Steamworks 原生资源
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
@@ -105,8 +100,82 @@ namespace WE_Tool
             };
         }
 
+        /// <summary>日志初始化。子进程必须写独立文件:Serilog 的 File sink 默认独占写句柄,
+        /// 第二个进程开同一个 log.txt 会在 sink 构造期抛 IOException,副窗口进程根本起不来。
+        /// 两类子进程之间也要分文件——属性与白名单窗口可以同时开着。</summary>
+        private static void InitLogging(bool childProcess, string forcedLevel = "", string childLogFile = "properties.txt")
+        {
+            AppDataRoot = GetAppDataRoot();
+            string logPath = System.IO.Path.Combine(AppDataRoot, "logs",
+                childProcess ? childLogFile : "log.txt");
+
+            // 日志文件规范化:固定单文件,不做滚动(滚动会把活跃文件改成 log_001.txt,
+            // 导致 Info 页日志面板读不到)。超 5MB 在启动时截断重写,防止无限增长。
+            try
+            {
+                var logDir = System.IO.Path.GetDirectoryName(logPath) ?? AppDataRoot;
+                Directory.CreateDirectory(logDir);
+                // 清理历史遗留的滚动序号文件(旧版本 rollOnFileSizeLimit 产生),保持目录只有活跃文件
+                foreach (var f in Directory.GetFiles(logDir, "log_*.txt"))
+                    try { File.Delete(f); } catch { }
+                if (new FileInfo(logPath).Length > 5 * 1024 * 1024)
+                    File.WriteAllText(logPath, string.Empty);
+            }
+            catch { /* 日志初始化失败不阻塞启动 */ }
+
+            // 级别来源:主进程从配置预读;子进程用快照带过来的值,不回头读 config.json
+            string level = childProcess ? forcedLevel : ReadConfiguredLogLevel();
+            if (level == "Off")
+                LogLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+            else if (Enum.TryParse<LogEventLevel>(level, true, out var parsed))
+                LogLevelSwitch.MinimumLevel = parsed;
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.ControlledBy(LogLevelSwitch) // 级别由设置页控制,运行时即时生效
+                .WriteTo.File(logPath, fileSizeLimitBytes: 5 * 1024 * 1024,
+                    rollOnFileSizeLimit: false)
+                .CreateLogger();
+        }
+
+        /// <summary>日志级别预读:此处时机早于 Log.Logger 赋值,LoadAsync 自身的日志打给
+        /// Serilog 默认静默器,不会落盘;文件缺失时 LoadAsync 会创建默认配置(与旧行为等价)。</summary>
+        private static string ReadConfiguredLogLevel()
+        {
+            try
+            {
+                return new ConfigService().LoadAsync().GetAwaiter().GetResult()?.LogLevel ?? "";
+            }
+            catch { return ""; }
+        }
+
+        /// <summary>全局异常日志:任何线程的未处理异常都落盘;
+        /// Steamworks 回调循环的异常(关闭 Steam 时管道断开)不杀死应用。</summary>
+        private void HookGlobalExceptionHandlers()
+        {
+            UnhandledException += OnUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
+        }
+
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            if (_launchSnapshot != null)
+            {
+                // 子进程:属性窗口就是本进程的全部。MainWindowInstance 指向它,App.GetPopupTheme()
+                // 才能从 Content.RequestedTheme 取到当前主题,否则弹层掉回 Default。
+                _window = new PropertiesWindow(_launchSnapshot);
+                MainWindowInstance = _window;
+                _window.Activate();
+                return;
+            }
+
+            if (_launchWhitelistSnapshot != null)
+            {
+                _window = new Views.WhitelistWindow(_launchWhitelistSnapshot);
+                MainWindowInstance = _window;
+                _window.Activate();
+                return;
+            }
+
             _window = new MainWindow();
             MainWindowInstance = _window;
 
@@ -392,20 +461,7 @@ namespace WE_Tool
                 // 文件缺失时 LoadAsync 会创建默认配置并返回默认值,与旧行为等价
                 // (旧实现文件缺失返回"跟随系统",而 InitializeAsync 本来也会创建文件)。
                 var settings = new WE_Tool.Service.ConfigService().LoadAsync().GetAwaiter().GetResult();
-                string lang = settings?.AppLanguage ?? "default";
-
-                // 跟随系统（空字符串或"default"）→ 不设置 PrimaryLanguageOverride
-                // 文档：空字符串不是合法的 BCP-47 标签，set 会抛 COMException
-                // 正确做法：完全不调用 setter，让系统默认生效
-                if (string.IsNullOrEmpty(lang) || lang == "default")
-                {
-                    Log.Information("语言加载完成: 跟随系统默认");
-                }
-                else
-                {
-                    Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = lang;
-                    Log.Information("语言加载完成: {Language}", lang);
-                }
+                ApplyLanguage(settings?.AppLanguage ?? "default");
             }
             catch (Exception ex)
             {

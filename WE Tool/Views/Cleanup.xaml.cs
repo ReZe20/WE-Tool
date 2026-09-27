@@ -22,6 +22,7 @@ using Serilog;
 using WE_Tool.ViewModels;
 using WE_Tool.Helper;
 using WE_Tool.Json;
+using WE_Tool.Service;
 using Windows.System;
 using Windows.UI.Core;
 
@@ -43,7 +44,6 @@ public sealed partial class Cleanup : Page
         App.GetAppDataRoot(), "cleanup_whitelist.json");
 
     private readonly HashSet<string> _whitelist = new(StringComparer.OrdinalIgnoreCase);
-    private WhitelistWindow? _whitelistWin;
     private bool _initialScanDone;
 
     public ObservableCollection<CleanupCardViewModel> Cards { get; } = new();
@@ -413,7 +413,7 @@ public sealed partial class Cleanup : Page
         foreach (var card in Cards.Where(c => c.IsSelected).ToList())
         {
             _whitelist.Add(card.FolderId);
-            _whitelistWin?.AddWhitelistCard(card.FolderId);
+            WhitelistWindowHost.NotifyAdded(card.FolderId); // 白名单副窗口增量加卡
             RemoveCard(card);
         }
         SaveWhitelist();
@@ -475,30 +475,25 @@ public sealed partial class Cleanup : Page
 
         _whitelist.Add(card.FolderId);
         SaveWhitelist();
-        _whitelistWin?.AddWhitelistCard(card.FolderId); // 通知窗口增量添加
+        WhitelistWindowHost.NotifyAdded(card.FolderId); // 白名单副窗口增量加卡
         RemoveCard(card);
     }
 
     private void WhitelistButton_Click(object sender, RoutedEventArgs e)
     {
-        // 单实例守卫:窗口已开(未关闭)则聚焦已有窗口,不再叠加
-        if (_whitelistWin != null)
+        // 单实例守卫:子进程窗口已开就只请它前置(宿主发 focus,由子窗口自己 Activate),不叠加第二个进程
+        if (WhitelistWindowHost.IsOpen) return;
+
+        // 白名单项被子窗口移除:本页是文件唯一写者,改集合+落盘,并把该壁纸加回列表
+        WhitelistWindowHost.OnItemRemoved = id =>
         {
-            try { _whitelistWin.Activate(); }
-            catch { _whitelistWin = null; }
-            return;
-        }
-        _whitelistWin = new WhitelistWindow(_whitelist, WorkshopPath);
-        var win = _whitelistWin;
-        // 白名单项被移除时立即把该壁纸加回列表
-        win.WhitelistItemRemoved += id =>
-        {
-            DispatcherQueue.TryEnqueue(() => RescanCardForId(id));
+            _whitelist.Remove(id);
+            SaveWhitelist();
+            RescanCardForId(id);
         };
-        // 窗口关闭后清引用 + 刷新列表(可能有其他变化);Scan 走后台线程,完成后回 UI 线程填集合
-        win.Closed += async (_, _) =>
+        // 子进程退出后刷新列表(可能有其他变化);Scan 走后台线程,完成后回 UI 线程填集合
+        WhitelistWindowHost.OnClosed = async () =>
         {
-            _whitelistWin = null;
             var list = await Task.Run(Scan);
             DispatcherQueue.TryEnqueue(() =>
             {
@@ -514,7 +509,8 @@ public sealed partial class Cleanup : Page
                 SyncView();
             });
         };
-        win.Activate();
+        _ = WhitelistWindowHost.OpenAsync(
+            ((App)Application.Current).ViewModel, _whitelist.ToList(), WorkshopPath);
     }
 
     private async void DeleteAllButton_Click(object sender, RoutedEventArgs e)

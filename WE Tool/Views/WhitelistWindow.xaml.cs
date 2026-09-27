@@ -17,6 +17,7 @@ using Serilog;
 using WE_Tool.ViewModels;
 using WE_Tool.Helper;
 using WE_Tool.Json;
+using WE_Tool.Service;
 using WinUIEx;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Media.Animation;
@@ -35,9 +36,16 @@ public sealed partial class WhitelistWindow : WindowEx
         return args.Length == 0 ? s : string.Format(s, args);
     }
 
+    /// <summary>母进程发来的启动载荷:白名单条目 + 工坊路径 + 主题/日志级别。本进程不读配置与白名单文件。</summary>
+    private readonly WhitelistWindowSnapshot _snapshot;
+    /// <summary>本进程自己的一份白名单集合:母进程把 cleanup_whitelist.json 的内容灌进载荷,
+    /// 这里只用来渲染/增删卡片。文件仍然只有母进程一个写者——本窗口删条目是"报意图",不落盘。</summary>
     private readonly HashSet<string> _whitelist;
     private readonly string _workshopPath;
     private ObservableCollection<CleanupCardViewModel> _cards = new();
+
+    private PropertyWindowChannel? _channel;
+    private string _theme = "";
 
     // [列表键盘可达 2026-09-22,同步残留清理页] 卡片 = Tab/方向键停留点,Ctrl+L 直达,Enter/空格深入一层到卡内控件,
     // Esc 退回卡片。与 Cleanup 页同一套模型,两点差异:
@@ -46,29 +54,104 @@ public sealed partial class WhitelistWindow : WindowEx
     //   2) XamlRoot 必须取本窗口的(主窗口 Content 的 XamlRoot 与本窗口无关,读错会恒返回 null)。
     private int _listAnchorIndex = -1;   // 列表里最后停留过的卡下标:Ctrl+L 的落点
 
-    /// <summary>白名单发生变化时触发(参数=被移除的 ID)。</summary>
-    public event Action<string>? WhitelistItemRemoved;
-
-    public WhitelistWindow(HashSet<string> whitelist, string workshopPath)
+    public WhitelistWindow(WhitelistWindowSnapshot snapshot)
     {
-        _whitelist = whitelist;
-        _workshopPath = workshopPath;
+        _snapshot = snapshot;
+        _whitelist = new HashSet<string>(snapshot.Entries);
+        _workshopPath = snapshot.WorkshopPath;
+        _theme = snapshot.Theme ?? "";
         InitializeComponent();
         // 自定义标题栏:去系统标题栏,顶部 48px 留空当标题栏(Tall 高度)
         ExtendsContentIntoTitleBar = true;
         AppWindow.TitleBar.PreferredHeightOption = Microsoft.UI.Windowing.TitleBarHeightOption.Tall;
         Title = LanguageHelper.GetResource("WhitelistWindowTitle.Title");
-        // 主题跟随主程序:独立窗口不继承 MainWindow 根元素的 RequestedTheme,创建时显式同步一次
-        // (主窗口为 Default=跟随系统时,本窗口保持 Default)
-        if (App.MainWindowInstance?.Content is FrameworkElement mainRoot
-            && mainRoot.RequestedTheme is Microsoft.UI.Xaml.ElementTheme et
-            && et is not Microsoft.UI.Xaml.ElementTheme.Default
-            && Content is FrameworkElement thisRoot)
-        {
-            thisRoot.RequestedTheme = et;
-        }
+        ApplyTheme();
         CardRepeater.ItemsSource = _cards;
         LoadWhitelistCards();
+
+        Closed += (s, e) =>
+        {
+            _channel?.Dispose();
+            // 本进程只有这一个窗口:关掉就退,别留一个没有窗口的空进程等 Job Object 收尸
+            Application.Current.Exit();
+        };
+
+        StartChannel();
+    }
+
+    /// <summary>接母进程的管道:本进程是 server(管名来自快照)。
+    /// 连不上只丢主题/增量加卡的实时同步,窗口本身照常工作。</summary>
+    private void StartChannel()
+    {
+        string pipeName = _snapshot.PipeName;
+        if (string.IsNullOrEmpty(pipeName)) return;
+
+        _ = Task.Run(async () =>
+        {
+            var channel = await PropertyWindowChannel
+                .AcceptAsServerAsync(pipeName, TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+            if (channel == null)
+            {
+                Log.Warning("[白名单副窗] 管道未建成,主题与增量加卡不可用");
+                return;
+            }
+
+            // 本窗口的 DispatcherQueue 必须在 UI 线程上取(Window.DispatcherQueue 是自由线程可读的)
+            var queue = DispatcherQueue;
+            channel.MessageReceived += message => queue?.TryEnqueue(() => OnLinkMessage(message));
+            channel.Broken += () => { };
+            _channel = channel;
+        });
+    }
+
+    /// <summary>母进程推来的设置变化/前置/加卡请求。UI 线程执行。</summary>
+    private void OnLinkMessage(PropertyWindowMessage message)
+    {
+        switch (message.Kind)
+        {
+            case PropertyWindowLink.KindTheme:
+                string newTheme = message.Theme ?? "";
+                if (newTheme == _theme) break;
+                _theme = newTheme;
+                ApplyTheme();
+                break;
+            case PropertyWindowLink.KindFocus:
+                Activate();
+                break;
+            case PropertyWindowLink.KindAdd:
+                if (!string.IsNullOrEmpty(message.EntryId)) AddWhitelistCard(message.EntryId!);
+                break;
+        }
+    }
+
+    /// <summary>主题由母进程经快照+管道给出:独立窗口不继承主窗口根元素的 RequestedTheme,
+    /// 而本进程根本没有主窗口可读(主 VM 只在母进程里)。</summary>
+    private void ApplyTheme()
+    {
+        if (Content is not FrameworkElement root) return;
+        root.RequestedTheme = _theme switch
+        {
+            "Dark" => Microsoft.UI.Xaml.ElementTheme.Dark,
+            "Light" => Microsoft.UI.Xaml.ElementTheme.Light,
+            _ => Microsoft.UI.Xaml.ElementTheme.Default
+        };
+    }
+
+    /// <summary>把"移出白名单"的意图报给母进程:改集合、写 cleanup_whitelist.json、把壁纸退回清理列表都由它做。</summary>
+    private void ReportRemoved(string id)
+    {
+        var channel = _channel;
+        if (channel == null)
+        {
+            Log.Warning("[白名单副窗] 管道未连通,{Id} 的移除没能上报,主程序仍保留该项", id);
+            return;
+        }
+        // 管道写可能在母进程不读时阻塞,一律离开 UI 线程
+        _ = Task.Run(() => channel.Send(new PropertyWindowMessage
+        {
+            Kind = PropertyWindowLink.KindRemoved,
+            EntryId = id,
+        }));
     }
 
     private void LoadWhitelistCards()
@@ -85,9 +168,10 @@ public sealed partial class WhitelistWindow : WindowEx
     }
 
 
-    /// <summary>外部调用:增量添加白名单卡片。</summary>
+    /// <summary>母进程增量通知:清理页把某 ID 加进了白名单。</summary>
     public void AddWhitelistCard(string id)
     {
+        _whitelist.Add(id);
         if (_cards.Any(c => c.FolderId == id)) return; // 已存在
         var dir = Path.Combine(_workshopPath, id);
         if (!Directory.Exists(dir)) return;
@@ -99,15 +183,17 @@ public sealed partial class WhitelistWindow : WindowEx
         }
     }
 
-    /// <summary>外部调用:增量移除白名单卡片。</summary>
-    public void RemoveWhitelistCard(string id)
+    /// <summary>本窗口内删除条目:先移除卡片(乐观更新),再把意图报给母进程落盘。</summary>
+    private void RemoveCard(string id)
     {
+        _whitelist.Remove(id);
         var card = _cards.FirstOrDefault(c => c.FolderId == id);
         if (card != null)
         {
             _cards.Remove(card); // ObservableCollection 触发动画
             UpdateVisibility();
         }
+        ReportRemoved(id);
     }
 
     private void UpdateVisibility()
@@ -232,35 +318,14 @@ public sealed partial class WhitelistWindow : WindowEx
     {
     AnimatedIconPlayer.PlayOnce(sender);   // [删除图标动画 2026-09]
         foreach (var card in _cards.Where(c => c.IsSelected).ToList())
-        {
-            _whitelist.Remove(card.FolderId);
-            WhitelistItemRemoved?.Invoke(card.FolderId);
-            _cards.Remove(card);
-        }
-        SaveWhitelistLocal();
+            RemoveCard(card.FolderId);
         UpdateBatchButtons();
-        UpdateVisibility();
-    }
-
-    private void SaveWhitelistLocal()
-    {
-        try
-        {
-            var file = Path.Combine(
-                App.GetAppDataRoot(), "cleanup_whitelist.json");
-            File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(_whitelist.ToList(), JsonContext.Default.ListString));
-        }
-        catch { }
     }
 
     private void RemoveFromWhitelist_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as Button)?.CommandParameter is not CleanupCardViewModel card) return;
-        _whitelist.Remove(card.FolderId);
-        WhitelistItemRemoved?.Invoke(card.FolderId);
-        SaveWhitelistLocal();
-        _cards.Remove(card); // 增量移除(ObservableCollection 触发动画)
-        UpdateVisibility();
+        RemoveCard(card.FolderId);
     }
 
     // ---------- 列表键盘可达(2026-09-22,同步残留清理页) ----------

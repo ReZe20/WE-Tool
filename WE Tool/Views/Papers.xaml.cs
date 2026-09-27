@@ -4766,15 +4766,15 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 ? new List<WallpaperItem> { ViewModel.SelectedWallpaper }
                 : [];
         if (items.Count == 0) return;
-        // 超过5个弹窗确认(去重由 PropertiesWindow.Open 内部处理)
-        if (PropertiesWindow.OpenWindowCount + items.Count > 5)
+        // 超过上限弹窗确认(同一壁纸去重由 OpenAsync 内部处理:改为要求已有子窗口前置)
+        if (PropertiesWindowHost.OpenWindowCount + items.Count > PropertiesWindowHost.WindowLimit)
         {
             var dlg = new ContentDialog
             {
                 XamlRoot = XamlRoot,
                 RequestedTheme = App.GetPopupTheme(),
                 Title = "打开多个属性窗口",
-                Content = $"将打开 {items.Count} 个属性窗口（当前已有 {PropertiesWindow.OpenWindowCount} 个），是否继续？",
+                Content = $"将打开 {items.Count} 个属性窗口（当前已有 {PropertiesWindowHost.OpenWindowCount} 个），是否继续？",
                 PrimaryButtonText = "打开",
                 CloseButtonText = "取消",
                 DefaultButton = ContentDialogButton.Close
@@ -4782,7 +4782,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
         }
         foreach (var wp in items)
-            PropertiesWindow.Open(wp);
+            await PropertiesWindowHost.OpenAsync(ViewModel, wp);
         }
         catch (Exception ex)
         {

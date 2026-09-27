@@ -25,6 +25,9 @@
     <!-- AOT/Trim 兼容:禁用 XAML 类型反射和绑定诊断(避免 0xC000027B stowed exception) -->
     <EnableTypeInfoReflection>true</EnableTypeInfoReflection>
     <EnableBindingDiagnostics>false</EnableBindingDiagnostics>
+    <!-- 入口点改由 WE Tool/Program.cs 实现:桥接子模式必须在 Application.Start 之前分流,
+         否则那个全程常驻的空闲进程要背上整套 XAML 运行时 -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
   <!-- NativeAOT 裁剪保留:LinkPartTemplateSelector/SelectTemplateCore 虚方法被 WinUI ItemsControl
        运行时调用(非静态可达),trimmer 会裁掉导致 AOT 下属性面板文字显示为类型名。 -->
@@ -66,6 +69,7 @@
     <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+    <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.0" />
@@ -75,54 +79,18 @@
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="4.151.1" />
     <PackageReference Include="WinUIEx" Version="2.9.3" />
   </ItemGroup>
-  <!-- SteamworksBridge 部署:应用对桥接无编译期引用(仅进程调用),不能 ProjectReference
-       (自包含发布会报 NETSDK1150);构建/发布时构建桥接并把输出拷进目标目录 -->
-  <PropertyGroup>
-    <BridgeAotPublishDir>$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\publish-aot</BridgeAotPublishDir>
-    <BridgeUseAot Condition="'$(Configuration)' != 'Debug' And Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\Properties\PublishProfiles\AotWinX64.pubxml')">true</BridgeUseAot>
-  </PropertyGroup>
-  <Target Name="CopySteamworksBridge" AfterTargets="Build;Publish" BeforeTargets="PackageWithLauncher" Condition="Exists('$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj')">
-    <!-- 桥接把 OutputPath 钉成不含平台段(为了引用解析稳定,见其 csproj 注释),所以 x64 与 ARM64 两次
-         构建写进的是同一个目录、后编的赢:用 dotnet build WE Tool.slnx 时 slnx 里的 ARM64 平台会把
-         apphost 换成 ARM64,VS 调试时报「映像文件…无效,但它对另一种计算机类型有效」。
-         不改路径形状(会引回 CS0006),改为构建前清空目录:顺带根除"历史残留被 glob 收进产物"那一类
-         老问题(见 skill:曾经整套 .NET8 运行时被拷进发布包)。 -->
-    <!-- 输出目录形状随调用方式变(实测):dotnet build 单项目 → bin\$(Configuration)\$(TargetFramework)\;
-         dotnet build WE Tool.slnx(RID 作为全局属性泄漏进 <MSBuild>)→ 多一段 win-x64\;
-         dotnet publish(RID 由 pubxml 在项目内赋值,不传给子项目)→ 又是无平台段。
-         所以不去猜路径,直接向子项目的 Build 目标要 TargetOutputs(它返回真实主输出路径),取其目录再 glob。
-         只拷本次真正产出的那一份,历史 bin 里的其他形状一律不参与。 -->
-    <RemoveDir Directories="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\" ContinueOnError="WarnAndContinue" />
-    <!-- [AOT 2026-09-20] Release 走 AOT 自包含发布(单 exe 2.89MB + steam_api64.dll,目标机免 .NET 运行时);
-         Debug 仍是普通 Build,保证 F5 直跑。实测 Facepunch.Steamworks 2.3.3 在 AOT 下可用:
-         SteamClient.Init/Name/SteamId/Item.Unsubscribe 全部正常,唯一必须改的是回包 JSON ——
-         匿名类型走反射序列化,AOT 下抛 InvalidOperationException(现改用源生成上下文,见 BridgeReplies.cs)。
-         profile 缺失时自动退回框架依赖(旧行为),与 BuildRepkg 的 RepkgUseAot 同一套形状。 -->
-    <RemoveDir Condition="'$(BridgeUseAot)' == 'true'" Directories="$(BridgeAotPublishDir)\" ContinueOnError="WarnAndContinue" />
-    <Exec Condition="'$(BridgeUseAot)' == 'true'"
-          Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj&quot; -c Release -p:PublishProfile=AotWinX64" />
-    <ItemGroup Condition="'$(BridgeUseAot)' == 'true'">
-      <BridgeOutput Include="$(BridgeAotPublishDir)\**\*" />
-    </ItemGroup>
-    <MSBuild Condition="'$(BridgeUseAot)' != 'true'" Projects="$(MSBuildThisFileDirectory)..\SteamworksBridge\SteamworksBridge.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform)">
-      <Output TaskParameter="TargetOutputs" ItemName="BridgeBuiltAssembly" />
-    </MSBuild>
-    <PropertyGroup>
-      <BridgeOutDir Condition="'@(BridgeBuiltAssembly)' != ''">$([System.IO.Path]::GetDirectoryName('%(BridgeBuiltAssembly.FullPath)'))\</BridgeOutDir>
-    </PropertyGroup>
-    <ItemGroup Condition="'$(BridgeUseAot)' != 'true' And '$(BridgeOutDir)' != ''">
-      <BridgeOutput Include="$(BridgeOutDir)**\*" Exclude="$(BridgeOutDir)*.pdb" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(BridgeUseAot)' != 'true' And '$(BridgeOutDir)' == ''">
-      <!-- 兜底:TargetOutputs 取不到时仍按主路径形状找(排除任何 win-* 子目录残留) -->
-      <BridgeOutput Include="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\**\*"
-                    Exclude="$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\*.pdb;$(MSBuildThisFileDirectory)..\SteamworksBridge\bin\$(Configuration)\$(TargetFramework)\win-*\**" />
-    </ItemGroup>
-    <!-- 失配保护:桥接必须产出文件,空则直接报错,杜绝发布包静默缺失 -->
-    <Error Condition="'@(BridgeOutput)' == ''" Text="CopySteamworksBridge 未找到任何桥接输出(TargetOutputs=$(BridgeOutDir)),请检查 SteamworksBridge 的 TFM 是否与主项目一致" />
-    <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(BridgeOutput)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition="'$(PublishDir)' != ''" />
-  </Target>
+  <!-- Steamworks 桥接:2026-09-27 起不再是独立工程,改为主程序自己带 steam-bridge 开关起的第二个进程
+       (XML 注释里不能写双横线,所以命令行开关只写名字)
+       (实现见 Service/SteamBridgeChild.cs,分流点在 Program.cs),省掉第二份 AOT 运行时。
+       Facepunch 因此成为主项目的编译期依赖,但它的原生库 steam_api64.dll 在 NuGet 包的 content/ 里,
+       PackageReference 不会自动复制(仅 contentFiles/ 才会),缺它桥接启动即失败(0x8007007E / ExitCode 1),
+       所以从仓库 native/facepunch/ 取(与 libSkiaSharp.dll 同模式,随 git 分发,CI/本地一致)。 -->
+  <ItemGroup>
+    <Content Include="$(MSBuildProjectDirectory)\..\native\facepunch\steam_api64.dll"
+             Link="steam_api64.dll"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
   <!-- 自动备份服务 AutoBackupService.exe:C++/MSVC 实现。
        应用对服务无编译期引用(只按 AppContext.BaseDirectory\AutoBackupService\AutoBackupService.exe
        起进程 + HKCU Run 键自启),所以不能 ProjectReference,只能在这里编好再拷进那个子目录。
@@ -452,7 +420,7 @@
 
   <!-- Post-publish: 剔除发布不需要的附带文件。AOT 主程序 WE_Tool.exe 直接位于发布根目录。
        portable zip 另由 PackageZip 组装 launcher + app\ 布局(见该目标);setup 直接用本根目录版。
-       目标名保留作 CopySteamworksBridge/CopyAutoBackupService/DeleteAotPdb/ReplaceSkiaDll 的时序锚点 -->
+       目标名保留作 CopyAutoBackupService/DeleteAotPdb/ReplaceSkiaDll 的时序锚点 -->
   <Target Name="PackageWithLauncher" AfterTargets="Publish">
     <!-- 剔除调试符号:SkiaSharp 等原生包自带 .pdb(仅调试用),发布产物不携带,避免体积虚增 -->
     <!-- 剔除 ANGLE 原生库:SkiaGifView 纯 CPU 光栅绘制(SKCodec+SKBitmap+SKXamlCanvas),不创建 GL 上下文;
@@ -494,17 +462,17 @@
       <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.Management.Deployment.Projection.dll" />
       <_PublishUnneeded Include="$(PublishDir)**\Microsoft.Windows.Media.Capture.Projection.dll" />
       <_PublishUnneeded Include="$(PublishDir)**\System.Numerics.Tensors.dll" />
-      <!-- [AOT 桥接 2026-09-20] 桥接为 AOT 单 exe 后,以下全是应消失的旧形态文件:
-           Facepunch 包装 dll + host 元数据(deps/runtimeconfig/托管 dll)是上一轮框架依赖发布留在
-           publish 目录里的残留(AOT 版不产出它们,但 RemoveDir 只管桥接自己的 bin,不清 publish 目录);
-           WinRT.Runtime.dll 是桥接 glob 顺带搬进来的投影(529KB),主程序 AOT 不需要。
-           不删 → 本地包比 CI 全新检出多这些文件,包体积不可复现。
-           Condition 必要:BridgeUseAot 为假(回退框架依赖)时这些正是桥接运行所需。 -->
-      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\Facepunch.Steamworks.Win64.dll" />
-      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\WinRT.Runtime.dll" />
-      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\SteamworksBridge.deps.json" />
-      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\SteamworksBridge.runtimeconfig.json" />
-      <_PublishUnneeded Condition="'$(BridgeUseAot)' == 'true'" Include="$(PublishDir)**\SteamworksBridge.dll" />
+      <!-- [桥接折进主 exe 2026-09-27] 下面两组是独立桥接工程留下的旧形态文件,现在没有任何东西运行它们,
+           但 publish 目录常被复用,不清就会跟着进包(实测本地包因此比 CI 全新检出多文件,体积不可复现)。 -->
+      <_PublishUnneeded Include="$(PublishDir)**\SteamworksBridge.exe" />
+      <_PublishUnneeded Include="$(PublishDir)**\SteamworksBridge.dll" />
+      <_PublishUnneeded Include="$(PublishDir)**\SteamworksBridge.deps.json" />
+      <_PublishUnneeded Include="$(PublishDir)**\SteamworksBridge.runtimeconfig.json" />
+      <!-- Facepunch 包装 dll + WinRT.Runtime.dll 现在是主程序自己的依赖(桥接跑在本进程里):
+           只在 AOT 发布时剔(AOT 已把它们焊进 exe,发布目录里再出现就是上一轮非 AOT 的残留);
+           非 AOT(Debug / 框架依赖发布)缺它们起不来,必须留着。 -->
+      <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\Facepunch.Steamworks.Win64.dll" />
+      <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\WinRT.Runtime.dll" />
     </ItemGroup>
     <Delete Files="@(_PublishUnneeded)" />
     <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (AOT 主程序,无 launcher) (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />

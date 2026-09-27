@@ -20,7 +20,7 @@
         CS1503 编译失败 -->
     <Grid x:Name="RootGrid" Background="Transparent">
         <Grid.Resources>
-        <!-- 文件属性页虚拟化行模板:预览/标题/节标题/信息行/分隔线/文件树 单模板按行类型 Visibility 切换
+        <!-- 文件属性页行模板:预览/标题/节标题/信息行/分隔线/文件树 单模板按行类型 Visibility 切换
              (同 PropertyRowTemplate 模式);标签/值在 code-behind 预计算(快照语义)。
              x:DataType + x:Bind:AOT 安全(普通 Binding 反射失效) -->
         <DataTemplate x:Key="FileInfoRowTemplate" x:DataType="local:FileInfoRow">
@@ -54,9 +54,13 @@
                 <!-- 分隔线 -->
                 <Rectangle Visibility="{x:Bind DividerVisibility, Mode=OneWay}" Height="1"
                            Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
-                <!-- 文件结构树:虚拟化回收后重新实化时由 Loaded 从缓存重建根节点 -->
+                <!-- 文件结构树:不设高度上限,整棵随条目数自然延长,溢出由外层 ScrollViewer 滚动。
+                     能这么做的前提是本页不回收行(VerticalCacheLength 盖住整页,见 code-behind 的 FullListCacheLength):
+                     本行是列表最后一项,Loaded 里 PopulateTree 会让它从 0 长到全高;一旦这一行能被销毁重建,
+                     这个增长就反复改掉整个列表的可滚动总高 → ScrollViewer 重算并夹紧偏移 → 本行被推出视野而销毁
+                     → 再实化又 0→全高,滚到近底部即自锁成上下抽搐。行常驻后它只在打开时长这一次。 -->
                 <TreeView Visibility="{x:Bind TreeVisibility, Mode=OneWay}"
-                          MaxHeight="200" Margin="0,0,0,20"
+                          Margin="0,0,0,20"
                           Loaded="FileStructureTree_Loaded"
                           Expanding="FileStructureTree_Expanding"
                           DoubleTapped="FileStructureTree_DoubleTapped"
@@ -138,9 +142,9 @@
                 <Grid>
                     <!-- ========== 文件属性页 ========== -->
                     <ScrollViewer x:Name="ContentRoot" Visibility="Visible" VerticalScrollBarVisibility="Auto">
-                        <!-- 文件属性页虚拟化列表:ItemsRepeater 由 code-behind 创建(XamlCompiler 对窗口内
+                        <!-- 文件属性页列表:ItemsRepeater 由 code-behind 创建(XamlCompiler 对窗口内
                              ItemsRepeater 标签稳定 Pass1 崩溃,同壁纸属性页 PropertyItemsHost 模式);
-                             直接挂 ScrollViewer.Content 获得有界视口,StackLayout 才真正虚拟化 -->
+                             行常驻不回收(VerticalCacheLength 取到盖住整页),原因见 code-behind FullListCacheLength -->
                     </ScrollViewer>
                     <!-- ========== 壁纸属性页(DataContext = 窗口实例,绑定窗口的 Properties 等) ========== -->
                     <Grid x:Name="WallpaperPropsRoot" Visibility="Collapsed">

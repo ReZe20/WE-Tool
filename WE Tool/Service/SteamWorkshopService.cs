@@ -1,7 +1,6 @@
 using Serilog;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -26,13 +25,13 @@ public enum SteamworksStatus
 }
 
 /// <summary>
-/// Steamworks 桥接管理器:Steamworks 注册在独立子进程 SteamworksBridge.exe 中,
-/// 通过 stdin/stdout 行 JSON 协议通信。原因:Steam 客户端退出时会强制关闭以游戏 AppID
-/// 连接的进程(连 Wallpaper Engine 本体都会被关),子进程方案让被杀的是桥接进程,主应用存活。
+/// Steamworks 桥接管理器:Steamworks 注册在主程序自己以 --steam-bridge 拉起的子进程中
+/// (实现见 <see cref="SteamBridgeChild"/>),通过 stdin/stdout 行 JSON 协议通信。原因:Steam 客户端
+/// 退出时会强制关闭以游戏 AppID 连接的进程(连 Wallpaper Engine 本体都会被关),子进程方案让被杀的是
+/// 桥接进程,主应用存活。
 /// </summary>
 public partial class SteamWorkshopService : IDisposable
 {
-    private const string BridgeExeName = "SteamworksBridge.exe";
 
     private static SteamWorkshopService? _instance;
     private static readonly object Lock = new();
@@ -191,10 +190,13 @@ public partial class SteamWorkshopService : IDisposable
     {
         try
         {
-            var exePath = Path.Combine(AppContext.BaseDirectory, BridgeExeName);
-            if (!File.Exists(exePath))
+            // 桥接不再是独立的 SteamworksBridge.exe,而是主程序自己带 --steam-bridge 的第二个进程。
+            // 换到这个形态是为了省掉第二份 AOT 运行时(旧桥接 exe 实测 2.89MB / 压缩后 ~1.3MB);
+            // 被 Steam 杀掉的是这个子进程,主程序照旧存活,隔离性一点没少。
+            var exePath = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exePath))
             {
-                Log.Error("SteamworksBridge.exe 缺失于 {Path},取消订阅功能不可用。", exePath);
+                Log.Error("Environment.ProcessPath 为空,无法拉起 Steamworks 桥接子进程,取消订阅功能不可用。");
                 _hadGoodStatus = false;
                 StatusChanged?.Invoke();
                 return false;
@@ -210,6 +212,7 @@ public partial class SteamWorkshopService : IDisposable
                 StandardInputEncoding = Encoding.UTF8,
                 StandardOutputEncoding = Encoding.UTF8,
             };
+            startInfo.ArgumentList.Add(SteamBridgeChild.BridgeArg);
             // 桥接是独立进程,读不到主程序日志级别;主程序"关闭日志"(Off→Fatal)时以参数同步静默
             if (App.LogLevelSwitch.MinimumLevel == Serilog.Events.LogEventLevel.Fatal)
                 startInfo.ArgumentList.Add("--log-off");
@@ -219,10 +222,6 @@ public partial class SteamWorkshopService : IDisposable
                 StartInfo = startInfo,
                 EnableRaisingEvents = true,
             };
-            // 自包含发布(无对应 .NET 运行时的机器)时,桥接为框架依赖进程,须指向应用自带的运行时;
-            // 框架依赖安装(本机装有对应 .NET)则不用设置
-            if (File.Exists(Path.Combine(AppContext.BaseDirectory, "hostfxr.dll")))
-                bridge.StartInfo.Environment["DOTNET_ROOT"] = AppContext.BaseDirectory;
             bridge.Exited += (_, _) =>
             {
                 // 桥接进程退出(Steam 关闭时被 Steam 终止,或自身崩溃)
@@ -241,7 +240,7 @@ public partial class SteamWorkshopService : IDisposable
             _bridge = bridge;
             _hadGoodStatus = false;
             _ = Task.Run(() => ReadBridgeOutput(bridge));
-            Log.Information("Steamworks 桥接进程已启动 (PID {Pid})", bridge.Id);
+            Log.Information("Steamworks 桥接子进程已启动 (PID {Pid}, {Exe} --steam-bridge)", bridge.Id, exePath);
             StatusChanged?.Invoke();
             return true;
         }

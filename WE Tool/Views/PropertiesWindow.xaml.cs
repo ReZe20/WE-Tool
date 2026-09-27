@@ -20,9 +20,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Converters;
+using WE_Tool.Json;
 using WE_Tool.Models;
 using WE_Tool.Service;
-using WE_Tool.ViewModels;
 using Windows.Graphics;
 using Windows.UI;
 using Microsoft.UI.Text;
@@ -36,29 +36,43 @@ namespace WE_Tool
     /// </summary>
     public sealed partial class PropertiesWindow : WindowEx, INotifyPropertyChanged
     {
-        /// <summary>保持所有已打开窗口的强引用——WinUI 3 中 Window 对象被 GC 回收会导致窗口消失</summary>
-        private static readonly List<PropertiesWindow> _openWindows = new();
+        /// <summary>母进程发来的启动载荷:条目字段 + 主题/模糊/尺寸。本进程不读 config.json。</summary>
+        private readonly PropertyWindowSnapshot _snapshot;
 
-        /// <summary>当前已打开的属性窗口数。</summary>
-        public static int OpenWindowCount => _openWindows.Count;
+        // 主题与预览模糊开关:打开时取快照值,之后由母进程经管道推送更新
+        // (设置 VM 只在主进程里,出进程后这里收不到 PropertyChanged,所以必须有一条推送通道)
+        private string _theme = "";
+        private bool _blurEveryone;
+        private bool _blurTeen;
+        private bool _blurAdult;
 
-        public SettingsViewModel ViewModel { get; }
+        private PropertyWindowChannel? _channel;
 
-        public PropertiesWindow()
+        /// <summary>文件属性页的实化缓冲(单位 = 视口倍数,上下各一份)。取到能盖住整页,等于关掉该页的
+        /// 虚拟化:本页行数固定(约 22 行),虚拟化省不下开销,却会把最后一行的文件树销毁重建,
+        /// 行高反复改掉列表可滚动总高 → 滚到近底部上下抽搐。见 FileInfoRowTemplate 内 TreeView 的注释。</summary>
+        private const double FullListCacheLength = 20;
+
+        public PropertiesWindow(PropertyWindowSnapshot snapshot)
         {
-            var app = Application.Current as App;
-            ViewModel = app?.ViewModel ?? new SettingsViewModel(new ConfigService(), new PickerService());
+            _snapshot = snapshot;
+            _theme = snapshot.Theme ?? "";
+            _blurEveryone = snapshot.BlurEveryone;
+            _blurTeen = snapshot.BlurTeen;
+            _blurAdult = snapshot.BlurAdult;
             InitializeComponent();
             // 壁纸属性页的 DataContext = 窗口自身(绑定 Properties/IsPropertyLoading 等)
             WallpaperPropsRoot.DataContext = this;
             // 壁纸属性页行:代码构建(LoadPropertiesAsync 增量填充 PropertyItemsHost.Children),
             // 不用 DataTemplate/ItemsRepeater——NativeAOT 下 x:Bind 对二级模板/Visibility 枚举绑定失效。
-            // 文件属性页虚拟化列表:ItemsRepeater 由 code-behind 创建(同 PropertyItemsHost 模式,
+            // 文件属性页列表:ItemsRepeater 由 code-behind 创建(同 PropertyItemsHost 模式,
             // XamlCompiler 对窗口内 ItemsRepeater 标签稳定 Pass1 崩溃);直接挂 ScrollViewer.Content,
-            // 获得有界视口,StackLayout 才真正虚拟化(行模板 FileInfoRowTemplate 在 RootGrid.Resources)
+            // 获得有界视口(行模板 FileInfoRowTemplate 在 RootGrid.Resources)。
+            // VerticalCacheLength 取到盖住整页 —— 该页不做行回收,原因见 FullListCacheLength。
             ContentRoot.Content = new ItemsRepeater
             {
                 Layout = new StackLayout(),
+                VerticalCacheLength = FullListCacheLength,
                 ItemTemplate = RootGrid.Resources["FileInfoRowTemplate"] as DataTemplate
             };
             Properties.CollectionChanged += (s, e) =>
@@ -85,46 +99,92 @@ namespace WE_Tool
                 Log.Warning(ex, "读取属性窗口标题资源失败");
             }
             Title = title;
-            // 恢复上次尺寸(开关开启且已记录过);否则用默认 560×720。
-            // 尺寸在构造时应用,避免打开后闪一下再跳(与主窗口恢复逻辑解耦,只存大小不存位置)。
-            // 尺寸字段只在配置模型(主窗口 WindowX/Y 同模式),VM 仅暴露开关,此处直接读模型。
-            int w = 560, h = 720;
-            if (ViewModel.AppSettingsVM.RestorePropertiesWindowSize)
-            {
-                try
-                {
-                    var boot = new ConfigService().LoadAsync().GetAwaiter().GetResult();
-                    if (boot.PropertiesWindowWidth > 0 && boot.PropertiesWindowHeight > 0)
-                    {
-                        w = boot.PropertiesWindowWidth;
-                        h = boot.PropertiesWindowHeight;
-                    }
-                }
-                catch { /* 读取失败用默认尺寸 */ }
-            }
+            // 尺寸由母进程按 RestorePropertiesWindowSize 决定后写进快照(本进程不读配置);
+            // 0 表示不恢复,用默认 560×720。构造时应用,避免打开后闪一下再跳。
+            int w = _snapshot.Width > 0 ? _snapshot.Width : 560;
+            int h = _snapshot.Height > 0 ? _snapshot.Height : 720;
             AppWindow.Resize(new SizeInt32(w, h));
             ApplyTheme();
 
-            // 设置页切换主题时跟随
-            ViewModel.AppSettingsVM.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(AppSettingsViewModel.Theme))
-                    ApplyTheme();
-            };
-
-            // [2026-09] Papers 页"预览模糊"开关切换时实时刷新本窗口预览行(模糊/原图跟随)
-            ViewModel.WallpaperDisplayVM.PropertyChanged += OnWallpaperDisplayVM_PropertyChanged;
-
-            // 尺寸防抖保存:窗口尺寸变化(手动拖拽/最大化)后 500ms 落盘,只存最后一次(照抄 MainWindow 模式)
+            // 尺寸防抖上报:窗口尺寸变化(手动拖拽/最大化)后 500ms 发给母进程,只报最后一次。
+            // 母进程攒着,等本进程退出才写进 config.json——两个进程并发全量覆写同一份配置必丢更新。
             AppWindow.Changed += OnAppWindowChanged;
 
             Closed += (s, e) =>
             {
-                _openWindows.Remove(this);
-                ViewModel.WallpaperDisplayVM.PropertyChanged -= OnWallpaperDisplayVM_PropertyChanged;
                 AppWindow.Changed -= OnAppWindowChanged;
-                SavePropertiesWindowSize(); // 关闭时兜底保存一次(防抖可能未触发)
+                ReportSize(); // 关闭时兜底报一次(防抖可能未触发)
+                _channel?.Dispose();
+                // 本进程只有这一个窗口:关掉就退,别留一个没有窗口的空进程等 Job Object 收尸
+                Application.Current.Exit();
             };
+
+            StartChannel();
+            ShowPropsPage = _snapshot.ShowPropsPage;
+            SetWallpaper(FromSnapshot(_snapshot));
+        }
+
+        /// <summary>快照还原成游离的 WallpaperItem:沿用窗口内既有的 SetWallpaper/行构建/树填充签名。
+        /// 语义与原来一致——打开时快照一次,之后不跟随主窗口选中变化。</summary>
+        private static WallpaperItem FromSnapshot(PropertyWindowSnapshot s) => new()
+        {
+            WorkshopID = s.WorkshopID,
+            Title = s.Title,
+            FolderPath = s.FolderPath,
+            Preview = s.Preview,
+            ContentRating = s.ContentRating,
+            Type = s.Type,
+            Description = s.Description,
+            Tags = s.Tags,
+            Source = s.Source,
+            Dependency = s.Dependency,
+            CreationTime = s.CreationTime,
+            UpdateTime = s.UpdateTime,
+            AcfUpdateTime = s.AcfUpdateTime,
+            FileSize = s.FileSize,
+            AcfSize = s.AcfSize,
+        };
+
+        /// <summary>接母进程的管道:本进程是 server(管名来自快照)。
+        /// 连不上只丢主题/尺寸的实时同步,窗口本身照常工作,不做重试轰炸。</summary>
+        private void StartChannel()
+        {
+            string pipeName = _snapshot.PipeName;
+            if (string.IsNullOrEmpty(pipeName)) return;
+
+            _ = Task.Run(async () =>
+            {
+                var channel = await PropertyWindowChannel
+                    .AcceptAsServerAsync(pipeName, TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+                if (channel == null) return;
+
+                // 本窗口的 DispatcherQueue 必须在 UI 线程上取(Window.DispatcherQueue 是自由线程可读的)
+                var queue = DispatcherQueue;
+                channel.MessageReceived += message => queue?.TryEnqueue(() => OnLinkMessage(message));
+                channel.Broken += () => { };
+                _channel = channel;
+            });
+        }
+
+        /// <summary>母进程推来的设置变化/前置请求。UI 线程执行。</summary>
+        private void OnLinkMessage(PropertyWindowMessage message)
+        {
+            switch (message.Kind)
+            {
+                case PropertyWindowLink.KindTheme:
+                    string newTheme = message.Theme ?? "";
+                    bool themeChanged = newTheme != _theme;
+                    _theme = newTheme;
+                    _blurEveryone = message.BlurEveryone;
+                    _blurTeen = message.BlurTeen;
+                    _blurAdult = message.BlurAdult;
+                    if (themeChanged) ApplyTheme();
+                    if (Selected != null) _ = RefreshPreviewBlurAsync(Selected);
+                    break;
+                case PropertyWindowLink.KindFocus:
+                    Activate();
+                    break;
+            }
         }
 
         /// <summary>打开时快照的壁纸(与主窗口选中分离,不跟随主窗口切换)</summary>
@@ -132,7 +192,7 @@ namespace WE_Tool
 
         private CancellationTokenSource? _sizeSaveCts;
 
-        /// <summary>窗口尺寸变化(拖拽/最大化)防抖 500ms 后保存;只记录最后一次。</summary>
+        /// <summary>窗口尺寸变化(拖拽/最大化)防抖 500ms 后报给母进程;只报最后一次。</summary>
         private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
         {
             if (!args.DidSizeChange) return;
@@ -152,64 +212,31 @@ namespace WE_Tool
                 }
 
                 if (token.IsCancellationRequested) return;
-                try
-                {
-                    var settings = await new ConfigService().LoadAsync();
-                    settings.PropertiesWindowWidth = sender.Size.Width;
-                    settings.PropertiesWindowHeight = sender.Size.Height;
-                    await new ConfigService().SaveAsync(settings);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "保存属性窗口尺寸失败");
-                }
+                ReportSize();
             });
         }
 
-        /// <summary>关闭时兜底保存一次当前尺寸(防抖可能未触发,如快速关闭)。</summary>
-        private void SavePropertiesWindowSize()
+        /// <summary>把当前尺寸报给母进程,由母进程在本进程退出时写进 config.json——
+        /// 尺寸字段属于那份共享配置,两个进程各自全量覆写必丢更新。
+        /// 管道写可能在对端不读时阻塞,所以离开 UI 线程;关闭路径上管道可能已断,失败即忽略。</summary>
+        private void ReportSize()
         {
-            try
+            var size = AppWindow.Size;
+            if (size.Width <= 0 || size.Height <= 0) return;
+            var channel = _channel;
+            if (channel == null) return;
+            var message = new PropertyWindowMessage
             {
-                var size = AppWindow.Size;
-                if (size.Width <= 0 || size.Height <= 0) return;
-                var settings = new ConfigService().LoadAsync().GetAwaiter().GetResult();
-                settings.PropertiesWindowWidth = size.Width;
-                settings.PropertiesWindowHeight = size.Height;
-                new ConfigService().SaveAsync(settings).GetAwaiter().GetResult();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "保存属性窗口尺寸失败(关闭时)");
-            }
+                Kind = PropertyWindowLink.KindSize,
+                Width = size.Width,
+                Height = size.Height,
+            };
+            _ = Task.Run(() => channel.Send(message));
         }
 
         /// <summary>是否显示"壁纸属性"页(组件等无 project.json 可配置属性的条目传 false,只显示文件属性页)</summary>
         public bool ShowPropsPage { get; set; } = true;
 
-        public static void Open(WallpaperItem wallpaper, bool showPropsPage = true)
-        {
-            // 去重:同一壁纸已有窗口则激活已有窗口,不重复创建
-            var existing = _openWindows.FirstOrDefault(w => w.Selected?.FolderPath == wallpaper.FolderPath);
-            if (existing != null)
-            {
-                existing.Activate();
-                return;
-            }
-
-            // 推迟一帧创建窗口:窗口构造(XAML 解析/可视树构建/绑定首次求值)是同步重活,
-            // 直接执行会短暂卡住主窗口;Low 优先级让本次点击先完成、UI 空闲后再建窗口。
-            // 前提:Open 从主窗口 UI 线程调用(GetForCurrentThread 取到主窗口队列)
-            var queue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-            queue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
-            {
-                var window = new PropertiesWindow();
-                _openWindows.Add(window);
-                window.ShowPropsPage = showPropsPage;
-                window.SetWallpaper(wallpaper);
-                window.Activate();
-            });
-        }
 
         private void SetWallpaper(WallpaperItem wallpaper)
         {
@@ -222,7 +249,7 @@ namespace WE_Tool
                 _ = LoadPropertiesAsync(wallpaper);
         }
 
-        // ========== 文件属性页:虚拟化行构建(快照语义,窗口打开时一次性取值) ==========
+        // ========== 文件属性页:行构建(快照语义,窗口打开时一次性取值) ==========
 
         private static readonly FileSizeToString FileSizeConv = new();
         private static readonly TypeToDisplay TypeConv = new();
@@ -236,7 +263,7 @@ namespace WE_Tool
         private static string Format(IValueConverter converter, object? value)
             => value == null ? "-" : (converter.Convert(value, typeof(string), null, null) as string) ?? "-";
 
-        /// <summary>构建文件属性页虚拟化行(标签用 LanguageHelper 取:MRT Core 键是 '/' 层级形式,
+        /// <summary>构建文件属性页的行集合(标签用 LanguageHelper 取:MRT Core 键是 '/' 层级形式,
         /// ResourceLoader.GetString 直接传 'X.Y.Text' 会抛 0x80073B17;LanguageHelper 内部 '.'→'/' + 缓存)</summary>
         private async Task BuildFileInfoRows(WallpaperItem? wallpaper)
         {
@@ -303,9 +330,7 @@ namespace WE_Tool
                 if (previewIdx < 0) return;
 
                 bool shouldBlur = BlurPreviewService.ShouldBlur(wallpaper.ContentRating,
-                    ViewModel.WallpaperDisplayVM.BlurEveryone,
-                    ViewModel.WallpaperDisplayVM.BlurTeen,
-                    ViewModel.WallpaperDisplayVM.BlurAdult);
+                    _blurEveryone, _blurTeen, _blurAdult);
 
                 Microsoft.UI.Xaml.Media.ImageSource? newSource;
                 if (shouldBlur)
@@ -327,16 +352,6 @@ namespace WE_Tool
             {
                 Serilog.Log.Warning(ex, "刷新属性窗口预览模糊失败");
             }
-        }
-
-        /// <summary>[2026-09] 预览模糊开关(BlurEveryone/BlurTeen/BlurAdult)切换 → 实时刷新本窗口预览行</summary>
-        private void OnWallpaperDisplayVM_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName is not (nameof(WallpaperDisplayViewModel.BlurEveryone)
-                    or nameof(WallpaperDisplayViewModel.BlurTeen)
-                    or nameof(WallpaperDisplayViewModel.BlurAdult))) return;
-            if (Selected == null) return;
-            _ = RefreshPreviewBlurAsync(Selected);
         }
 
         // ========== 壁纸属性页:快照壁纸的 project.json 属性(懒加载/增量填充/代次号,模式同 SettingsViewModel) ==========
@@ -839,7 +854,7 @@ namespace WE_Tool
 
         private void ApplyTheme()
         {
-            string theme = ViewModel.AppSettingsVM.Theme ?? "";
+            string theme = _theme;
             ElementTheme elementTheme = theme switch
             {
                 "Dark" => ElementTheme.Dark,
@@ -855,10 +870,10 @@ namespace WE_Tool
         /// <summary>刷新代次号:防止快速切换壁纸时异步枚举乱序完成导致文件树串台</summary>
         private int _treeLoadVersion;
 
-        /// <summary>当前实化的文件树(模板内实例:虚拟化回收后重新实化时由 Loaded 更新)</summary>
+        /// <summary>模板里的文件树实例(由 Loaded 赋值;行常驻实化,所以它就是唯一那一个)</summary>
         private TreeView? _treeView;
 
-        /// <summary>根目录扫描结果缓存:树行重实化时同步重建,不重复扫磁盘</summary>
+        /// <summary>根目录扫描结果缓存:扫描与树的实化谁先到都有数据可填,不重复扫磁盘</summary>
         private List<string>? _cachedDirs;
         private List<(string Name, FileItemType Type, long Size)>? _cachedFiles;
         private bool _cachedDenied;
@@ -901,7 +916,8 @@ namespace WE_Tool
             PopulateTree();
         }
 
-        /// <summary>文件树行被虚拟化回收后重新实化(滚回视野)时:同步用缓存重建根节点</summary>
+        /// <summary>记下模板里的 TreeView 实例(行不再回收,故一生只跑一次);首次实化可能早于根目录
+        /// 扫描完成,缓存已就绪时在这里补填一次</summary>
         private void FileStructureTree_Loaded(object sender, RoutedEventArgs e)
         {
             var tree = (TreeView)sender;
@@ -1079,11 +1095,11 @@ namespace WE_Tool
         }
     }
 
-    /// <summary>文件属性页虚拟化行类型</summary>
+    /// <summary>文件属性页行类型</summary>
     public enum FileInfoRowKind { Preview, Title, Section, Info, Divider, Tree }
 
     /// <summary>
-    /// 文件属性页虚拟化行:单模板 + Kind 可见性切换(同 PropertyRowTemplate 模式);
+    /// 文件属性页的行模型:单模板 + Kind 可见性切换(同 PropertyRowTemplate 模式);
     /// 标签/值在 BuildFileInfoRows 时预计算(窗口快照语义)。
     /// </summary>
     public sealed class FileInfoRow
