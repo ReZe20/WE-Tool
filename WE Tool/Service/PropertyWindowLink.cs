@@ -30,6 +30,9 @@ namespace WE_Tool.Service
         public const string KindFocus = "focus";
         public const string KindSize = "size";
         public const string KindSaved = "saved";
+        /// <summary>母→子:Papers 属性面板刚写了同一张壁纸的 project.json,子窗口重读。
+        /// 与 KindSaved 是一对反向通知——两侧都可能是写者,谁写完谁喊对方重读。</summary>
+        public const string KindReload = "reload";
         /// <summary>母→子:清理页刚把某 ID 加入白名单,子窗口增量加卡。</summary>
         public const string KindAdd = "add";
         /// <summary>子→母:子窗口请求把某 ID 移出白名单。落盘由母进程做——保持单写者。</summary>

@@ -130,7 +130,10 @@
     <value>This wallpaper has no configurable properties</value>
   </data>
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
-    <value>Save Properties</value>
+    <value>Apply changes</value>
+  </data>
+  <data name="PropertyPanel_Undo.Content" xml:space="preserve">
+    <value>Undo changes</value>
   </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>G-All ages</value>
@@ -1303,6 +1306,9 @@ Note: Enabling this together with Full Output may cause file clutter.</value>
   <data name="Common_Cancel.Text" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="Common_OK.Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Select All</value>
   </data>
@@ -2085,5 +2091,77 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   </data>
   <data name="LoadPapers_PresetUnset" xml:space="preserve">
     <value>Not set</value>
+  </data>
+  <data name="WeSettings_Default.Text" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="PropertyPreset_Header.Content" xml:space="preserve">
+    <value>Presets</value>
+  </data>
+  <data name="PropertyPreset_LoadButton.Content" xml:space="preserve">
+    <value>Load preset</value>
+  </data>
+  <data name="PropertyPreset_ShareEmpty.Text" xml:space="preserve">
+    <value>This wallpaper has no Wallpaper Engine properties to share</value>
+  </data>
+  <data name="PropertyPreset_Save.Content" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="PropertyPreset_Share.Content" xml:space="preserve">
+    <value>Share JSON</value>
+  </data>
+  <data name="PropertyPreset_Reset.Content" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="PropertyPreset_Empty.Text" xml:space="preserve">
+    <value>No presets yet</value>
+  </data>
+  <data name="PropertyPreset_SaveHint.Text" xml:space="preserve">
+    <value>Save as preset</value>
+  </data>
+  <data name="PropertyPreset_NameLabel.Text" xml:space="preserve">
+    <value>Preset name</value>
+  </data>
+  <data name="PropertyPreset_DupName.Text" xml:space="preserve">
+    <value>A preset with this name exists; saving updates it with the current values</value>
+  </data>
+  <data name="PropertyPreset_SavedFmt.Text" xml:space="preserve">
+    <value>Saved preset "{0}"</value>
+  </data>
+  <data name="PropertyPreset_MergedFmt.Text" xml:space="preserve">
+    <value>Updated preset "{0}"</value>
+  </data>
+  <data name="PropertyPreset_LoadedFmt.Text" xml:space="preserve">
+    <value>Applied {1} values from preset "{0}"; press Apply changes to write them</value>
+  </data>
+  <data name="PropertyPreset_ShareTitle.Text" xml:space="preserve">
+    <value>Share JSON</value>
+  </data>
+  <data name="PropertyPreset_ShareHint.Text" xml:space="preserve">
+    <value>Copy this JSON onto another wallpaper, or paste someone else's JSON to override the values above</value>
+  </data>
+  <data name="PropertyPreset_Copy.Text" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="PropertyPreset_CopiedFmt.Text" xml:space="preserve">
+    <value>Copied {0} characters (Base64, paste it straight into Wallpaper Engine's share box)</value>
+  </data>
+  <data name="PropertyPreset_DecodedFmt.Text" xml:space="preserve">
+    <value>Expanded the Base64 into JSON ({0} characters)</value>
+  </data>
+  <data name="PropertyPreset_Paste.Text" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="PropertyPreset_Apply.Text" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="PropertyPreset_AppliedFmt.Text" xml:space="preserve">
+    <value>Applied {0} values from the JSON; press Apply changes to write them</value>
+  </data>
+  <data name="PropertyPreset_ResetConfirm.Text" xml:space="preserve">
+    <value>Reset this wallpaper to its defaults and clear its local Wallpaper Engine settings (presets are kept)</value>
+  </data>
+  <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
+    <value>Reset done</value>
   </data>
 </root>

@@ -25,7 +25,6 @@ using WE_Tool.Models;
 using WE_Tool.Service;
 using Windows.Graphics;
 using Windows.UI;
-using Microsoft.UI.Text;
 using WinUIEx;
 
 namespace WE_Tool
@@ -81,6 +80,9 @@ namespace WE_Tool
                 OnPropertyChanged(nameof(PropertyListVisibility));
                 UpdateSaveButtonState();
             };
+            // 属性行改脏 → 「应用更改」「撤销更改」该亮了。事件挂在行模型的 setter 上,装载与保存也会经过,
+            // 所以只当"该重算一遍"的信号用(真值现取各行 IsModified);后台线程报来的就回 UI 线程重算。
+            WallpaperProperty.Edited += () => DispatcherQueue?.TryEnqueue(UpdateSaveButtonState);
             // 自定义标题栏:去系统标题栏,顶部 48px 留空当标题栏(Tall 高度)
             ExtendsContentIntoTitleBar = true;
             AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
@@ -183,6 +185,11 @@ namespace WE_Tool
                     break;
                 case PropertyWindowLink.KindFocus:
                     Activate();
+                    break;
+                case PropertyWindowLink.KindReload:
+                    // 母进程的 Papers 属性面板刚写了这张壁纸:重读。否则本窗口手里是打开时的旧值,
+                    // 下一次在这里保存会把面板的修改覆盖回去(代价:本窗口未保存的编辑随之丢弃)
+                    if (Selected != null) _ = LoadPropertiesAsync(Selected);
                     break;
             }
         }
@@ -384,8 +391,15 @@ namespace WE_Tool
 
         public Visibility PropertyListVisibility => Properties.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
+        /// <summary>「应用更改」「撤销更改」两枚同一开关:这一张的任一行有未保存改动才亮(套预设、粘分享 JSON
+        /// 也是经 setter 落进 IsModified 的,同样算)。没改动时点它俩本来也没事可做,不如先按住。</summary>
         private void UpdateSaveButtonState()
-            => PropertySaveButton.IsEnabled = !IsPropertyLoading && _propertyFolder != null && Properties.Any(p => p.IsEditable);
+        {
+            bool dirty = !IsPropertyLoading && _propertyFolder != null
+               && Properties.SelectMany(p => p.Children.Prepend(p)).Any(p => p.IsModified);
+            PropertySaveButton.IsEnabled = dirty;
+            PropertyUndoButton.IsEnabled = dirty;
+        }
 
         private async Task LoadPropertiesAsync(WallpaperItem? item)
         {
@@ -401,7 +415,8 @@ namespace WE_Tool
 
             try
             {
-                var props = await Task.Run(() => WallpaperPropertyParser.Parse(folder));
+                // WE 内置属性块 + project.json 的作者属性,一次读齐(两处面板/窗口同一份实现)
+                var props = await Task.Run(() => WeWallpaperSettings.ReadRows(folder));
                 if (version != _propertyLoadVersion) return;
 
                 // 增量填充防卡顿:大壁纸(200+ 属性)每批构建+添加后等一帧,创建+布局渐进分摊,UI 不冻结
@@ -414,7 +429,7 @@ namespace WE_Tool
                     foreach (var p in chunk)
                     {
                         Properties.Add(p);
-                        PropertyItemsHost.Children.Add(BuildPropertyRow(p));
+                        PropertyItemsHost.Children.Add(WallpaperPropertyRowBuilder.BuildPropertyRow(p));
                     }
                     await Task.Delay(16);
                 }
@@ -435,341 +450,64 @@ namespace WE_Tool
             var folder = _propertyFolder;
             if (string.IsNullOrEmpty(folder)) return;
 
-            // 扁平化收集:group(Expander) 内的可编辑属性也要写回
+            string okText = LanguageHelper.GetResource("Common_OK.Text");
+
+            // 分层写回:WE 内置属性 → WE 安装目录的 config.json,作者属性 → project.json
             var props = Properties
                 .SelectMany(p => p.Children.Prepend(p))
                 .Where(p => p.IsEditable)
                 .ToList();
             if (props.Count == 0)
             {
-                await DialogHelper.ShowMessageAsync("保存属性", "没有可编辑属性");
+                await DialogHelper.ShowFlyoutMessageAsync(PropertySaveButton, "没有可编辑属性", okText);
                 return;
             }
 
-            var (ok, error) = await Task.Run(() => WallpaperPropertyWriter.Save(folder, props));
+            var (ok, error, wroteProject, weWritten) = await Task.Run(() => WeWallpaperSettings.SaveRows(folder, Properties));
             if (ok)
-                await DialogHelper.ShowMessageAsync("保存属性", "属性已保存到 project.json。");
+            {
+                UpdateSaveButtonState();   // SaveRows 写成后已抹掉脏标记 → 两枚按钮当场回到禁用
+                ReportSaved();   // 告知母进程:Papers 属性面板若正显示这张,该重读了
+                await DialogHelper.ShowFlyoutMessageAsync(PropertySaveButton,
+                    WeWallpaperSettings.SaveResultText(wroteProject, weWritten), okText);
+            }
             else
-                await DialogHelper.ShowMessageAsync("保存失败", error ?? "未知错误");
+                await DialogHelper.ShowFlyoutMessageAsync(PropertySaveButton,
+                    "应用更改失败：" + (error ?? "未知错误"), okText);
+        }
+
+        /// <summary>撤销更改:丢掉页上的未保存编辑,按磁盘上的值重读(与母进程保存后的重读同一条路径)</summary>
+        private void PropertyUndoButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (Selected != null) _ = LoadPropertiesAsync(Selected);
+        }
+
+        // ===== 预设那排按钮(XAML 里挂的;行为在 Helper/WallpaperPresetActions.cs,与 Papers 属性面板同源) =====
+
+        private void WallpaperPresetLoad_Click(object sender, RoutedEventArgs e)
+            => WallpaperPresetActions.ShowLoadFlyout((FrameworkElement)sender, _propertyFolder ?? "", () => Properties);
+
+        private void WallpaperPresetSave_Click(object sender, RoutedEventArgs e)
+            => _ = WallpaperPresetActions.SaveAsync((FrameworkElement)sender, _propertyFolder ?? "", () => Properties);
+
+        private void WallpaperPresetShare_Click(object sender, RoutedEventArgs e)
+            => _ = WallpaperPresetActions.ShareAsync((FrameworkElement)sender, () => Properties);
+
+        private void WallpaperPresetReset_Click(object sender, RoutedEventArgs e)
+            => _ = WallpaperPresetActions.ResetAsync((FrameworkElement)sender, _propertyFolder ?? "", () => LoadPropertiesAsync(Selected));
+
+        /// <summary>写盘成功后报给母进程(saved 消息)。与 ReportSize 同法:管道写可能在对端不读时阻塞,
+        /// 所以离开 UI 线程;管道未建成就不报(那是主题/尺寸同步也一并不可用的同一种情况)。</summary>
+        private void ReportSaved()
+        {
+            var channel = _channel;
+            if (channel == null) return;
+            var message = new PropertyWindowMessage { Kind = PropertyWindowLink.KindSaved };
+            _ = Task.Run(() => channel.Send(message));
         }
 
         // ========== 壁纸属性页:代码构建行(NativeAOT 下 x:Bind 对 Visibility 枚举/二级 DataTemplate/
         //   ItemTemplateSelector 的绑定全部失效,整行代码构建彻底绕开——UI 线程调用,不依赖绑定) ==========
-
-        /// <summary>构建文字内容:纯文本 → TextBlock;含链接 → StackPanel + HyperlinkButton(可点击跳转);
-        /// 含 &lt;font color&gt; 应用文字色;含 &lt;img&gt; 渲染 HTTP 图片(外层 &lt;a href&gt; 时整图可点击)。
-        /// 图片段不渲染其文本;加载失败隐藏。</summary>
-        private static FrameworkElement BuildTextContent(WallpaperProperty prop)
-        {
-            bool hasLink = prop.LinkSegments.Any(s => s.Url != null);
-            bool hasImage = prop.ImageSegments.Count > 0;
-            Brush? textBrush = prop.TextColor is Color c ? new SolidColorBrush(c) : null;
-
-            // 无链接无图片:单 TextBlock(带颜色)
-            if (!hasLink && !hasImage)
-            {
-                var tb = new TextBlock
-                {
-                    Text = prop.DisplayText,
-                    TextWrapping = TextWrapping.Wrap,
-                    FontSize = prop.TextFontSize,
-                    FontWeight = prop.TextFontWeight,
-                    TextAlignment = prop.TextAlignmentValue
-                };
-                if (textBrush != null) tb.Foreground = textBrush;
-                return tb;
-            }
-
-            var sp = new StackPanel { Spacing = 2 };
-
-            // 文字段(链接 → HyperlinkButton;普通 → TextBlock;均应用文字色)
-            foreach (var (text, url) in prop.LinkSegments)
-            {
-                if (string.IsNullOrWhiteSpace(text)) continue;
-                if (url == null)
-                {
-                    var tb = new TextBlock
-                    {
-                        Text = text,
-                        TextWrapping = TextWrapping.Wrap,
-                        FontSize = prop.TextFontSize,
-                        FontWeight = prop.TextFontWeight
-                    };
-                    if (textBrush != null) tb.Foreground = textBrush;
-                    sp.Children.Add(tb);
-                }
-                else
-                {
-                    try
-                    {
-                        var hb = new HyperlinkButton
-                        {
-                            Content = text,
-                            NavigateUri = new Uri(url),
-                            Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"]
-                        };
-                        if (textBrush != null) hb.Foreground = textBrush;
-                        sp.Children.Add(hb);
-                    }
-                    catch
-                    {
-                        var tb = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap };
-                        if (textBrush != null) tb.Foreground = textBrush;
-                        sp.Children.Add(tb);
-                    }
-                }
-            }
-
-            // 图片段(<img src>,HTTP 加载;外层 <a href> 时整图可点击;加载失败隐藏)
-            foreach (var (src, link, width, height) in prop.ImageSegments)
-            {
-                try
-                {
-                    var image = new Microsoft.UI.Xaml.Controls.Image
-                    {
-                        Source = new BitmapImage(new Uri(src)),
-                        Stretch = Stretch.Uniform,
-                        MaxWidth = 200,
-                        MaxHeight = 200,
-                        Margin = new Thickness(0, 4, 0, 4)
-                    };
-                    if (width.HasValue) image.Width = Math.Min(width.Value, 200);
-                    if (height.HasValue) image.Height = Math.Min(height.Value, 200);
-                    image.ImageFailed += (s, e) => image.Visibility = Visibility.Collapsed;
-
-                    if (link != null)
-                    {
-                        try
-                        {
-                            var hb = new HyperlinkButton
-                            {
-                                NavigateUri = new Uri(link),
-                                Style = (Style)Application.Current.Resources["ExternalLinkButtonStyle"],
-                                Content = image
-                            };
-                            sp.Children.Add(hb);
-                        }
-                        catch { sp.Children.Add(image); }
-                    }
-                    else
-                    {
-                        sp.Children.Add(image);
-                    }
-                }
-                catch { /* 无效图片 URL → 跳过 */ }
-            }
-            return sp;
-        }
-
-        /// <summary>构建单个属性行(Grid 两列:左标签 + 右控件);分组标题/Expander 由 BuildPropertyRow 分发。</summary>
-        private FrameworkElement BuildEditableRow(WallpaperProperty prop)
-        {
-            var grid = new Grid { Margin = new Thickness(0, 4, 0, 4), ColumnSpacing = 12 };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            // 左列:标签(文字/链接)
-            var label = BuildTextContent(prop);
-            label.VerticalAlignment = VerticalAlignment.Center;
-            Grid.SetColumn(label, 0);
-            grid.Children.Add(label);
-
-            // 右列:按类型构建编辑控件
-            var editor = BuildEditor(prop);
-            if (editor != null)
-            {
-                Grid.SetColumn(editor, 1);
-                grid.Children.Add(editor);
-            }
-            return grid;
-        }
-
-        /// <summary>按类型构建右列编辑控件;只读类型返回 null(无控件)。</summary>
-        private FrameworkElement? BuildEditor(WallpaperProperty prop)
-        {
-            switch (prop.Type)
-            {
-                case "bool":
-                {
-                    var cb = new CheckBox
-                    {
-                        IsChecked = prop.BoolValue,
-                        MinWidth = 0,
-                        HorizontalAlignment = HorizontalAlignment.Right,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    cb.Checked += (s, e) => prop.BoolValue = cb.IsChecked == true;
-                    cb.Unchecked += (s, e) => prop.BoolValue = false;
-                    return cb;
-                }
-                case "slider":
-                {
-                    var sp = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
-                    var slider = new Slider
-                    {
-                        Value = prop.SliderValue,
-                        Minimum = prop.SliderMin,
-                        Maximum = prop.SliderMax,
-                        StepFrequency = prop.SliderStep,
-                        Width = 100,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    var valueText = new TextBlock
-                    {
-                        Text = prop.SliderValueText,
-                        MinWidth = 40,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    slider.ValueChanged += (s, e) =>
-                    {
-                        prop.SliderValue = slider.Value;
-                        valueText.Text = prop.SliderValueText;
-                    };
-                    sp.Children.Add(slider);
-                    sp.Children.Add(valueText);
-                    return sp;
-                }
-                case "combo":
-                {
-                    var button = new DropDownButton
-                    {
-                        MinWidth = 140,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    var display = new TextBlock { Text = prop.ComboDisplayText };
-                    button.Content = display;
-                    button.Click += (s, e) => ShowComboMenu(button, prop, display);
-                    return button;
-                }
-                case "color":
-                {
-                    var button = new Button { Padding = new Thickness(8, 4, 8, 4), VerticalAlignment = VerticalAlignment.Center };
-                    var sp = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-                    var swatch = new Microsoft.UI.Xaml.Shapes.Rectangle { Width = 14, Height = 14, Fill = prop.ColorBrush, VerticalAlignment = VerticalAlignment.Center };
-                    var hex = new TextBlock { Text = prop.ColorHexText, VerticalAlignment = VerticalAlignment.Center };
-                    sp.Children.Add(swatch);
-                    sp.Children.Add(hex);
-                    button.Content = sp;
-                    var picker = new ColorPicker
-                    {
-                        Color = prop.ColorValue,
-                        IsAlphaEnabled = false,
-                        IsColorPreviewVisible = false,
-                        IsColorSpectrumVisible = true,
-                        IsColorSliderVisible = true,
-                        IsHexInputVisible = true
-                    };
-                    var flyout = new Flyout { Content = picker };
-                    flyout.Opened += FlyoutThemeRefresh_Opened;
-                    picker.ColorChanged += (s, e) =>
-                    {
-                        prop.ColorValue = picker.Color;
-                        swatch.Fill = prop.ColorBrush;
-                        hex.Text = prop.ColorHexText;
-                    };
-                    button.Flyout = flyout;
-                    return button;
-                }
-                case "textinput":
-                {
-                    var tb = new TextBox
-                    {
-                        Text = prop.TextValue,
-                        TextWrapping = TextWrapping.Wrap,
-                        Width = 180,
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    tb.TextChanged += (s, e) => prop.TextValue = tb.Text;
-                    return tb;
-                }
-                case "scenetexture":
-                {
-                    var button = new Button
-                    {
-                        Command = prop.PickFileCommand,
-                        Content = prop.FilePathDisplay,
-                        MaxWidth = 180,
-                        Padding = new Thickness(10, 4, 10, 4),
-                        VerticalAlignment = VerticalAlignment.Center
-                    };
-                    return button;
-                }
-                default:
-                    return null; // 只读类型:无编辑控件(值已在标签区? 原 XAML ReadOnly 分支显示 DisplayValue)
-            }
-        }
-
-        /// <summary>combo 下拉:DropDownButton + 动态 MenuFlyout(复用原 ComboButton_Click 逻辑;弹层主题显式应用)</summary>
-        private void ShowComboMenu(DropDownButton button, WallpaperProperty prop, TextBlock display)
-        {
-            var flyout = new MenuFlyout();
-            string group = $"Combo_{prop.Key}";
-            for (int i = 0; i < prop.Options.Count; i++)
-            {
-                int index = i; // 闭包捕获
-                var item = new RadioMenuFlyoutItem
-                {
-                    Text = prop.Options[i].Label,
-                    IsChecked = i == prop.ComboIndex,
-                    GroupName = group
-                };
-                item.Click += (s, e2) =>
-                {
-                    prop.ComboIndex = index;
-                    display.Text = prop.ComboDisplayText;
-                };
-                flyout.Items.Add(item);
-            }
-            flyout.Opened += App.ApplyFlyoutTheme;
-            button.Flyout = flyout;
-            flyout.ShowAt(button);
-        }
-
-        /// <summary>构建分组标题(分隔线 + 粗体文字)。分组标题是纯文本组件(无链接),直接 TextBlock。</summary>
-        private FrameworkElement BuildGroupHeader(WallpaperProperty prop)
-        {
-            var sp = new StackPanel();
-            sp.Children.Add(new Microsoft.UI.Xaml.Shapes.Rectangle
-            {
-                Height = 1,
-                Fill = (Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"],
-                Margin = new Thickness(0, 6, 0, 10)
-            });
-            sp.Children.Add(new TextBlock
-            {
-                Text = prop.DisplayText,
-                TextWrapping = TextWrapping.Wrap,
-                FontSize = 14,
-                FontWeight = FontWeights.SemiBold,
-                TextAlignment = prop.TextAlignmentValue
-            });
-            return sp;
-        }
-
-        /// <summary>构建分组 Expander(header = 文字/链接;内容 = 子属性行递归构建)。</summary>
-        private FrameworkElement BuildGroupExpander(WallpaperProperty prop)
-        {
-            var expander = new Expander
-            {
-                IsExpanded = false,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                Margin = new Thickness(0, 4, 0, 4),
-                Header = BuildTextContent(prop)
-            };
-            var items = new ItemsControl { IsTabStop = false };
-            foreach (var child in prop.Children)
-                items.Items.Add(BuildPropertyRow(child));
-            expander.Content = items;
-            return expander;
-        }
-
-        /// <summary>构建单行:按类型分发(分组标题/Expander/可编辑行)。</summary>
-        private FrameworkElement BuildPropertyRow(WallpaperProperty prop)
-        {
-            if (prop.IsGroupHeader) return BuildGroupHeader(prop);
-            if (prop.IsGroup) return BuildGroupExpander(prop);
-            return BuildEditableRow(prop);
-        }
 
         private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {

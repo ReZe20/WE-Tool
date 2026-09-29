@@ -14,12 +14,16 @@ namespace WE_Tool.Helper
 {
     /// <summary>
     /// 解析壁纸目录 project.json 的 general.properties 为属性面板数据。
-    /// 选中壁纸时懒解析 + 按文件夹路径缓存（project.json 修改时间变化时重新解析）。
+    /// 选中壁纸时懒解析 + 按文件夹缓存「project.json 修改时间 + general.properties 那段原文」（时间没变就不重读整份文件），
+    /// 但每次调用都新建一批行模型 —— 面板的编辑是就地改模型的，缓存模型会把未保存的改动当成磁盘状态。
     /// 仅 Scene 类壁纸有 general.properties；视频/网页/未发布项目通常没有（返回空列表）。
     /// </summary>
     internal static class WallpaperPropertyParser
     {
-        private static readonly ConcurrentDictionary<string, (DateTime LastWriteUtc, List<WallpaperProperty> Properties)> Cache = new();
+        /// <summary>缓存的是 general.properties 那段「原文」,不是行模型 —— 面板上的编辑直接落在模型实例上,
+        /// 缓存模型等于把未保存的改动存进缓存(撤销更改撤不掉,换张壁纸再回来改动还阴魂不散)。
+        /// 整份 project.json 仍然只在文件改动过之后解析一次,每次取用只是把那段原文重建成一批新行。</summary>
+        private static readonly ConcurrentDictionary<string, (DateTime LastWriteUtc, string PropertiesJson)> Cache = new();
 
         /// <summary>解析壁纸文件夹下的 project.json；文件缺失/无属性/解析失败一律返回空列表（调用方显示占位提示）</summary>
         public static List<WallpaperProperty> Parse(string folderPath)
@@ -31,11 +35,11 @@ namespace WE_Tool.Helper
 
                 var lastWrite = File.GetLastWriteTimeUtc(path);
                 if (Cache.TryGetValue(folderPath, out var cached) && cached.LastWriteUtc == lastWrite)
-                    return cached.Properties;
+                    return BuildRows(cached.PropertiesJson);
 
-                var props = ParseInternal(path);
-                Cache[folderPath] = (lastWrite, props);
-                return props;
+                string propertiesJson = ExtractProperties(File.ReadAllText(path));
+                Cache[folderPath] = (lastWrite, propertiesJson);
+                return BuildRows(propertiesJson);
             }
             catch (Exception ex)
             {
@@ -44,13 +48,22 @@ namespace WE_Tool.Helper
             }
         }
 
-        private static List<WallpaperProperty> ParseInternal(string projectJsonPath)
+        /// <summary>整份 project.json → general.properties 的原文;没有这一段就记成空对象
+        /// (视频/网页/未发布项目大多没有,照样进缓存,免得每次选中都重读整份文件)</summary>
+        private static string ExtractProperties(string projectJson)
         {
-            using var doc = JsonDocument.Parse(File.ReadAllText(projectJsonPath));
+            using var doc = JsonDocument.Parse(projectJson);
             var root = doc.RootElement;
-            if (root.ValueKind != JsonValueKind.Object) return [];
-            if (!root.TryGetProperty("general", out var general) || general.ValueKind != JsonValueKind.Object) return [];
-            if (!general.TryGetProperty("properties", out var properties) || properties.ValueKind != JsonValueKind.Object) return [];
+            if (root.ValueKind != JsonValueKind.Object) return "{}";
+            if (!root.TryGetProperty("general", out var general) || general.ValueKind != JsonValueKind.Object) return "{}";
+            if (!general.TryGetProperty("properties", out var properties) || properties.ValueKind != JsonValueKind.Object) return "{}";
+            return properties.GetRawText();
+        }
+
+        private static List<WallpaperProperty> BuildRows(string propertiesJson)
+        {
+            using var doc = JsonDocument.Parse(propertiesJson);
+            var properties = doc.RootElement;
 
             var rows = new List<(int Order, int Index, WallpaperProperty Prop)>();
             foreach (var kv in properties.EnumerateObject())
@@ -95,6 +108,9 @@ namespace WE_Tool.Helper
                     IsGroup = type == "group" && !isGroupHeader
                 };
                 LoadEditableValue(prop, obj);
+                // 读入不算改动:上面经的是「用户改过值」那批 setter,内置行的抹平在 WeWallpaperSettings.Read,
+                // 作者行这边此前没人抹,于是选中一张就自带"有未保存改动"
+                prop.IsModified = false;
 
                 rows.Add((
                     GetInt(obj, "order"),

@@ -211,6 +211,22 @@ namespace WE_Tool.Service
             _ = Task.Run(() => channel.Send(message));
         }
 
+        /// <summary>某个属性副窗口写完了它那张壁纸的 project.json(子进程报回 saved 消息),参数是文件夹。
+        /// Papers 的属性面板订阅它:面板若正显示同一张,手里的模型已经过期,须重读。</summary>
+        public static event Action<string>? PropertySavedByChild;
+
+        /// <summary>反向:母进程(Papers 属性面板)刚写了某张壁纸的 project.json,请它的属性副窗口重读。
+        /// 不做这件事的话,那个进程手里还是它打开时的快照,下一次它保存会把面板的修改覆盖回去。</summary>
+        public static void NotifyPropertySaved(string folderPath)
+        {
+            if (string.IsNullOrEmpty(folderPath)) return;
+            Child[] targets;
+            lock (_gate) targets = _children.Where(c => c.FolderPath == folderPath).ToArray();
+            if (targets.Length == 0) return;
+            var message = new PropertyWindowMessage { Kind = PropertyWindowLink.KindReload };
+            foreach (var child in targets) Send(child, message);
+        }
+
         private static void OnChildMessage(Child child, PropertyWindowMessage message)
         {
             switch (message.Kind)
@@ -223,6 +239,8 @@ namespace WE_Tool.Service
                     // 子进程写了 project.json。母进程的 WallpaperPropertyParser 按文件修改时间缓存,
                     // 下次解析自然重读;列表字段(标题/类型/分级)不来自 general.properties,无需刷新。
                     Log.Information("[属性副窗] 子进程已保存属性: {Folder}", child.FolderPath);
+                    // 但 Papers 属性面板若正显示这一张,它手里的模型也过期了(再保存会把子窗口的修改覆盖回去)
+                    PropertySavedByChild?.Invoke(child.FolderPath);
                     break;
             }
         }

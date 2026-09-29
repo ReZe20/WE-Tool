@@ -576,6 +576,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
         {
             if (SelectedWallpapers.Count > 0)
                 return true;
+            if (_detailUninstallEnabled) return true;
             return ViewModel?.SelectedWallpaper != null;
         }
     }
@@ -662,6 +663,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
                         ? Visibility.Collapsed : Visibility.Visible;
                     UpdateDetailBlur(); // 详情大图模糊层与列表预览同步
+                    ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper); // [属性 2026-09] 详情面板属性块(防抖)
                 }
                 return;
             }
@@ -926,8 +928,31 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 // 不 return:下面 _ = ApplyFilters() 还要跑(方向变化要重排列表)。
                 if (!_sortDirectionIconCycleActive) SortDirectionIcon_SyncSource("方向变化");
             }
+            if (e.PropertyName == nameof(WallpaperDisplayViewModel.RightSplitViewPaneOpen))
+            {
+                // 面板重新打开:收起期间的选中变化不解析属性,这里补一次(收起时那几百个控件也不该建)
+                ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper);
+            }
+            if (e.PropertyName == nameof(WallpaperDisplayViewModel.RightPanelIndex))
+            {
+                // 右侧「详情面板 / 属性面板」二选一:属性块跟着切显隐;已建过行的只切显隐不重建
+                ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper);
+            }
             _ = ApplyFilters();
         };
+
+        // 属性行被改脏 → 重算「应用更改/撤销更改」的可用态。事件在行模型 setter 上,装载与保存也会走,
+        // 所以只当"该重算了"的信号,真值一律现取 WallpaperPropsRows 的 IsModified。
+        WallpaperProperty.Edited += () => DispatcherQueue.TryEnqueue(() => OnPropertyChanged(nameof(HasWallpaperPropEdits)));
+
+        // 属性副窗口写完了同一张壁纸的 project.json:面板手里的模型已过期,重读 —— 否则面板下一次
+        // 保存会把子窗口刚写的改回去。子进程消息在管道线程上回调,回 UI 线程再动可视树。
+        PropertiesWindowHost.PropertySavedByChild += folder => DispatcherQueue.TryEnqueue(() =>
+        {
+            // 草稿也一起丢:那张的值已经被子窗口写过一轮,留着会把人家刚写的盖回去
+            DropWallpaperPropsDraft(folder);
+            if (folder == _wallpaperPropsLoadedFolder) ReloadWallpaperPropsFromDisk();
+        });
 
         this.Loaded += async (s, e) =>
         {
@@ -941,6 +966,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             }
 
             UpdateDetailBackupButton();   // [详情面板备份按钮 2026-09-21] 回到本页时按当前选中项重算文案与可用性
+            ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper); // [属性 2026-09] 页面是缓存页,回到本页补一次属性块
 
             // [性能 2026-09] 先设预渲染缓冲(减少实化/回收容器数),再钳列宽
             ApplyRepeaterCacheLength();
@@ -4350,7 +4376,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                         finished: ToolbarCopyIcon_SwapBackToLottie);
                 }
             }
-            else if (DetailCopyIcon is not null)
+            else if (DetailCopyAnimatedIcon is not null)
             {
                 await DetailCopyIcon_WaitCycleAsync();
                 await PlayCopyCheckAnimationAsync(DetailCopyIcon,
@@ -6013,87 +6039,328 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         UpdateDetailBackupButton();
     }
 
-    // ===================== 详情面板的备份 / 卸载按钮(2026-09-21) =====================
-    // 备份:一枚按钮两用,文案与动作都跟着"当前选中这张壁纸"的备份状态走 —— 已备份 →「取消备份」,未备份 →「备份壁纸」。
-    //     交互按 2026-09-21 的要求收敛成一步:备份直接做、不弹任何窗;取消备份在按钮处弹确认小卡(删东西这一步留一次反悔机会)。
-    //     旧写法一次操作要点两轮(确认对话框 + 结果对话框);批量入口(右键菜单 / 工具条)保留那套,因为批量要报数量。
-    // 卸载:详情面板只作用于单张,同样改成确认小卡;工具条与右键菜单两个批量入口仍走 UninstallSelectedCommand 的模态对话框。
-    // 可用性判据与子菜单同源(工坊来源 + 有 WorkshopID + 有本地目录 + 工坊目录存在),路径无效时按钮禁用而不是点了报错。
-    private WallpaperItem? _detailBackupTarget;
-    private bool _detailBackupTargetBackedUp;
+    // ===================== 详情面板的卸载按钮(2026-09-21) =====================
+    // 卸载:详情面板只作用于单张,在按钮处弹确认小卡;工具条与右键菜单两个批量入口仍走 UninstallSelectedCommand 的模态对话框。
+    // 备份按钮已从详情面板撤掉(工作区里只留解包/复制/卸载),批量入口(右键菜单 / 工具条)保留。
+    // 这个字段只作用于详情面板那一枚:工坊来源 + 有本地目录 + 工坊目录存在才亮,比基类那条(有选中就亮)严。
+    private bool _detailUninstallEnabled;
 
-    public bool IsBackupActionEnabled { get; private set; }
-    public string DetailBackupActionText
-        => LanguageHelper.GetResource(_detailBackupTargetBackedUp ? "Detail_Unbackup.Text" : "Detail_Backup.Text");
+    // ========== [2026-09] 详情面板:壁纸属性(WE 内置属性 + project.json 作者属性,可改并保存) ==========
 
-    /// <summary>刷新详情面板备份按钮的文案与可用性。选中壁纸变化、工坊路径变化、回到本页、一次备份/取消备份做完之后都要调。</summary>
+    /// <summary>选中稳定多久才去解析 project.json。拖拽滑过时每进一张卡都会换选中项,不等稳定就解析
+    /// 等于每张卡都付一遍解析+建行;250ms 与钻入动画防抖(PlayDrillInAnimation)同量级。</summary>
+    private const int WallpaperPropsDebounceMs = 250;
+
+    private CancellationTokenSource? _wallpaperPropsCts;
+    private int _wallpaperPropsVersion;
+
+    /// <summary>已建好行对应的文件夹。与当前选中相同时不重建 —— 详情/属性面板来回切、重复点同一张卡
+    /// 都不该把那几百个控件再造一遍(只切显隐)。</summary>
+    private string? _wallpaperPropsLoadedFolder;
+
+    /// <summary>面板当前显示的属性模型(与行上的控件共享同一批实例:编辑器直接改它们的值,保存时收齐写回)</summary>
+    private List<WallpaperProperty>? _wallpaperProps;
+
+    /// <summary>认领的这一次选中是否还在防抖/解析/建行(面板上挂加载环);建出行或放弃时清掉</summary>
+    private bool _wallpaperPropsLoading;
+
+    /// <summary>当前这批行里有没有可编辑的(没有就不显示顶部那两排按钮,只留占位提示)</summary>
+    private bool _wallpaperPropsEditable;
+
+    /// <summary>切走那张壁纸时收下的「未保存改动」:按文件夹存那一批行模型,选回来照着重建行。
+    /// 只收真改脏的(没改过的下次读盘就是同样的值,留着白费内存)。
+    /// 属性子窗口是一窗一壁纸、切不走,所以它不需要这一套,也不跨进程共享。</summary>
+    private readonly Dictionary<string, List<WallpaperProperty>> _wallpaperPropsDrafts = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>草稿的收纳先后,只为超出上限时丢最早那批</summary>
+    private readonly List<string> _wallpaperPropsDraftOrder = [];
+
+    /// <summary>同时留几份草稿。改过没保存的壁纸通常就几张,撞到上限说明是在一张张试参数,丢最早的够用</summary>
+    private const int MaxWallpaperPropsDrafts = 24;
+
+    /// <summary>右面板当前是不是属性模式(查看菜单里的二选一,持久化在 Papers 配置段)</summary>
+    private bool IsPropertyPanelMode => ViewModel.WallpaperDisplayVM.PropertyPanelViewItem;
+
+    /// <summary>属性块的显隐 + 加载环:属性模式 + 有内容才显示内容(没有可配置属性时内容是那句占位提示,
+    /// 所以真折叠的情况只有「还没加载」与「当前是详情模式」);还在加载这一次选中时改挂环,
+    /// 环与内容互斥、建出行即换。顶部那两排按钮跟着一起管:没有可编辑属性时它也不该露面。</summary>
+    private void SyncWallpaperPropsVisibility()
+    {
+        bool hasRows = WallpaperPropsHost.Children.Count > 0;
+        bool show = IsPropertyPanelMode && hasRows;
+        WallpaperPropsHost.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        WallpaperPropsHeader.Visibility =
+            show && _wallpaperPropsEditable ? Visibility.Visible : Visibility.Collapsed;
+
+        bool showRing = IsPropertyPanelMode && _wallpaperPropsLoading && !hasRows;
+        WallpaperPropsRing.IsActive = showRing;
+        WallpaperPropsRing.Visibility = showRing ? Visibility.Visible : Visibility.Collapsed;
+
+        // 顶部两枚按钮的可用态跟着这次同步一起重算(行换了、清空了、建好了都会经过这里)
+        OnPropertyChanged(nameof(HasWallpaperPropEdits));
+    }
+
+    /// <summary>丢掉已建的行、按当前选中项重新解析建行(撤销更改 / 重置 / 属性副窗口保存过)。
+    /// ScheduleWallpaperPropsLoad 的复用检查会拦住「同一张不重建」,所以先把记着的文件夹清掉。
+    /// 这条是"故意丢改动"的入口,那张的草稿必须一起丢 —— 否则选回来又把旧改动端上来。</summary>
+    private void ReloadWallpaperPropsFromDisk()
+    {
+        DropWallpaperPropsDraft(_wallpaperPropsLoadedFolder);
+        _wallpaperPropsLoadedFolder = null;
+        _wallpaperProps = null;
+        ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper);
+    }
+
+    private void DropWallpaperPropsDraft(string? folder)
+    {
+        if (string.IsNullOrEmpty(folder)) return;
+        _wallpaperPropsDrafts.Remove(folder);
+        _wallpaperPropsDraftOrder.Remove(folder);
+    }
+
+    /// <summary>换下当前这批行前把未保存改动收进草稿;这批没改动就把草稿清掉(它可能已经落盘了)。
+    /// 收之前断掉行控件引用:那批控件马上要被换掉,挂着只会让旧可视树跟着模型一起留在内存里。</summary>
+    private void StashWallpaperPropsDraft()
+    {
+        string? folder = _wallpaperPropsLoadedFolder;
+        var props = _wallpaperProps;
+        if (string.IsNullOrEmpty(folder) || props == null || props.Count == 0) return;
+
+        foreach (var p in props.SelectMany(p => p.Children.Prepend(p))) p.RowElement = null;
+
+        if (!HasPropEdits(props)) DropWallpaperPropsDraft(folder);
+        else
+        {
+            _wallpaperPropsDrafts[folder] = props;
+            _wallpaperPropsDraftOrder.Remove(folder);
+            _wallpaperPropsDraftOrder.Add(folder);
+            while (_wallpaperPropsDraftOrder.Count > MaxWallpaperPropsDrafts)
+            {
+                string oldest = _wallpaperPropsDraftOrder[0];
+                _wallpaperPropsDraftOrder.RemoveAt(0);
+                _wallpaperPropsDrafts.Remove(oldest);
+            }
+        }
+    }
+
+    /// <summary>这批行里有没有未保存的改动(分组要展开看子项)</summary>
+    private static bool HasPropEdits(IReadOnlyList<WallpaperProperty> props)
+        => props.SelectMany(p => p.Children.Prepend(p)).Any(p => p.IsModified);
+
+    /// <summary>面板上有没有未保存的改动 —— 任一行脏了就算(套预设、粘分享 JSON 也是经 setter 落进来的,同样算改动)。
+    /// 「应用更改」「撤销更改」两枚按钮的 IsEnabled 绑这条,与 IsUninstallEnabled 同一绑法。</summary>
+    public bool HasWallpaperPropEdits => HasPropEdits(WallpaperPropsRows);
+
+    /// <summary>选中的壁纸变了:立刻清空属性块(不显示上一张的属性,那会误导),等选中稳定后再解析。
+    /// 多选模式、无 folder、面板收起、当前是详情模式都不解析 —— 这些情况下省掉的不只是解析,
+    /// 还有几百个控件的建行与布局。</summary>
+    private void ScheduleWallpaperPropsLoad(WallpaperItem? item)
+    {
+        _wallpaperPropsCts?.Cancel();
+        _wallpaperPropsCts = null;
+        int version = ++_wallpaperPropsVersion;
+
+        string? folder = item?.FolderPath;
+
+        // 同一张已经建过行:只同步显隐,不重造(切换面板模式、重复选中走这条)
+        if (!string.IsNullOrEmpty(folder)
+            && folder == _wallpaperPropsLoadedFolder
+            && WallpaperPropsHost.Children.Count > 0)
+        {
+            SyncWallpaperPropsVisibility();
+            return;
+        }
+
+        StashWallpaperPropsDraft();   // 先把上一张的未保存改动收下再清面板(多选/详情模式这些早退分支也别让它白丢)
+        WallpaperPropsHost.Children.Clear();
+        _wallpaperPropsLoadedFolder = null;
+        _wallpaperProps = null;
+        _wallpaperPropsLoading = false;
+        SyncWallpaperPropsVisibility();   // 清空即收起内容与环;后面的每个早退分支都停在这个状态
+
+        if (item == null || _isMultiSelectMode) return;
+        if (!IsPropertyPanelMode) return;
+        if (!ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen) return;
+        if (string.IsNullOrEmpty(folder)) return;
+
+        // 认领这一张:即便解析失败也不再重复尝试,与「同一张只解析一次」一致
+        _wallpaperPropsLoadedFolder = folder;
+
+        // 这张留着一份没保存的改动:草稿直接端回来重建行,不再读盘(读来的值要被这份改动盖住,不如不读)
+        if (_wallpaperPropsDrafts.TryGetValue(folder, out var drafted))
+        {
+            DropWallpaperPropsDraft(folder);
+            ShowWallpaperProps(drafted);
+            return;
+        }
+
+        _wallpaperPropsLoading = true;
+        SyncWallpaperPropsVisibility();   // 防抖窗口就开始转,不等解析完成
+        var cts = new CancellationTokenSource();
+        _wallpaperPropsCts = cts;
+        _ = LoadWallpaperPropsAsync(folder, version, cts.Token);
+    }
+
+    /// <summary>防抖 → 后台解析 → 回 UI 线程一次建完。解析器按「路径 + project.json 改时间」缓存那段原文,
+    /// 主进程长驻,所以整份 project.json 一生只读一次(每次取用重建一批新行)。留草稿的那张根本不走到这里。
+    /// 一次建而不是分批:实测暖机后每行边际成本约 0.19ms,而分批的 Task.Delay(16) 在 179 行时要多花
+    /// 288ms(占整段 47%);布局又被 ScrollViewer 限制在视口内、不随已挂行数增长,分批买不到平滑。</summary>
+    private async Task LoadWallpaperPropsAsync(string folder, int version, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(WallpaperPropsDebounceMs, token);
+        }
+        catch (OperationCanceledException)
+        {
+            return; // 选中又变了,本次作废
+        }
+        if (version != _wallpaperPropsVersion) return;
+
+        List<WallpaperProperty> props;
+        try
+        {
+            // WE 内置属性(主题配色/对齐/播放速度/颜色校正/滤镜)+ project.json 的作者属性,一次读齐
+            props = await Task.Run(() => WeWallpaperSettings.ReadRows(folder));
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "解析壁纸属性失败: {Folder}", folder);
+            // 认领的文件夹已经记下,不会再重试;环必须停,否则一直转
+            if (version == _wallpaperPropsVersion)
+            {
+                _wallpaperPropsLoading = false;
+                SyncWallpaperPropsVisibility();
+            }
+            return;
+        }
+
+        // 解析期间选中又变了 / 面板被收起 / 进了多选 / 切回详情模式:丢弃结果
+        if (version != _wallpaperPropsVersion) return;
+        if (!IsPropertyPanelMode) return;
+        if (!ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen) return;
+
+        ShowWallpaperProps(props);
+    }
+
+    /// <summary>把一批行模型建到面板上(磁盘新读来的、草稿复用的都走这条)。一次建完不分批,理由见上面那段。</summary>
+    private void ShowWallpaperProps(List<WallpaperProperty> props)
+    {
+        _wallpaperPropsLoading = false;
+        _wallpaperProps = props;
+        foreach (var p in props)
+            WallpaperPropsHost.Children.Add(WallpaperPropertyRowBuilder.BuildPropertyRow(p));
+        if (props.Count == 0)
+            WallpaperPropsHost.Children.Add(BuildWallpaperPropsEmptyHint());
+        _wallpaperPropsEditable = props.Count > 0 && HasEditableProps(props);
+        SyncWallpaperPropsVisibility();
+    }
+
+    /// <summary>可编辑属性 = 能写回 project.json 的那些;分组自身不可编辑,要看它的子项</summary>
+    private static bool HasEditableProps(List<WallpaperProperty> props)
+        => props.SelectMany(p => p.Children.Prepend(p)).Any(p => p.IsEditable);
+
+    // ===== 属性面板顶部那两排按钮的处理器(XAML 里挂的;按钮是静态控件,行为在 Helper/WallpaperPresetActions.cs) =====
+
+    /// <summary>面板当前这批行(与行上控件共享同一批实例);没有时给空表,动作会自己判"没有可写的"。</summary>
+    private IReadOnlyList<WallpaperProperty> WallpaperPropsRows
+        => (IReadOnlyList<WallpaperProperty>?)_wallpaperProps ?? Array.Empty<WallpaperProperty>();
+
+    private void WallpaperPropsSaveButton_Click(object sender, RoutedEventArgs e) => _ = SaveWallpaperPropsAsync();
+
+    /// <summary>撤销更改:丢掉面板上的未保存编辑,按磁盘上的值重建行(与副窗口保存后的重读同一条路径)</summary>
+    private void WallpaperPropsUndoButton_Click(object sender, RoutedEventArgs e) => ReloadWallpaperPropsFromDisk();
+
+    private void WallpaperPresetLoad_Click(object sender, RoutedEventArgs e)
+        => WallpaperPresetActions.ShowLoadFlyout((FrameworkElement)sender, _wallpaperPropsLoadedFolder ?? "", () => WallpaperPropsRows);
+
+    private void WallpaperPresetSave_Click(object sender, RoutedEventArgs e)
+        => _ = WallpaperPresetActions.SaveAsync((FrameworkElement)sender, _wallpaperPropsLoadedFolder ?? "", () => WallpaperPropsRows);
+
+    private void WallpaperPresetShare_Click(object sender, RoutedEventArgs e)
+        => _ = WallpaperPresetActions.ShareAsync((FrameworkElement)sender, () => WallpaperPropsRows);
+
+    private void WallpaperPresetReset_Click(object sender, RoutedEventArgs e)
+        => _ = WallpaperPresetActions.ResetAsync((FrameworkElement)sender, _wallpaperPropsLoadedFolder ?? "", () =>
+        {
+            ReloadWallpaperPropsFromDisk();
+            return Task.CompletedTask;
+        });
+
+    /// <summary>把面板上的编辑值写回:WE 内置属性 → WE 安装目录的 config.json,其余 → project.json
+    /// (见 WeWallpaperSettings.SaveRows;两层都是文本级定点替换+原子写)。写盘放后台线程;
+    /// 成功后请已开的属性窗口重读 —— 那个进程手里是它自己打开时的快照,下一次保存会把面板刚写的改回去。
+    /// 结果不弹居中模态框(焦点会从右侧面板拽到窗口正中),改成贴在「应用更改」下面的小卡;失败文案与属性窗口共用(硬编码)。</summary>
+    private async Task SaveWallpaperPropsAsync()
+    {
+        string? folder = _wallpaperPropsLoadedFolder;
+        var props = _wallpaperProps;
+        if (string.IsNullOrEmpty(folder) || props == null) return;
+
+        // 结果一律贴在「应用更改」下面(小卡),不弹居中模态框:面板在窗口右侧,模态框会把焦点拽走
+        string okText = LanguageHelper.GetResource("Common_OK.Text");
+        var editable = props.SelectMany(p => p.Children.Prepend(p)).Where(p => p.IsEditable).ToList();
+        if (editable.Count == 0)
+        {
+            await DialogHelper.ShowFlyoutMessageAsync(WallpaperPropsSaveButton, "没有可编辑属性", okText);
+            return;
+        }
+
+        try
+        {
+            var (ok, error, wroteProject, weWritten) = await Task.Run(
+                () => WeWallpaperSettings.SaveRows(folder, props));
+            if (ok)
+            {
+                // SaveRows 写成后已抹掉脏标记 → 两枚按钮当场回到禁用
+                OnPropertyChanged(nameof(HasWallpaperPropEdits));
+                PropertiesWindowHost.NotifyPropertySaved(folder);
+                await DialogHelper.ShowFlyoutMessageAsync(WallpaperPropsSaveButton,
+                    WeWallpaperSettings.SaveResultText(wroteProject, weWritten), okText);
+            }
+            else
+            {
+                await DialogHelper.ShowFlyoutMessageAsync(WallpaperPropsSaveButton,
+                    "应用更改失败：" + (error ?? "未知错误"), okText);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "保存壁纸属性失败: {Folder}", folder);
+            await DialogHelper.ShowFlyoutMessageAsync(WallpaperPropsSaveButton, "应用更改失败：" + ex.Message, okText);
+        }
+    }
+
+    /// <summary>属性面板的空态提示:视频/应用类壁纸没有 project.json,场景壁纸也可能没有非空的
+    /// general.properties。文案与属性窗口同一句(11 种语言都在),免得看到一片空白以为没加载出来。</summary>
+    private static FrameworkElement BuildWallpaperPropsEmptyHint()
+    {
+        var tb = new TextBlock
+        {
+            Text = LanguageHelper.GetResource("PropertyPanel_NoProperties.Text"),
+            TextWrapping = TextWrapping.Wrap,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 8, 0, 8)
+        };
+        if (Application.Current.Resources["TextFillColorSecondaryBrush"] is Brush brush)
+            tb.Foreground = brush;
+        return tb;
+    }
+
+    /// <summary>刷新详情面板卸载按钮的可用性(选中壁纸变化、工坊路径变化、回到本页时调)。
+    /// 判据:工坊来源 + 有 WorkshopID + 有本地目录 + 工坊目录存在;路径无效时按钮禁用而不是点了报错。</summary>
     private void UpdateDetailBackupButton()
     {
         var item = ViewModel?.SelectedWallpaper;
         var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
-        bool enabled = item != null
+        _detailUninstallEnabled = item != null
             && item.Source == "workshop"
             && !string.IsNullOrEmpty(item.WorkshopID)
             && !string.IsNullOrEmpty(item.FolderPath)
             && !string.IsNullOrEmpty(workshopPath)
             && Directory.Exists(workshopPath);
 
-        _detailBackupTarget = enabled ? item : null;
-        _detailBackupTargetBackedUp = enabled && BackupService.IsBackedUp(workshopPath!, item!.WorkshopID!);
-        IsBackupActionEnabled = enabled;
-
-        OnPropertyChanged(nameof(IsBackupActionEnabled));
-        OnPropertyChanged(nameof(DetailBackupActionText));
-    }
-
-    private async void DetailBackupButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_detailBackupTarget is not { } item) return;
-        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
-        // 判据在 UpdateDetailBackupButton 里已经过一遍;这里落成局部量只为把"非空"交给编译器
-        // (属性不受空值流分析追踪,直接传 item.FolderPath 会报 CS8604)
-        string sourceDir = item.FolderPath ?? "";
-        if (string.IsNullOrEmpty(workshopPath) || string.IsNullOrEmpty(item.WorkshopID) || sourceDir.Length == 0) return;
-
-        if (!_detailBackupTargetBackedUp)
-        {
-            var result = BackupService.BackupWallpaperFolder(sourceDir, workshopPath, item.WorkshopID);
-            UpdateDetailBackupButton();   // 先改口:成功时"按钮变成取消备份"本身就是全部反馈,不再弹结果框
-            Log.Information("详情面板备份壁纸: {Title}(跳过已是链接的 {Skipped} 个文件)",
-                item.Title ?? item.WorkshopID, result.Skipped);
-            if (result.Error is not null)
-                await DialogHelper.ShowMessageAsync("备份失败", $"{item.Title ?? item.WorkshopID}: {result.Error}");
-            return;
-        }
-
-        // 取消备份:弹确认小卡。平时只有一句提示;"源文件已被删掉、备份是唯一副本"这种真会丢东西的情况才追加警示行
-        UnbackupFlyoutHint.Text = LanguageHelper.GetResource("Detail_UnbackupFlyout_Hint.Text");
-        UnbackupFlyoutConfirmButton.Content = LanguageHelper.GetResource("Detail_Unbackup.Text");
-        UnbackupFlyoutCancelButton.Content = LanguageHelper.GetResource("Common_Cancel.Text");
-        bool sourceGone = !Directory.Exists(Path.Combine(workshopPath, item.WorkshopID));
-        UnbackupFlyoutWarn.Text = LanguageHelper.GetResource("Detail_UnbackupFlyout_Warn.Text");
-        UnbackupFlyoutWarn.Visibility = sourceGone ? Visibility.Visible : Visibility.Collapsed;
-        UnbackupConfirmFlyout.ShowAt(sender as FrameworkElement ?? DetailBackupButton);
-    }
-
-    private async void UnbackupConfirm_Click(object sender, RoutedEventArgs e)
-    {
-        UnbackupConfirmFlyout.Hide();
-        if (_detailBackupTarget is not { } item) return;
-        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
-        if (string.IsNullOrEmpty(workshopPath) || string.IsNullOrEmpty(item.WorkshopID)) return;
-
-        var backupDir = BackupService.GetBackupDir(workshopPath, item.WorkshopID);
-        try
-        {
-            if (Directory.Exists(backupDir)) Directory.Delete(backupDir, true);
-            Log.Information("详情面板取消备份: {Title}", item.Title ?? item.WorkshopID);
-        }
-        catch (Exception ex)
-        {
-            await DialogHelper.ShowMessageAsync("取消备份失败", ex.Message);
-        }
-        UpdateDetailBackupButton();
+        OnPropertyChanged(nameof(IsUninstallEnabled));
     }
 
     private void DetailUninstallButton_Click(object sender, RoutedEventArgs e)
@@ -6121,10 +6388,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         UpdateDetailBackupButton();   // 卸载掉的那张没了,按钮状态跟着重算(选中已被清空)
     }
 
-    /// <summary>小卡上的「取消」按钮:两个弹层共用这一个处理器(同一时刻只可能开着一个,对没开着的那个 Hide 是空操作)。</summary>
+    /// <summary>小卡上的「取消」按钮:关掉确认小卡(Esc 或点别处由 Flyout 自己关)。</summary>
     private void FlyoutDismiss_Click(object sender, RoutedEventArgs e)
     {
-        UnbackupConfirmFlyout.Hide();
         UninstallConfirmFlyout.Hide();
     }
 

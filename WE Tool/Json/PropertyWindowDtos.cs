@@ -47,6 +47,7 @@ namespace WE_Tool.Json
     public sealed class PropertyWindowMessage
     {
         /// <summary>theme / blur / focus(母进程要求子窗口前置)/ add(母→子:白名单新增)/
+        /// reload(母→子:面板刚写了同一张壁纸的 project.json,子窗口重读)/
         /// removed(子→母:白名单移除请求)| size(子→母:最新尺寸)| saved(子→母:已写 project.json)</summary>
         public string Kind { get; set; } = "";
         public string? Theme { get; set; }

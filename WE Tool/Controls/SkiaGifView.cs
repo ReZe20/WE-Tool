@@ -30,6 +30,10 @@ public sealed partial class SkiaGifView : SKXamlCanvas
     /// (等待期间容器可能已被回收复用,不校验就会把旧 GIF 装到新卡片上)。</summary>
     private int _loadToken;
 
+    /// <summary>离场瞬间正在播的路径(仅"未被显式 Stop 的离场"才留账,即页面缓存切走)。
+    /// 重新挂载时按它自恢复 —— 页面侧靠可视树遍历重启要赌"遍历 vs 挂载"的先后,赌输就全不播。</summary>
+    private string? _pathOnDetach;
+
     /// <summary>是否正在播放(幂等 Start 判断用)</summary>
     public bool IsPlaying { get; private set; }
     /// <summary>当前播放的 GIF 路径(同 path 重绑跳过,避免重复打开)</summary>
@@ -42,8 +46,28 @@ public sealed partial class SkiaGifView : SKXamlCanvas
     {
         PaintSurface += OnPaint;
         SizeChanged += (_, _) => Invalidate();
-        Loaded += (_, _) => Invalidate(); // 挂载后强制首次重绘(渲染表面初始化)
-        Unloaded += (_, _) => Stop(); // 容器销毁/回收:自停,防共享时钟空转
+        Loaded += (_, _) =>
+        {
+            Invalidate(); // 挂载后强制首次重绘(渲染表面初始化)
+            // 缓存页切回:容器不重新绑定、ElementPrepared 不再触发,重启只能靠这里。
+            // 挂在 Loaded 上与布局时序无关(元素确已接回可视树);仍要求自身可见,
+            // 免得卡片被换成静态图/叠在模糊层下时把旧 GIF 复活。
+            if (_pathOnDetach is { } path && Visibility == Microsoft.UI.Xaml.Visibility.Visible)
+            {
+                Log.Information("[Skia][GIF] 挂载自恢复: {Path}", path);
+                _pathOnDetach = null;
+                Start(path);
+            }
+        };
+        Unloaded += (_, _) =>
+        {
+            // 容器回收/换绑前页面会先调 Stop() 清账,所以只有"切走缓存"会留下这条记录。
+            // 记账必须在 Stop() 之后:它会把账一起清掉。
+            bool wasPlaying = IsPlaying;
+            string? wasPath = CurrentPath;
+            Stop();
+            if (wasPlaying) _pathOnDetach = wasPath;
+        };
     }
 
     /// <summary>打开 GIF 并开始播放(替换 BitmapImage 直播路径);同 path 正在播则忽略。
@@ -100,6 +124,7 @@ public sealed partial class SkiaGifView : SKXamlCanvas
     public void Stop()
     {
         _loadToken++; // [性能 2026-09] 作废在途的后台开文件(其完成回调会 Dispose 结果,不装载)
+        _pathOnDetach = null; // 显式停播 = 不想要动画,清掉自恢复账(否则回收后会被 Loaded 复活)
         if (_instances.Remove(this) && _instances.Count == 0)
         {
             _timer?.Stop();

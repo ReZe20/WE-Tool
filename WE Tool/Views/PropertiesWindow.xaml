@@ -150,10 +150,24 @@
                     <Grid x:Name="WallpaperPropsRoot" Visibility="Collapsed">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel Padding="24,16,24,16" Spacing="15">
-                                <Button x:Name="PropertySaveButton"
-                                        x:Uid="PropertyPanel_Save"
-                                        Click="PropertySaveButton_Click"
-                                        HorizontalAlignment="Left"/>
+                                <StackPanel Spacing="8">
+                                    <!-- 六枚按钮与 Papers 属性面板同一排法(上排对当前值动手、下排预设三件事,文案与行为同源),
+                                         只是这里窗口宽,按钮按内容自然宽、不拉满 -->
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button x:Name="PropertySaveButton"
+                                                x:Uid="PropertyPanel_Save"
+                                                Click="PropertySaveButton_Click"/>
+                                        <Button x:Name="PropertyUndoButton"
+                                                x:Uid="PropertyPanel_Undo"
+                                                Click="PropertyUndoButton_Click"/>
+                                        <Button x:Uid="PropertyPreset_Reset" Click="WallpaperPresetReset_Click"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button x:Uid="PropertyPreset_LoadButton" Click="WallpaperPresetLoad_Click"/>
+                                        <Button x:Uid="PropertyPreset_Save" Click="WallpaperPresetSave_Click"/>
+                                        <Button x:Uid="PropertyPreset_Share" Click="WallpaperPresetShare_Click"/>
+                                    </StackPanel>
+                                </StackPanel>
                                 <ProgressRing x:Name="PropertyPanelLoadingRing"
                                               IsActive="{x:Bind IsPropertyLoading, Mode=OneWay}"
                                               Visibility="{x:Bind PropertyPanelLoadingVisibility, Mode=OneWay}"

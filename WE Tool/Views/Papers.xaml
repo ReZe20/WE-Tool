@@ -171,19 +171,8 @@
         <!-- [详情面板确认弹层 2026-09-21] 取代"确认对话框 + 结果对话框"两次点击:在按钮处弹这层小卡,
              一句提示 + 确定/取消(Esc 或点别处也算放弃)。提示与按钮文案都在代码里按 LanguageHelper 设,
              不走 x:Uid(TextBlock 用 .Text、Button 用 .Content,两套键名在弹层里容易踩空)。
-             Opened 仍挂 FlyoutThemeRefresh_Opened:弹层内容在独立顶层里,不继承页面主题(App.ApplyFlyoutTheme 支持 Flyout)。 -->
-        <Flyout x:Name="UnbackupConfirmFlyout" Opened="FlyoutThemeRefresh_Opened">
-            <StackPanel Width="300" Spacing="10">
-                <TextBlock x:Name="UnbackupFlyoutHint" TextWrapping="Wrap" FontSize="12"/>
-                <TextBlock x:Name="UnbackupFlyoutWarn" TextWrapping="Wrap" FontSize="12"
-                           Foreground="{ThemeResource SystemFillColorCautionBrush}" Visibility="Collapsed"/>
-                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                    <Button x:Name="UnbackupFlyoutConfirmButton" Style="{StaticResource AccentButtonStyle}"
-                            Click="UnbackupConfirm_Click"/>
-                    <Button x:Name="UnbackupFlyoutCancelButton" Click="FlyoutDismiss_Click"/>
-                </StackPanel>
-            </StackPanel>
-        </Flyout>
+             Opened 仍挂 FlyoutThemeRefresh_Opened:弹层内容在独立顶层里,不继承页面主题(App.ApplyFlyoutTheme 支持 Flyout)。
+             原先还有一层"取消备份"确认小卡,它只服务详情面板那枚已被撤掉的备份按钮,一并删除。 -->
         <Flyout x:Name="UninstallConfirmFlyout" Opened="FlyoutThemeRefresh_Opened">
             <StackPanel Width="300" Spacing="10">
                 <TextBlock x:Name="UninstallFlyoutHint" TextWrapping="Wrap" FontSize="12"/>
@@ -295,6 +284,14 @@
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize70Item, Mode=TwoWay}"/>
                         <RadioMenuFlyoutItem GroupName="MenuPageSizeGroup" x:Uid="Pagination_90"
                                              IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize90Item, Mode=TwoWay}"/>
+                    </MenuFlyoutSubItem>
+                    <MenuFlyoutSeparator/>
+                    <!-- 右侧面板二选一(与工具栏「查看」菜单同一份状态) -->
+                    <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_RightPanel">
+                        <RadioMenuFlyoutItem GroupName="RightPanelGroup" x:Uid="RightPanel_Detail"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelViewItem, Mode=TwoWay}"/>
+                        <RadioMenuFlyoutItem GroupName="RightPanelGroup" x:Uid="RightPanel_Property"
+                                             IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PropertyPanelViewItem, Mode=TwoWay}"/>
                     </MenuFlyoutSubItem>
                 </MenuFlyoutSubItem>
                 <!-- 排序已在查看菜单内置标签，此处仅保留排序 -->
@@ -578,6 +575,15 @@
                                 <RadioMenuFlyoutItem GroupName="PageSizeGroup" x:Uid="Pagination_90"
                                                      IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PageSize90Item, Mode=TwoWay}"/>
                             </MenuFlyoutSubItem>
+                            <MenuFlyoutSeparator/>
+                            <!-- 右侧面板二选一:详情面板 = 预览/信息/文件路径+描述;属性面板 = 同一套内容去掉描述、换成该壁纸的可配置属性(可改并保存)。
+                                 选择持久化在 Papers 配置段(RightPanelIndex) -->
+                            <MenuFlyoutSubItem x:Uid="MenuFlyoutSubItem_RightPanel">
+                                <RadioMenuFlyoutItem GroupName="MenuRightPanelGroup" x:Uid="RightPanel_Detail"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelViewItem, Mode=TwoWay}"/>
+                                <RadioMenuFlyoutItem GroupName="MenuRightPanelGroup" x:Uid="RightPanel_Property"
+                                                     IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.PropertyPanelViewItem, Mode=TwoWay}"/>
+                            </MenuFlyoutSubItem>
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
@@ -751,7 +757,10 @@
                                            TextWrapping="Wrap"
                                            FontSize="20"
                                            Margin="10,0,0,0"/>
-                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
+                                <!-- 属性模式下整排收起:解包/复制/卸载是对壁纸本身动手,不是改属性;
+                                     工具栏与卡片右键菜单是同一批命令,入口不丢 -->
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0"
+                                            Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}">
                                     <Button x:Name="DetailExtractButton" Command="{x:Bind ExtractSelectedCommand}" HorizontalAlignment="Left">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <wetool:ThemedAnimatedIcon x:Name="DetailExtractIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
@@ -801,43 +810,6 @@
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
-                                    <Button x:Name="DetailImportToEditorButton"
-                                            Click="ImportToEditor_Click"
-                                            IsEnabled="{x:Bind IsImportToEditorEnabled, Mode=OneWay}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <wetool:ThemedAnimatedIcon x:Name="DetailImportToEditorIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
-                                                <wetool:ThemedAnimatedIcon.Source>
-                                                    <animatedvisuals:ImportToEditorIcon/>
-                                                </wetool:ThemedAnimatedIcon.Source>
-                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
-                                                    <FontIconSource Glyph="&#xE70F;"/>
-                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
-                                            </wetool:ThemedAnimatedIcon>
-                                            <TextBlock x:Uid="Detail_ImportToEditor" VerticalAlignment="Center" FontSize="12"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <!-- [详情面板备份按钮 2026-09-21] 一枚按钮两用:当前这张壁纸已备份 → 文案「取消备份」,
-                                         点击在按钮处弹确认小卡;未备份 → 文案「备份壁纸」,点击直接备份不弹层。
-                                         文案/可用性由 UpdateDetailBackupButton 在选中项、工坊路径变化或一次备份操作结束后刷新
-                                         (x:Bind OneWay 走属性通知)。图标 = 壁纸备份页在导航栏那一枚的 Lottie,
-                                         状态切换由 Button 模板驱动(见 Papers.xaml.cs「详情面板按钮图标动画」段:不要再手动 SetState)。 -->
-                                    <Button x:Name="DetailBackupButton"
-                                            Click="DetailBackupButton_Click"
-                                            IsEnabled="{x:Bind IsBackupActionEnabled, Mode=OneWay}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="14" Height="14">
-                                                <wetool:ThemedAnimatedIcon.Source>
-                                                    <animatedvisuals:WallpaperBackupIcon/>
-                                                </wetool:ThemedAnimatedIcon.Source>
-                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
-                                                    <FontIconSource Glyph="&#xF738;"/>
-                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
-                                            </wetool:ThemedAnimatedIcon>
-                                            <TextBlock Text="{x:Bind DetailBackupActionText, Mode=OneWay}" VerticalAlignment="Center" FontSize="12"/>
-                                        </StackPanel>
-                                    </Button>
-                                </StackPanel>
                                 <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FolderPath, Mode=OneWay, FallbackValue=''}" 
                                            Style="{StaticResource CaptionTextBlockStyle}"
                                            Foreground="Gray" 
@@ -845,7 +817,9 @@
                                            IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"
                                            Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}"
                                            Margin="10,0,0,0"/>
-                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0">
+                                <!-- 「打开目录」与「属性」同样归详情:属性模式下右侧面板本身就是属性编辑器 -->
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0"
+                                            Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}">
                                     <Button x:Name="DetailOpenDirectoryButton" Command="{x:Bind OpenSelectedFoldersCommand}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <wetool:ThemedAnimatedIcon x:Name="DetailOpenDirectoryIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
@@ -873,7 +847,9 @@
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                <!-- 大小·来源·类型·评级与标签:说的是"这张壁纸是什么",与改属性无关,属性模式下收起 -->
+                                <StackPanel Orientation="Horizontal" Spacing="4"
+                                            Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}">
                                     <TextBlock Text="{x:Bind ViewModel.SelectedWallpaper.FileSize, Mode=OneWay, Converter={StaticResource FileSizeToString}, FallbackValue=''}"
                                                Style="{StaticResource CaptionTextBlockStyle}"
                                                FontWeight="SemiBold"
@@ -896,7 +872,7 @@
                                                Margin="4,0,4,0"
                                                IsTextSelectionEnabled="{x:Bind ViewModel.WallpaperDisplayVM.DetailSelectionEnabled, Mode=OneWay}"/>
                                 </StackPanel>
-                                <Grid>
+                                <Grid Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}">
                                     <Border Background="#20808080" 
                                             CornerRadius="4" 
                                             Padding="6,2" 
@@ -921,6 +897,51 @@
                                                 Visibility="Collapsed"
                                                 HorizontalAlignment="Left"
                                                 Margin="10,2,0,0"/>
+                                <!-- [2026-09] 属性面板(查看菜单里与详情面板二选一):行由 code-behind 一次建好挂进
+                                     WallpaperPropsHost,选中稳定 250ms 后读 WE 内置属性 + project.json 的作者属性
+                                     (Papers.xaml.cs ScheduleWallpaperPropsLoad);两处都没有时挂一句占位提示。
+                                     放在单选中信息面板内,多选/无选中随之隐藏 -->
+                                <!-- 属性面板顶部这两排是静态控件,写这儿而不是代码建(只有下边的属性行需要动态建);
+                                     显隐由 Papers.xaml.cs SyncWallpaperPropsVisibility 与 host 一起管 -->
+                                <StackPanel x:Name="WallpaperPropsHeader" Spacing="8" Visibility="Collapsed">
+                                    <!-- 六枚按钮排成 2×3(星列等分、跟着面板宽度走;此前是四排、每排还写死宽度,窄面板里白吃四行):
+                                         上排是对当前值动手 —— 写回 / 丢掉内存里的改动 / 清掉磁盘上的覆盖,下排是预设三件事。
+                                         文案在 resw(.Content),行为在 Helper/WallpaperPresetActions.cs -->
+                                    <Grid ColumnSpacing="8" RowSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Button Grid.Row="0" Grid.Column="0" x:Name="WallpaperPropsSaveButton"
+                                                x:Uid="PropertyPanel_Save" Click="WallpaperPropsSaveButton_Click" HorizontalAlignment="Stretch"
+                                                IsEnabled="{x:Bind HasWallpaperPropEdits, Mode=OneWay}"/>
+                                        <Button Grid.Row="0" Grid.Column="1" x:Uid="PropertyPanel_Undo"
+                                                Click="WallpaperPropsUndoButton_Click" HorizontalAlignment="Stretch"
+                                                IsEnabled="{x:Bind HasWallpaperPropEdits, Mode=OneWay}"/>
+                                        <Button Grid.Row="0" Grid.Column="2" x:Uid="PropertyPreset_Reset"
+                                                Click="WallpaperPresetReset_Click" HorizontalAlignment="Stretch"/>
+                                        <Button Grid.Row="1" Grid.Column="0" x:Uid="PropertyPreset_LoadButton"
+                                                Click="WallpaperPresetLoad_Click" HorizontalAlignment="Stretch"/>
+                                        <Button Grid.Row="1" Grid.Column="1" x:Uid="PropertyPreset_Save"
+                                                Click="WallpaperPresetSave_Click" HorizontalAlignment="Stretch"/>
+                                        <Button Grid.Row="1" Grid.Column="2" x:Uid="PropertyPreset_Share"
+                                                Click="WallpaperPresetShare_Click" HorizontalAlignment="Stretch"/>
+                                    </Grid>
+                                </StackPanel>
+                                <StackPanel x:Name="WallpaperPropsHost" Visibility="Collapsed"/>
+                                <!-- 加载环:属性模式且这一次选中还没建出行时显示(含选中的 250ms 防抖窗口),
+                                     建出行即换成上面的内容;与 host 互斥,由 Papers.xaml.cs SyncWallpaperPropsVisibility 管 -->
+                                <ProgressRing x:Name="WallpaperPropsRing"
+                                              IsActive="False"
+                                              Visibility="Collapsed"
+                                              Width="24" Height="24"
+                                              HorizontalAlignment="Left"
+                                              Margin="10,8,0,0"/>
                             </StackPanel>
                             <StackPanel x:Name="MultiSelectionInfoPanel" Spacing="10" Visibility="Collapsed" HorizontalAlignment="Stretch">
                                 <TextBlock x:Name="MultiSelectCountText" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
@@ -930,8 +951,6 @@
                                 </Grid>
                                 <Button x:Uid="MultiSelect_Cancel" Click="CancelMultiSelect_Click" HorizontalAlignment="Stretch" Style="{StaticResource DefaultButtonStyle}"/>
                             </StackPanel>
-
-                            <!-- 属性面板底部区：保存/加载指示 + 属性列表（仅属性模式显示；随整个面板一起滚动） -->
                         </StackPanel>
                     </Grid>
                 </ScrollView>

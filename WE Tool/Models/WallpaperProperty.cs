@@ -24,7 +24,7 @@ namespace WE_Tool.Models
     /// 可编辑类型（bool/slider/combo/color/textinput）的值在对应控件上双向绑定，
     /// 保存时一次性写回 project.json（文本级定点替换，只动 value token）。
     /// 纯文本组件（text/group）可能带超链接与样式；group 类型渲染为可折叠 Expander 并吞并后续属性；
-    /// condition 字段控制行可见性（由 ViewModel 建立属性间监听）。
+    /// 条件显隐见 <c>Gate</c>/<c>Gated</c>（WE 内置属性用，作者属性的 condition 字段暂未接）。
     /// </summary>
     public partial class WallpaperProperty : INotifyPropertyChanged
     {
@@ -110,6 +110,60 @@ namespace WE_Tool.Models
 
         public Visibility GroupBorderVisibility => IsGroup ? Visibility.Visible : Visibility.Collapsed;
 
+        // === WE 内置属性（WeWallpaperSettings 读出来的行，与 project.json 属性同构） ===
+        /// <summary>这一行来自 WE 自己的配置(config.json 的 wproperties)而不是 project.json —— 保存时写回目标不同</summary>
+        public bool IsWeBuiltin { get; set; }
+
+        /// <summary>WE 配置里没有这一项的记录、又不知道 WE 的默认值 ⇒ 行显示「默认」占位(未定态)</summary>
+        public bool IsUnset
+        {
+            get => _isUnset;
+            set
+            {
+                if (_isUnset == value) return;
+                _isUnset = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SliderValueText));
+                OnPropertyChanged(nameof(ComboDisplayText));
+            }
+        }
+        private bool _isUnset;
+
+        /// <summary>用户在这一行上改过值：写回 WE 配置时只写这些行(读入后由 WeWallpaperSettings 抹平,
+        /// 保存成功后再抹一次)。翻成 true 时朝 <see cref="Edited"/> 报一声,宿主用它点亮「应用更改/撤销更改」</summary>
+        public bool IsModified
+        {
+            get => _isModified;
+            set
+            {
+                if (_isModified == value) return;
+                _isModified = value;
+                if (value) Edited?.Invoke();
+            }
+        }
+        private bool _isModified;
+
+        /// <summary>某一行刚变成「有未保存改动」时报一声(同一行只报一次,滑杆连拖不重复)。
+        /// 装载与保存也走这个 setter,所以订阅方别把次数当改动条数用:回 UI 线程按各行实际的脏标记重算一遍。</summary>
+        public static event Action? Edited;
+
+        /// <summary>未定态显示的占位文字(「默认」;由读取方按界面语言填,空则不显示占位)</summary>
+        public string UnsetText { get; set; } = "";
+
+        // === 条件显隐(WE 属性对话框里那批带 condition 的行) ===
+        /// <summary>本行的显隐交给这条 bool 行:它关着时本行整行收起。
+        /// WE 自己就是这样藏「亮度/对比度/色调偏移/饱和度」的(condition = wec_e.value),
+        /// 由 <c>WeWallpaperSettings</c> 按目录表挂上。</summary>
+        public WallpaperProperty? Gate { get; set; }
+
+        /// <summary>受本行(bool)控制的行;勾选状态一变,<c>WallpaperPropertyRowBuilder</c>
+        /// 就把它们的 Visibility 翻过去 —— 与 WE 的对话框一样,收起不是禁用,值仍然留着可保存。</summary>
+        public List<WallpaperProperty> Gated { get; } = [];
+
+        /// <summary>本行的可视元素,建行时回填,供条件联动改显隐。只有 WE 内置行会挂条件,
+        /// 而那批行每次读取都新建,不会和另一个面板共用同一个实例。</summary>
+        public FrameworkElement? RowElement { get; set; }
+
         // === 编辑配置（解析时固定，仅解析器写入） ===
         public double SliderMin { get; set; }
         public double SliderMax { get; set; } = 100;
@@ -130,6 +184,7 @@ namespace WE_Tool.Models
                 if (_boolValue != value)
                 {
                     _boolValue = value;
+                    MarkUserEdit();
                     OnPropertyChanged();
                 }
             }
@@ -144,15 +199,17 @@ namespace WE_Tool.Models
                 if (_sliderValue != value)
                 {
                     _sliderValue = value;
+                    MarkUserEdit();
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(SliderValueText));
                 }
             }
         }
 
-        /// <summary>slider 当前值显示文本：有精度定义按精度保留小数，否则最多 3 位（去尾零）</summary>
+        /// <summary>slider 当前值显示文本:未定态显示「默认」占位;有精度定义按精度保留小数,否则最多 3 位(去尾零)</summary>
         public string SliderValueText
-            => Precision >= 0 ? SliderValue.ToString($"F{Precision}") : SliderValue.ToString("0.###");
+            => IsUnset && UnsetText.Length > 0 ? UnsetText
+             : Precision >= 0 ? SliderValue.ToString($"F{Precision}") : SliderValue.ToString("0.###");
 
         private int _comboIndex = -1;
         public int ComboIndex
@@ -163,6 +220,7 @@ namespace WE_Tool.Models
                 if (_comboIndex != value)
                 {
                     _comboIndex = value;
+                    MarkUserEdit();
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(ComboValue));
                     OnPropertyChanged(nameof(ComboDisplayText));
@@ -174,11 +232,12 @@ namespace WE_Tool.Models
         public string ComboValue
             => ComboIndex >= 0 && ComboIndex < Options.Count ? Options[ComboIndex].Value : "";
 
-        /// <summary>下拉按钮显示文本：选中项 label；匹配失败显示原值（解析器已格式化到 DisplayValue）</summary>
+        /// <summary>下拉按钮显示文本：未定态显示「默认」占位；选中项 label；匹配失败显示原值（解析器已格式化到 DisplayValue）</summary>
         public string ComboDisplayText
         {
             get
             {
+                if (IsUnset && UnsetText.Length > 0) return UnsetText;
                 if (ComboIndex >= 0 && ComboIndex < Options.Count)
                     return Options[ComboIndex].Label;
                 return string.IsNullOrEmpty(DisplayValue) ? ComboValue : DisplayValue;
@@ -194,6 +253,7 @@ namespace WE_Tool.Models
                 if (_colorValue != value)
                 {
                     _colorValue = value;
+                    MarkUserEdit();
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(ColorBrush));
                     OnPropertyChanged(nameof(ColorHexText));
@@ -210,10 +270,19 @@ namespace WE_Tool.Models
                 if (_textValue != value)
                 {
                     _textValue = value;
+                    MarkUserEdit();
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(FilePathDisplay));
                 }
             }
+        }
+
+        /// <summary>用户改了值:标记这一行要写回,并把「默认」占位换成真值(装载时经由同样的 setter,
+        /// 由读取方在装载完成后统一把 IsModified/IsUnset 重置成装载态)。</summary>
+        private void MarkUserEdit()
+        {
+            IsModified = true;
+            IsUnset = false;
         }
 
         // === 文件路径选择（scenetexture：点击按钮选图片，写回路径字符串） ===

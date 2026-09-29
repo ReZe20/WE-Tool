@@ -130,7 +130,10 @@
     <value>该壁纸没有可配置属性</value>
   </data>
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
-    <value>保存属性</value>
+    <value>应用更改</value>
+  </data>
+  <data name="PropertyPanel_Undo.Content" xml:space="preserve">
+    <value>撤销更改</value>
   </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>大众级(G)</value>
@@ -1302,6 +1305,9 @@
   <data name="Common_Cancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
+  <data name="Common_OK.Text" xml:space="preserve">
+    <value>确定</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>全选</value>
   </data>
@@ -2079,5 +2085,77 @@
   </data>
   <data name="MpkgQueue_ProbePartialShort.Text" xml:space="preserve">
     <value>只有 {0}/{1} 张纹理会缩小</value>
+  </data>
+  <data name="WeSettings_Default.Text" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="PropertyPreset_Header.Content" xml:space="preserve">
+    <value>预设</value>
+  </data>
+  <data name="PropertyPreset_LoadButton.Content" xml:space="preserve">
+    <value>加载预设</value>
+  </data>
+  <data name="PropertyPreset_ShareEmpty.Text" xml:space="preserve">
+    <value>该壁纸没有可分享的 Wallpaper Engine 属性</value>
+  </data>
+  <data name="PropertyPreset_Save.Content" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="PropertyPreset_Share.Content" xml:space="preserve">
+    <value>分享 JSON</value>
+  </data>
+  <data name="PropertyPreset_Reset.Content" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="PropertyPreset_Empty.Text" xml:space="preserve">
+    <value>暂无预设</value>
+  </data>
+  <data name="PropertyPreset_SaveHint.Text" xml:space="preserve">
+    <value>存为预设</value>
+  </data>
+  <data name="PropertyPreset_NameLabel.Text" xml:space="preserve">
+    <value>预设名称</value>
+  </data>
+  <data name="PropertyPreset_DupName.Text" xml:space="preserve">
+    <value>已有同名预设，保存将用当前值更新它</value>
+  </data>
+  <data name="PropertyPreset_SavedFmt.Text" xml:space="preserve">
+    <value>已保存预设「{0}」</value>
+  </data>
+  <data name="PropertyPreset_MergedFmt.Text" xml:space="preserve">
+    <value>已更新预设「{0}」</value>
+  </data>
+  <data name="PropertyPreset_LoadedFmt.Text" xml:space="preserve">
+    <value>已套用预设「{0}」的 {1} 项，需点击「应用更改」写入</value>
+  </data>
+  <data name="PropertyPreset_ShareTitle.Text" xml:space="preserve">
+    <value>分享 JSON</value>
+  </data>
+  <data name="PropertyPreset_ShareHint.Text" xml:space="preserve">
+    <value>复制这段 JSON 可分享给其他壁纸；粘贴他人 JSON 后点击「应用」将覆盖当前值</value>
+  </data>
+  <data name="PropertyPreset_Copy.Text" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="PropertyPreset_CopiedFmt.Text" xml:space="preserve">
+    <value>已复制 {0} 个字符（Base64，可直接贴进 Wallpaper Engine 的分享框）</value>
+  </data>
+  <data name="PropertyPreset_DecodedFmt.Text" xml:space="preserve">
+    <value>已把 Base64 还原为 JSON（{0} 个字符）</value>
+  </data>
+  <data name="PropertyPreset_Paste.Text" xml:space="preserve">
+    <value>粘贴</value>
+  </data>
+  <data name="PropertyPreset_Apply.Text" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="PropertyPreset_AppliedFmt.Text" xml:space="preserve">
+    <value>已套用 JSON 中的 {0} 项，需点击「应用更改」写入</value>
+  </data>
+  <data name="PropertyPreset_ResetConfirm.Text" xml:space="preserve">
+    <value>将该壁纸恢复为默认值，并清除其在 Wallpaper Engine 中的本地设置（预设保留）</value>
+  </data>
+  <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
+    <value>已重置</value>
   </data>
 </root>

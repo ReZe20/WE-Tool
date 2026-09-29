@@ -24,7 +24,7 @@ namespace WE_Tool.Helper
         {
             string path = Path.Combine(folderPath, "project.json");
             if (!File.Exists(path))
-                return (false, $"project.json 不存在: {path}");
+                return (false, $"project.json 不存在：{path}");
 
             string json;
             try
@@ -34,7 +34,7 @@ namespace WE_Tool.Helper
             catch (Exception ex)
             {
                 Log.Warning(ex, "读取 project.json 失败: {Path}", path);
-                return (false, $"读取 project.json 失败: {ex.Message}");
+                return (false, $"读取 project.json 失败：{ex.Message}");
             }
 
             var editable = properties.Where(p => p.IsEditable && !(p.Type == "combo" && p.ComboIndex < 0)).ToList();
@@ -57,7 +57,7 @@ namespace WE_Tool.Helper
             }
 
             if (failedKeys.Count > 0)
-                return (false, $"以下属性在 project.json 中未找到，已取消保存: {string.Join(", ", failedKeys)}");
+                return (false, $"以下属性在 project.json 中未找到，已取消保存：{string.Join(", ", failedKeys)}");
 
             // 写后校验：重新解析失败则放弃（不写盘，原文件不受影响）
             try
@@ -67,7 +67,7 @@ namespace WE_Tool.Helper
             catch (Exception ex)
             {
                 Log.Warning(ex, "写回结果 JSON 校验失败,已取消保存: {Path}", path);
-                return (false, $"写回结果 JSON 校验失败，已取消保存: {ex.Message}");
+                return (false, $"写回结果 JSON 校验失败，已取消保存：{ex.Message}");
             }
 
             // 临时文件 + File.Replace 原子写，同时生成备份
@@ -82,7 +82,7 @@ namespace WE_Tool.Helper
             {
                 try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
                 Log.Warning(ex, "写入 project.json 失败: {Path}", path);
-                return (false, $"写入 project.json 失败: {ex.Message}");
+                return (false, $"写入 project.json 失败：{ex.Message}");
             }
         }
 
