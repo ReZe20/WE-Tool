@@ -2147,4 +2147,19 @@ project.json とプレビューをコピー
   <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
     <value>リセットしました</value>
   </data>
+  <data name="MpkgQueue_Detach.AutomationProperties.Name" xml:space="preserve">
+    <value>別ウィンドウへ移動</value>
+  </data>
+  <data name="MpkgQueue_Detach.ToolTipService.ToolTip" xml:space="preserve">
+    <value>ウィンドウで開く</value>
+  </data>
+  <data name="MpkgQueue_Dock.AutomationProperties.Name" xml:space="preserve">
+    <value>ページに戻す</value>
+  </data>
+  <data name="MpkgQueue_Dock.ToolTipService.ToolTip" xml:space="preserve">
+    <value>パネルモードに戻す</value>
+  </data>
+  <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
+    <value>モバイル変換キュー</value>
+  </data>
 </root>

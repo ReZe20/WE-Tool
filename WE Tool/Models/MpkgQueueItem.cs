@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using WE_Tool.Json;
 
 namespace WE_Tool.Models;
 
@@ -36,6 +37,9 @@ public partial class MpkgQueueItem : INotifyPropertyChanged
             ?? (wallpaper.FolderPath != null ? new DirectoryInfo(wallpaper.FolderPath).Name : "?");
         Key = wallpaper.FolderPath ?? wallpaper.WorkshopID ?? Name;
         Preview = wallpaper.Preview;
+        // 预览模糊按这张的分级判定。副窗口在另一个进程里,它手上只有载荷带过来的这一份,
+        // 所以分级必须随行带走,不能到用时再回主 VM 查。
+        ContentRating = wallpaper.ContentRating;
     }
 
     public WallpaperItem Wallpaper { get; }
@@ -47,6 +51,36 @@ public partial class MpkgQueueItem : INotifyPropertyChanged
     public string Key { get; }
 
     public string? Preview { get; }
+
+    /// <summary>这张的分级(everyone/questionable/mature)。只用于"该不该糊",界面上不显示。</summary>
+    public string? ContentRating { get; set; }
+
+    private ImageSource? _blurSource;
+
+    /// <summary>命中预览模糊时的那张高斯模糊图;null = 不糊(或还没生成好)。</summary>
+    public ImageSource? BlurSource
+    {
+        get => _blurSource;
+        set
+        {
+            if (ReferenceEquals(_blurSource, value)) return;
+            _blurSource = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(BlurOverlayVisibility));
+        }
+    }
+
+    /// <summary>糊上之后原图那层要让位(异步生成期间也不能露原图,否则先看清一眼再糊上)。</summary>
+    public Visibility RawPreviewVisibility => BlurSource is null ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility BlurOverlayVisibility => BlurSource is null ? Visibility.Collapsed : Visibility.Visible;
+
+    /// <summary>把模糊结论摆回/撤下这一行。撤下时原图那层要同时亮回来。</summary>
+    public void SetBlur(ImageSource? blurred)
+    {
+        BlurSource = blurred;
+        OnPropertyChanged(nameof(RawPreviewVisibility));
+    }
 
     /// <summary>
     /// 行内 slider 的绑定面:Slider.Value 是 double,档位序号是 int,这里做那一次转换。
@@ -321,6 +355,29 @@ public partial class MpkgQueueItem : INotifyPropertyChanged
 
     public Visibility ProbeNoteVisibility => string.IsNullOrEmpty(_probeNote) ? Visibility.Collapsed : Visibility.Visible;
 
+    private double _entryProgress;
+
+    /// <summary>
+    /// 这一张<b>内部</b>转到哪 —— repkg 每处理完一条条目回一行 <c>pos/total</c>，折成百分比写进来。
+    /// 只有面板在开转期间写它，批次一结束就归零，所以它不是行状态、不进 DTO、也不参与产物判定。
+    /// </summary>
+    public double EntryProgress
+    {
+        get => _entryProgress;
+        set
+        {
+            double next = Math.Clamp(value, 0, 100);
+            // 每条目都推一次，半格以内的差值不值得重画一遍（条目多的包一次能推上百次）
+            if (Math.Abs(_entryProgress - next) < 0.5) return;
+            _entryProgress = next;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(EntryProgressVisibility));
+        }
+    }
+
+    /// <summary>没在转的行不留一根空条：0 就是"这行还没轮到/已经结算完并被清掉"。</summary>
+    public Visibility EntryProgressVisibility => _entryProgress > 0 ? Visibility.Visible : Visibility.Collapsed;
+
     /// <summary>探测结论是"这个档位白选"还是只是一句构成说明 —— 前者才配那格琥珀色。</summary>
     public bool ProbeIsWarning
     {
@@ -408,6 +465,62 @@ public partial class MpkgQueueItem : INotifyPropertyChanged
     /// </summary>
     public string ProbeSignature =>
         $"{EffectiveTier}|{Etc2On}|{ShrinkDxOn}|{CopyTexturesOn}";
+
+    /// <summary>
+    /// 交出去给副窗口的那份形状。写的是<b>存下的意图</b>(_tier 与各覆盖原值)而不是生效值:
+    /// 生效值是在这边算出来的派生量,把"照搬开着所以档位算 0"写回载荷,贴回来就真丢了原先选的倍数。
+    /// 探测结论不带走 —— 子进程开面板时会按同样的口径重探一轮,省得把两套文案的时序问题也搬过去。
+    /// </summary>
+    public MpkgQueueRowDto ToRowDto() => new()
+    {
+        WorkshopID = Wallpaper.WorkshopID,
+        Title = Wallpaper.Title,
+        FolderPath = Wallpaper.FolderPath,
+        Preview = Wallpaper.Preview,
+        Type = Wallpaper.Type,
+        ContentRating = ContentRating,
+        Tier = _tier,
+        KeepAudio = _keepAudio,
+        UseLz4 = _useLz4,
+        ShaderCompat = _shaderCompat,
+        EncodeEtc2 = _encodeEtc2,
+        CopyTextures = _copyTextures,
+        ShrinkDx = _shrinkDx,
+        NameMode = _nameMode,
+        IsExpanded = IsExpanded,
+    };
+
+    /// <summary>
+    /// 从副窗口的载荷还原一行:绕开各 setter,直接把私有覆盖摆回原位 ——
+    /// 那些 setter 的职责是"把等于全局的值折成 null"和"跨过原始档时吃掉 ETC2 覆盖",
+    /// 而送来的本来就已经是走完整套护栏的结果,再走一遍只会多改一遍。
+    /// 唯一走 setter 的是 SettingsVisibility:它连带把收起行的 IsExpanded 归零,那条规矩得留着。
+    /// </summary>
+    public static MpkgQueueItem FromRowDto(MpkgQueueRowDto row, Visibility settingsVisibility)
+    {
+        var item = new MpkgQueueItem(new WallpaperItem
+        {
+            WorkshopID = row.WorkshopID,
+            Title = row.Title,
+            FolderPath = row.FolderPath,
+            Preview = row.Preview,
+            Type = row.Type,
+            ContentRating = row.ContentRating,
+        })
+        {
+            SettingsVisibility = settingsVisibility,
+        };
+        item._tier = row.Tier;
+        item._keepAudio = row.KeepAudio;
+        item._useLz4 = row.UseLz4;
+        item._shaderCompat = row.ShaderCompat;
+        item._encodeEtc2 = row.EncodeEtc2;
+        item._copyTextures = row.CopyTextures;
+        item._shrinkDx = row.ShrinkDx;
+        item._nameMode = row.NameMode;
+        item.IsExpanded = row.IsExpanded && settingsVisibility == Visibility.Visible;
+        return item;
+    }
 
     private void SetOverride(ref bool? field, bool value, bool globalDefault, string propertyName)
     {

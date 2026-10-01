@@ -2147,4 +2147,19 @@
   <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
     <value>Сброшено</value>
   </data>
+  <data name="MpkgQueue_Detach.AutomationProperties.Name" xml:space="preserve">
+    <value>Перенести в отдельное окно</value>
+  </data>
+  <data name="MpkgQueue_Detach.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Открыть в окне</value>
+  </data>
+  <data name="MpkgQueue_Dock.AutomationProperties.Name" xml:space="preserve">
+    <value>Вернуть на страницу</value>
+  </data>
+  <data name="MpkgQueue_Dock.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Вернуться в режим панели</value>
+  </data>
+  <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
+    <value>Очередь конвертации для мобильных</value>
+  </data>
 </root>

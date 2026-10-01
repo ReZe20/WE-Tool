@@ -10,7 +10,7 @@ using WE_Tool.Json;
 namespace WE_Tool.Service
 {
     /// <summary>
-    /// 副窗口(属性 / 白名单)的进程间链路:启动载荷文件 + 命名管道双向行帧。
+    /// 副窗口(属性 / 白名单 / 移动版队列)的进程间链路:启动载荷文件 + 命名管道双向行帧。
     /// 子进程是 server(它先从载荷里拿到管名并等待连接),母进程是 client 并重试——
     /// WinUI 冷启动比管道重试窗口慢不了多少,所以不需要额外的"就绪"信令。
     /// 只用一条管道,不引入 WndProc 子类化/共享内存:NativeAOT 下没有函数指针生命周期要管。
@@ -18,12 +18,13 @@ namespace WE_Tool.Service
     internal static class PropertyWindowLink
     {
         /// <summary>协议代号:子进程据此拒绝旧母进程(或反过来)的载荷,不做静默兼容。
-        /// 名字里的 property 是历史原因,它现在同时管属性与白名单两种副窗口。</summary>
+        /// 名字里的 property 是历史原因,它现在同时管属性、白名单与移动版队列三种副窗口。</summary>
         public const string Protocol = "we-property-1";
 
         /// <summary>副窗口模式的启动开关(生成的 Main 丢弃 args,只能在 App 构造里读命令行)。</summary>
         public const string SwitchProperties = "--properties-window";
         public const string SwitchWhitelist = "--whitelist-window";
+        public const string SwitchMpkgQueue = "--mpkg-window";
 
         public const string KindTheme = "theme";
         public const string KindBlur = "blur";
@@ -38,7 +39,17 @@ namespace WE_Tool.Service
         /// <summary>子→母:子窗口请求把某 ID 移出白名单。落盘由母进程做——保持单写者。</summary>
         public const string KindRemoved = "removed";
 
-        public enum WindowKind { None, Properties, Whitelist }
+        /// <summary>母→子:页面又「转为移动版」了几张,子窗口把行追加进自己那份队列。
+        /// 队列此时只有一个持有者(子进程),母进程自己那份是空的,所以这条是单向投递不是同步。</summary>
+        public const string KindMpkgRows = "mpkg-rows";
+        /// <summary>子→母:整份队列(行 + 面板状态)交回。带 Dock=true 的是点「贴回」,母进程要顺带把页面面板展开;
+        /// 不带的是每次改动后的存一份和退出前那一次 —— 母进程收下但不弹面板。</summary>
+        public const string KindMpkgQueue = "mpkg-queue";
+        /// <summary>子→母:副窗口正在转换 / 转完了。母进程据此挡住同一段时间里再开一批提取,
+        /// 免得两个 repkg 批次抢同一批核(两侧原本共用 IsExtracting 这道闸,出进程后只剩这一条消息能顶它)。</summary>
+        public const string KindMpkgBusy = "mpkg-busy";
+
+        public enum WindowKind { None, Properties, Whitelist, MpkgQueue }
 
         public static string NewPipeName() => $"we-tool-child-{Guid.NewGuid():N}";
 
@@ -49,6 +60,10 @@ namespace WE_Tool.Service
         public static string WritePayload(WhitelistWindowSnapshot snapshot) =>
             WriteTemp($"we-tool-whitelist-{Guid.NewGuid():N}.json", JsonSerializer.Serialize(
                 snapshot, PropertyWindowJsonContext.Default.WhitelistWindowSnapshot));
+
+        public static string WritePayload(MpkgWindowSnapshot snapshot) =>
+            WriteTemp($"we-tool-mpkg-{Guid.NewGuid():N}.json", JsonSerializer.Serialize(
+                snapshot, PropertyWindowJsonContext.Default.MpkgWindowSnapshot));
 
         private static string WriteTemp(string fileName, string text)
         {
@@ -74,6 +89,11 @@ namespace WE_Tool.Service
                     payloadPath = args[i + 1];
                     return WindowKind.Whitelist;
                 }
+                if (string.Equals(args[i], SwitchMpkgQueue, StringComparison.Ordinal))
+                {
+                    payloadPath = args[i + 1];
+                    return WindowKind.MpkgQueue;
+                }
             }
             return WindowKind.None;
         }
@@ -97,6 +117,18 @@ namespace WE_Tool.Service
             if (snapshot != null && !Protocol.Equals(snapshot.Protocol, StringComparison.Ordinal))
             {
                 Log.Error("[白名单副窗] 协议不匹配: 期望 {Want},实际 {Got}", Protocol, snapshot.Protocol);
+                return null;
+            }
+            return snapshot;
+        }
+
+        public static MpkgWindowSnapshot? ReadMpkgPayload(string path)
+        {
+            var snapshot = ReadAndDelete(path, text => JsonSerializer.Deserialize(
+                text, PropertyWindowJsonContext.Default.MpkgWindowSnapshot));
+            if (snapshot != null && !Protocol.Equals(snapshot.Protocol, StringComparison.Ordinal))
+            {
+                Log.Error("[移动版副窗] 协议不匹配: 期望 {Want},实际 {Got}", Protocol, snapshot.Protocol);
                 return null;
             }
             return snapshot;
@@ -229,6 +261,9 @@ namespace WE_Tool.Service
             {
                 Log.Debug(ex, "[属性副窗] 管道读循环结束");
             }
+            // 由读循环来收尾释放:它只在 EOF/读失败之后才走到这里,也就是对端关闭前写进管道的
+            // 最后几条消息已经全部交付了。反过来(对端进程一没就 Dispose)会把缓冲里的消息掐掉。
+            Dispose();
             Broken?.Invoke();
         }
 

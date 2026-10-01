@@ -2147,4 +2147,19 @@ project.json 및 미리보기 복사
   <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
     <value>초기화했습니다</value>
   </data>
+  <data name="MpkgQueue_Detach.AutomationProperties.Name" xml:space="preserve">
+    <value>별도 창으로 이동</value>
+  </data>
+  <data name="MpkgQueue_Detach.ToolTipService.ToolTip" xml:space="preserve">
+    <value>창에서 열기</value>
+  </data>
+  <data name="MpkgQueue_Dock.AutomationProperties.Name" xml:space="preserve">
+    <value>페이지로 되돌리기</value>
+  </data>
+  <data name="MpkgQueue_Dock.ToolTipService.ToolTip" xml:space="preserve">
+    <value>패널 모드로 되돌리기</value>
+  </data>
+  <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
+    <value>모바일 변환 대기열</value>
+  </data>
 </root>

@@ -51,11 +51,14 @@ namespace WE_Tool
         public static readonly string SystemLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
         private static Json.PropertyWindowSnapshot? _launchSnapshot;
         private static Json.WhitelistWindowSnapshot? _launchWhitelistSnapshot;
+        private static Json.MpkgWindowSnapshot? _launchMpkgSnapshot;
         /// <summary>当前进程是属性副窗口子进程(母进程带 --properties-window 自我启动)</summary>
         public static bool IsPropertiesWindowChild => _launchSnapshot != null;
         public static Json.PropertyWindowSnapshot? PropertiesWindowLaunch => _launchSnapshot;
         /// <summary>当前进程是白名单副窗口子进程(母进程带 --whitelist-window 自我启动)</summary>
         public static Json.WhitelistWindowSnapshot? WhitelistWindowLaunch => _launchWhitelistSnapshot;
+        /// <summary>当前进程是移动版队列副窗口子进程(母进程带 --mpkg-window 自我启动,队列已整份交给它)</summary>
+        public static Json.MpkgWindowSnapshot? MpkgWindowLaunch => _launchMpkgSnapshot;
         /// <summary>用户数据根,InitLogging 里定值(日志/配置/缓存同根)</summary>
         public static string AppDataRoot { get; private set; } = "";
 
@@ -65,23 +68,51 @@ namespace WE_Tool
             // 拉起 SteamworksBridge、全盘扫描并写 wallpaper_cache.json、注册 HKCU 通知——
             // 子进程一样都不需要,且与母进程并发全量覆写同一批文件必丢更新。
             var launchKind = Service.PropertyWindowLink.ReadLaunchKind(out string payloadPath);
-            if (launchKind == Service.PropertyWindowLink.WindowKind.Properties)
-                _launchSnapshot = Service.PropertyWindowLink.ReadPropertiesPayload(payloadPath);
-            else if (launchKind == Service.PropertyWindowLink.WindowKind.Whitelist)
-                _launchWhitelistSnapshot = Service.PropertyWindowLink.ReadWhitelistPayload(payloadPath);
-
-            if (_launchSnapshot != null || _launchWhitelistSnapshot != null)
+            switch (launchKind)
             {
-                bool isWhitelist = _launchWhitelistSnapshot != null;
-                ViewModel = null!; // 副模式不构建主 VM:两类副窗口都只吃快照,不再引用它
-                ApplyLanguage(isWhitelist ? _launchWhitelistSnapshot!.Language : _launchSnapshot!.Language);
+                case Service.PropertyWindowLink.WindowKind.Properties:
+                    _launchSnapshot = Service.PropertyWindowLink.ReadPropertiesPayload(payloadPath);
+                    break;
+                case Service.PropertyWindowLink.WindowKind.Whitelist:
+                    _launchWhitelistSnapshot = Service.PropertyWindowLink.ReadWhitelistPayload(payloadPath);
+                    break;
+                case Service.PropertyWindowLink.WindowKind.MpkgQueue:
+                    _launchMpkgSnapshot = Service.PropertyWindowLink.ReadMpkgPayload(payloadPath);
+                    break;
+            }
+
+            if (_launchSnapshot != null || _launchWhitelistSnapshot != null || _launchMpkgSnapshot != null)
+            {
+                // 三种副窗口的差别只剩语言 / 日志级别 / 日志文件名 / 横幅上的名字。
+                // 载荷读失败(协议不匹配、json 坏了)时三份全为 null,那时当普通进程往下走,不建一个空壳副窗口。
+                string childLanguage, childLevel, childLogFile, childLabel;
+                if (_launchMpkgSnapshot != null)
+                {
+                    childLanguage = _launchMpkgSnapshot.Language;
+                    childLevel = _launchMpkgSnapshot.LogLevel;
+                    childLogFile = "mpkg.txt";
+                    childLabel = "移动版队列副窗口";
+                }
+                else if (_launchWhitelistSnapshot != null)
+                {
+                    childLanguage = _launchWhitelistSnapshot.Language;
+                    childLevel = _launchWhitelistSnapshot.LogLevel;
+                    childLogFile = "whitelist.txt";
+                    childLabel = "白名单副窗口";
+                }
+                else
+                {
+                    childLanguage = _launchSnapshot!.Language;
+                    childLevel = _launchSnapshot.LogLevel;
+                    childLogFile = "properties.txt";
+                    childLabel = "属性副窗口";
+                }
+                ViewModel = null!; // 副模式不构建主 VM:三类副窗口都只吃快照,不再引用它
+                ApplyLanguage(childLanguage);
                 this.InitializeComponent();
-                InitLogging(childProcess: true, forcedLevel:
-                    isWhitelist ? _launchWhitelistSnapshot!.LogLevel : _launchSnapshot!.LogLevel,
-                    childLogFile: isWhitelist ? "whitelist.txt" : "properties.txt");
+                InitLogging(childProcess: true, forcedLevel: childLevel, childLogFile: childLogFile);
                 HookGlobalExceptionHandlers();
-                Log.Information("===={Child}子进程已启动。Pid={Pid}====",
-                    isWhitelist ? "白名单副窗口" : "属性副窗口", Environment.ProcessId);
+                Log.Information("===={Child}子进程已启动。Pid={Pid}====", childLabel, Environment.ProcessId);
                 return;
             }
 
@@ -171,6 +202,15 @@ namespace WE_Tool
             if (_launchWhitelistSnapshot != null)
             {
                 _window = new Views.WhitelistWindow(_launchWhitelistSnapshot);
+                MainWindowInstance = _window;
+                _window.Activate();
+                return;
+            }
+
+            if (_launchMpkgSnapshot != null)
+            {
+                // 移动版队列副窗口:本进程的全部就是这块面板,转换也由它自己起 repkg 子进程跑。
+                _window = new Views.MpkgQueueWindow(_launchMpkgSnapshot);
                 MainWindowInstance = _window;
                 _window.Activate();
                 return;

@@ -2147,4 +2147,19 @@ Haftungsausschluss: Dieses Tool dient ausschließlich dem persönlichen Lernen u
   <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
     <value>Zurückgesetzt</value>
   </data>
+  <data name="MpkgQueue_Detach.AutomationProperties.Name" xml:space="preserve">
+    <value>In eigenes Fenster wechseln</value>
+  </data>
+  <data name="MpkgQueue_Detach.ToolTipService.ToolTip" xml:space="preserve">
+    <value>In Fenster öffnen</value>
+  </data>
+  <data name="MpkgQueue_Dock.AutomationProperties.Name" xml:space="preserve">
+    <value>Zurück zur Seite</value>
+  </data>
+  <data name="MpkgQueue_Dock.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Zurück zum Panelmodus</value>
+  </data>
+  <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
+    <value>Warteschlange für Mobile-Umwandlung</value>
+  </data>
 </root>

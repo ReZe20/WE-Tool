@@ -2147,4 +2147,19 @@ Dichiarazione di esclusione di responsabilità: questo strumento è destinato so
   <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
     <value>Ripristinato</value>
   </data>
+  <data name="MpkgQueue_Detach.AutomationProperties.Name" xml:space="preserve">
+    <value>Sposta in una finestra dedicata</value>
+  </data>
+  <data name="MpkgQueue_Detach.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Apri in una finestra</value>
+  </data>
+  <data name="MpkgQueue_Dock.AutomationProperties.Name" xml:space="preserve">
+    <value>Riporta alla pagina</value>
+  </data>
+  <data name="MpkgQueue_Dock.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Torna alla modalità pannello</value>
+  </data>
+  <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
+    <value>Coda di conversione mobile</value>
+  </data>
 </root>

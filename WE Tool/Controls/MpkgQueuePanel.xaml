@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="WE_Tool.Controls.MpkgQueuePanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:WE_Tool.Models"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    mc:Ignorable="d">
+
+    <!-- 待转移动包队列面板。2026-09-24 由「转为移动版」改入队而来,2026-10-01 从 Papers 页里搬成独立控件:
+         同一块面板现在有两个宿主 —— Papers 页的覆盖层,和母进程自我启动的 mpkg-window 副窗口(子进程),
+         所以这里不放任何页面专属的引用(输出目录、进度字段、通知都由宿主给)。
+         表头/总控与行模板共用同一份写死列宽,改一处要改两处,否则标签和它下面的 slider 就错位
+         (全仓没有 SharedSizeGroup/sticky header 先例可抄)。 -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题栏(固定) -->
+        <!-- 标题栏。页面宿主里它是"左图标+标题+两颗键";独立窗口里改成属性窗口那一条:
+             整行高 48(Tall 高度)、标题居中、图标让位,右侧那颗键前面留出系统按钮的位置。 -->
+        <Grid MinHeight="{x:Bind HeaderMinHeight, Mode=OneWay}" Padding="{x:Bind HeaderPadding, Mode=OneWay}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Margin="8,8,0,0"
+                        Visibility="{x:Bind TitleChromeVisibility, Mode=OneWay}">
+                <FontIcon Glyph="&#xE8F1;" FontSize="16" VerticalAlignment="Center"/>
+                <TextBlock x:Uid="MpkgQueueTitle" Style="{StaticResource TitleTextBlockStyle}"
+                       FontSize="18" VerticalAlignment="Center" Margin="8,0,0,0" Grid.Column="1"/>
+            </StackPanel>
+            <!-- 副窗口那一份标题:居中的这条就是标题栏本体(属性窗口那条带写的也是 IsHitTestVisible=False ——
+                 标题文字若吃掉指针,拖动就没地方按了)。整带不能像属性窗口那样整个关掉命中测试,
+                 因为「贴回」键在这条带里。 -->
+            <TextBlock Grid.Column="1" Grid.ColumnSpan="3" x:Uid="MpkgQueueTitle"
+                       Style="{StaticResource TitleTextBlockStyle}"
+                       FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
+                       IsHitTestVisible="False"
+                       Visibility="{x:Bind CenteredTitleVisibility, Mode=OneWay}"/>
+            <StackPanel x:Name="MpkgQueueHeaderButtons" Grid.Column="2" Orientation="Horizontal" Spacing="2"
+                        VerticalAlignment="Center">
+                <!-- 换宿主那两个键:页面面板上是「转到独立窗口」,副窗口里是「贴回页面」,各只露一颗。
+                     故意用两枚按钮而不是换字形/换 ToolTip:x:Uid 是编译期定死的,运行时换不了本地化来源。 -->
+                <Button x:Name="MpkgQueueDetachButton" x:Uid="MpkgQueue_Detach"
+                        Visibility="{x:Bind DetachButtonVisibility, Mode=OneWay}"
+                        Click="MpkgQueueDetach_Click"
+                        Style="{StaticResource SubtleButtonStyle}">
+                    <FontIcon Glyph="&#xE8A7;" FontSize="12"/>
+                </Button>
+                <Button x:Name="MpkgQueueDockButton" x:Uid="MpkgQueue_Dock"
+                        Visibility="{x:Bind DockButtonVisibility, Mode=OneWay}"
+                        Click="MpkgQueueDock_Click"
+                        Style="{StaticResource SubtleButtonStyle}">
+                    <FontIcon Glyph="&#xE71B;" FontSize="12"/>
+                </Button>
+                <Button x:Name="MpkgQueueCloseButton"
+                        Click="MpkgQueueClose_Click"
+                        Visibility="{x:Bind CloseButtonVisibility, Mode=OneWay}"
+                        Style="{StaticResource SubtleButtonStyle}">
+                    <FontIcon Glyph="&#xE711;" FontSize="9"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- 队列本体:超出滚动,底部总控与按钮不动 -->
+        <ScrollView x:Name="MpkgQueueScroll" Grid.Row="1"
+                    VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
+                    HorizontalScrollMode="Disabled">
+            <ItemsRepeater x:Name="MpkgQueueRepeater" ItemsSource="{x:Bind Items}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="4"/>
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:MpkgQueueItem">
+                        <!-- 卡片 = 主行 + 可展开的参数条。展开状态挂在行模型上(不是控件里),
+                             所以虚拟化回收控件不会把他点开的那几行悄悄合上。 -->
+                        <StackPanel Background="{ThemeResource ControlFillColorDefaultBrush}"
+                                    CornerRadius="6" Margin="12,0,12,0" Padding="16,4,16,6">
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="44"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Width="44" Height="44" CornerRadius="6"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                    <!-- 预览模糊:命中年龄段那几档时,原图那层让位、顶上盖一张高斯模糊图
+                                         (与列表卡片、属性副窗口同一形状)。两层叠在同一格里,靠各自可见性切换。 -->
+                                    <Grid>
+                                        <Image Source="{x:Bind Preview}" Stretch="UniformToFill"
+                                               Visibility="{x:Bind RawPreviewVisibility, Mode=OneWay}"/>
+                                        <Image Source="{x:Bind BlurSource, Mode=OneWay}" Stretch="UniformToFill"
+                                               Visibility="{x:Bind BlurOverlayVisibility, Mode=OneWay}"/>
+                                    </Grid>
+                                </Border>
+                                <!-- 名称 + 档位预警共占这一格:预警要在他人还没展开参数条、
+                                     还没点开始的时候就读得到,放进参数条等于事后解释。
+                                     主行只放一小段短词,长句收进旁边那颗 i 的 ToolTip ——
+                                     一列几十行时,整句话会把行高顶开、把名称挤成两行。 -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind Name}" FontSize="13"
+                                               TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                               ToolTipService.ToolTip="{x:Bind Name}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,1,0,0"
+                                                Visibility="{x:Bind ProbeNoteVisibility, Mode=OneWay}">
+                                        <TextBlock Text="{x:Bind ProbeShort, Mode=OneWay}" FontSize="11"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{x:Bind ProbeNoteBrush, Mode=OneWay}"/>
+                                        <FontIcon Glyph="&#xE946;" FontSize="11" VerticalAlignment="Center"
+                                                Foreground="{x:Bind ProbeNoteBrush, Mode=OneWay}"
+                                                ToolTipService.ToolTip="{x:Bind ProbeNote, Mode=OneWay}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <!-- 三档各占一格:StepFrequency=1 + SnapsTo=StepValues 让 slider 只能停在 0/1/2
+                                     (WinUI 的 SliderSnapsTo 没有 None,天生就会吸附,所以不会出现"停在半格")。
+                                     刻度用 Inline:BottomRight 要在控件下面另留高度,行高会被顶开。 -->
+                                <Slider Grid.Column="2" x:Name="MpkgTierSlider" x:Uid="MpkgQueue_TierSlider"
+                                        Minimum="0" Maximum="2" StepFrequency="1"
+                                        SnapsTo="StepValues" TickFrequency="1" TickPlacement="Inline"
+                                        IsThumbToolTipEnabled="False" VerticalAlignment="Center"
+                                        Value="{x:Bind TierValue, Mode=TwoWay}" MaxWidth="100"
+                                        IsEnabled="{x:Bind PixelKnobsEnabled, Mode=OneWay}"/>
+                                <TextBlock Grid.Column="3" Text="{x:Bind TierText, Mode=OneWay}" FontSize="13"
+                                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <!-- 展开箭头与移除按钮共用最后一列:多开一列就要两边(表头/行模板)同改列宽,
+                                     而总控那根 slider 是靠右边距压在本列之上的,列一多错位概率直线上升。 -->
+                                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <Grid Visibility="{x:Bind SettingsVisibility, Mode=OneWay}">
+                                        <Button x:Name="MpkgQueueExpandButton"
+                                                Style="{StaticResource SubtleButtonStyle}"
+                                                Click="MpkgQueueRowExpand_Click" CommandParameter="{x:Bind}"
+                                                x:Uid="MpkgQueue_Expand">
+                                            <FontIcon Glyph="{x:Bind ChevronGlyph, Mode=OneWay}" FontSize="12"/>
+                                        </Button>
+                                        <!-- 「这行走过别的路」角标:收起来的时候靠它扫队列 -->
+                                        <Ellipse Width="7" Height="7" Fill="#E5A50A" IsHitTestVisible="False"
+                                                 HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,3,3,0"
+                                                 Visibility="{x:Bind OverrideBadgeVisibility, Mode=OneWay}"/>
+                                    </Grid>
+                                    <Button x:Name="MpkgQueueRemoveButton"
+                                            Style="{StaticResource SubtleButtonStyle}"
+                                            Click="MpkgQueueRemove_Click" CommandParameter="{x:Bind}"
+                                            x:Uid="MpkgQueue_Remove">
+                                        <FontIcon Glyph="&#xE738;" FontSize="12"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                            <!-- 这一张自己的分进度。repkg 的 mpkg 是多 worker 并行，同时在产的条目来自好几张壁纸，
+                                 所以这条数只有落在行上才读得出意义(摆在总条下面会变成一根乱跳的条)；
+                                 总那条按"第几张"走的进度照旧，两者不同维度、不相减。 -->
+                            <ProgressBar Value="{x:Bind EntryProgress, Mode=OneWay}" Maximum="100" Height="3"
+                                         CornerRadius="2" Margin="0,4,0,0"
+                                         Visibility="{x:Bind EntryProgressVisibility, Mode=OneWay}"/>
+                            <!-- 参数条:一个开关一格 SettingsCard(仓库既有口径,Info 页就是这么摆的),
+                                 标签在左、开关在右,卡片自带的描边天然把各项分开,不再自己拼 2x2 网格。
+                                 绑的就是行模型,所以改一下立刻进 Snapshot,没有"提交"这一步。
+                                 摆法是"父在上、子缩进":纹理原样保留管着像素那三格(外加主行那根倍数 slider),
+                                 所以它单独占第一格,受它管的三格往里缩一格排它下面;不相干的另起一段。 -->
+                            <StackPanel Visibility="{x:Bind ExpandedVisibility, Mode=OneWay}" Margin="0,8,0,0">
+                                <!-- 每格都带 ToolTip 说清"这格管什么、关/开的后果",而不只是改个名:
+                                     这些键的默认值都是刻意选的,不知道后果就会随手翻。 -->
+                                <controls:SettingsCard x:Uid="MpkgQueue_CopyTextures"
+                                                       MinHeight="44" Padding="12,6,12,6" Margin="0,0,0,2">
+                                    <ToggleSwitch x:Name="MpkgQueueEditCopyTextures" IsOn="{x:Bind CopyTexturesOn, Mode=TwoWay}"/>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard x:Uid="MpkgQueue_Etc2Card"
+                                                       MinHeight="44" Padding="12,6,12,6" Margin="8,0,8,2">
+                                    <controls:SettingsCard.Header>
+                                        <StackPanel>
+                                            <TextBlock x:Uid="MpkgQueue_Etc2"/>
+                                            <!-- 置灰理由就地摆一行:光让开关点不动,只会让人以为是控件坏了。
+                                                 这格只在原始档(不许 ETC2)时出现。 -->
+                                            <TextBlock x:Uid="MpkgQueue_Etc2Reason" FontSize="11" TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       Visibility="{x:Bind Etc2ReasonVisibility, Mode=OneWay}"/>
+                                        </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                    <ToggleSwitch x:Name="MpkgQueueEditEtc2" IsOn="{x:Bind Etc2On, Mode=TwoWay}"
+                                                  IsEnabled="{x:Bind Etc2Enabled, Mode=OneWay}"/>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard x:Uid="MpkgQueue_ShrinkDx"
+                                                       MinHeight="44" Padding="12,6,12,6" Margin="8,0,8,2">
+                                    <!-- 生效值与置灰都由父决定:照搬开着时没有 DXT 载荷会被解码,所以这格必然false -->
+                                    <ToggleSwitch x:Name="MpkgQueueEditShrinkDx" IsOn="{x:Bind ShrinkDxOn, Mode=TwoWay}"
+                                                  IsEnabled="{x:Bind PixelKnobsEnabled, Mode=OneWay}"/>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard x:Uid="MpkgQueue_UseLz4"
+                                                       MinHeight="44" Padding="12,6,12,6" Margin="8,0,8,2">
+                                    <!-- 照搬开着时 LZ4 也没有对象(它只作用于物化出来的 mip),
+                                         所以跟着父一起置灰;但值本身照旧显示、照旧发进清单 ——
+                                         repkg 故意不改它,这里也不能改,否则清单和读数会互相打脸。 -->
+                                    <ToggleSwitch x:Name="MpkgQueueEditUseLz4" IsOn="{x:Bind UseLz4On, Mode=TwoWay}"
+                                                  IsEnabled="{x:Bind PixelKnobsEnabled, Mode=OneWay}"/>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard x:Uid="MpkgQueue_KeepAudio"
+                                                       MinHeight="44" Padding="12,6,12,6" Margin="0,10,0,2">
+                                    <ToggleSwitch x:Name="MpkgQueueEditKeepAudio" IsOn="{x:Bind KeepAudioOn, Mode=TwoWay}"/>
+                                </controls:SettingsCard>
+                                <controls:SettingsCard x:Uid="MpkgQueue_ShaderCompat"
+                                                       MinHeight="44" Padding="12,6,12,6" Margin="0,0,0,2">
+                                    <ToggleSwitch x:Name="MpkgQueueEditShaderCompat" IsOn="{x:Bind ShaderCompatOn, Mode=TwoWay}"/>
+                                </controls:SettingsCard>
+                                <!-- 重命名那格不叫"包名":手机读的是包内 project.json 的 title,
+                                     这格只管磁盘上的 .mpkg 叫什么。所以二选一直接摆出来,不叫开关。
+                                     没有 ID 的壁纸(导入/自制)整组置灰并就地给理由 ——
+                                     选了 ID 也会悄悄退回标题,那比点不动更坏。 -->
+                                <controls:SettingsCard x:Uid="MpkgQueue_RenameFileCard"
+                                                       MinHeight="44" Padding="12,6,12,6" Margin="0,0,0,2">
+                                    <controls:SettingsCard.Header>
+                                        <StackPanel>
+                                            <TextBlock x:Uid="MpkgQueue_RenameFile"/>
+                                            <TextBlock x:Uid="MpkgQueue_RenameFileReason" FontSize="11" TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       Visibility="{x:Bind NameIdReasonVisibility, Mode=OneWay}"/>
+                                        </StackPanel>
+                                    </controls:SettingsCard.Header>
+                                    <RadioButtons x:Name="MpkgQueueEditName" MaxColumns="2"
+                                                  SelectedIndex="{x:Bind NameModeIndex, Mode=TwoWay}"
+                                                  IsEnabled="{x:Bind NameIdEnabled, Mode=OneWay}">
+                                        <RadioButton x:Uid="MpkgQueue_NameByTitle"/>
+                                        <RadioButton x:Uid="MpkgQueue_NameById"/>
+                                    </RadioButtons>
+                                </controls:SettingsCard>
+                                <Button x:Name="MpkgQueueResetButton" x:Uid="MpkgQueue_Reset"
+                                        Margin="0,6,0,0" Padding="10,5,10,6" HorizontalAlignment="Left"
+                                        Click="MpkgQueueRowReset_Click" CommandParameter="{x:Bind}"
+                                        Style="{StaticResource DefaultButtonStyle}"
+                                        Visibility="{x:Bind ResetVisibility, Mode=OneWay}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollView>
+
+        <!-- 总控区两排:上排档位、下排文件重命名。档位排的列宽与行模板逐列一致(44/*/100/40/Auto),
+             所以 slider 正好压在各行 slider 上、倍数文字正好压在各行 1×/2×/4× 上;
+             它仍叫 MpkgQueueMasterRow(代码按自定义模式改它的右边距),外层这个 StackPanel 只负责把两排摞起来。 -->
+        <StackPanel Grid.Row="2">
+            <StackPanel x:Name="MpkgQueueMasterRow" Orientation="Horizontal" Spacing="6"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,10,86,0">
+                <TextBlock x:Uid="MpkgQueue_ColReduction" FontSize="12" VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Center"
+                          Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Margin="0,2,0,0">
+                    <ToolTipService.ToolTip>
+                        <ToolTip x:Uid="MpkgQueue_ReductionTip"/>
+                    </ToolTipService.ToolTip>
+                </FontIcon>
+                <Slider x:Name="MpkgQueueMasterSlider" x:Uid="MpkgQueue_Master"
+                        Minimum="0" Width="100" Maximum="2" StepFrequency="1"
+                        SnapsTo="StepValues" TickFrequency="1" TickPlacement="Inline"
+                        IsThumbToolTipEnabled="False" VerticalAlignment="Center"
+                        Value="{x:Bind MasterTierValue, Mode=TwoWay}"/>
+                <TextBlock Text="{x:Bind MasterTierText, Mode=OneWay}" FontSize="13"
+                           VerticalAlignment="Center" HorizontalAlignment="Center" Margin="18,0,0,0"/>
+            </StackPanel>
+            <!-- 重命名总控:挪一下就是把所有行放回"跟随总控"并把默认改成这一档(见 MasterNameModeValue)。
+                 故意不逐行写死值 —— 那样几十行会一起亮角标,角标就废了。 -->
+            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right"
+                        VerticalAlignment="Center" Margin="0,0,40,0">
+                <TextBlock x:Uid="MpkgQueue_RenameFile" FontSize="12" VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Margin="0,6,0,0">
+                    <ToolTipService.ToolTip>
+                        <ToolTip x:Uid="MpkgQueue_MasterRenameTip"/>
+                    </ToolTipService.ToolTip>
+                </TextBlock>
+                <RadioButtons x:Name="MpkgQueueMasterNameRadio" MaxColumns="2" VerticalAlignment="Center"
+                              SelectedIndex="{x:Bind MasterNameModeValue, Mode=TwoWay}">
+                    <RadioButton x:Uid="MpkgQueue_NameByTitle"/>
+                    <RadioButton x:Uid="MpkgQueue_NameById"/>
+                </RadioButtons>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- 按钮栏(固定):左边队列计数,按钮靠右 -->
+        <Grid Grid.Row="3" Padding="24,12,24,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="MpkgQueueCountText" Text="" FontSize="13" VerticalAlignment="Center"
+                       Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <!-- 自定义模式:开了才在每行露出「逐行设置」按钮。它是模式开关不是某一行的状态,
+                     所以关掉会把已写的逐行覆盖一并清掉(ToolTip 里写明)。 -->
+                <ToggleButton x:Name="MpkgQueueCustomButton" x:Uid="MpkgQueue_Custom"
+                              Checked="MpkgQueueCustom_Changed" Unchecked="MpkgQueueCustom_Changed"/>
+                <Button x:Name="MpkgQueueClearButton" x:Uid="MpkgQueue_Clear"
+                        Click="MpkgQueueClear_Click" Style="{StaticResource DefaultButtonStyle}"/>
+                <Button x:Name="MpkgQueueStartButton" x:Uid="MpkgQueue_Start"
+                        Click="MpkgQueueStart_Click" Style="{StaticResource AccentButtonStyle}"
+                        IsEnabled="{x:Bind CanStart, Mode=OneWay}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 进度条:开转之后这一块亮起来,面板不用收起、也不用借用提取那张面板。
+             独立窗口的全部意义就在这儿 —— 别的页开着、别的程序在前台,这一条也照样看得见、照样能停。 -->
+        <Grid Grid.Row="4" Padding="24,0,24,20" Visibility="{x:Bind ProgressVisibility, Mode=OneWay}">
+            <StackPanel Spacing="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{x:Bind ProgressStateText, Mode=OneWay}" FontSize="13" VerticalAlignment="Center"
+                               Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                               TextTrimming="CharacterEllipsis"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="MpkgQueuePauseButton" Click="MpkgQueuePause_Click"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                Visibility="{x:Bind PauseButtonVisibility, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="&#xE769;" FontSize="12"/>
+                                <TextBlock x:Uid="ExtractPause" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="MpkgQueueResumeButton" Click="MpkgQueueResume_Click"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                Visibility="{x:Bind ResumeButtonVisibility, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="&#xE768;" FontSize="12"/>
+                                <TextBlock x:Uid="ExtractResume" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="MpkgQueueStopButton" Click="MpkgQueueStop_Click"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                Visibility="{x:Bind StopButtonVisibility, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="&#xE71A;" FontSize="12"/>
+                                <TextBlock x:Uid="ExtractStop" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+                <ProgressBar Value="{x:Bind ProgressValue, Mode=OneWay}" Maximum="100" Height="6"
+                             CornerRadius="3" VerticalAlignment="Center"/>
+                <!-- 明细压成一行:那句"已完成 N/M 个壁纸 · 正在转 X 42%"里的名字是壁纸标题,长的能顶两行,
+                     两行一来整条进度区高度就跳,上面那根总条跟着抖。截断走省略号,全文进 ToolTip(行名同一条办法)。 -->
+                <TextBlock Text="{x:Bind ProgressDetailText, Mode=OneWay}" FontSize="12" TextWrapping="Wrap"
+                           MaxLines="1" TextTrimming="CharacterEllipsis"
+                           ToolTipService.ToolTip="{x:Bind ProgressDetailText, Mode=OneWay}"
+                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

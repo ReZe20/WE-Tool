@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<winuiex:WindowEx
+    x:Class="WE_Tool.Views.MpkgQueueWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:winuiex="using:WinUIEx"
+    xmlns:wetool="using:WE_Tool.Controls"
+    mc:Ignorable="d"
+    MinWidth="520"
+    MinHeight="420">
+    <winuiex:WindowEx.SystemBackdrop>
+        <DesktopAcrylicBackdrop/>
+    </winuiex:WindowEx.SystemBackdrop>
+
+    <!-- 移动版转换队列副窗口(母进程带 mpkg-window 开关自我启动的子进程)。
+         标题栏照属性窗口那条改:去掉系统标题栏、Tall 高度 48、标题居中、亚克力透出。
+         与属性窗口不同的是这条带里要摆一颗能点的「贴回」键,所以整带不能再像它那样
+         直接 IsHitTestVisible=False —— 那颗键的位置由 code-behind 按系统按钮区宽让位,
+         并把它的矩形登记成 Passthrough 输入区,否则点击会落在系统标题栏上到不了按钮。
+         这里不用 x:Bind:Window 不是 FrameworkElement,x:Bind 在窗口根上会踩 XamlCompiler 的 CS1503
+         (属性副窗口那处注释记过)。整棵树只有这一个无绑定的控件,天然避开。 -->
+    <Grid x:Name="RootGrid" Background="Transparent">
+        <wetool:MpkgQueuePanel x:Name="QueuePanel"/>
+    </Grid>
+</winuiex:WindowEx>

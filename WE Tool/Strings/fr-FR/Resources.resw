@@ -2147,4 +2147,19 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
     <value>Réinitialisé</value>
   </data>
+  <data name="MpkgQueue_Detach.AutomationProperties.Name" xml:space="preserve">
+    <value>Déplacer dans une fenêtre dédiée</value>
+  </data>
+  <data name="MpkgQueue_Detach.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ouvrir dans une fenêtre</value>
+  </data>
+  <data name="MpkgQueue_Dock.AutomationProperties.Name" xml:space="preserve">
+    <value>Ramener dans la page</value>
+  </data>
+  <data name="MpkgQueue_Dock.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Revenir au mode panneau</value>
+  </data>
+  <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
+    <value>File d’attente de conversion mobile</value>
+  </data>
 </root>

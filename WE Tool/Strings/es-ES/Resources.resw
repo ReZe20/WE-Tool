@@ -2147,4 +2147,19 @@ Descargo de responsabilidad: esta herramienta es solo para aprendizaje personal 
   <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
     <value>Restablecido</value>
   </data>
+  <data name="MpkgQueue_Detach.AutomationProperties.Name" xml:space="preserve">
+    <value>Mover a ventana independiente</value>
+  </data>
+  <data name="MpkgQueue_Detach.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abrir en ventana</value>
+  </data>
+  <data name="MpkgQueue_Dock.AutomationProperties.Name" xml:space="preserve">
+    <value>Devolver a la página</value>
+  </data>
+  <data name="MpkgQueue_Dock.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Volver al modo de panel</value>
+  </data>
+  <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
+    <value>Cola de conversión móvil</value>
+  </data>
 </root>

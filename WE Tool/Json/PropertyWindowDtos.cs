@@ -43,12 +43,14 @@ namespace WE_Tool.Json
         public long? AcfSize { get; set; }
     }
 
-    /// <summary>副窗口管道上的一条消息(一行一个 JSON),属性窗口与白名单窗口共用。</summary>
+    /// <summary>副窗口管道上的一条消息(一行一个 JSON),属性 / 白名单 / 移动版队列三种副窗口共用。</summary>
     public sealed class PropertyWindowMessage
     {
         /// <summary>theme / blur / focus(母进程要求子窗口前置)/ add(母→子:白名单新增)/
         /// reload(母→子:面板刚写了同一张壁纸的 project.json,子窗口重读)/
-        /// removed(子→母:白名单移除请求)| size(子→母:最新尺寸)| saved(子→母:已写 project.json)</summary>
+        /// removed(子→母:白名单移除请求)| size(子→母:最新尺寸)| saved(子→母:已写 project.json)|
+        /// mpkg-rows(母→子:页面又入了几行)| mpkg-queue(子→母:整份队列交回,见 Dock)|
+        /// mpkg-busy(子→母:副窗口正在转换,母进程这段时间别开提取)</summary>
         public string Kind { get; set; } = "";
         public string? Theme { get; set; }
         public bool BlurEveryone { get; set; }
@@ -58,5 +60,18 @@ namespace WE_Tool.Json
         public int Height { get; set; }
         /// <summary>add/removed 用的工坊 ID。</summary>
         public string? EntryId { get; set; }
+
+        /// <summary>mpkg-rows/mpkg-queue 带的行。null = 这条消息与移动版队列无关。</summary>
+        public System.Collections.Generic.List<MpkgQueueRowDto>? Rows { get; set; }
+
+        /// <summary>mpkg-queue 带的面板状态(总控档位、重命名档、自定义模式)。</summary>
+        public MpkgPanelStateDto? Panel { get; set; }
+
+        /// <summary>mpkg-queue:除了把队列交回,还要母进程把页面面板展开(点「贴回」);
+        /// false = 只是把这份状态存下来,面板保持收起(关窗、退出前的那一次同步)。</summary>
+        public bool Dock { get; set; }
+
+        /// <summary>mpkg-busy:子进程这一批还在转。</summary>
+        public bool Busy { get; set; }
     }
 }

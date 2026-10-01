@@ -2147,4 +2147,19 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
     <value>Redefinido</value>
   </data>
+  <data name="MpkgQueue_Detach.AutomationProperties.Name" xml:space="preserve">
+    <value>Mover para janela própria</value>
+  </data>
+  <data name="MpkgQueue_Detach.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abrir em uma janela</value>
+  </data>
+  <data name="MpkgQueue_Dock.AutomationProperties.Name" xml:space="preserve">
+    <value>Devolver à página</value>
+  </data>
+  <data name="MpkgQueue_Dock.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Voltar ao modo de painel</value>
+  </data>
+  <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
+    <value>Fila de conversão para celular</value>
+  </data>
 </root>
