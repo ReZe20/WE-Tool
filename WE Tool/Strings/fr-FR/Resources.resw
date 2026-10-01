@@ -132,6 +132,9 @@
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
     <value>Enregistrer les propriétés</value>
   </data>
+  <data name="PropertyPanel_Undo.Content" xml:space="preserve">
+    <value>Annuler les modifications</value>
+  </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>Tout public (G)</value>
   </data>
@@ -1270,6 +1273,9 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
   <data name="Common_Cancel.Text" xml:space="preserve">
     <value>Annuler</value>
   </data>
+  <data name="Common_OK.Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Tout sélectionner</value>
   </data>
@@ -1418,7 +1424,7 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
     <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
-    <value>WinUI 3 (Windows App SDK 1.8)</value>
+    <value>WinUI 3 (Windows App SDK 2.4)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
     <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
@@ -1463,10 +1469,10 @@ Note: Activer ceci avec Sortie complète peut causer du désordre.</value>
     <value>GitHub Issues</value>
   </data>
   <data name="Info_RepkgCreditsLine1.Content" xml:space="preserve">
-    <value>.NET Framework 4.7.2</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_RepkgCreditsLine2.Content" xml:space="preserve">
-    <value>CommandLineParser 2.9</value>
+    <value>System.CommandLine 2.0</value>
   </data>
   <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
     <value>K4os.Compression.LZ4 1.3</value>
@@ -1541,24 +1547,6 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
     <value>Réinitialisation de Steamworks en cours, veuillez patienter…</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
-    <value>Version de RePKG_Re à jour</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
-    <value>Version actuelle {0}</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
-    <value>Version de RePKG_Re incompatible</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
-    <value>Actuel {0}, requis {1}. Veuillez mettre à jour le backend RePKG_Re</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
-    <value>RePKG_Re introuvable</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
-    <value>repkg\RePKG_Re.exe manquant, extraction non disponible</value>
   </data>
   <data name="Info_TranslationTitle.Text" xml:space="preserve">
     <value>Progression de la traduction</value>
@@ -2086,5 +2074,77 @@ Avertissement : cet outil est réservé à un usage personnel d'apprentissage et
   </data>
   <data name="LoadPapers_PresetUnset" xml:space="preserve">
     <value>Non défini</value>
+  </data>
+  <data name="WeSettings_Default.Text" xml:space="preserve">
+    <value>Par défaut</value>
+  </data>
+  <data name="PropertyPreset_Header.Content" xml:space="preserve">
+    <value>Préréglages</value>
+  </data>
+  <data name="PropertyPreset_LoadButton.Content" xml:space="preserve">
+    <value>Charger un préréglage</value>
+  </data>
+  <data name="PropertyPreset_ShareEmpty.Text" xml:space="preserve">
+    <value>Ce fond d'écran n'a pas de propriétés Wallpaper Engine à partager</value>
+  </data>
+  <data name="PropertyPreset_Save.Content" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="PropertyPreset_Share.Content" xml:space="preserve">
+    <value>Partager le JSON</value>
+  </data>
+  <data name="PropertyPreset_Reset.Content" xml:space="preserve">
+    <value>Réinitialiser</value>
+  </data>
+  <data name="PropertyPreset_Empty.Text" xml:space="preserve">
+    <value>Aucun préréglage pour le moment</value>
+  </data>
+  <data name="PropertyPreset_SaveHint.Text" xml:space="preserve">
+    <value>Enregistrer comme préréglage</value>
+  </data>
+  <data name="PropertyPreset_NameLabel.Text" xml:space="preserve">
+    <value>Nom du préréglage</value>
+  </data>
+  <data name="PropertyPreset_DupName.Text" xml:space="preserve">
+    <value>Un préréglage porte déjà ce nom ; l'enregistrement le mettra à jour avec les valeurs actuelles</value>
+  </data>
+  <data name="PropertyPreset_SavedFmt.Text" xml:space="preserve">
+    <value>Préréglage « {0} » enregistré</value>
+  </data>
+  <data name="PropertyPreset_MergedFmt.Text" xml:space="preserve">
+    <value>Préréglage « {0} » mis à jour</value>
+  </data>
+  <data name="PropertyPreset_LoadedFmt.Text" xml:space="preserve">
+    <value>{1} valeurs du préréglage « {0} » appliquées ; cliquez sur « Enregistrer les propriétés » pour les écrire</value>
+  </data>
+  <data name="PropertyPreset_ShareTitle.Text" xml:space="preserve">
+    <value>Partager le JSON</value>
+  </data>
+  <data name="PropertyPreset_ShareHint.Text" xml:space="preserve">
+    <value>Copiez ce JSON pour le partager à un autre fond d'écran ; collez le JSON de quelqu'un d'autre puis cliquez sur « Appliquer » pour remplacer les valeurs actuelles</value>
+  </data>
+  <data name="PropertyPreset_Copy.Text" xml:space="preserve">
+    <value>Copier</value>
+  </data>
+  <data name="PropertyPreset_CopiedFmt.Text" xml:space="preserve">
+    <value>{0} caractères copiés (Base64, à coller directement dans la zone de partage de Wallpaper Engine)</value>
+  </data>
+  <data name="PropertyPreset_DecodedFmt.Text" xml:space="preserve">
+    <value>Base64 converti en JSON ({0} caractères)</value>
+  </data>
+  <data name="PropertyPreset_Paste.Text" xml:space="preserve">
+    <value>Coller</value>
+  </data>
+  <data name="PropertyPreset_Apply.Text" xml:space="preserve">
+    <value>Appliquer</value>
+  </data>
+  <data name="PropertyPreset_AppliedFmt.Text" xml:space="preserve">
+    <value>{0} valeurs du JSON appliquées ; cliquez sur « Enregistrer les propriétés » pour les écrire</value>
+  </data>
+  <data name="PropertyPreset_ResetConfirm.Text" xml:space="preserve">
+    <value>Rétablit ce fond d'écran à ses valeurs par défaut et efface ses réglages locaux dans Wallpaper Engine (les préréglages sont conservés)</value>
+  </data>
+  <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
+    <value>Réinitialisé</value>
   </data>
 </root>

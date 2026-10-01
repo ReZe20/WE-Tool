@@ -15,7 +15,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Version>0.8.1</Version>
+    <Version>0.9.0</Version>
     <!-- Release 下 WinUI 默认禁用反射序列化,导致 config.json 读写失败(实测:设置全部丢失);显式开启 -->
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <Authors>ReZe20</Authors>
@@ -128,7 +128,8 @@
     <Message Importance="high" Text="AutoBackupService(C++) $(AutoBackupCppExe) → $(TargetDir)AutoBackupService\ (PublishDir 同步)" />
   </Target>
 
-  <!-- 从 external/repkg_Re 仓库 csproj 读取目标后端版本,构建时生成 RepkgVersion.g.cs 常量供运行时校验。
+  <!-- 从 external/repkg_Re 仓库 csproj 读取后端版本,构建时生成 RepkgVersion.g.cs 常量供 Info 页显示。
+       后端代码已编译进本 exe,不再有随包 exe 可比对版本,此常量只作展示用(原「运行时校验」判据已退场)。
        不依赖 SDK 的 AssemblyMetadata 管线(其特性转换发生在 CreateGeneratedAssemblyInfoInputsCacheFile,
        顺序敏感且增量缓存易跳过);直接生成源码文件最稳 -->
   <Target Name="InjectRepkgVersion" BeforeTargets="MarkupCompilePass1;CoreCompile" Condition="Exists('$(MSBuildThisFileDirectory)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj')">
@@ -211,10 +212,17 @@
   </Target>
 
   <ItemGroup>
+    <!-- repkg_Re 的许可声明:后端代码现在编在主程序里,不再有 repkg\ 子目录,两份文件平铺到根、
+         用 RePKG_Re 前缀(与 Info 页标题、程序集名同形)与 WE Tool 自己的 LICENSE / THIRD-PARTY-NOTICES.txt 区分(Info 页按钮读取) -->
     <Content Include="..\external\repkg_Re\LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <Link>repkg\LICENSE</Link>
+      <Link>RePKG_Re-LICENSE.txt</Link>
+    </Content>
+    <Content Include="..\external\repkg_Re\THIRD-PARTY-NOTICES.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>RePKG_Re-THIRD-PARTY-NOTICES.txt</Link>
     </Content>
   </ItemGroup>
   <ItemGroup>
@@ -295,7 +303,17 @@
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>true</IsAotCompatible>
-    <TrimMode>partial</TrimMode>
+    <!-- 裁剪档位:full = 成员级(静态不可达的方法/类型不编译进镜像)。
+         此前是 partial(程序集级:被引用的第三方程序集整块保留),在 AOT 下等价于给 ILC 打开
+         defaultrooting —— 后端编译进主程序后,没标 IsTrimmable 的 ImageSharp 2.1 会被整块实例化编译,
+         实测主程序 32.8MB → 98.5MB。整只 full 实测回到 34.1MB。
+         代价:任何"运行时才想到的调用"都可能被裁掉,构建期不报,症状是点到某功能才抛
+         MissingMethodException / 类型初始化失败。风险集中在界面侧(Facepunch 桥接、x:Bind、
+         反射式 config.json 读写、Lottie 生成类、TrimmerRoots.xml 之外的模板选择器),
+         后端侧不是新风险(repkg_Re 的独立 AOT 发布一直按可达性裁 ImageSharp)。
+         退回粗粒度只需把这一行改回 partial:下方 TrimBackendImageDeps 目标已单独给后端依赖
+         标了 link,退档时体积只涨回 39.6MB 而不是 98.5MB。 -->
+    <TrimMode>full</TrimMode>
     <CsWinRTAotWarningLevel>2</CsWinRTAotWarningLevel>
     <!-- [路线二] Skia 静态库产物目录(本机构建生成)。不存在时静态链接自动跳过,回退 NuGet dll 模式 -->
     <SkiaStaticLibDir Condition="'$(SkiaStaticLibDir)' == ''">C:\Users\lijun\Documents\Projects\skia-engine\out\min-gif\</SkiaStaticLibDir>
@@ -392,30 +410,55 @@
             <Compile Remove="SkiaStaticLink.cs" />
           </ItemGroup>
 
-    <!-- Publish repkg-Re 并复制到 repkg/ 供 CLI 调用。
-         Release(打包/发版) 且 repkg_Re 已具备 AotWinX64 profile 时 = NativeAOT 自包含单 exe(免运行时,
-         产物 bin/publish-aot/,ILC 约 2-3 分钟);其余情况(Debug 迭代 / repkg_Re 尚未合入 AOT profile 的过渡期)
-         = FolderProfile 普通发布(快,产物 bin/publish/)。 -->
-  <PropertyGroup>
-    <RepkgUseAot Condition="'$(Configuration)' == 'Release' And Exists('$(ProjectDir)..\external\repkg_Re\RePKG_Re\Properties\PublishProfiles\AotWinX64.pubxml')">true</RepkgUseAot>
-    <RepkgPublishDir Condition="'$(RepkgUseAot)' == 'true'">$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\publish-aot</RepkgPublishDir>
-    <RepkgPublishDir Condition="'$(RepkgUseAot)' != 'true'">$(ProjectDir)..\external\repkg_Re\RePKG_Re\bin\publish</RepkgPublishDir>
-  </PropertyGroup>
-  <Target Name="BuildRepkg" BeforeTargets="BeforeBuild">
-    <Exec Condition="'$(RepkgUseAot)' == 'true'"
-          Command="dotnet publish &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj&quot; -c Release -p:PublishProfile=AotWinX64" />
-    <Exec Condition="'$(RepkgUseAot)' != 'true'"
-          Command="dotnet publish &quot;$(ProjectDir)..\external\repkg_Re\RePKG_Re\RePKG_Re.csproj&quot; -c $(Configuration) -p:PublishProfile=FolderProfile" />
+  <!-- 提取后端不再作为单独的 RePKG_Re.exe 随包:CLI 代码直接编译进主程序,主程序带 repkg 子开关
+       以子进程形式跑自己(开关字面量见 RepkgChild.ChildArg;分流在 Program.cs,与 steam 桥接同一条通道)。
+       external/repkg_Re 仍是独立 git 仓库,CI 的 clone 步骤照旧;它自己的 win/linux 发布不受影响。
+       Release 下 AOT 把这三个工程连同 ImageSharp/LZ4/System.CommandLine 一起焊进 exe,
+       Debug 下作为普通程序集输出到 bin。 -->
+  <ItemGroup>
+    <ProjectReference Include="..\external\repkg_Re\RePKG_Re.Cli\RePKG_Re.Cli.csproj" />
+  </ItemGroup>
+
+  <!-- 裁剪档位按程序集分治:本应用整体仍是 TrimMode=partial(界面对粗粒度的依赖是既成事实——
+       TrimmerRoots.xml 与 EnableTypeInfoReflection 都是为它做的让步),而 partial 在 AOT 下等价于给
+       ILC 打开 defaultrooting,把没标 IsTrimmable 的第三方程序集整块留在镜像里。ImageSharp 2.1 是
+       netcoreapp3.1 时代产物、没有该标注,于是每种像素格式 × 每种编解码器 × 每种滤镜全被实例化编译,
+       实测多花 64MB(合并后 98.5MB vs 合并前两个 exe 合计 42.3MB)。
+       这里只给后端自己的依赖图逐程序集标 TrimMode=link(ILC 侧收成 trim 名单,见
+       Microsoft.NETCore.Native.targets 的 _IlcTrimmedAssemblies),界面那一侧一档不动。
+       对 ImageSharp 这不是新档位:repkg_Re 的独立 AOT 发布一直是按可达性裁它在。
+       钩子必须挂在 _ComputeManagedAssemblyForILLink 之后:该目标(NativeAOT 专用)在
+       _ComputeManagedAssemblyToLink 之后把整张 ManagedAssemblyToLink 条目表 Remove 再 Include 重建一遍,
+       挂在同一个 AfterTargets 上的自定义元数据会被它洗掉(实测 rsp 里只剩 defaultrooting、零条 trim)。 -->
+  <Target Name="TrimBackendImageDeps" AfterTargets="_ComputeManagedAssemblyForILLink">
     <ItemGroup>
-      <RepkgOutput Include="$(RepkgPublishDir)\*" />
-      <!-- 同时声明为 Content，使 repkg 进入 publish 产物（publish 只发布清单内文件） -->
-      <Content Include="@(RepkgOutput)">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-        <Link>repkg\%(Filename)%(Extension)</Link>
-      </Content>
+      <ManagedAssemblyToLink Update="@(ManagedAssemblyToLink)"
+                             Condition="'%(Filename)' == 'SixLabors.ImageSharp' Or '%(Filename)' == 'K4os.Compression.LZ4' Or '%(Filename)' == 'System.CommandLine'">
+        <TrimMode>link</TrimMode>
+      </ManagedAssemblyToLink>
     </ItemGroup>
-    <Copy SourceFiles="@(RepkgOutput)" DestinationFolder="$(OutputPath)\repkg" />
+  </Target>
+
+  <!-- 粒度哨兵。防的是这一条静默路径:哪天 TrimMode 被改回 partial(或 SDK 改了上面那个钩子的目标名,
+       使按程序集的标记失效),ImageSharp 就会整块编进镜像,实测涨 58.9MB —— 构建期不报错,只有包变大。
+       判据直接读 ILC 实收的参数文件:同时出现 defaultrooting(整块保留)却没有本后端依赖的
+       trim 名单,就是那个坏组合。整只 full 时 defaultrooting 不出现,此哨兵天然静默。
+       两个方向都在探针工程上验过(真 rsp 判通过、合成坏 rsp 判触发)。 -->
+  <Target Name="AssertTrimGranularity" AfterTargets="IlcCompile" Condition="'$(PublishAot)' == 'true'">
+    <PropertyGroup>
+      <_IlcRspDir Condition="'$(NativeIntermediateOutputPath)' != ''">$(NativeIntermediateOutputPath)</_IlcRspDir>
+      <_IlcRspDir Condition="'$(_IlcRspDir)' == ''">$(IntermediateOutputPath)native\</_IlcRspDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_IlcRsp Include="$(_IlcRspDir)*.ilc.rsp" />
+      <_IlcRsp>
+        <Rooted>$([System.IO.File]::ReadAllText('%(Identity)').Contains('--defaultrooting'))</Rooted>
+        <Trimmed>$([System.IO.File]::ReadAllText('%(Identity)').Contains('--trim:SixLabors.ImageSharp'))</Trimmed>
+      </_IlcRsp>
+      <_BadGranularity Include="@(_IlcRsp)" Condition="'%(Rooted)' == 'True' And '%(Trimmed)' != 'True'" />
+    </ItemGroup>
+    <Error Condition="@(_BadGranularity->Count()) > 0"
+           Text="裁剪粒度退化:$(_IlcRspDir) 里的 ilc.rsp 开了 defaultrooting 却没有 SixLabors.ImageSharp 的 trim 名单。后果是 ImageSharp 整块编进镜像(实测 +58.9MB)。查两处:上面的 TrimMode 是否被改回 partial;TrimBackendImageDeps 的钩子目标 _ComputeManagedAssemblyForILLink 是否还存在(改名即静默失效)。" />
   </Target>
 
   <!-- Post-publish: 剔除发布不需要的附带文件。AOT 主程序 WE_Tool.exe 直接位于发布根目录。
@@ -473,6 +516,19 @@
            非 AOT(Debug / 框架依赖发布)缺它们起不来,必须留着。 -->
       <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\Facepunch.Steamworks.Win64.dll" />
       <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\WinRT.Runtime.dll" />
+      <!-- [repkg 折进主 exe 2026-09-29] 提取后端自己的三个程序集 + 它的包依赖。AOT 已把它们编译进 exe,
+           发布目录里再出现就是上一轮非 AOT 构建的残留(publish 目录常被复用,不清会跟着进包)。
+           非 AOT(Debug / 框架依赖发布)缺它们起不来,必须留着 —— 与上面两行同一条判据。 -->
+      <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\RePKG_Re.Cli.dll" />
+      <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\RePKG_Re.Application.dll" />
+      <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\RePKG_Re.Core.dll" />
+      <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\SixLabors.ImageSharp.dll" />
+      <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\K4os.Compression.LZ4.dll" />
+      <_PublishUnneeded Condition="'$(PublishAot)' == 'true'" Include="$(PublishDir)**\System.CommandLine.dll" />
+      <!-- 后端声明文件的旧名(改名前用过 repkg- 前缀)。Info 页只读 RePKG_Re- 那两个,旧名留着
+           就是包里多一份没人引用的许可文本 —— 与上面 dll 同一条"复用发布目录必清"的理由,不区分 AOT -->
+      <_PublishUnneeded Include="$(PublishDir)**\repkg-LICENSE.txt" />
+      <_PublishUnneeded Include="$(PublishDir)**\repkg-THIRD-PARTY-NOTICES.txt" />
     </ItemGroup>
     <Delete Files="@(_PublishUnneeded)" />
     <Message Importance="high" Text="Publish done: $(PublishDir)WE_Tool.exe (AOT 主程序,无 launcher) (已剔除 @(_PublishUnneeded.Count) 项: pdb + ANGLE + WebView2)" />

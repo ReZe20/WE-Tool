@@ -2,19 +2,57 @@ WE Tool 使用的第三方组件及其许可证声明
 ==========================================
 
 本项目采用 GPL-3.0 协议（见 LICENSE）。以下第三方组件按各自协议使用，
-版权归各自作者所有：
+版权归各自作者所有。清单按"是否进发布包"分层，版本号取本次发布实际解析到的版本。
+
+一、编译进 WE_Tool.exe 的托管依赖（NativeAOT 静态编入，发布包内没有对应的独立 dll）
 
 - CommunityToolkit.Mvvm 8.4.2 — MIT License
+- CommunityToolkit.Common 8.2.1 — MIT License
 - CommunityToolkit.WinUI.Animations 8.2.251219 — MIT License
 - CommunityToolkit.WinUI.Controls.Primitives 8.2.251219 — MIT License
 - CommunityToolkit.WinUI.Controls.SettingsControls 8.2.251219 — MIT License
-- Microsoft.Windows.SDK.BuildTools 10.0.26100.7705 — MIT License
-- Microsoft.WindowsAppSDK 1.8.260804001 — MIT License
+- CommunityToolkit.WinUI.Extensions / Helpers / Triggers 8.2.251219 — MIT License
+- Facepunch.Steamworks 2.3.3 — MIT License
 - Serilog 4.4.0 — Apache License 2.0
 - Serilog.Sinks.File 7.0.0 — Apache License 2.0
+- SkiaSharp 4.151.1 — MIT License
+- SkiaSharp.Views.WinUI 4.151.1 — MIT License
 - WinUIEx 2.9.3 — MIT License
+- 由内嵌的提取后端带入：K4os.Compression.LZ4 1.3.8（MIT）、SixLabors.ImageSharp 2.1.13
+  （Apache License 2.0）、System.CommandLine 2.0.10（MIT）；这三项的许可证全文见随包的
+  RePKG_Re-THIRD-PARTY-NOTICES.txt
 
-各组件完整许可证文本见其官方仓库或 NuGet 包。
+二、按微软许可条款分发的平台组件（不是 MIT；这些组件不许可再许可，只允许随应用分发）
 
-内嵌的 repkg_Re（RePKG_Re.exe）为 MIT 协议（基于 notscuffed/RePKG 的 fork，
-原作者 NotScuffed，维护者 ReZe20），其许可证声明见 repkg/THIRD-PARTY-NOTICES.txt。
+- Microsoft.WindowsAppSDK 2.4.0（含 Foundation / WinUI / Base / DWrite / Runtime / ML / AI /
+  Search / Widgets / InteractiveExperiences 子包）— Microsoft Software License Terms（Windows App
+  SDK）；随包的 Microsoft.WindowsAppRuntime.Bootstrap.dll 属该协议第 3 条定义的可再分发代码
+- Microsoft.Graphics.Win2D 1.4.0 — 包内声明为 Microsoft 许可条款（上游 microsoft/Win2D 仓库以 MIT
+  发布）；随包 Microsoft.Graphics.Canvas.dll
+- Microsoft.Windows.SDK.BuildTools 10.0.26100.7705 与 Microsoft.Windows.SDK.BuildTools.MSIX
+  1.7.251221100 — Windows SDK 许可条款；仅构建期使用，不随包分发
+- Microsoft.Web.WebView2 1.0.3719.77 — Microsoft 许可条款；仅作为 WinUI 子包的依赖被拉入，
+  本项目零调用，发布时已从包中剔除，不随包分发
+- .NET 10 类库与运行时、NativeAOT 工具链（Microsoft.DotNet.ILCompiler 与
+  Microsoft.NET.ILLink.Tasks 10.0.12）— MIT License / Apache-2.0（.NET 运行时与库）；运行时的
+  原生代码静态链进主程序
+
+三、随包分发的原生库
+
+- steam_api64.dll — Valve Steamworks SDK 运行时，依 Steamworks SDK 协议随应用再分发
+- Skia（https://skia.org）— BSD-3-Clause，Google LLC。经 SkiaSharp.NativeAssets 使用：本机把
+  精简构建的静态库链进主程序，静态库缺失时随包的是本仓库 native/skia-min-gif/libSkiaSharp.dll
+  （对上游构建产物的裁剪，仍按 BSD-3-Clause）
+- SkiaSharp.Views.WinUI.Native.dll — MIT License（SkiaSharp.Views.WinUI 4.151.1 的构建产物）
+
+四、生成器产物
+
+- WE Tool/AnimatedVisuals/*.cs 动画图标类 — 由 LottieGen 8.2.250604
+  （CommunityToolkit.WinUI.Animations.LottieGen，MIT License）生成，之后经手工修订
+
+各组件完整许可证文本见其官方仓库或 NuGet 包（包内 License.md / license.txt 即权威文本）。
+
+内嵌的 repkg_Re 提取后端为 MIT 协议（基于 notscuffed/RePKG 的 fork，
+原作者 NotScuffed，维护者 ReZe20）。它不再是单独的 RePKG_Re.exe，而是以 RePKG_Re.Cli 等
+程序集编译进 WE_Tool.exe，因此它依赖的 SixLabors.ImageSharp、K4os.Compression.LZ4 与
+System.CommandLine 也随本项目分发；这三项的许可证全文见随包的 RePKG_Re-THIRD-PARTY-NOTICES.txt。

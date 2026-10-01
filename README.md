@@ -77,7 +77,7 @@
 ### 构建
 
 ```bash
-# 还原并构建主应用(自动构建 repkg_re 后端与 Steamworks 桥接)
+# 还原并构建主应用(提取后端与 Steamworks 桥接都编译进主 exe;需先把 external/repkg_Re 仓库 clone 到位)
 dotnet build "WE Tool/WE Tool.csproj" -c Release
 ```
 
@@ -120,7 +120,7 @@ WE Tool/
 │   │   └── ComboOption.cs / ProjectMetadata.cs / TranslationStatusItem.cs
 │   ├── Service/
 │   │   ├── ConfigService.cs          # 配置读写
-│   │   ├── RepkgCliService.cs        # 子进程调用 RePKG_Re.exe(batch 单进程多线程提取 + 暂停/继续/停止 + 崩溃重启)
+│   │   ├── RepkgCliService.cs        # 拉起提取后端子进程(主程序自己带 repkg 开关;batch 单进程多线程提取 + 暂停/继续/停止 + 崩溃重启)
 │   │   ├── SteamWorkshopService.cs   # Steamworks 桥接管理(取消订阅/状态)
 │   │   ├── AutoBackupServiceManager.cs # 自动备份服务安装/管理
 │   │   ├── NotificationService.cs    # 通知
@@ -159,7 +159,8 @@ WE Tool/
 └── external/
     └── repkg_Re/               # 独立 git 仓库:RePKG_Re(ReZe20 分支)
         ├── RePKG_Re.sln
-        ├── RePKG_Re/           # 控制台 exe(extract/info/batch/serve 命令)
+        ├── RePKG_Re/           # 控制台 exe 的壳(入口与命令都在 RePKG_Re.Cli)
+        ├── RePKG_Re.Cli/       # extract/info/batch/pack 命令 + CLI 入口;WE Tool 编译的就是这个工程
         ├── RePKG_Re.Core/      # .pkg 包解析核心
         ├── RePKG_Re.Application/ # 纹理解码 & 图片转换(ImageSharp/GifWriter)
         └── RePKG_Re.Tests/     # NUnit 测试

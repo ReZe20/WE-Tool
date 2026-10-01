@@ -20,13 +20,28 @@ namespace WE_Tool.Service;
 
 public class RepkgCliService
 {
-    private readonly string _repkgDir;
+    private readonly string _childExe;
+    private readonly string _childArgPrefix;
     private readonly ConcurrentDictionary<int, Process> _runningProcesses = new();
     private readonly ConcurrentBag<string> _startedOutputPaths = new();
 
-    public RepkgCliService(string? repkgDir = null)
+    /// <summary>
+    /// 默认形态:提取后端的 CLI 代码编译在本 exe 里,子进程就是主程序自己带 --repkg。
+    /// repkgExeDir 是测试接缝——指向放着替身 RePKG_Re.exe(FakeRePkg)的目录时退回独立 CLI 形态,
+    /// 不带 --repkg 前缀,因为替身认的就是原命令行。
+    /// </summary>
+    public RepkgCliService(string? repkgExeDir = null)
     {
-        _repkgDir = repkgDir ?? Path.Combine(AppContext.BaseDirectory, "repkg");
+        if (string.IsNullOrEmpty(repkgExeDir))
+        {
+            _childExe = Environment.ProcessPath!;
+            _childArgPrefix = RepkgChild.ChildArg + " ";
+        }
+        else
+        {
+            _childExe = Path.Combine(repkgExeDir, "RePKG_Re.exe");
+            _childArgPrefix = string.Empty;
+        }
     }
 
     // ---------- repkg 输出日志(Info 页 RePKG_Re 日志面板轮询 repkg.log) ----------
@@ -250,9 +265,9 @@ public class RepkgCliService
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = Path.Combine(_repkgDir, "RePKG_Re.exe"),
-                    Arguments = $"batch --manifest \"{manifestPath}\"",
-                    WorkingDirectory = _repkgDir,
+                    FileName = _childExe,
+                    Arguments = $"{_childArgPrefix}batch --manifest \"{manifestPath}\"",
+                    WorkingDirectory = AppContext.BaseDirectory,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -645,9 +660,11 @@ public class RepkgCliService
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = Path.Combine(_repkgDir, "RePKG_Re.exe"),
-                Arguments = $"batch --manifest \"{manifestPath}\"",
-                WorkingDirectory = _repkgDir,
+                FileName = _childExe,
+                Arguments = $"{_childArgPrefix}batch --manifest \"{manifestPath}\"",
+                // 子进程的 CWD 不参与定位(manifest 里全是绝对路径);钉到应用目录,
+                // 而不是继承父进程那个由启动方式决定的任意 CWD
+                WorkingDirectory = AppContext.BaseDirectory,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

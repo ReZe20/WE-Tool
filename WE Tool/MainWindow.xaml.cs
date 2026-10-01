@@ -525,11 +525,11 @@ namespace WE_Tool
             NotificationService.IsWindowFocused = e.WindowActivationState != WindowActivationState.Deactivated;
         }
 
-        /// <summary>导航栏 Info 项徽标:全绿才绿(Steamworks 在线 且 RePKG_Re 版本匹配),其余一律红</summary>
+        /// <summary>导航栏 Info 项徽标:只看 Steamworks 在线状态。后端版本判据已随「repkg 折进主 exe」退场
+        /// —— 后端代码编译在本 exe 内,不存在随包版本与目标版本不一致的状态</summary>
         private void UpdateSteamStatusBadge()
         {
-            bool allOk = SteamWorkshopService.GetInstance().Status == SteamworksStatus.Running
-                         && Info.IsRepkgStatusOk();
+            bool allOk = SteamWorkshopService.GetInstance().Status == SteamworksStatus.Running;
             if (allOk)
             {
                 SteamStatusBadge.Visibility = Visibility.Visible;

@@ -132,6 +132,9 @@
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
     <value>Сохранить свойства</value>
   </data>
+  <data name="PropertyPanel_Undo.Content" xml:space="preserve">
+    <value>Отменить изменения</value>
+  </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>Для всех (G)</value>
   </data>
@@ -1270,6 +1273,9 @@
   <data name="Common_Cancel.Text" xml:space="preserve">
     <value>Отмена</value>
   </data>
+  <data name="Common_OK.Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Выбрать все</value>
   </data>
@@ -1418,7 +1424,7 @@
     <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
-    <value>WinUI 3 (Windows App SDK 1.8)</value>
+    <value>WinUI 3 (Windows App SDK 2.4)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
     <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
@@ -1463,10 +1469,10 @@
     <value>GitHub Issues</value>
   </data>
   <data name="Info_RepkgCreditsLine1.Content" xml:space="preserve">
-    <value>.NET Framework 4.7.2</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_RepkgCreditsLine2.Content" xml:space="preserve">
-    <value>CommandLineParser 2.9</value>
+    <value>System.CommandLine 2.0</value>
   </data>
   <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
     <value>K4os.Compression.LZ4 1.3</value>
@@ -1541,24 +1547,6 @@
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
     <value>Повторная инициализация Steamworks. Пожалуйста, подождите…</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
-    <value>Версия RePKG_Re в норме</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
-    <value>Текущая версия: {0}</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
-    <value>Версия RePKG_Re не совпадает</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
-    <value>Текущая версия: {0}, необходимая: {1}. Обновите бэкенд RePKG_Re.</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
-    <value>RePKG_Re не найден</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
-    <value>repkg\RePKG_Re.exe отсутствует. Функция извлечения недоступна.</value>
   </data>
   <data name="Info_TranslationTitle.Text" xml:space="preserve">
     <value>Прогресс перевода</value>
@@ -2086,5 +2074,77 @@
   </data>
   <data name="LoadPapers_PresetUnset" xml:space="preserve">
     <value>Не задано</value>
+  </data>
+  <data name="WeSettings_Default.Text" xml:space="preserve">
+    <value>По умолчанию</value>
+  </data>
+  <data name="PropertyPreset_Header.Content" xml:space="preserve">
+    <value>Пресеты</value>
+  </data>
+  <data name="PropertyPreset_LoadButton.Content" xml:space="preserve">
+    <value>Загрузить пресет</value>
+  </data>
+  <data name="PropertyPreset_ShareEmpty.Text" xml:space="preserve">
+    <value>У этих обоев нет свойств Wallpaper Engine, которыми можно поделиться</value>
+  </data>
+  <data name="PropertyPreset_Save.Content" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="PropertyPreset_Share.Content" xml:space="preserve">
+    <value>Поделиться JSON</value>
+  </data>
+  <data name="PropertyPreset_Reset.Content" xml:space="preserve">
+    <value>Сбросить</value>
+  </data>
+  <data name="PropertyPreset_Empty.Text" xml:space="preserve">
+    <value>Пресетов пока нет</value>
+  </data>
+  <data name="PropertyPreset_SaveHint.Text" xml:space="preserve">
+    <value>Сохранить как пресет</value>
+  </data>
+  <data name="PropertyPreset_NameLabel.Text" xml:space="preserve">
+    <value>Имя пресета</value>
+  </data>
+  <data name="PropertyPreset_DupName.Text" xml:space="preserve">
+    <value>Пресет с таким именем уже есть; сохранение обновит его текущими значениями</value>
+  </data>
+  <data name="PropertyPreset_SavedFmt.Text" xml:space="preserve">
+    <value>Пресет «{0}» сохранён</value>
+  </data>
+  <data name="PropertyPreset_MergedFmt.Text" xml:space="preserve">
+    <value>Пресет «{0}» обновлён</value>
+  </data>
+  <data name="PropertyPreset_LoadedFmt.Text" xml:space="preserve">
+    <value>Применено {1} значений из пресета «{0}»; нажмите «Сохранить свойства», чтобы записать их</value>
+  </data>
+  <data name="PropertyPreset_ShareTitle.Text" xml:space="preserve">
+    <value>Поделиться JSON</value>
+  </data>
+  <data name="PropertyPreset_ShareHint.Text" xml:space="preserve">
+    <value>Скопируйте этот JSON, чтобы передать его другим обоям; вставьте чужой JSON и нажмите «Применить», чтобы перезаписать текущие значения</value>
+  </data>
+  <data name="PropertyPreset_Copy.Text" xml:space="preserve">
+    <value>Копировать</value>
+  </data>
+  <data name="PropertyPreset_CopiedFmt.Text" xml:space="preserve">
+    <value>Скопировано {0} символов (Base64; можно вставить прямо в поле общего доступа Wallpaper Engine)</value>
+  </data>
+  <data name="PropertyPreset_DecodedFmt.Text" xml:space="preserve">
+    <value>Base64 преобразован обратно в JSON ({0} символов)</value>
+  </data>
+  <data name="PropertyPreset_Paste.Text" xml:space="preserve">
+    <value>Вставить</value>
+  </data>
+  <data name="PropertyPreset_Apply.Text" xml:space="preserve">
+    <value>Применить</value>
+  </data>
+  <data name="PropertyPreset_AppliedFmt.Text" xml:space="preserve">
+    <value>Применено {0} значений из JSON; нажмите «Сохранить свойства», чтобы записать их</value>
+  </data>
+  <data name="PropertyPreset_ResetConfirm.Text" xml:space="preserve">
+    <value>Сбросить эти обои к значениям по умолчанию и удалить их локальные настройки в Wallpaper Engine (пресеты сохранятся)</value>
+  </data>
+  <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
+    <value>Сброшено</value>
   </data>
 </root>

@@ -48,93 +48,10 @@ public sealed partial class Info : Page
     private readonly DispatcherTimer _logTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private int _lastSteamState = -1; // -1=未检查 0=正常 1=初始化失败 2=中途断开
     private Task? _steamInitTask;
-    /// <summary>RePKG_Re 后端版本:读取随包 exe 的文件版本(0.5.0.0 → 0.5.0),自动跟随后端发布</summary>
-    public string RepkgVersionText
-    {
-        get
-        {
-            try
-            {
-                var exePath = Path.Combine(AppContext.BaseDirectory, "repkg", "RePKG_Re.exe");
-                if (!File.Exists(exePath)) return string.Empty;
-                var version = FileVersionInfo.GetVersionInfo(exePath).FileVersion;
-                return string.IsNullOrEmpty(version) ? string.Empty : TrimFileVersion(version);
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
-    }
-    /// <summary>随包 RePKG_Re 是否为目标版本(静态信息,运行时不变;Info 页 InfoBar 与导航徽标共用)</summary>
-    public static bool IsRepkgStatusOk()
-    {
-        try
-        {
-            var required = RepkgVersionInfo.Required;
-            if (string.IsNullOrEmpty(required)) return false; // 构建时未注入(external 缺失)
-            var exePath = Path.Combine(AppContext.BaseDirectory, "repkg", "RePKG_Re.exe");
-            if (!File.Exists(exePath)) return false;
-            var version = FileVersionInfo.GetVersionInfo(exePath).FileVersion;
-            var current = string.IsNullOrEmpty(version) ? string.Empty : TrimFileVersion(version);
-            return current == required;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// 文件版本 "0.5.0.0" → "0.5.0":只裁掉 FileVersion 自动补的第四段(.0),保留 Major.Minor.Build。
-    /// 不能用 TrimEnd('0', '.')——它会把 0.5.0.0 误剪成 0.5(第三段为 0 时),与注入的 Required("0.5.0")比对失败。
-    /// </summary>
-    private static string TrimFileVersion(string fileVersion)
-    {
-        var parts = fileVersion.Split('.');
-        if (parts.Length == 4 && parts[3] == "0")
-            return $"{parts[0]}.{parts[1]}.{parts[2]}";
-        return fileVersion;
-    }
-    /// <summary>校验随包 RePKG_Re 是否为目标版本(目标版本构建时从 external/repkg_Re 仓库 csproj 注入)</summary>
-    private void UpdateRepkgStatus()
-    {
-        try
-        {
-            // 目标版本:构建时由 InjectRepkgVersion 目标生成 RepkgVersion.g.cs 常量,
-            // 单源来自 external/repkg_Re/RePKG_Re/RePKG_Re.csproj
-            var required = RepkgVersionInfo.Required;
-            if (string.IsNullOrEmpty(required)) return; // 构建时未注入(如 external 缺失),不做校验
-
-            var exePath = Path.Combine(AppContext.BaseDirectory, "repkg", "RePKG_Re.exe");
-            if (!File.Exists(exePath))
-            {
-                RepkgStatusBar.Severity = InfoBarSeverity.Error;
-                RepkgStatusBar.Title = LanguageHelper.GetResource("Info_RepkgVersionMissing.Title.Text");
-                RepkgStatusBar.Message = LanguageHelper.GetResource("Info_RepkgVersionMissing.Message.Text");
-            }
-            else if (IsRepkgStatusOk())
-            {
-                RepkgStatusBar.Severity = InfoBarSeverity.Success;
-                RepkgStatusBar.Title = LanguageHelper.GetResource("Info_RepkgVersionOk.Title.Text");
-                RepkgStatusBar.Message = string.Format(
-                    LanguageHelper.GetResource("Info_RepkgVersionOk.Message.Text"), RepkgVersionText);
-            }
-            else
-            {
-                RepkgStatusBar.Severity = InfoBarSeverity.Error;
-                RepkgStatusBar.Title = LanguageHelper.GetResource("Info_RepkgVersionMismatch.Title.Text");
-                RepkgStatusBar.Message = string.Format(
-                    LanguageHelper.GetResource("Info_RepkgVersionMismatch.Message.Text"),
-                    string.IsNullOrEmpty(RepkgVersionText) ? "?" : RepkgVersionText, required);
-            }
-            RepkgStatusBar.IsOpen = true;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "检查 RePKG_Re 版本失败");
-        }
-    }
+    /// <summary>RePKG_Re 后端版本:构建时由 InjectRepkgVersion 从 external/repkg_Re 仓库 csproj 注入。
+    /// 后端代码现在编译在本 exe 里(子模式见 RepkgChild),不存在「随包 exe 版本与目标版本不一致」这种状态了,
+    /// 原版本校验 InfoBar / 导航徽标分支 / TrimFileVersion 随之退场。</summary>
+    public string RepkgVersionText => RepkgVersionInfo.Required;
 
     public ObservableCollection<TranslationStatusItem> TranslationStatus { get; } = new();
     public Info()
@@ -149,7 +66,6 @@ public sealed partial class Info : Page
         // Steamworks 首次初始化放后台线程,避免页面加载卡顿;完成后立即反映状态
         _steamInitTask = SteamWorkshopService.InitializeOnBackground();
         _ = RefreshSteamStatusAsync();
-        UpdateRepkgStatus(); // RePKG_Re 后端版本校验(静态信息,加载时查一次)
 
         // 翻译完成度(构建时统计,加载时填充一次)
         foreach (var item in TranslationStatusInfo.Items)
@@ -312,13 +228,13 @@ public sealed partial class Info : Page
     private async void RepkgLicenseButton_Click(object sender, RoutedEventArgs e)
         => await ShowTextFileDialogAsync(
             LanguageHelper.GetResource("Info_License.Header"),
-            Path.Combine(AppContext.BaseDirectory, "repkg", "LICENSE"),
+            Path.Combine(AppContext.BaseDirectory, "RePKG_Re-LICENSE.txt"),
             "https://github.com/ReZe20/repkg-Re/blob/master/LICENSE");
 
     private async void RepkgThirdPartyButton_Click(object sender, RoutedEventArgs e)
         => await ShowTextFileDialogAsync(
             LanguageHelper.GetResource("Info_RepkgThirdPartyButton.Content"),
-            Path.Combine(AppContext.BaseDirectory, "repkg", "THIRD-PARTY-NOTICES.txt"),
+            Path.Combine(AppContext.BaseDirectory, "RePKG_Re-THIRD-PARTY-NOTICES.txt"),
             "https://github.com/ReZe20/repkg-Re/blob/master/THIRD-PARTY-NOTICES.txt");
     /// <summary>在应用内对话框显示许可证/第三方组件全文(可选中、可滚动);viewUrl 非空时在"关闭"左边加"在浏览器中查看"按钮</summary>
     private async Task ShowTextFileDialogAsync(string title, string filePath, string? viewUrl = null)

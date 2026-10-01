@@ -132,6 +132,9 @@
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
     <value>プロパティを保存</value>
   </data>
+  <data name="PropertyPanel_Undo.Content" xml:space="preserve">
+    <value>変更を取り消す</value>
+  </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>全年齢(G)</value>
   </data>
@@ -1270,6 +1273,9 @@ project.json とプレビューをコピー
   <data name="Common_Cancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>
+  <data name="Common_OK.Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>すべて選択</value>
   </data>
@@ -1418,7 +1424,7 @@ project.json とプレビューをコピー
     <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
-    <value>WinUI 3 (Windows App SDK 1.8)</value>
+    <value>WinUI 3 (Windows App SDK 2.4)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
     <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
@@ -1463,10 +1469,10 @@ project.json とプレビューをコピー
     <value>GitHub Issues</value>
   </data>
   <data name="Info_RepkgCreditsLine1.Content" xml:space="preserve">
-    <value>.NET Framework 4.7.2</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_RepkgCreditsLine2.Content" xml:space="preserve">
-    <value>CommandLineParser 2.9</value>
+    <value>System.CommandLine 2.0</value>
   </data>
   <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
     <value>K4os.Compression.LZ4 1.3</value>
@@ -1541,24 +1547,6 @@ project.json とプレビューをコピー
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
     <value>Steamworks を再初期化しています。しばらくお待ちください…</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
-    <value>RePKG_Re バージョン正常</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
-    <value>現在のバージョン: {0}</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
-    <value>RePKG_Re バージョン不一致</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
-    <value>現在: {0}、必要: {1}。RePKG_Re バックエンドを更新してください</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
-    <value>RePKG_Re が見つかりません</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
-    <value>repkg\RePKG_Re.exe が見つかりません。抽出機能は使用できません</value>
   </data>
   <data name="Info_TranslationTitle.Text" xml:space="preserve">
     <value>翻訳進捗</value>
@@ -2086,5 +2074,77 @@ project.json とプレビューをコピー
   </data>
   <data name="LoadPapers_PresetUnset" xml:space="preserve">
     <value>未設定</value>
+  </data>
+  <data name="WeSettings_Default.Text" xml:space="preserve">
+    <value>既定</value>
+  </data>
+  <data name="PropertyPreset_Header.Content" xml:space="preserve">
+    <value>プリセット</value>
+  </data>
+  <data name="PropertyPreset_LoadButton.Content" xml:space="preserve">
+    <value>プリセットを読み込む</value>
+  </data>
+  <data name="PropertyPreset_ShareEmpty.Text" xml:space="preserve">
+    <value>この壁紙には共有できる Wallpaper Engine プロパティがありません</value>
+  </data>
+  <data name="PropertyPreset_Save.Content" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="PropertyPreset_Share.Content" xml:space="preserve">
+    <value>JSON を共有</value>
+  </data>
+  <data name="PropertyPreset_Reset.Content" xml:space="preserve">
+    <value>リセット</value>
+  </data>
+  <data name="PropertyPreset_Empty.Text" xml:space="preserve">
+    <value>プリセットはまだありません</value>
+  </data>
+  <data name="PropertyPreset_SaveHint.Text" xml:space="preserve">
+    <value>プリセットとして保存</value>
+  </data>
+  <data name="PropertyPreset_NameLabel.Text" xml:space="preserve">
+    <value>プリセット名</value>
+  </data>
+  <data name="PropertyPreset_DupName.Text" xml:space="preserve">
+    <value>同名のプリセットが既にあります。保存すると現在の値で上書きされます</value>
+  </data>
+  <data name="PropertyPreset_SavedFmt.Text" xml:space="preserve">
+    <value>プリセット「{0}」を保存しました</value>
+  </data>
+  <data name="PropertyPreset_MergedFmt.Text" xml:space="preserve">
+    <value>プリセット「{0}」を更新しました</value>
+  </data>
+  <data name="PropertyPreset_LoadedFmt.Text" xml:space="preserve">
+    <value>プリセット「{0}」の {1} 項目を適用しました。「プロパティを保存」をクリックして反映してください</value>
+  </data>
+  <data name="PropertyPreset_ShareTitle.Text" xml:space="preserve">
+    <value>JSON を共有</value>
+  </data>
+  <data name="PropertyPreset_ShareHint.Text" xml:space="preserve">
+    <value>この JSON をコピーして他の壁紙に共有できます。他の人の JSON を貼り付けて「適用」を押すと現在の値が上書きされます</value>
+  </data>
+  <data name="PropertyPreset_Copy.Text" xml:space="preserve">
+    <value>コピー</value>
+  </data>
+  <data name="PropertyPreset_CopiedFmt.Text" xml:space="preserve">
+    <value>{0} 文字をコピーしました（Base64。Wallpaper Engine の共有ボックスにそのまま貼り付けられます）</value>
+  </data>
+  <data name="PropertyPreset_DecodedFmt.Text" xml:space="preserve">
+    <value>Base64 を JSON に戻しました（{0} 文字）</value>
+  </data>
+  <data name="PropertyPreset_Paste.Text" xml:space="preserve">
+    <value>貼り付け</value>
+  </data>
+  <data name="PropertyPreset_Apply.Text" xml:space="preserve">
+    <value>適用</value>
+  </data>
+  <data name="PropertyPreset_AppliedFmt.Text" xml:space="preserve">
+    <value>JSON 内の {0} 項目を適用しました。「プロパティを保存」をクリックして反映してください</value>
+  </data>
+  <data name="PropertyPreset_ResetConfirm.Text" xml:space="preserve">
+    <value>この壁紙を既定値に戻し、Wallpaper Engine 内のローカル設定も削除します（プリセットは残ります）</value>
+  </data>
+  <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
+    <value>リセットしました</value>
   </data>
 </root>

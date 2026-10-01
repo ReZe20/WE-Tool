@@ -49,8 +49,23 @@ Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 ; 随仓库的中文翻译文件较老,缺开始菜单页"不创建文件夹"勾选框的官方消息文案,在此覆盖补充
 NoIcons=不创建开始菜单文件夹(&W)
 
+[InstallDelete]
+; 覆盖安装只覆盖同名文件,Inno 从不删除"新包里没有的文件",所以形态变更留下的旧构件必须在这里点名。
+; 不删的代价:老 repkg\RePKG_Re.exe(约 9.5MB)永久留在 {app},而且新版卸载日志里没有它的记录,
+; 连卸载都带不走它 —— 卸载后仍是残留。曾靠 [UninstallDelete] 兜,那只对"由旧版本装上的实例"有效,
+; 对 0.8.x→0.9.0 这种覆盖升级完全无用,所以改成安装前删。
+; 时机:[InstallDelete] 在 [Files] 之前执行,故列出的文件若本轮发布包也带(CI 上 libSkiaSharp.dll 走
+; NuGet 兜底,本机则由 AOT 静态链接进 exe),删掉后仍会被当轮新副本填回,不会变成"缺 dll"。
+Type: filesandordirs; Name: "{app}\repkg"
+Type: files; Name: "{app}\SteamworksBridge.exe"
+Type: files; Name: "{app}\SteamworksBridge.dll"
+Type: files; Name: "{app}\SteamworksBridge.deps.json"
+Type: files; Name: "{app}\SteamworksBridge.runtimeconfig.json"
+Type: files; Name: "{app}\libSkiaSharp.dll"
+
 [Files]
-; 整目录递归打包(含 repkg 等子目录),忽略仅存在于本地的残留文件
+; 整目录递归打包(含 AutoBackupService 等子目录),忽略仅存在于本地的残留文件
+; 提取后端不再有 repkg\ 子目录:CLI 代码编译在 WE_Tool.exe 内(2026-09-29)
 ; Excludes 兜住 .pdb:AOT 符号由 ILC 在发布目标全部跑完之后才落回发布根,csproj 里两次"打包前删除"
 ; 都存在时序风险,这里再挡一道,保证安装包体积不会被 140MB 符号污染
 Source: "{#SourceRoot}\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: recursesubdirs createallsubdirs ignoreversion
@@ -69,10 +84,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Run]
 ; 安装完成页可选直接启动
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
-
-[UninstallDelete]
-; 卸载时清掉运行期可能生成的空目录残留
-Type: filesandordirs; Name: "{app}\repkg"
 
 [Code]
 { 卸载器:可选删除用户数据与配置。

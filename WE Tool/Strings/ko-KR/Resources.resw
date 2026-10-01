@@ -132,6 +132,9 @@
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
     <value>속성 저장</value>
   </data>
+  <data name="PropertyPanel_Undo.Content" xml:space="preserve">
+    <value>변경 취소</value>
+  </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>전체 이용가(G)</value>
   </data>
@@ -1270,6 +1273,9 @@ project.json 및 미리보기 복사
   <data name="Common_Cancel.Text" xml:space="preserve">
     <value>취소</value>
   </data>
+  <data name="Common_OK.Text" xml:space="preserve">
+    <value>확인</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>모두 선택</value>
   </data>
@@ -1418,7 +1424,7 @@ project.json 및 미리보기 복사
     <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
-    <value>WinUI 3 (Windows App SDK 1.8)</value>
+    <value>WinUI 3 (Windows App SDK 2.4)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
     <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
@@ -1463,10 +1469,10 @@ project.json 및 미리보기 복사
     <value>GitHub Issues</value>
   </data>
   <data name="Info_RepkgCreditsLine1.Content" xml:space="preserve">
-    <value>.NET Framework 4.7.2</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_RepkgCreditsLine2.Content" xml:space="preserve">
-    <value>CommandLineParser 2.9</value>
+    <value>System.CommandLine 2.0</value>
   </data>
   <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
     <value>K4os.Compression.LZ4 1.3</value>
@@ -1541,24 +1547,6 @@ project.json 및 미리보기 복사
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
     <value>Steamworks를 다시 초기화하는 중입니다. 잠시만 기다려 주세요…</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
-    <value>RePKG_Re 버전 정상</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
-    <value>현재 버전 {0}</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
-    <value>RePKG_Re 버전 불일치</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
-    <value>현재 {0}, 필요: {1}. RePKG_Re 백엔드를 업데이트하세요</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
-    <value>RePKG_Re를 찾을 수 없음</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
-    <value>repkg\RePKG_Re.exe가 없어 추출 기능을 사용할 수 없습니다</value>
   </data>
   <data name="Info_TranslationTitle.Text" xml:space="preserve">
     <value>번역 진행률</value>
@@ -2086,5 +2074,77 @@ project.json 및 미리보기 복사
   </data>
   <data name="LoadPapers_PresetUnset" xml:space="preserve">
     <value>설정되지 않음</value>
+  </data>
+  <data name="WeSettings_Default.Text" xml:space="preserve">
+    <value>기본값</value>
+  </data>
+  <data name="PropertyPreset_Header.Content" xml:space="preserve">
+    <value>프리셋</value>
+  </data>
+  <data name="PropertyPreset_LoadButton.Content" xml:space="preserve">
+    <value>프리셋 불러오기</value>
+  </data>
+  <data name="PropertyPreset_ShareEmpty.Text" xml:space="preserve">
+    <value>이 배경화면에는 공유할 Wallpaper Engine 속성이 없습니다</value>
+  </data>
+  <data name="PropertyPreset_Save.Content" xml:space="preserve">
+    <value>저장</value>
+  </data>
+  <data name="PropertyPreset_Share.Content" xml:space="preserve">
+    <value>JSON 공유</value>
+  </data>
+  <data name="PropertyPreset_Reset.Content" xml:space="preserve">
+    <value>초기화</value>
+  </data>
+  <data name="PropertyPreset_Empty.Text" xml:space="preserve">
+    <value>프리셋이 없습니다</value>
+  </data>
+  <data name="PropertyPreset_SaveHint.Text" xml:space="preserve">
+    <value>프리셋으로 저장</value>
+  </data>
+  <data name="PropertyPreset_NameLabel.Text" xml:space="preserve">
+    <value>프리셋 이름</value>
+  </data>
+  <data name="PropertyPreset_DupName.Text" xml:space="preserve">
+    <value>같은 이름의 프리셋이 이미 있습니다. 저장하면 현재 값으로 갱신됩니다</value>
+  </data>
+  <data name="PropertyPreset_SavedFmt.Text" xml:space="preserve">
+    <value>프리셋 "{0}"을(를) 저장했습니다</value>
+  </data>
+  <data name="PropertyPreset_MergedFmt.Text" xml:space="preserve">
+    <value>프리셋 "{0}"을(를) 업데이트했습니다</value>
+  </data>
+  <data name="PropertyPreset_LoadedFmt.Text" xml:space="preserve">
+    <value>프리셋 "{0}"의 {1}개 항목을 적용했습니다. "속성 저장"을 눌러 반영하세요</value>
+  </data>
+  <data name="PropertyPreset_ShareTitle.Text" xml:space="preserve">
+    <value>JSON 공유</value>
+  </data>
+  <data name="PropertyPreset_ShareHint.Text" xml:space="preserve">
+    <value>이 JSON을 복사해 다른 배경화면에 공유할 수 있습니다. 다른 사람의 JSON을 붙여넣고 "적용"을 누르면 현재 값이 덮어써집니다</value>
+  </data>
+  <data name="PropertyPreset_Copy.Text" xml:space="preserve">
+    <value>복사</value>
+  </data>
+  <data name="PropertyPreset_CopiedFmt.Text" xml:space="preserve">
+    <value>{0}자를 복사했습니다(Base64. Wallpaper Engine의 공유 입력칸에 바로 붙여넣을 수 있습니다)</value>
+  </data>
+  <data name="PropertyPreset_DecodedFmt.Text" xml:space="preserve">
+    <value>Base64를 JSON으로 되돌렸습니다({0}자)</value>
+  </data>
+  <data name="PropertyPreset_Paste.Text" xml:space="preserve">
+    <value>붙여넣기</value>
+  </data>
+  <data name="PropertyPreset_Apply.Text" xml:space="preserve">
+    <value>적용</value>
+  </data>
+  <data name="PropertyPreset_AppliedFmt.Text" xml:space="preserve">
+    <value>JSON의 {0}개 항목을 적용했습니다. "속성 저장"을 눌러 반영하세요</value>
+  </data>
+  <data name="PropertyPreset_ResetConfirm.Text" xml:space="preserve">
+    <value>이 배경화면을 기본값으로 되돌리고 Wallpaper Engine의 로컬 설정을 지웁니다(프리셋은 그대로 남습니다)</value>
+  </data>
+  <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
+    <value>초기화했습니다</value>
   </data>
 </root>

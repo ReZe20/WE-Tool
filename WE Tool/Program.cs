@@ -16,6 +16,10 @@ internal static class Program
         if (Service.SteamBridgeChild.IsBridgeMode(args))
             Environment.Exit(Service.SteamBridgeChild.Run(args));
 
+        // 提取后端子模式:CLI 代码编译在本 exe 里,RepkgCliService 拉起的就是自己
+        if (Service.RepkgChild.IsChildMode(args))
+            Environment.Exit(Service.RepkgChild.Run(args));
+
         global::WinRT.ComWrappersSupport.InitializeComWrappers();
         global::Microsoft.UI.Xaml.Application.Start(_ =>
         {

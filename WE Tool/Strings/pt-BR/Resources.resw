@@ -132,6 +132,9 @@
   <data name="PropertyPanel_Save.Content" xml:space="preserve">
     <value>Salvar propriedades</value>
   </data>
+  <data name="PropertyPanel_Undo.Content" xml:space="preserve">
+    <value>Desfazer alterações</value>
+  </data>
   <data name="Rating_Everyone.Content" xml:space="preserve">
     <value>Livre (G)</value>
   </data>
@@ -1270,6 +1273,9 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
   <data name="Common_Cancel.Text" xml:space="preserve">
     <value>Cancelar</value>
   </data>
+  <data name="Common_OK.Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="MultiSelect_SelectAll.Content" xml:space="preserve">
     <value>Selecionar tudo</value>
   </data>
@@ -1418,7 +1424,7 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
     <value>.NET 10</value>
   </data>
   <data name="Info_CreditsLine2.Content" xml:space="preserve">
-    <value>WinUI 3 (Windows App SDK 1.8)</value>
+    <value>WinUI 3 (Windows App SDK 2.4)</value>
   </data>
   <data name="Info_CreditsLine3.Content" xml:space="preserve">
     <value>CommunityToolkit (MVVM 8.4.2 / WinUI Controls 8.2)</value>
@@ -1463,10 +1469,10 @@ Nota: Habilitar junto com Saída completa pode causar desorganização.</value>
     <value>GitHub Issues</value>
   </data>
   <data name="Info_RepkgCreditsLine1.Content" xml:space="preserve">
-    <value>.NET Framework 4.7.2</value>
+    <value>.NET 10</value>
   </data>
   <data name="Info_RepkgCreditsLine2.Content" xml:space="preserve">
-    <value>CommandLineParser 2.9</value>
+    <value>System.CommandLine 2.0</value>
   </data>
   <data name="Info_RepkgCreditsLine3.Content" xml:space="preserve">
     <value>K4os.Compression.LZ4 1.3</value>
@@ -1541,24 +1547,6 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   </data>
   <data name="Info_SteamRetrying.Message.Text" xml:space="preserve">
     <value>Reinicializando Steamworks, aguarde…</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Title.Text" xml:space="preserve">
-    <value>Versão do RePKG_Re normal</value>
-  </data>
-  <data name="Info_RepkgVersionOk.Message.Text" xml:space="preserve">
-    <value>Versão atual {0}</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Title.Text" xml:space="preserve">
-    <value>Versão do RePKG_Re incompatível</value>
-  </data>
-  <data name="Info_RepkgVersionMismatch.Message.Text" xml:space="preserve">
-    <value>Atual: {0}, necessária: {1}. Atualize o backend RePKG_Re.</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Title.Text" xml:space="preserve">
-    <value>RePKG_Re não encontrado</value>
-  </data>
-  <data name="Info_RepkgVersionMissing.Message.Text" xml:space="preserve">
-    <value>repkg\RePKG_Re.exe não encontrado. A funcionalidade de extração está indisponível.</value>
   </data>
   <data name="Info_TranslationTitle.Text" xml:space="preserve">
     <value>Progresso da tradução</value>
@@ -2086,5 +2074,77 @@ Aviso legal: esta ferramenta destina-se apenas a aprendizado pessoal e backup. O
   </data>
   <data name="LoadPapers_PresetUnset" xml:space="preserve">
     <value>Não definido</value>
+  </data>
+  <data name="WeSettings_Default.Text" xml:space="preserve">
+    <value>Padrão</value>
+  </data>
+  <data name="PropertyPreset_Header.Content" xml:space="preserve">
+    <value>Predefinições</value>
+  </data>
+  <data name="PropertyPreset_LoadButton.Content" xml:space="preserve">
+    <value>Carregar predefinição</value>
+  </data>
+  <data name="PropertyPreset_ShareEmpty.Text" xml:space="preserve">
+    <value>Este papel de parede não tem propriedades do Wallpaper Engine para compartilhar</value>
+  </data>
+  <data name="PropertyPreset_Save.Content" xml:space="preserve">
+    <value>Salvar</value>
+  </data>
+  <data name="PropertyPreset_Share.Content" xml:space="preserve">
+    <value>Compartilhar JSON</value>
+  </data>
+  <data name="PropertyPreset_Reset.Content" xml:space="preserve">
+    <value>Redefinir</value>
+  </data>
+  <data name="PropertyPreset_Empty.Text" xml:space="preserve">
+    <value>Nenhuma predefinição ainda</value>
+  </data>
+  <data name="PropertyPreset_SaveHint.Text" xml:space="preserve">
+    <value>Salvar como predefinição</value>
+  </data>
+  <data name="PropertyPreset_NameLabel.Text" xml:space="preserve">
+    <value>Nome da predefinição</value>
+  </data>
+  <data name="PropertyPreset_DupName.Text" xml:space="preserve">
+    <value>Já existe uma predefinição com este nome; salvar vai atualizá-la com os valores atuais</value>
+  </data>
+  <data name="PropertyPreset_SavedFmt.Text" xml:space="preserve">
+    <value>Predefinição "{0}" salva</value>
+  </data>
+  <data name="PropertyPreset_MergedFmt.Text" xml:space="preserve">
+    <value>Predefinição "{0}" atualizada</value>
+  </data>
+  <data name="PropertyPreset_LoadedFmt.Text" xml:space="preserve">
+    <value>{1} valores da predefinição "{0}" aplicados; clique em "Salvar propriedades" para gravá-los</value>
+  </data>
+  <data name="PropertyPreset_ShareTitle.Text" xml:space="preserve">
+    <value>Compartilhar JSON</value>
+  </data>
+  <data name="PropertyPreset_ShareHint.Text" xml:space="preserve">
+    <value>Copie este JSON para compartilhá-lo com outros papéis de parede; cole o JSON de outra pessoa e clique em "Aplicar" para sobrescrever os valores atuais</value>
+  </data>
+  <data name="PropertyPreset_Copy.Text" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="PropertyPreset_CopiedFmt.Text" xml:space="preserve">
+    <value>{0} caracteres copiados (Base64, cole diretamente na caixa de compartilhamento do Wallpaper Engine)</value>
+  </data>
+  <data name="PropertyPreset_DecodedFmt.Text" xml:space="preserve">
+    <value>Base64 convertido de volta em JSON ({0} caracteres)</value>
+  </data>
+  <data name="PropertyPreset_Paste.Text" xml:space="preserve">
+    <value>Colar</value>
+  </data>
+  <data name="PropertyPreset_Apply.Text" xml:space="preserve">
+    <value>Aplicar</value>
+  </data>
+  <data name="PropertyPreset_AppliedFmt.Text" xml:space="preserve">
+    <value>{0} valores do JSON aplicados; clique em "Salvar propriedades" para gravá-los</value>
+  </data>
+  <data name="PropertyPreset_ResetConfirm.Text" xml:space="preserve">
+    <value>Redefine este papel de parede para os valores padrão e apaga suas configurações locais no Wallpaper Engine (as predefinições são mantidas)</value>
+  </data>
+  <data name="PropertyPreset_ResetDone.Text" xml:space="preserve">
+    <value>Redefinido</value>
   </data>
 </root>

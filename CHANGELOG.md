@@ -1,42 +1,59 @@
-# 更新日志
+# 更新日志 / Changelog
 
-## v0.8.1
+> 每个版本的条目先中文、后英文。发布说明由 CI 从本文件整段复制对应版本段落，所以 GitHub Release 页面会两种语言一起显示，中文在前。
+> Each release section lists Chinese entries first, then the English mirror. CI builds the GitHub Release body by copying the whole version section from this file, so both languages appear on the release page with Chinese first.
 
-- 架构:自动备份服务改用 C++/MSVC 单文件 exe 实现(替换原 C# Native AOT)——体积 3.37MB → 235KB,只导入 KERNEL32/SHELL32,不再依赖 .NET 运行时与 VC 运行库
-- 修复:长路径(超过 260 字符)的壁纸被静默漏备份——硬链接与文件 ID 查询未加 `\\?\` 前缀,`ERROR_PATH_NOT_FOUND` 被咽掉却仍写完成标记;壁纸备份页的同一份实现一并修复
-- 修复:只备份了一半(部分文件失败)也被标记为"已备份"而永不再重试——改为任一文件失败则不写 `.backup_ok`
-- 修复:服务日志超过上限时首行丢失(日志文件尚不存在时读取长度抛异常,跳过滚动逻辑)
-- 修复:创意工坊库目录缺失时服务启动即崩(文件监听器赋值路径抛异常),改为跳过 VDF 监听并记一行日志
-- 修复:Native AOT 正式包启动即崩(0xc000027b),双击无任何提示——LottieGen 生成的动画图标类与 ThemedAnimatedIcon 未标记 `partial`,C#/WinRT 不为其生成 CCW 互操作桩;Debug 不启用 AOT 故完全无症状,仅发布包复现
-- 修复:VS「生成解决方案」会静默遗漏 SteamworksBridge——解决方案构建把 RuntimeIdentifier 作为全局属性传给子项目,桥接输出多出 `win-x64\` 一段而拷贝清单只认无平台段目录;改为向子项目索取真实产出路径
-- 优化:自动备份服务的 VDF 解析与主程序统一为同一套两级匹配(原实现要求 `publishedfileid` 与 `disabled_locally` 同现且有序,字段顺序一变即静默漏判)
-- 优化:服务控制台输出固定为 UTF-8(原跟随系统 OEM 代码页,简中机器输出 GBK、其他机器输出 UTF-8,同一版本行为不一致)
-- 优化:发布产物不再携带 AOT 调试符号——SDK 的符号拷贝钩子晚于本仓库所有发布后目标,改由 `CopyOutputSymbolsToPublishDirectory=false` 从源头关闭,安装脚本另加 `Excludes: "*.pdb"` 兜底
-- 新增:`TestBackupContract` 契约差分器——34 个黑盒场景(配置与命令行 / 单次备份 / 常驻监听),在临时目录伪造整套 Steam 环境后真的拉起服务子进程,把退出码、输出、日志文本与备份目录结果归一化成基线逐字节比对;已纳入解决方案,可在 VS 里直接 F5
-- 新增:Lottie 动画图标的 json 源纳入仓库(`Lottie/`)——此前只存在于仓库外目录,素材一旦丢失图标即不可再生
-- 修复:Papers 与已安装组件页"列表空白处右键菜单"完全不弹出——v0.8.0 把内容/列表模式由 GridView 迁成 ScrollView+ItemsRepeater 时,原先挂在 GridView 上的 `ContextFlyout` 随控件一起丢了,菜单资源留在 Page.Resources 里无人引用;改为接在已有的"右键按下→松开"手动弹菜单链路上补回,并覆盖到图标模式(该模式此前从未有过空白区菜单),按下点落在卡片上时不弹(按住卡片拖到空白松开不该弹出列表菜单)
-- 清理:移除图标动画/主题重涂排查期的探针——23 个开关(窗口 7 个导航图标 + Papers 8 + 组件页 7 + `AnimatedIconPlayer.Enabled`)与约 100 条 `[动画]`/`[图标主题]` 诊断日志,共 138 行,行为不变(开关原本全为 true)。`ThemedAnimatedIcon` 的 250ms 兜底轮询此前每轮都打一条日志(每秒最多 4 条刷进 Logs 页)一并静掉,连带删掉只为日志标签存在的 `SegmentsIconName` 与 `ApplyColor(trigger)` 参数;保留 `涂色异常` 那条 catch 上报。左侧"筛选结果"图标用的两个 Collapsed Border(`LeftFilterColorProbe*`)不是探针,是借框架解析 `{ThemeResource}` 色值的取色载体,删了图标就不跟主题/选中态变色,注释已标明
-- UI:导入解包页的完成/提示 InfoBar 从页面顶部移到操作栏之上(底部)——提示跟着按钮区出现,不再把导入队列整体往下挤
-- 修复:残留清理页把最后一张卡推入白名单(或单卡清理掉)后右下角按钮区整条消失——空态/列表/命令栏的可见性由 5 处重复的 `Cards.Count > 0` 翻转各写一遍,清空分支把整条 `CommandBar` 折叠了,而"白名单/重新扫描"只挂在这条栏上;页面是缓存页且首次自动扫描不再触发,导航离开再回来也回不来,等于锁死在空态。收敛成 `SyncView()` 单一同步点:命令栏常驻,需要卡片才能执行的按钮(批量白名单/批量删除/清理全部)改按项数禁用。同源修掉三处漏写:扫描失败态同样丢了"重新扫描"、白名单窗口关闭回填列表后不切空态、白名单项被移除加回列表时总结行不刷新
-- 架构:属性窗口从主窗口同线程的 `Window` 改为同 exe 自我启动的**子进程**——WinUI 3 的 `Window` 只能待在启动 `Application` 的那个 UI 线程上(整个进程的 XAML 运行时绑一条 DispatcherQueue),属性窗口的可视树构建/文件树枚举/预览模糊都压在主线程上,列表滚动跟着掉帧。子进程零读 `config.json`:条目字段与主题/模糊/尺寸/语言全由母进程打包成 `%TEMP%` 载荷带过来(命令行装不下不可控长度的描述与标签),载荷读入即删;两侧一条命名管道双向,母进程推主题与模糊开关(出进程后唯一会掉的功能,靠这条补回)与"同一壁纸重复打开请前置",子进程报回尺寸与保存通知,尺寸由母进程攒到子进程退出才落盘——两个进程各自全量覆写同一份配置必丢更新。子进程挂在既有 Job Object 上,主程序退出即带走;不建跨进程 owner 关系,那会把两边输入队列绑起来,正好抵消解耦收益。上限仍是 5 个属性窗口(现在一个窗口=一个进程),子进程日志独立写 `logs\properties.txt`(Serilog 文件 sink 默认独占写句柄,共一个文件名第二个进程会在 sink 构造期抛 IOException)
-- 新增:Papers 右侧面板改为二选一 —— 「查看」菜单(工具栏按钮与列表空白处右键菜单两处,同一份状态)新增「右侧面板」子菜单:`详情面板` = 原来的样子;`属性面板` = 同一套内容去掉与改属性无关的那几项——描述、文件路径、大小/来源/类型/评级一行、标签条、以及「属性」按钮本身(右侧面板已经是属性编辑器,再挂一个开子进程的入口只会让人以为两处不一样);这几项的可见性早就挂在 `DetailPanelVisibility` 上或同一份绑定接上,只是此前没有入口。两排操作按钮(解包/复制/卸载/导入编辑器/备份、「打开目录」)整排收起——它们动的是壁纸文件本身,不是属性;命令在工具栏与卡片右键菜单上各有一份,入口不丢。属性模式下这一屏只剩标题、保存按钮与属性行、换成该壁纸的可配置属性(可改并保存,一行一条,标签/值两列,分组沿用默认折叠的 Expander;该壁纸没有可配置属性时给一句占位提示)。编辑控件与属性窗口同源——布尔勾选框、数值滑杆、下拉、取色器、文本框、场景纹理选文件,改动落在内存模型上,顶部「应用更改」按钮经 `WallpaperPropertyWriter` 一次写回 project.json(与属性窗口同一条原子写路径),旁边一枚「撤销更改」= 丢掉未保存的编辑、按磁盘上的值重建行(与属性窗口改后重读同一条路径);两处保存按钮都改名「应用更改」,提示框标题取同一句。这两枚都按"这张壁纸有没有未保存的改动"才亮 —— 脏标记在行模型的 setter 上报一声,宿主回 UI 线程现取各行 `IsModified` 重算(套预设、粘分享 JSON 走同一 setter,同样算改动;写成后抹平脏标记,两枚当场回到禁用)。两个写者互不覆盖:任一侧保存后都通知对方重读——面板保存后请已开的属性窗口重读(否则那个进程手里还是打开时的快照,下一次保存会把面板刚写的改回去),属性窗口保存后经新增的 `PropertySavedByChild` 事件让面板重读。选择持久化在 Papers 配置段(`RightPanelIndex`),来回切换与重复选中同一张都不重建那几百个控件、只切显隐。属性行还没建出来时(含选中的 250ms 防抖窗口)原位挂一个 `ProgressRing`,建出行即换成属性行,环的 `IsActive` 随显隐一起开关(不空转)。解析在选中稳定 250ms 后才开始(拖拽滑过时不解析,切走即作废),走主进程内 `WallpaperPropertyParser` 的「路径 + project.json 改时间」缓存,所以同一张壁纸一生只解析一次;行一次性建完而不是分批——实测暖机后每行边际成本约 0.19ms,而分批在 179 行时要多花 288ms 的刻意让帧(占整段 47%),且布局成本被 ScrollViewer 限制在视口内、不随已挂行数增长,分批换不到平滑。标签(链接/HTTP 图片/文字色/标题字号)与值渲染和属性窗口共用同一份实现(`Helper/WallpaperPropertyRowBuilder.cs`),顺带修好属性窗口里只读类型(如 `usershortcut`)只显示标签、值无处可看的问题(原 XAML 的 ReadOnly 分支在代码构建时漏了)
-- 修复:属性窗口「文件属性」页滚到近底部时整页上下抽搐——该页是 `ItemsRepeater` 虚拟化列表,最后一行(文件结构树)的 `TreeView` 在 `Loaded` 里从缓存重建根节点,行高随实化在 0 与 200 之间跳;这行又恰好压在列表尾端,高度一变就改掉整个列表的可滚动总高 → `ScrollViewer` 重算并夹紧偏移 → 本行被判定滚出视野而销毁 → 再实化又 0→200,形成不依赖滚轮输入的自锁循环。「壁纸属性」页是普通 `StackPanel`(行永不销毁、总高单调固定)所以没这个症状。改为该页不再回收行:`VerticalCacheLength` 取到盖住整页(本页行数固定,约 22 行,虚拟化本就省不下开销),行常驻实化后 `Loaded` 只跑一次;文件结构树随之去掉 `MaxHeight="200"` 上限,整棵按条目数自然延长,不再挤在 200 高的内滚框里
-- 新增:Papers「属性面板」与属性窗口的「壁纸属性」页多了四枚预设按钮(「加载预设」/「保存」/「分享 JSON」/「重置」),做 WE 属性对话框那组预设操作里的四项 —— 加载 / 保存 / 分享 JSON / 重置;「应用到所有壁纸」不做(它要跨壁纸写配置、还会改默认值)。按钮是静态控件,直接写在两处 XAML 里(Papers.xaml 的 `WallpaperPropsHeader`、PropertiesWindow.xaml 的壁纸属性页),只有属性行那种随壁纸变的才代码建;四件事的行为共用 `Helper/WallpaperPresetActions.cs`;六枚按钮(连同「应用更改」「撤销更改」)排成 2×3 —— 上排对当前值动手(应用更改 / 撤销更改 / 重置),下排预设三件事(加载预设 / 保存 / 分享 JSON),Papers 面板里星列等分、跟着面板宽度走(此前是四排按钮还各自写死宽度,窄面板里白吃四行),属性窗口里按内容自然宽。「加载预设」点开是该壁纸的预设名单(没有时一条灰的「还没有预设」),选一条即套用 —— 名单同步建完再弹,不留异步缝。「分享 JSON」这条路留了一条读数(内置行数/JSON 项数/字节数),空框那次靠它定位是哪一环空。预设本来存在 WE 安装目录 config.json 的 `<账户>.general.wpresets[壁纸主文件].presets[]`(与 wproperties 平级,实测本机 2636878454 底下有 `1`/`123`/`333`/`666` 四条,每条是 `{name, properties}`,properties 存全量键)。四项的语义照 WE 自己的实现核过(它的 UI 打包在 `ui/dist/scripts/scripts.js` 里,`callbackLoadWallpaperProperties`/`callbackSaveWallpaperProperties`/`callbackShareWallpaperProperties`/`callbackResetCurrentWallpaperProperties` 四个处理器):加载 = 选一条预设、把值套到行上(我们这边点数落成"改动",仍要点保存才写回;WE 是立刻生效);保存 = 问个名字把当前内置行整份存成预设,重名并进已有那条(只改我们这 13 个键,WE 自己多存的 `alignmentx/y/z` 留着 —— 与 WE 的 merge 行为一致);分享 JSON = 弹出可编辑的 JSON(与 WE 同一形状:key→值 的平表,也认带 name/properties 的预设对象;粘贴支持 Base64,WE 的复制给的就是 Base64),点应用把改过的值套回行上;重置 = 清掉这张壁纸在本机 WE 配置里的覆盖记录(预设留着),面板随即重读回默认。只覆盖内置那层 —— 作者属性归 project.json,不进预设(WE 的预设其实也含作者属性值,但那层在我们这儿是 project.json,"套预设"去改作者默认值不对)。写回沿用既有那条原子路径(文本级定点替换 + `config.json.wetool.bak` + 临时文件 File.Replace + 写后 JSON 校验),新建段的排版照 WE 自己的(键与括号同缩进、成员再进一级)。这套文本操作在真配置的副本上验过六种情形:新增预设 / 重名合并 / 重置 / 首次建段(整段 wpresets 不存在)/ 同名连存两次(只留一条)/ 分享 JSON 解析(平表、预设对象、Base64、坏输入),只动了该动的地方、其余账户段与其它壁纸的记录逐字节不变。两处没做:预设的「删除」(WE 的加载弹窗里带)与 `alignmentx/y/z` 三个键(预设里有,我们不显示也不写)
-- 架构:残留清理页的白名单窗口走同一条子进程链路(第二个启动开关),差别在两处。一是写权归属:原先母进程把自己那份白名单集合的引用直接交给窗口,删条目就地改集合、由窗口全量覆写 `cleanup_whitelist.json`;出进程后没有共享引用,改成子窗口只报"我要移除某项"的意图,母进程改集合、落盘、再把该壁纸退回清理列表——文件始终只有一个写者,不必为此引入跨进程锁;反方向母进程推"某项已加入白名单",子窗口增量加卡。二是单实例:属性窗口按壁纸各开一个,白名单全程序只有一个,已开时按钮只请它前置。主题同样经管道实时跟;它的日志写第三份文件 `logs\whitelist.txt`,否则与属性子进程同时开着会抢同一个独占句柄
-- 新增:Papers「属性面板」与属性窗口的「壁纸属性」页在最上面接一段 WE 自己的属性(13 行平铺,不加标题、不套 Expander —— 这 13 项要一眼看到,也不需要折叠;与作者属性之间一条分隔线,线放在作者属性头顶而不是内置块尾巴,免得壁纸没有作者属性时最后多出一条没人分隔的孤线) —— WE 自己那层属性(主题配色/对齐方式/位置/翻转/鼠标视差/播放速度/图片筛选器+强度/显示颜色选项/亮度/对比度/色调偏移/饱和度)不在 project.json 里:WE 只把用户改过的键写进安装目录 config.json 的 `<Windows账户>.wproperties[壁纸主文件路径][MonitorN]`,没记录的键走它内部默认值。标签、对齐选项名与 25 个滤镜名都读 WE 自己的 `locale/ui_<语言>.json`(措辞与 WE 一致);默认值取 WE 自己 UI 代码里的那份(对齐=覆盖、位置=50、播放速度=100、鼠标视差=开),颜色校正与滤镜强度 WE 没暴露默认值——这几行显示「默认」占位(未定态:布尔是三态外观、滑杆停在量程中点),用户一动才成为显式值。「亮度/对比度/色调偏移/饱和度」跟 WE 的对话框一样归「显示颜色选项」管——没勾上时这四行整行收起,勾选框一翻即时展开/收起;收起只是不显示,四条的值仍留在内存里,改过再关掉照样保存。接线方式是通用的:目录表上给受控行标 `GateKey`,读取时把「谁控制谁」挂到行模型上,行构建器建行时按控制行的状态定初始可见性、并在勾选事件里翻受控行(属性面板与属性窗口共用同一段,两处行为一致)。写入目标(保存时)是 WE 安装目录(注册表 `HKCU\Software\WallpaperEngine` 的 installPath)下那份 config.json,只写用户真改过的行(读入后抹掉脏标记,没改的行不动),写回方式与 project.json 那套一致:文本级定点替换 + `config.json.wetool.bak` 备份 + 临时文件 File.Replace + 写后 JSON 校验。编辑哪台显示器按「当前/最近配置里这张壁纸挂的那台」定(读与写共用同一条推导),标题不带显示器字样——那台只是取覆盖记录的下标,一张壁纸挂两台时显示的仍是配置里排在最前的那台,标出来反而像确定的归属。主题配色归内置块(WE 里改的也是它的覆盖值,同项不再在作者属性里重复);WE 没装或读不了时整块不出现,主题配色留在作者属性里。注意 WE 运行中时它按内存里的配置整份覆写该文件,所以保存成功的提示写的是"重启 Wallpaper Engine 生效";对齐方式 0..4 的枚举顺序按 WE 语言文件的排列推定(未逐档在 WE 里核对)
+## v0.9.0
 
-- 修复:「撤销更改」撤不掉壁纸自定义属性(project.json 的 general.properties)的改动,换张壁纸再选回来那些改动还阴魂不散 —— 属性解析器按文件夹缓存的是**行模型列表**,而面板的编辑就落在这些实例上,等于把"改过的内存态"当成磁盘态存进了缓存(WE 内置那层每次重建,所以只有自定义属性这层露馅)。缓存改成「project.json 修改时间 + general.properties 那段原文」,每次取用把原文重建成一批新行;整份 project.json 仍然只在文件时间变化后读一次,没有多付磁盘 I/O。同源的还有一处:作者行装载时经的是"用户改过值"那批 setter,内置行有人抹脏标记、作者行没人抹,于是选中一张就自带"有未保存改动"——接上"有改动才可点"的按钮可用态后当场现形,现在两边都在建行之初抹平
+### 中文
 
-- 新增:Papers「属性面板」的未保存改动现在按壁纸存草稿 —— 此前选中换一张再换回来,那批没保存的编辑就没了(面板换张时清掉行、模型跟着丢)。改成:换下当前这批行时,真改脏的那份按文件夹收下(同时最多 24 份,撞到上限丢最早收的;收下前断掉行控件引用,免得旧可视树跟着模型留在内存里),选回来照着它重建行、不再读盘;「撤销更改」/「重置」/属性子窗口写过这张,都把对应草稿一起丢掉,保存成功算落盘、下次换张时顺手清掉。属性窗口不需要这套——一个窗口只开一张壁纸,本来就切不走。代价说清楚:草稿留着期间,这张壁纸在 WE 那边被改了不会被看见(屏上值以你的改动为准),要看磁盘上的值就点「撤销更改」
+- 新增:Papers 右侧面板可切「详情面板 / 属性面板」,属性面板里直接改这张壁纸的属性,按「应用更改」写入
+- 新增:属性面板与属性窗口的「壁纸属性」页接上 WE 自己那层属性(主题配色、对齐、位置、翻转、鼠标视差、播放速度、滤镜与强度、显示颜色选项、亮度、对比度、色调偏移、饱和度),可改可保存
+- 新增:WE 属性的预设四项——加载预设、保存、分享 JSON、重置,与 WE 共用同一份数据,WE 那边也看得到(「应用到所有壁纸」与「删除预设」没做)
+- 新增:「分享 JSON」与 WE 双向可读:复制出来的是 Base64,可直接贴进 WE 的分享框;从 WE 复制的贴进来会自动还原成 JSON
+- 新增:Papers 属性面板的未保存改动按壁纸存草稿,切走再切回来还在(同时最多留 24 张)
+- 新增:属性窗口与白名单窗口改为独立进程,列表滚动不再被它们拖慢;属性窗口仍限 5 个,同一壁纸重复打开会把已有的前置
+- UI:按钮弹出的二级框改成贴在按钮下方的小卡(只有「分享 JSON」还是模态);导入解包页的提示条从页顶移到操作栏之上
+- 优化:安装包 13.19MB → 11.66MB,便携包 17.79MB → 14.62MB
+- 变更:解包后端不再是随包的 `repkg\RePKG_Re.exe`,改由主程序自己跑;功能与命令行行为不变
+- 变更:自动备份服务改用 C++ 单文件实现,235KB(原 3.37MB),不再需要额外运行库
+- 修复:正式包双击启动即崩、没有任何提示
+- 修复:Papers 与已安装组件页在列表空白处右键不弹菜单;图标模式补上空白区菜单
+- 修复:残留清理页处理完最后一张卡后底部按钮整条消失,离开页面再回来也回不来
+- 修复:属性窗口「文件属性」页滚到接近底部时整页上下抽搐
+- 修复:「撤销更改」撤不掉壁纸自定义属性的改动,换张壁纸再选回来改动还在
+- 修复:「分享 JSON」的编辑框里只剩一个花括号
+- 修复:筛选器强度与亮度/对比度/色调偏移/饱和度只显示「默认」占位,现在给出 WE 的实际默认值;「分享 JSON」随之从 8 个键补到 13 个(内置属性全都带上)
+- 修复:自动备份的四处——路径超 260 字符的壁纸被静默漏备份;只成功一部分也被标成"已备份"、从此不再重试;日志写满时丢第一行;创意工坊库目录缺失时服务启动即崩
+- 修复:覆盖安装留下的旧文件(`repkg\RePKG_Re.exe`、`SteamworksBridge.*`、旧版 `libSkiaSharp.dll`)现在安装时点名清掉
+- 修复:第三方许可清单按实际编进程序的包重新清点(Windows App SDK 等此前被误标 MIT),Info 页致谢同步纠正;随包声明文件改名 `RePKG_Re-LICENSE.txt` / `RePKG_Re-THIRD-PARTY-NOTICES.txt`
+- 说明:属性写到 WE 安装目录的 config.json,而 WE 运行中会整份覆写该文件,所以保存后要重启 Wallpaper Engine 才生效
+- 文档:更新日志改为中英双语(中文在前)
 
-- UI:Papers「属性面板」与属性窗口「壁纸属性」页里,除「分享 JSON」(要装一个大 JSON 编辑框,按原样留模态)之外,按钮弹出的二级框全部改成贴在按钮下面的小卡(Flyout + 确定/取消,骨架沿用详情面板那枚「卸载确认」卡)——动的是:应用更改的结果与报错、保存预设的名字输入、重置的确认与结果。居中的模态框会把焦点从右侧面板拽到窗口正中,点完还得回头找刚才在点什么;小卡开在按钮底下,焦点几乎不挪。三条共用 `DialogHelper.ShowFlyoutMessageAsync` / `ShowFlyoutConfirmAsync` / `ShowFlyoutInputAsync`(输入那张一开就把焦点送进文本框、回车等同按确定;点别处或 Esc 一律按"没同意"算),这几件预设操作因此都要把唤起它的按钮当锚点传进去。随之删掉只为旧模态输入框服务的 `ShowTextInputAsync`,并丢掉两个再没用上的标题键(`PropertyPreset_SaveTitle` / `PropertyPreset_ResetTitle`——小卡就开在那枚按钮下面,标题是重复的);新增 `Common_OK.Text`(确定/OK)
+### English
 
-- UI:小卡文案改成陈述句,去掉「还没有预设 / 预设会留着 / 点保存生效」这类口语说法(改成「暂无预设」「(预设保留)」「需点击「应用更改」写入」);保存预设补上**输入时的重名提醒**——开卡之前把这张壁纸的预设名单一次读齐(不在每次按键后再去摸配置文件),名字框底下就地显示「已有同名预设,保存将用当前值更新它」,不必等保存完再补一层确认。比较口径与写入端 `FindPresetElement` 一致(区分大小写的相等),所以提示说会更新、保存就一定更新那条;结果文案也据实分成两种 —— `SavePreset` 现在回报这次是并入已有那条还是新建,对应「已更新预设「x」」与「已保存预设「x」」。同一批文字说明里的标点也统一成全角(逗号/分号/冒号/括号),包括服务层那些会显示到小卡上的报错文本(`无法确定该壁纸在 Wallpaper Engine 里的主文件，改动没有写出去`、`写回结果不是合法 JSON，已取消保存：…` 这类)
-
-- 修复:「分享 JSON」的文本框里只有一个花括号 —— JSON 是好的(日志读到 13 项 273 字节),坏在赋值顺序:那个多行框由代码建,对象初始化器里 `Text = json` 写在 `AcceptsReturn = true` **前面**,而初始化器按书写顺序赋值,那一刻它还是个单行框;单行 `TextBox` 收到带换行的赋值是**截断**(第一个换行符之后整段丢弃,不是"把换行符去掉"),我们那份 JSON 正以 `{\r\n` 开头,于是框里只剩一个 `{`,之后再打开 `AcceptsReturn` 也找不回来。改成先配好 `AcceptsReturn`/`TextWrapping` 再赋 `Text`。定位靠的是新增的「弹窗打开: 初值 N 字符」这条读数——它与生成端那条对不上,一下就说明问题在显示端而不是数据端(此前离线复现只核生成的字符串,看不出这一步)
-- 修复:「分享 JSON」的剪贴板与解码口径照 WE 补齐 —— WE 分享框的「复制」按的是 `btoa(jsonText)`,剪贴板里躺的是 Base64;它框内挂了 `$watch("data.preset")`,只要这串能 `atob` 解成 JSON 就**当场换成解码后的文本**显示,所以在 WE 里贴 Base64 永远可读。我们原先「粘贴」只把剪贴板原文塞进框、解码要等到点「应用」,贴进来的 Base64 就一直躺在框里(直接 Ctrl+V 更连「粘贴」都不走)。现在内容一变就试着还原(已经是 JSON 的原样留着,两者都不是也留着,让「应用」那步去说它不合法,不在这里吞掉用户贴的东西),自己引起的替换用标志位挡住递归;「复制」改按 WE 口径出 Base64(状态行报一句字数,并说明它是要贴进 WE 分享框的),两侧编解码由 `WeWallpaperSettings.EncodeShareForClipboard` / `NormalizeShareText` 提供,作为委托传给 `ShowJsonAsync`,让这个 helper 保持不认识 wallpaper 那套格式(唯一不等价处:WE 的 `btoa` 只吃单字节,我们按 UTF-8 编,分享对象里一旦有中文它解不出——它那 15 个键全是 ASCII,故眼下无碍)。顺带堵住这条链上的静默出口:原先 `ShowJsonAsync` / `ShowMessageAsync` 取不到 `XamlRoot` 时直接 return(表现就是按钮按下去毫无动静,现场无从分辨),现改由唤起它的按钮取 `XamlRoot`(取不到再退回主窗口)并留一行报错;每一步都有读数——生成端(内置行数/项数/字节数,有内置行却一个键都没生成时额外警告)、弹窗打开时的初值、内容被还原前后、弹窗关闭(结果 + 框内整串内容,最多 400 字符)、套用(读到几项/套上几项/这张壁纸没有哪些键,不然"套上 0 项"分不清是键名不对还是值不对)。对话框的默认按钮从「取消」挪到「应用」——这条路按下去就是要套值,取消只是不想要了(焦点在多行框里时 Enter 仍算换行,这条只在焦点落在按钮上时接管)
-
-- 修复:「筛选器强度」与「亮度/对比度/色调偏移/饱和度」五行在没有 WE 覆盖记录时只显示「默认」占位,「分享 JSON」也因此只有 8 个键(WE 那串是满的 15 个)—— 这五条的默认值此前记为"WE 没暴露"(不在它 UI 侧的 `getSharedDefaultProperties` 里,原生层查不到)。取证补上:WE 每次保存预设/分享都把那张表整个写全,本机 `config.json` 的 `wpresets[2636878454].presets` 四条(值各不同,说明不是从他改动抄来的)里没动过的项固定是 `wcc_amt=100`、`wec_brs/con/hue/sa=50`、`wec_e=false`,与"强度满档、校正中性"对得上,据此填进目录表的 `DefaultNumber`;这几行从此显示真值而不是占位,未定态只留给确实没有默认可推的情形(如主题配色在两边都没记录时)。写回行为不变(仍只写用户真改过的行)
+- Added: the Papers right panel now switches between Details and Properties — Properties edits the selected wallpaper's attributes in place and writes them out with "Apply changes"
+- Added: the Properties panel and the properties window's "Wallpaper properties" page now carry WE's own layer of properties (theme colour, alignment, position, flip, mouse parallax, playback speed, image filter and strength, display colour options, brightness, contrast, hue shift, saturation), editable and saved
+- Added: four WE preset operations — load, save, share JSON, reset — sharing WE's own data, so they show up in WE too ("apply to all wallpapers" and deleting a preset are not implemented)
+- Added: "Share JSON" works with WE in both directions — Copy emits Base64 that pastes straight into WE's share box, and a string copied from WE is restored to JSON when pasted here
+- Added: unsaved edits in the Properties panel are kept per wallpaper as drafts, so switching away and back preserves them (up to 24 wallpapers at a time)
+- Added: the properties and whitelist windows run as separate processes, so scrolling a list is no longer slowed by them; still a maximum of 5 properties windows, and reopening the same wallpaper brings the existing one forward
+- UI: secondary dialogs are now small cards anchored under the button (only "Share JSON" stays modal); the import page's completion banner moved from the top of the page to above the action bar
+- Optimized: installer 13.19 MB → 11.66 MB, portable archive 17.79 MB → 14.62 MB
+- Changed: the extraction backend is no longer a shipped `repkg\RePKG_Re.exe` — the main program runs it itself; commands and behaviour are unchanged
+- Changed: the auto-backup service is now a single C++ file, 235 KB (was 3.37 MB), with no extra runtime to install
+- Fix: the release build crashed on launch with no message at all
+- Fix: right-clicking empty list space opened no menu on the Papers and installed-components pages; icon mode gained the empty-area menu
+- Fix: on the leftover-cleanup page the bottom button bar vanished after the last card was handled and could not be restored by navigating away and back
+- Fix: the properties window's "File properties" page jerked up and down when scrolled near the bottom
+- Fix: "Undo changes" could not undo edits to a wallpaper's custom properties, and they reappeared when the wallpaper was reselected
+- Fix: the "Share JSON" text box showed nothing but a single brace
+- Fix: filter strength and brightness/contrast/hue shift/saturation showed only a "Default" placeholder and now show WE's real defaults; "Share JSON" went from 8 keys to 13 with that, carrying every built-in property
+- Fix: four auto-backup problems — wallpapers whose path exceeds 260 characters were silently never backed up; a partial backup was still marked "backed up" and never retried; the service log lost its first line at the size cap; the service crashed at startup when the Workshop library directory was missing
+- Fix: files left behind by an overwrite install (`repkg\RePKG_Re.exe`, `SteamworksBridge.*`, an old `libSkiaSharp.dll`) are now removed during installation
+- Fix: the third-party notices were recounted against what is actually compiled in (Windows App SDK and friends had been mislabelled MIT), the Info page credits were corrected, and the shipped notice files are now `RePKG_Re-LICENSE.txt` / `RePKG_Re-THIRD-PARTY-NOTICES.txt`
+- Note: properties are written to WE's install-directory config.json, which a running WE overwrites wholesale — restart Wallpaper Engine for changes to take effect
+- Docs: the changelog is now bilingual, with Chinese first
 
 ## v0.8.0
 
