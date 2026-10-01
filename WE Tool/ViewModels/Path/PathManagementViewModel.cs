@@ -63,7 +63,8 @@ namespace WE_Tool.ViewModels
 
         private async Task BrowseFolderAsync(object? parameter)
         {
-            var path = await _pickerService.PickFolderAsync();
+            // 只有这一页要"压暗其它、露出这一条":系统文件夹对话框盖在上面,回来容易忘了刚在改哪条路径
+            var path = await FocusSpotlight.AroundAsync(() => _pickerService.PickFolderAsync());
             if (!string.IsNullOrEmpty(path))
             {
                 var key = (parameter as string) ?? "WorkshopPath";
@@ -94,7 +95,7 @@ namespace WE_Tool.ViewModels
 
         private async Task BrowseFileAsync(object? parameter)
         {
-            var filePath = await _pickerService.PickFileAsync();
+            var filePath = await FocusSpotlight.AroundAsync(() => _pickerService.PickFileAsync());
 
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath) && parameter != null)
             {

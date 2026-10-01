@@ -16,7 +16,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using WE_Tool.Helper;
 using WE_Tool.Converters;
@@ -108,14 +107,13 @@ namespace WE_Tool
             AppWindow.Resize(new SizeInt32(w, h));
             ApplyTheme();
 
-            // 尺寸防抖上报:窗口尺寸变化(手动拖拽/最大化)后 500ms 发给母进程,只报最后一次。
-            // 母进程攒着,等本进程退出才写进 config.json——两个进程并发全量覆写同一份配置必丢更新。
+            // 尺寸上报:窗口每变一次尺寸就立刻报给母进程(母进程侧合并成一次写盘)。
+            // 不在这里防抖、也不在关闭时补报——那样最后一次拖拽就得等窗口关掉才存得下。
             AppWindow.Changed += OnAppWindowChanged;
 
             Closed += (s, e) =>
             {
                 AppWindow.Changed -= OnAppWindowChanged;
-                ReportSize(); // 关闭时兜底报一次(防抖可能未触发)
                 _channel?.Dispose();
                 // 本进程只有这一个窗口:关掉就退,别留一个没有窗口的空进程等 Job Object 收尸
                 Application.Current.Exit();
@@ -197,48 +195,23 @@ namespace WE_Tool
         /// <summary>打开时快照的壁纸(与主窗口选中分离,不跟随主窗口切换)</summary>
         public WallpaperItem? Selected { get; private set; }
 
-        private CancellationTokenSource? _sizeSaveCts;
-
-        /// <summary>窗口尺寸变化(拖拽/最大化)防抖 500ms 后报给母进程;只报最后一次。</summary>
+        /// <summary>窗口尺寸一变就报给母进程(母进程侧合并写盘,见 PropertiesWindowHost.ScheduleSizeWrite)。
+        /// 本进程不碰 config.json——尺寸字段属于母进程那一份共享配置。</summary>
         private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
         {
             if (!args.DidSizeChange) return;
-
-            _sizeSaveCts?.Cancel();
-            _sizeSaveCts = new CancellationTokenSource();
-            var token = _sizeSaveCts.Token;
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await Task.Delay(500, token);
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-
-                if (token.IsCancellationRequested) return;
-                ReportSize();
-            });
-        }
-
-        /// <summary>把当前尺寸报给母进程,由母进程在本进程退出时写进 config.json——
-        /// 尺寸字段属于那份共享配置,两个进程各自全量覆写必丢更新。
-        /// 管道写可能在对端不读时阻塞,所以离开 UI 线程;关闭路径上管道可能已断,失败即忽略。</summary>
-        private void ReportSize()
-        {
-            var size = AppWindow.Size;
+            var size = sender.Size;
+            // 最小化时 AppWindow.Size 报 0×0(主窗口那边就是这么把 WindowWidth/Height 写成 0 的),
+            // 这种值当"上次尺寸"没意义,直接不报。
             if (size.Width <= 0 || size.Height <= 0) return;
-            var channel = _channel;
-            if (channel == null) return;
             var message = new PropertyWindowMessage
             {
                 Kind = PropertyWindowLink.KindSize,
                 Width = size.Width,
                 Height = size.Height,
             };
-            _ = Task.Run(() => channel.Send(message));
+            // 管道写可能在对端不读时阻塞,所以离开 UI 线程
+            _ = Task.Run(() => _channel?.Send(message));
         }
 
         /// <summary>是否显示"壁纸属性"页(组件等无 project.json 可配置属性的条目传 false,只显示文件属性页)</summary>
@@ -496,8 +469,8 @@ namespace WE_Tool
         private void WallpaperPresetReset_Click(object sender, RoutedEventArgs e)
             => _ = WallpaperPresetActions.ResetAsync((FrameworkElement)sender, _propertyFolder ?? "", () => LoadPropertiesAsync(Selected));
 
-        /// <summary>写盘成功后报给母进程(saved 消息)。与 ReportSize 同法:管道写可能在对端不读时阻塞,
-        /// 所以离开 UI 线程;管道未建成就不报(那是主题/尺寸同步也一并不可用的同一种情况)。</summary>
+        /// <summary>写盘成功后报给母进程(saved 消息)。管道写可能在对端不读时阻塞,所以离开 UI 线程;
+        /// 管道未建成就不报(那是主题/尺寸同步也一并不可用的同一种情况)。</summary>
         private void ReportSaved()
         {
             var channel = _channel;

@@ -150,24 +150,31 @@
                     <Grid x:Name="WallpaperPropsRoot" Visibility="Collapsed">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel Padding="24,16,24,16" Spacing="15">
-                                <StackPanel Spacing="8">
-                                    <!-- 六枚按钮与 Papers 属性面板同一排法(上排对当前值动手、下排预设三件事,文案与行为同源),
-                                         只是这里窗口宽,按钮按内容自然宽、不拉满 -->
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Button x:Name="PropertySaveButton"
-                                                x:Uid="PropertyPanel_Save"
-                                                Click="PropertySaveButton_Click"/>
-                                        <Button x:Name="PropertyUndoButton"
-                                                x:Uid="PropertyPanel_Undo"
-                                                Click="PropertyUndoButton_Click"/>
-                                        <Button x:Uid="PropertyPreset_Reset" Click="WallpaperPresetReset_Click"/>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Button x:Uid="PropertyPreset_LoadButton" Click="WallpaperPresetLoad_Click"/>
-                                        <Button x:Uid="PropertyPreset_Save" Click="WallpaperPresetSave_Click"/>
-                                        <Button x:Uid="PropertyPreset_Share" Click="WallpaperPresetShare_Click"/>
-                                    </StackPanel>
-                                </StackPanel>
+                                <!-- 六枚按钮与 Papers 属性面板同一排法:2×3 星列等分、每枚拉满所在格
+                                     (上排对当前值动手、下排预设三件事,文案与行为同源) -->
+                                <Grid ColumnSpacing="8" RowSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Button Grid.Row="0" Grid.Column="0" x:Name="PropertySaveButton"
+                                            x:Uid="PropertyPanel_Save" Click="PropertySaveButton_Click" HorizontalAlignment="Stretch"/>
+                                    <Button Grid.Row="0" Grid.Column="1" x:Name="PropertyUndoButton"
+                                            x:Uid="PropertyPanel_Undo" Click="PropertyUndoButton_Click" HorizontalAlignment="Stretch"/>
+                                    <Button Grid.Row="0" Grid.Column="2" x:Uid="PropertyPreset_Reset"
+                                            Click="WallpaperPresetReset_Click" HorizontalAlignment="Stretch"/>
+                                    <Button Grid.Row="1" Grid.Column="0" x:Uid="PropertyPreset_LoadButton"
+                                            Click="WallpaperPresetLoad_Click" HorizontalAlignment="Stretch"/>
+                                    <Button Grid.Row="1" Grid.Column="1" x:Uid="PropertyPreset_Save"
+                                            Click="WallpaperPresetSave_Click" HorizontalAlignment="Stretch"/>
+                                    <Button Grid.Row="1" Grid.Column="2" x:Uid="PropertyPreset_Share"
+                                            Click="WallpaperPresetShare_Click" HorizontalAlignment="Stretch"/>
+                                </Grid>
                                 <ProgressRing x:Name="PropertyPanelLoadingRing"
                                               IsActive="{x:Bind IsPropertyLoading, Mode=OneWay}"
                                               Visibility="{x:Bind PropertyPanelLoadingVisibility, Mode=OneWay}"
