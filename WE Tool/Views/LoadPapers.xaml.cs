@@ -23,7 +23,9 @@ namespace WE_Tool
 {
     /// <summary>
     /// 导入解包页：用户导入本地 .pkg/.mpkg 壁纸包,复制到导出目录后调用 repkg_re 解包。
-    /// 提取完成后补写缺失的 project.json(桌面 pkg 包内无此文件),并触发后台扫描让壁纸出现在"我的壁纸"。
+    /// 队列按结果分态:成功项收到完成事件即整行清出,失败/停止项留在列表里(失败行进度条转 Error 红),
+    /// 再点开始提取就只会重跑留下的这些。批尾对成功项补写缺失的 project.json(桌面 pkg 包内无此文件),
+    /// 并触发后台扫描让壁纸出现在"我的壁纸"。
     /// </summary>
     public sealed partial class LoadPapers : Page, INotifyPropertyChanged
     {
@@ -42,6 +44,9 @@ namespace WE_Tool
 
         /// <summary>进度事件名(壁纸 Title=安全名)→ 队列项。</summary>
         private readonly Dictionary<string, ImportQueueItem> _itemsByName = new(StringComparer.Ordinal);
+
+        /// <summary>本轮已"完成即清行"的成功项输出目录:行已从列表移除,批尾的 project.json 补写和汇总计数只能靠它。</summary>
+        private readonly List<string> _succeededOutputs = new();
 
         /// <summary>拖放是否正在页面上方(用于遮罩淡入淡出的状态守卫)。</summary>
         private bool _dragOver;
@@ -249,6 +254,7 @@ namespace WE_Tool
         {
             if (_isExtracting) return;
             AnimatedIconPlayer.PlayOnce(sender);   // [删除图标动画 2026-09]
+            ProbeQueue($"手动清空队列:原 {QueueItems.Count} 行");
             QueueItems.Clear();
             ImportInfoBar.IsOpen = false;
         }
@@ -258,7 +264,10 @@ namespace WE_Tool
         {
             if (_isExtracting) return;
             if (sender is Button { CommandParameter: ImportQueueItem item })
+            {
+                ProbeQueue($"手动移除单行: {item.FileName} | 状态={item.Status}");
                 QueueItems.Remove(item);
+            }
         }
 
         // ==================== 提取业务 ====================
@@ -293,6 +302,7 @@ namespace WE_Tool
             // (batch input 兼容文件,无需再拷贝 pkg 到输出目录)
             // 重名检测:内存集合(本批次内去重)+ 磁盘(历史遗留目录不覆盖)
             _itemsByName.Clear();
+            _succeededOutputs.Clear();
             var usedTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var wallpapers = new List<WallpaperItem>();
             foreach (var item in QueueItems)
@@ -317,6 +327,7 @@ namespace WE_Tool
                     item.OutputPath = Path.Combine(outputRoot, title);
                     item.Progress = 0;
                     item.Status = "等待提取";
+                    item.IsError = false;   // 上一轮的失败红标随重跑退掉
 
                     // Title = 输出文件夹名(batch 按 Title 计算输出目录);事件路由键同步
                     wallpapers.Add(new WallpaperItem { FolderPath = item.FilePath, Title = title });
@@ -326,6 +337,8 @@ namespace WE_Tool
                 {
                     Log.Error(ex, "[导入解包] 准备失败: {Path}", item.FilePath);
                     item.Status = "准备失败";
+                    item.IsError = true;
+                    ProbeQueue($"准备失败 → 留行 {item.FileName} | {ex.GetType().Name}: {ex.Message}");
                 }
             }
 
@@ -355,6 +368,11 @@ namespace WE_Tool
             _navBadgeError = false;
             NavBadgeService.SetBadge("LoadPapers", wallpapers.Count);
 
+            ProbeQueue(
+                $"==== 开始一轮:待提取 {wallpapers.Count}/{QueueItems.Count} | 输出根={outputRoot} | " +
+                $"OneFolder={extractSettings.OneFolder}(0=每包一夹) 覆盖={extractSettings.CoverAllFiles} " +
+                $"跳过已提取={extractSettings.SkipExistingOutput} 输出project.json={extractSettings.OutProjectJSON}");
+
             // 进程优先级是 RepkgCliService 的静态量(启动每个 repkg 子进程时套用),Papers 侧同样在启动前设置;
             // 不设的话会用上一次的值或默认 Normal —— 所以每次开始提取都按设置页「性能」区刷新一遍。
             RepkgCliService.SetProcessPriorityLevel(settings.Extract.ProcessPriority);
@@ -375,12 +393,14 @@ namespace WE_Tool
                     if (item.Status is "等待提取" or "正在提取")
                         item.Status = "已停止";
                 }
+                ProbeQueue($"整批被停止:剩余 {QueueItems.Count} 行转「已停止」");
                 ShowInfoBar("已停止提取", InfoBarSeverity.Warning);
                 NotificationService.NotifyIfUnfocused("导入解包已停止", "提取已停止");
                 TaskbarProgressService.Clear();
             }
             catch (Exception ex)
             {
+                ProbeQueue($"整批抛异常: {ex.GetType().Name}: {ex.Message} | 剩余 {QueueItems.Count} 行");
                 Log.Error(ex, "[导入解包] 提取失败");
                 ShowInfoBar($"提取失败:{ex.Message}", InfoBarSeverity.Error);
                 NotificationService.NotifyIfUnfocused("导入解包失败", $"提取失败:{ex.Message}");
@@ -394,11 +414,11 @@ namespace WE_Tool
                 _isExtracting = false;
                 _isPaused = false;
                 UpdateRunningState();
-                // 导航栏徽标:失败 → 红色保留剩余数;否则按队列剩余更新(全完成→隐藏,停止→保留剩余)
+                // 导航栏徽标:成功项已清出,队列剩下的就是要处理的;全成功→0→徽标隐藏
                 if (_navBadgeError)
-                    NavBadgeService.SetBadge("LoadPapers", Math.Max(1, GetPendingCount()), NavBadgeState.Error);
+                    NavBadgeService.SetBadge("LoadPapers", Math.Max(1, QueueItems.Count), NavBadgeState.Error);
                 else
-                    NavBadgeService.SetBadge("LoadPapers", GetPendingCount());
+                    NavBadgeService.SetBadge("LoadPapers", QueueItems.Count);
             }
         }
 
@@ -415,7 +435,7 @@ namespace WE_Tool
                 _isPaused = false;
                 TaskbarProgressService.SetProgress(GetQueueProgress());
                 // 导航栏徽标:恢复 → 绿色
-                NavBadgeService.SetBadge("LoadPapers", GetPendingCount(), NavBadgeState.Running);
+                NavBadgeService.SetBadge("LoadPapers", QueueItems.Count, NavBadgeState.Running);
             }
             else
             {
@@ -423,7 +443,7 @@ namespace WE_Tool
                 _isPaused = true;
                 TaskbarProgressService.SetPaused();
                 // 导航栏徽标:暂停 → 黄色
-                NavBadgeService.SetBadge("LoadPapers", GetPendingCount(), NavBadgeState.Paused);
+                NavBadgeService.SetBadge("LoadPapers", QueueItems.Count, NavBadgeState.Paused);
             }
             UpdateRunningState();
         }
@@ -434,41 +454,39 @@ namespace WE_Tool
             _extractService?.Stop();
         }
 
-        /// <summary>队列整体进度(0~100):完成/失败项计 100,其余按各自 pct 加权平均。</summary>
+        /// <summary>
+        /// 本轮整体进度(0~100)。成功项已逐条清出队列,所以分母是"已清出的 + 还留着的":
+        /// 清出的按 100 计,留下的失败项也按 100 计(已是终态),其余按各自条目 pct。
+        /// </summary>
         private double GetQueueProgress()
         {
-            var items = QueueItems;
-            if (items.Count == 0) return 0;
-            double sum = 0;
-            foreach (var it in items)
-            {
-                if (it.Status is "提取完成" or "提取失败")
-                    sum += 100;
-                else
-                    sum += it.Progress;
-            }
-            return sum / items.Count;
+            int total = _succeededOutputs.Count + QueueItems.Count;
+            if (total == 0) return 0;
+            double sum = _succeededOutputs.Count * 100.0;
+            foreach (var it in QueueItems)
+                sum += it.IsError ? 100 : it.Progress;
+            return sum / total;
         }
 
-        /// <summary>队列中尚未"提取完成"的项数(等待/正在提取/失败都算)。</summary>
-        private int GetPendingCount()
-        {
-            int pending = 0;
-            foreach (var item in QueueItems)
-            {
-                if (item.Status != "提取完成")
-                    pending++;
-            }
-            return pending;
-        }
-
-        /// <summary>batch 进度事件 name|action|pct|entry → 队列项状态/进度(回 UI 线程更新)。</summary>
+        /// <summary>
+        /// batch 进度事件 name|action|pct|entry → 队列项状态/进度(回 UI 线程更新)。
+        /// _itemsByName 只在 UI 线程增删(开始提取时整表 Clear),这里读它来自子进程输出线程;
+        /// 因此完成项清行后不剔键 —— 迟到的条目事件只会改到一个已经离开列表的对象上,无副作用。
+        /// </summary>
         private void OnExtractProgress(string msg)
         {
             var parts = msg.Split('|');
-            if (parts.Length < 2) return; // 汇总消息(name 缺失),忽略
+            if (parts.Length < 2)
+            {
+                ProbeQueue($"汇总消息(无 name,已忽略): {msg}");
+                return;
+            }
 
-            if (!_itemsByName.TryGetValue(parts[0], out var item)) return;
+            if (!_itemsByName.TryGetValue(parts[0], out var item))
+            {
+                ProbeQueue($"路由不命中(这一名没有对应队列项): {msg}");
+                return;
+            }
             double pct = parts.Length > 2 && double.TryParse(parts[2], out var p) ? p : 0;
 
             _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
@@ -485,16 +503,23 @@ namespace WE_Tool
                         TaskbarProgressService.SetProgress(GetQueueProgress());
                         break;
                     case "完成":
-                        item.Progress = 100;
-                        item.Status = "提取完成";
+                        // [临时埋点 2026-10-02] 清行前记下这张的输出目录实况:空/不存在却说"完成"就是漏判
+                        ProbeQueue($"action=完成 → 清行 {item.FileName} | 输出目录={ProbeDirState(item.OutputPath)} | 原状态={item.Status}");
+                        _succeededOutputs.Add(item.OutputPath);
+                        QueueItems.Remove(item);
                         TaskbarProgressService.SetProgress(GetQueueProgress());
-                        NavBadgeService.SetBadge("LoadPapers", GetPendingCount());
+                        NavBadgeService.SetBadge("LoadPapers", QueueItems.Count);
                         break;
                     case "失败":
+                        ProbeQueue($"action=失败 → 留行 {item.FileName} | 输出目录={ProbeDirState(item.OutputPath)} | 原状态={item.Status}");
                         item.Progress = 100;
                         item.Status = "提取失败";
+                        item.IsError = true;
                         TaskbarProgressService.SetProgress(GetQueueProgress());
-                        NavBadgeService.SetBadge("LoadPapers", GetPendingCount());
+                        NavBadgeService.SetBadge("LoadPapers", QueueItems.Count);
+                        break;
+                    default:
+                        ProbeQueue($"action 未识别(不改动行): {msg}");
                         break;
                 }
             });
@@ -646,19 +671,23 @@ namespace WE_Tool
         /// <summary>提取全部结束后:补写缺失的 project.json、汇总提示、触发后台扫描(仅导出到项目路径时,否则壁纸不在库扫描范围)。</summary>
         private void FinalizeExtraction(AppSettings settings, string outputRoot)
         {
-            int ok = 0, fail = 0;
+            // 成功项已逐条清出队列,计数只能取 _succeededOutputs;project.json 的补写也留在批尾:
+            // 包旁那份由 PostProcessWallpaper 在 repkg 进程退出后才复制,提前补写会抢在它前面。
+            int ok = _succeededOutputs.Count;
+            int fail = 0;
             foreach (var item in QueueItems)
             {
-                if (item.Status == "提取完成")
-                {
-                    ok++;
-                    EnsureProjectJson(item);
-                }
-                else if (item.Status is "提取失败" or "准备失败")
-                {
-                    fail++;
-                }
+                if (item.IsError) fail++;
             }
+
+            foreach (var output in _succeededOutputs)
+            {
+                EnsureProjectJson(output);
+            }
+
+            ProbeQueue(
+                $"==== 批尾:成功 {_succeededOutputs.Count} | 留下 {QueueItems.Count} 行" +
+                $"[{string.Join(", ", QueueItems.Select(i => $"{i.FileName}:{i.Status}"))}]");
 
             bool inLibraryPath = string.Equals(
                 outputRoot.TrimEnd('\\'),
@@ -693,18 +722,18 @@ namespace WE_Tool
         }
 
         /// <summary>桌面 .pkg 包内没有 project.json(batch 也不复制包旁文件),缺则补写最小文件;mpkg 自带则跳过。</summary>
-        private static void EnsureProjectJson(ImportQueueItem item)
+        private static void EnsureProjectJson(string outputPath)
         {
-            if (string.IsNullOrEmpty(item.OutputPath)) return;
+            if (string.IsNullOrEmpty(outputPath)) return;
 
-            var jsonPath = Path.Combine(item.OutputPath, "project.json");
+            var jsonPath = Path.Combine(outputPath, "project.json");
             if (File.Exists(jsonPath)) return;
 
             try
             {
-                string type = File.Exists(Path.Combine(item.OutputPath, "index.html")) ? "web" : "scene";
+                string type = File.Exists(Path.Combine(outputPath, "index.html")) ? "web" : "scene";
                 File.WriteAllText(jsonPath,
-                    JsonSerializer.Serialize(new LoadPapersEntry(Path.GetFileName(item.OutputPath), type), JsonContext.Default.LoadPapersEntry));
+                    JsonSerializer.Serialize(new LoadPapersEntry(Path.GetFileName(outputPath), type), JsonContext.Default.LoadPapersEntry));
             }
             catch (Exception ex)
             {
@@ -717,6 +746,42 @@ namespace WE_Tool
             ImportInfoBar.Message = message;
             ImportInfoBar.Severity = severity;
             ImportInfoBar.IsOpen = true;
+        }
+
+        // ==================== 临时诊断埋点(定位"错误项被清出列表"之后整段删掉)====================
+        // 直写文件,不走 Serilog:LogLevel=Off 时探针会被吞(见日志页那套口径)。
+
+        private static readonly object ProbeLock = new();
+
+        private static void ProbeQueue(string line)
+        {
+            try
+            {
+                var path = Path.Combine(WE_Tool.ViewModels.AppSettingsHelper.LogPath, "import_queue.txt");
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                lock (ProbeLock)
+                    File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {line}{Environment.NewLine}");
+            }
+            catch { /* 埋点失败不影响提取 */ }
+        }
+
+        private static string ProbeDirState(string dir)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(dir)) return "未分配";
+                if (!Directory.Exists(dir)) return "不存在";
+                int n = 0;
+                foreach (var _ in Directory.EnumerateFileSystemEntries(dir))
+                {
+                    if (++n >= 50) break;
+                }
+                return $"{n}{(n >= 50 ? "+" : "")} 项";
+            }
+            catch (Exception ex)
+            {
+                return $"读取失败 {ex.GetType().Name}";
+            }
         }
 
         private static bool IsPkgFile(string name)

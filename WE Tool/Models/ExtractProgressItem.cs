@@ -14,6 +14,7 @@ public partial class ExtractProgressItem : INotifyPropertyChanged
     private string? _preview;
     private string? _contentRating;
     private ImageSource? _blurSource;
+    private bool _isError;
 
     public string Name { get => _name; set { _name = value; OnPropertyChanged(); } }
     public string Action { get => _action; set { _action = value; OnPropertyChanged(); } }
@@ -34,6 +35,18 @@ public partial class ExtractProgressItem : INotifyPropertyChanged
     }
 
     public string? Preview { get => _preview; set { _preview = value; OnPropertyChanged(); } }
+
+    /// <summary>失败项:把这一行的进度条切到 Error 态。失败的行留在列表里等用户看,不随结算清掉。</summary>
+    public bool IsError
+    {
+        get => _isError;
+        set
+        {
+            if (_isError == value) return;
+            _isError = value;
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>这张的分级。提取进度面板那几行缩略图要不要糊,由它和查看菜单那三档一起判。</summary>
     public string? ContentRating { get => _contentRating; set { _contentRating = value; OnPropertyChanged(); } }

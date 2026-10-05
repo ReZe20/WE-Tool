@@ -23,7 +23,8 @@ public class RepkgCliService
     private readonly string _childExe;
     private readonly string _childArgPrefix;
     private readonly ConcurrentDictionary<int, Process> _runningProcesses = new();
-    private readonly ConcurrentBag<string> _startedOutputPaths = new();
+    /// <summary>本轮批处理里真开过工的壁纸输出路径。每轮开始时整只换新(见 RunBatchWithRestartAsync)。</summary>
+    private ConcurrentBag<string> _startedOutputPaths = new();
 
     /// <summary>
     /// 默认形态:提取后端的 CLI 代码编译在本 exe 里,子进程就是主程序自己带 --repkg。
@@ -560,6 +561,11 @@ public class RepkgCliService
         var idToItem = items.ToDictionary(x => x.Id, StringComparer.Ordinal);
         var pending = new HashSet<string>(items.Select(x => x.Id), StringComparer.Ordinal);
 
+        // 每次批处理开始时清空"已开始"名单:它的语义是"本轮哪些壁纸真的开过工",只在取消清理路径里
+        // Clear 会让上一轮的陈旧路径活到这一轮,把本轮从未开工的文件夹当成"开过工"而少删。
+        // 位置必须在重启循环之外 —— 同一批的重启属于同一轮。
+        _startedOutputPaths = new ConcurrentBag<string>();
+
         // 每次提取开始清空 repkg 日志(Info 页 RePKG_Re 日志面板只显示最近一次提取的记录)
         ResetRepkgLog();
 
@@ -596,6 +602,13 @@ public class RepkgCliService
                 if (!mobile && idToItem.TryGetValue(id, out var doneItem))
                     PostProcessWallpaper(doneItem.Wallpaper, GetOutputPath(outputRoot, doneItem.Wallpaper, settings), settings);
             }
+
+            if (result.ZeroOutputIds.Count > 0)
+                Log.Warning("[repkg] {Count} 个壁纸一个条目都没提出来(已按失败上报): {Names}",
+                    result.ZeroOutputIds.Count,
+                    string.Join(", ", result.ZeroOutputIds
+                        .Where(idToItem.ContainsKey)
+                        .Select(id => NameOf(idToItem[id].Wallpaper))));
 
             if (result.CleanDone) break;
 
@@ -719,8 +732,20 @@ public class RepkgCliService
                         }
                         else if (action == "done")
                         {
-                            result.DoneIds.Add(id);
-                            reportProgress($"{NameOf(item.Wallpaper)}|完成|100");
+                            // 零产出判据:一张壁纸只要有一个条目进过队列,repkg 就至少发过一条 entry 事件。
+                            // 它的四个整包失败分支(输入不存在/枚举失败/目录里没有 pkg/没有可提条目)
+                            // 都在发 start 之前就 return,所以"done 但一条 entry 都没见过"= 这个壁纸
+                            // 什么都没提出来。协议里没有 failed,这条判据只能建在 repkg 的返回顺序上 ——
+                            // 它哪天把 entry 事件挪到处理之后发,这里就失真。
+                            // 另一半:error 事件按壁纸计数(ErrorsById),只要有过一条条目写失败就不报完成 ——
+                            // 「完成」是 UI 清行的唯一触发,报错了就等于把失败悄悄删掉。
+                            // 但 DoneIds 仍按"提出过东西"收:后处理(复制包旁 project.json/预览图)不该因
+                            // 某个坏纹理一起停掉,判死的是行,不是已经写出来的文件。
+                            var produced = result.IdsWithEntries.Contains(id);
+                            var errored = result.ErrorsById.TryGetValue(id, out var errorCount) ? errorCount : 0;
+                            if (produced) result.DoneIds.Add(id);
+                            else result.ZeroOutputIds.Add(id);
+                            reportProgress($"{NameOf(item.Wallpaper)}|{(produced && errored == 0 ? "完成" : "失败")}|100");
                         }
                         return;
                     }
@@ -736,6 +761,9 @@ public class RepkgCliService
                 {
                     // 崩溃定位:转换前发出的事件,最后一条 = 崩溃前正在处理的条目
                     result.LastActiveId = entryId;
+                    // 零产出判据的登记处。必须在下面的节流之前 —— 被节流掉的条目事件同样证明
+                    // "这张壁纸有东西可提",漏登记就会把成功的壁纸报成失败
+                    result.IdsWithEntries.Add(entryId);
 
                     // 节流:每个壁纸最多每 30ms 触发一次进度回调
                     var now = Environment.TickCount64;
@@ -752,6 +780,8 @@ public class RepkgCliService
                 else if (entryType == "error")
                 {
                     result.ErrorCount++;
+                    // 按壁纸累计条目错误数,done 分支据此判"每一条都写失败"
+                    result.ErrorsById[entryId] = result.ErrorsById.TryGetValue(entryId, out var seen) ? seen + 1 : 1;
                     var entry = root.TryGetProperty("entry", out var ep2) ? ep2.GetString() : null;
                     var msg = root.TryGetProperty("msg", out var mp) ? mp.GetString() : null;
                     Log.Warning("[repkg] 条目错误 {Entry}: {Msg}", entry, msg);
@@ -1315,6 +1345,15 @@ public class RepkgCliService
 
         /// <summary>收到 wallpaper done 的壁纸 id 集合</summary>
         public HashSet<string> DoneIds { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>发过 entry 事件的壁纸 id —— 「有没有产出」的唯一可见证据(done 分支据此分流完成/失败)</summary>
+        public HashSet<string> IdsWithEntries { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>done 了但一条 entry 都没发过的壁纸 id(repkg 侧整包失败的形状)</summary>
+        public HashSet<string> ZeroOutputIds { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>每张壁纸累计的条目 error 事件数,决定这一张报完成还是失败</summary>
+        public Dictionary<string, int> ErrorsById { get; } = new(StringComparer.Ordinal);
 
         public int ErrorCount;
     }

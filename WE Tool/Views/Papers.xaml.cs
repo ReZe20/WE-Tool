@@ -302,6 +302,9 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
     private int _extractCompletedCount;
     private HashSet<string> _extractCompletedNames = [];
 
+    /// <summary>本轮按「失败」结算掉的壁纸名:零产出/崩溃跳过/没有 pkg 的都算。只用来在收尾文案里点出数量。</summary>
+    private HashSet<string> _extractFailedNames = [];
+
     /// <summary>导航徽标是否处于失败(红)状态:失败后保持红色,直到下次提取开始才复位。</summary>
     private bool _navBadgeError;
     public IAsyncRelayCommand OpenSelectedFoldersCommand { get; }
@@ -660,7 +663,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     OnPropertyChanged(nameof(IsUninstallEnabled));
                     OnPropertyChanged(nameof(IsImportToEditorEnabled));
                     OnPropertyChanged(nameof(IsConvertToMobileEnabled));
-                    UpdateDetailBackupButton();   // [详情面板备份按钮 2026-09-21] 换选中项 → 文案/可用性重算
+                    UpdateDetailActionButtons();   // [详情面板备份按钮 2026-09-21] 换选中项 → 文案/可用性重算
                     // 多选模式下详情面板的显示/提示由 ToggleMultiSelectVisuals 全权接管:
                     // 此处不得重新点亮无选择提示(否则勾选引发的 SelectedWallpaper 变动会把提示盖回堆叠视图上)
                     if (_isMultiSelectMode) return;
@@ -976,7 +979,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 await RefreshWallpaperList();
             }
 
-            UpdateDetailBackupButton();   // [详情面板备份按钮 2026-09-21] 回到本页时按当前选中项重算文案与可用性
+            UpdateDetailActionButtons();   // [详情面板备份按钮 2026-09-21] 回到本页时按当前选中项重算文案与可用性
             ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper); // [属性 2026-09] 页面是缓存页,回到本页补一次属性块
 
             // [性能 2026-09] 先设预渲染缓冲(减少实化/回收容器数),再钳列宽
@@ -5045,6 +5048,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             _extractTotalCount = itemsToExtract.Count;
             _extractCompletedCount = 0;
             _extractCompletedNames = [];
+            _extractFailedNames = [];
             _extractProgressByName = [];
             ExtractProgressItems.Clear();
             ExtractProgress = 0;
@@ -5145,23 +5149,47 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                             }
                             progressItem.Progress = pct; // 0.5% 阈值防抖在 setter 内
                         }
-                        else if (action == "完成" && _extractCompletedNames.Add(name))
+                        else if (action == "完成" || action == "失败")
                         {
-                            // 已完成壁纸移出列表(剩余项自动上移)
-                            if (_extractProgressByName.Remove(name, out var doneItem))
+                            // 失败行留着并转红,完成行清掉 —— 与导入解包页的分态同一口径。
+                            // 零产出那张从没发过 start 也没发过 entry,行是没建过的,所以失败这里要建行再标红;
+                            // 建行只是兜住"失败但没行"这一种,常态失败走的是 TryGetValue 那条。
+                            if (action == "失败")
+                            {
+                                if (!_extractProgressByName.TryGetValue(name, out var failedItem))
+                                {
+                                    extractNameToItem.TryGetValue(name, out var failedSource);
+                                    failedItem = new ExtractProgressItem
+                                    {
+                                        Name = name,
+                                        Preview = failedSource?.Preview,
+                                        ContentRating = failedSource?.ContentRating,
+                                    };
+                                    _extractProgressByName[name] = failedItem;
+                                    ExtractProgressItems.Add(failedItem);
+                                    if (failedSource != null) _ = ApplyExtractRowBlurAsync(failedItem, failedSource);
+                                }
+                                failedItem.IsError = true;
+                                failedItem.Progress = 100;
+                            }
+                            else if (_extractProgressByName.Remove(name, out var doneItem))
                                 ExtractProgressItems.Remove(doneItem);
-                            _extractCompletedCount++;
-                            ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
-                            ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
-                            OnPropertyChanged(nameof(ExtractProgressText));
-                            TaskbarProgressService.SetProgress(ExtractProgress);
-                            // 导航栏徽标:剩余 = 总数 - 完成数
-                            NavBadgeService.SetBadge("Papers", _extractTotalCount - _extractCompletedCount);
-                        }
-                        else if (action == "失败" && _extractProgressByName.Remove(name, out var failedItem))
-                        {
-                            // 崩溃跳过/失败的壁纸同样移出列表
-                            ExtractProgressItems.Remove(failedItem);
+
+                            // 同一张壁纸会因崩溃重启被重复结算,Add 为 false 即重复,不再计数。
+                            // 失败同样算「这张处理完了」:不进计数的话总条会永远卡在 N-1/N。
+                            if (_extractCompletedNames.Add(name))
+                            {
+                                if (action == "失败") _extractFailedNames.Add(name);
+                                _extractCompletedCount++;
+                                ExtractProgress = (double)_extractCompletedCount / _extractTotalCount * 100;
+                                ExtractSubText = _extractFailedNames.Count > 0
+                                    ? $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸(失败 {_extractFailedNames.Count} 个)"
+                                    : $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
+                                OnPropertyChanged(nameof(ExtractProgressText));
+                                TaskbarProgressService.SetProgress(ExtractProgress);
+                                // 导航栏徽标:剩余 = 总数 - 已结算数(成败都算结算)
+                                NavBadgeService.SetBadge("Papers", _extractTotalCount - _extractCompletedCount);
+                            }
                         }
                     }
 
@@ -5172,13 +5200,6 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                     }
                 });
             };
-
-            // 监听 RePKG_Re 的进程输出，捕获当前条目名
-            // 在 onProgress 回调中，如果有条目信息，通过额外段传入：
-            // RepkgCliService.RunRepkgAsync 中 OutputDataReceived 已解析 "entry" 字段，
-            // 但当前只传了 pos/total。需要修改 RunRepkgAsync 将 entry 名也传入 progressCb。
-            // 临时方案：从 msg 中取第4段（如果有）
-            // 已通过上述 parts[3] 逻辑支持
 
             var extractSettings = new ExtractSettings
             {
@@ -5220,10 +5241,12 @@ private void ToggleMultiSelectVisuals(bool isMulti)
                 ExtractProgress = 100;
                 ExtractState = ExtractState.Completed;
                 IsExtracting = false;
-                ExtractStatus = "提取完成";
+                ExtractStatus = _extractFailedNames.Count > 0 ? "提取完成，有失败项" : "提取完成";
                 TaskbarProgressService.SetProgress(100);
                 if (!_isSingleExtract)
-                    ExtractSubText = $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
+                    ExtractSubText = _extractFailedNames.Count > 0
+                        ? $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸(失败 {_extractFailedNames.Count} 个)"
+                        : $"已完成 {_extractCompletedCount}/{_extractTotalCount} 个壁纸";
                 Log.Information("提取完成: {Count} 个壁纸 → {Output}", itemsToExtract.Count, outputPath);
                 // 主窗口不在焦点时弹系统通知
                 NotificationService.NotifyIfUnfocused(
@@ -5599,7 +5622,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             unbackupItem.IsEnabled = done > 0;
         }
 
-        UpdateDetailBackupButton();
+        UpdateDetailActionButtons();
     }
 
     // ===================== 详情面板的卸载按钮(2026-09-21) =====================
@@ -5910,20 +5933,92 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         return tb;
     }
 
-    /// <summary>刷新详情面板卸载按钮的可用性(选中壁纸变化、工坊路径变化、回到本页时调)。
-    /// 判据:工坊来源 + 有 WorkshopID + 有本地目录 + 工坊目录存在;路径无效时按钮禁用而不是点了报错。</summary>
-    private void UpdateDetailBackupButton()
+    // ===================== 详情面板的备份 / 卸载按钮 =====================
+    // 备份:一枚按钮两用,文案与动作都跟着"当前选中这张壁纸"的备份状态走 —— 已备份 →「取消备份」,未备份 →「备份壁纸」。
+    //     交互收敛成一步:备份直接做、不弹任何窗;取消备份在按钮处弹确认小卡(删东西这一步留一次反悔机会)。
+    //     批量入口(右键菜单 / 工具条)保留"确认 + 结果"两轮,因为批量要报数量。
+    // 卸载:详情面板只作用于单张,同样是确认小卡;工具条与右键菜单两个批量入口仍走 UninstallSelectedCommand 的模态对话框。
+    // 可用性判据与子菜单同源(工坊来源 + 有 WorkshopID + 有本地目录 + 工坊目录存在),路径无效时按钮禁用而不是点了报错。
+    private WallpaperItem? _detailBackupTarget;
+    private bool _detailBackupTargetBackedUp;
+
+    public bool IsBackupActionEnabled { get; private set; }
+
+    /// <summary>详情面板那枚按钮的文案:已备份说「取消备份」,没备份说「备份壁纸」——动作随状态改口,不摆一个歧义的「备份」。</summary>
+    public string DetailBackupActionText
+        => LanguageHelper.GetResource(_detailBackupTargetBackedUp ? "Detail_Unbackup.Text" : "Detail_Backup.Text");
+
+    /// <summary>刷新详情面板那两枚按钮(卸载 / 备份)的可用性与文案。
+    /// 选中壁纸变化、工坊路径变化、回到本页、一次备份或取消备份做完之后都要调。</summary>
+    private void UpdateDetailActionButtons()
     {
         var item = ViewModel?.SelectedWallpaper;
         var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
-        _detailUninstallEnabled = item != null
+        bool enabled = item != null
             && item.Source == "workshop"
             && !string.IsNullOrEmpty(item.WorkshopID)
             && !string.IsNullOrEmpty(item.FolderPath)
             && !string.IsNullOrEmpty(workshopPath)
             && Directory.Exists(workshopPath);
 
+        _detailUninstallEnabled = enabled;
         OnPropertyChanged(nameof(IsUninstallEnabled));
+
+        _detailBackupTarget = enabled ? item : null;
+        _detailBackupTargetBackedUp = enabled && BackupService.IsBackedUp(workshopPath!, item!.WorkshopID!);
+        IsBackupActionEnabled = enabled;
+        OnPropertyChanged(nameof(IsBackupActionEnabled));
+        OnPropertyChanged(nameof(DetailBackupActionText));
+    }
+
+    private async void DetailBackupButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_detailBackupTarget is not { } item) return;
+        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+        // 判据在 UpdateDetailActionButtons 里已经过一遍;这里落成局部量只为把"非空"交给编译器
+        // (属性不受空值流分析追踪,直接传 item.FolderPath 会报 CS8604)
+        string sourceDir = item.FolderPath ?? "";
+        if (string.IsNullOrEmpty(workshopPath) || string.IsNullOrEmpty(item.WorkshopID) || sourceDir.Length == 0) return;
+
+        if (!_detailBackupTargetBackedUp)
+        {
+            var result = BackupService.BackupWallpaperFolder(sourceDir, workshopPath, item.WorkshopID);
+            UpdateDetailActionButtons();   // 先改口:成功时"按钮变成取消备份"本身就是全部反馈,不再弹结果框
+            Log.Information("详情面板备份壁纸: {Title}(跳过已是链接的 {Skipped} 个文件)",
+                item.Title ?? item.WorkshopID, result.Skipped);
+            if (result.Error is not null)
+                await DialogHelper.ShowMessageAsync("备份失败", $"{item.Title ?? item.WorkshopID}: {result.Error}");
+            return;
+        }
+
+        // 取消备份:弹确认小卡。平时只有一句提示;"源文件已被删掉、备份是唯一副本"这种真会丢东西的情况才追加警示行
+        UnbackupFlyoutHint.Text = LanguageHelper.GetResource("Detail_UnbackupFlyout_Hint.Text");
+        UnbackupFlyoutConfirmButton.Content = LanguageHelper.GetResource("Detail_Unbackup.Text");
+        UnbackupFlyoutCancelButton.Content = LanguageHelper.GetResource("Common_Cancel.Text");
+        bool sourceGone = !Directory.Exists(Path.Combine(workshopPath, item.WorkshopID));
+        UnbackupFlyoutWarn.Text = LanguageHelper.GetResource("Detail_UnbackupFlyout_Warn.Text");
+        UnbackupFlyoutWarn.Visibility = sourceGone ? Visibility.Visible : Visibility.Collapsed;
+        UnbackupConfirmFlyout.ShowAt(sender as FrameworkElement ?? DetailBackupButton);
+    }
+
+    private async void UnbackupConfirm_Click(object sender, RoutedEventArgs e)
+    {
+        UnbackupConfirmFlyout.Hide();
+        if (_detailBackupTarget is not { } item) return;
+        var workshopPath = ViewModel?.PathManagementVM?.WorkshopPath;
+        if (string.IsNullOrEmpty(workshopPath) || string.IsNullOrEmpty(item.WorkshopID)) return;
+
+        var backupDir = BackupService.GetBackupDir(workshopPath, item.WorkshopID);
+        try
+        {
+            if (Directory.Exists(backupDir)) Directory.Delete(backupDir, true);
+            Log.Information("详情面板取消备份: {Title}", item.Title ?? item.WorkshopID);
+        }
+        catch (Exception ex)
+        {
+            await DialogHelper.ShowMessageAsync("取消备份失败", ex.Message);
+        }
+        UpdateDetailActionButtons();
     }
 
     private void DetailUninstallButton_Click(object sender, RoutedEventArgs e)
@@ -5948,7 +6043,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
         await UninstallSelectionCoreAsync(items,
             items.Where(w => w.Source == "workshop").ToList(),
             items.Where(w => w.Source != "workshop").ToList());
-        UpdateDetailBackupButton();   // 卸载掉的那张没了,按钮状态跟着重算(选中已被清空)
+        UpdateDetailActionButtons();   // 卸载掉的那张没了,按钮状态跟着重算(选中已被清空)
     }
 
     /// <summary>小卡上的「取消」按钮:关掉确认小卡(Esc 或点别处由 Flyout 自己关)。</summary>
@@ -6024,7 +6119,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             }
         }
 
-        UpdateDetailBackupButton();   // 备份状态已落盘,详情面板那枚按钮立刻改口为「取消备份」
+        UpdateDetailActionButtons();   // 备份状态已落盘,详情面板那枚按钮立刻改口为「取消备份」
         var msg = $"备份完成：成功 {success} / {toBackup.Count} 个壁纸";
         if (skippedAll > 0)
             msg += $"\n（其中 {skippedAll} 个文件此前已是链接，自动跳过）";
@@ -6096,7 +6191,7 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             }
         }
 
-        UpdateDetailBackupButton();   // 备份已删除,详情面板那枚按钮立刻改回「备份壁纸」
+        UpdateDetailActionButtons();   // 备份已删除,详情面板那枚按钮立刻改回「备份壁纸」
         var msg = $"取消备份完成：成功 {success} / {toRemove.Count} 个壁纸";
         if (failed > 0)
             msg += "\n\n失败项：\n" + string.Join("\n", failures);

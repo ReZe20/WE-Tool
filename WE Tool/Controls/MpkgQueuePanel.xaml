@@ -161,6 +161,7 @@
                                  总那条按"第几张"走的进度照旧，两者不同维度、不相减。 -->
                             <ProgressBar Value="{x:Bind EntryProgress, Mode=OneWay}" Maximum="100" Height="3"
                                          CornerRadius="2" Margin="0,4,0,0"
+                                         ShowError="{x:Bind IsError, Mode=OneWay}"
                                          Visibility="{x:Bind EntryProgressVisibility, Mode=OneWay}"/>
                             <!-- 参数条:一个开关一格 SettingsCard(仓库既有口径,Info 页就是这么摆的),
                                  标签在左、开关在右,卡片自带的描边天然把各项分开,不再自己拼 2x2 网格。

@@ -375,8 +375,25 @@ public partial class MpkgQueueItem : INotifyPropertyChanged
         }
     }
 
-    /// <summary>没在转的行不留一根空条：0 就是"这行还没轮到/已经结算完并被清掉"。</summary>
-    public Visibility EntryProgressVisibility => _entryProgress > 0 ? Visibility.Visible : Visibility.Collapsed;
+    /// <summary>没在转的行不留一根空条：0 就是"这行还没轮到/已经结算完并被清掉"。
+    /// 失败行例外：那根条要留着显示 Error 态，否则批次收尾把百分比归零之后就没人知道这行是失败留下的。</summary>
+    public Visibility EntryProgressVisibility =>
+        _entryProgress > 0 || _isError ? Visibility.Visible : Visibility.Collapsed;
+
+    private bool _isError;
+
+    /// <summary>这一张转换失败:把行上那根条切到 Error 态。失败的行留在队列里等用户改档位重跑,所以红标要活过收尾归零。</summary>
+    public bool IsError
+    {
+        get => _isError;
+        set
+        {
+            if (_isError == value) return;
+            _isError = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(EntryProgressVisibility));
+        }
+    }
 
     /// <summary>探测结论是"这个档位白选"还是只是一句构成说明 —— 前者才配那格琥珀色。</summary>
     public bool ProbeIsWarning

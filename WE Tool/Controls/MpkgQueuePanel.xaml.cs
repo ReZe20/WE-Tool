@@ -818,8 +818,13 @@ public sealed partial class MpkgQueuePanel : UserControl, INotifyPropertyChanged
             _total = queue.Count;
             _done = 0;
             _allSettled = false;
-            // 上一批残留的行内条先抹平,不然开新批时旧的那根会先跳一下再被这次的事件改写
-            foreach (var row in queue) row.EntryProgress = 0;
+            // 上一批残留的行内条先抹平,不然开新批时旧的那根会先跳一下再被这次的事件改写;
+            // 红标一起退掉 —— 这次重跑成功的那张不该继续顶着一根上一轮的错误条
+            foreach (var row in queue)
+            {
+                row.IsError = false;
+                row.EntryProgress = 0;
+            }
             _progressValue = 0;
             _progressStateText = "正在转换...";
             _progressDetailText = $"已完成 0/{queue.Count} 个壁纸";
@@ -841,7 +846,11 @@ public sealed partial class MpkgQueuePanel : UserControl, INotifyPropertyChanged
 
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
                 {
-                    if (action == "失败") failedNames.Add(name);
+                    if (action == "失败")
+                    {
+                        failedNames.Add(name);
+                        MarkRowError(name);
+                    }
                     if (action == "开始" || action == "解析PKG")
                     {
                         // 总进度按"第几张"走,单张内部那一格走行上的条;明细这行照旧点出"正在转哪一张"。
@@ -949,7 +958,12 @@ public sealed partial class MpkgQueuePanel : UserControl, INotifyPropertyChanged
         IsBusy = false;
         _paused = false;
         // 行上那根条是这一批的过程量,批一结束就清:失败留下的行若顶着半截条,会被读成"还转到一半"
-        foreach (var row in queue) row.EntryProgress = 0;
+        // 失败那几行的条不归零:收尾一归零,Error 态就跟着Visibility一起塌了,
+        // 而队列里留下的正是这几行 —— 用户得能看出哪几张是失败留下来的
+        foreach (var row in queue)
+        {
+            if (!row.IsError) row.EntryProgress = 0;
+        }
         RaiseProgress();
         // 徽标:转完(完成/停止)隐藏;失败 → 红色保留剩余数(与提取那套一致)
         if (_navBadgeError)
@@ -966,6 +980,16 @@ public sealed partial class MpkgQueuePanel : UserControl, INotifyPropertyChanged
         foreach (var row in Items)
         {
             if (row.Name == name) row.EntryProgress = pct;
+        }
+    }
+
+    /// <summary>把这一张标成失败:行上那根条进 Error 态,并且躲过收尾的归零。
+    /// 与 <see cref="SetRowProgress"/> 同一条按名匹配的口径(同名两张一起动)。</summary>
+    private void MarkRowError(string name)
+    {
+        foreach (var row in Items)
+        {
+            if (row.Name == name) row.IsError = true;
         }
     }
 

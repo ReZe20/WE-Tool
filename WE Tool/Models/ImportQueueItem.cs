@@ -7,7 +7,8 @@ namespace WE_Tool.Models
 {
     /// <summary>
     /// 导入壁纸页的队列项：一个待导入的 .pkg/.mpkg 壁纸包文件。
-    /// 当前为 UI 骨架阶段：Status 停在"等待导入"，导入执行逻辑接入后驱动 Progress/Status。
+    /// 提取执行逻辑驱动 Status/Progress/IsError;成功项在收到完成事件时整行清出队列,
+    /// 只有失败与停止的项会留在列表里等用户处理。
     /// </summary>
     public partial class ImportQueueItem : INotifyPropertyChanged
     {
@@ -26,6 +27,14 @@ namespace WE_Tool.Models
         {
             get => _status;
             set { if (_status != value) { _status = value; OnPropertyChanged(); } }
+        }
+
+        private bool _isError;
+        /// <summary>失败项(提取失败/准备失败):驱动进度条的 Error 视觉态。"已停止"是用户主动停的,不算失败。</summary>
+        public bool IsError
+        {
+            get => _isError;
+            set { if (_isError != value) { _isError = value; OnPropertyChanged(); } }
         }
 
         private double _progress;

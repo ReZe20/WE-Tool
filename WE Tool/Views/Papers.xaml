@@ -171,8 +171,21 @@
         <!-- [详情面板确认弹层 2026-09-21] 取代"确认对话框 + 结果对话框"两次点击:在按钮处弹这层小卡,
              一句提示 + 确定/取消(Esc 或点别处也算放弃)。提示与按钮文案都在代码里按 LanguageHelper 设,
              不走 x:Uid(TextBlock 用 .Text、Button 用 .Content,两套键名在弹层里容易踩空)。
-             Opened 仍挂 FlyoutThemeRefresh_Opened:弹层内容在独立顶层里,不继承页面主题(App.ApplyFlyoutTheme 支持 Flyout)。
-             原先还有一层"取消备份"确认小卡,它只服务详情面板那枚已被撤掉的备份按钮,一并删除。 -->
+             Opened 仍挂 FlyoutThemeRefresh_Opened:弹层内容在独立顶层里,不继承页面主题(App.ApplyFlyoutTheme 支持 Flyout)。 -->
+        <!-- 取消备份那层同一条形状,只服务详情面板的备份按钮(已备份时那一按走这条路);
+             工具栏与右键菜单的批量「取消备份」仍走自己的模态确认,因为要报数量。 -->
+        <Flyout x:Name="UnbackupConfirmFlyout" Opened="FlyoutThemeRefresh_Opened">
+            <StackPanel Width="300" Spacing="10">
+                <TextBlock x:Name="UnbackupFlyoutHint" TextWrapping="Wrap" FontSize="12"/>
+                <TextBlock x:Name="UnbackupFlyoutWarn" TextWrapping="Wrap" FontSize="12"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" Visibility="Collapsed"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button x:Name="UnbackupFlyoutConfirmButton" Style="{StaticResource AccentButtonStyle}"
+                            Click="UnbackupConfirm_Click"/>
+                    <Button x:Name="UnbackupFlyoutCancelButton" Click="FlyoutDismiss_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Flyout>
         <Flyout x:Name="UninstallConfirmFlyout" Opened="FlyoutThemeRefresh_Opened">
             <StackPanel Width="300" Spacing="10">
                 <TextBlock x:Name="UninstallFlyoutHint" TextWrapping="Wrap" FontSize="12"/>
@@ -807,6 +820,44 @@
                                                 </wetool:ThemedAnimatedIcon.FallbackIconSource>
                                             </wetool:ThemedAnimatedIcon>
                                             <TextBlock x:Uid="Detail_Uninstall" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                                <!-- 导入编辑器与备份同样只归详情模式:它们动的也是壁纸本身,不是属性。
+                                     备份那枚是一键两用 —— 当前这张已备份则文案「取消备份」、点了弹上面那张确认小卡,
+                                     未备份则「备份壁纸」、点了直接做(单张不弹结果框,按钮改口就是反馈)。
+                                     文案/可用性由 UpdateDetailActionButtons 在选中项、工坊路径变化或一次备份操作结束后重算。
+                                     图标状态切换由 Button 模板驱动(见 Papers.xaml.cs「详情面板按钮图标动画」段:不要手动 SetState)。 -->
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0"
+                                            Visibility="{x:Bind ViewModel.WallpaperDisplayVM.DetailPanelVisibility, Mode=OneWay}">
+                                    <Button x:Name="DetailImportToEditorButton"
+                                            Click="ImportToEditor_Click"
+                                            IsEnabled="{x:Bind IsImportToEditorEnabled, Mode=OneWay}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <wetool:ThemedAnimatedIcon x:Name="DetailImportToEditorIcon" AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:ImportToEditorIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xE70F;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
+                                            <TextBlock x:Uid="Detail_ImportToEditor" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="DetailBackupButton"
+                                            Click="DetailBackupButton_Click"
+                                            IsEnabled="{x:Bind IsBackupActionEnabled, Mode=OneWay}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <wetool:ThemedAnimatedIcon AnimatedIcon.State="Normal" Width="14" Height="14">
+                                                <wetool:ThemedAnimatedIcon.Source>
+                                                    <animatedvisuals:WallpaperBackupIcon/>
+                                                </wetool:ThemedAnimatedIcon.Source>
+                                                <wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                                    <FontIconSource Glyph="&#xF738;"/>
+                                                </wetool:ThemedAnimatedIcon.FallbackIconSource>
+                                            </wetool:ThemedAnimatedIcon>
+                                            <TextBlock Text="{x:Bind DetailBackupActionText, Mode=OneWay}" VerticalAlignment="Center" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -1557,7 +1608,8 @@
                                             </Border>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
                                                 <TextBlock Text="{x:Bind Name}" FontSize="13" TextTrimming="CharacterEllipsis"/>
-                                                <ProgressBar Value="{x:Bind Progress, Mode=OneWay}" Maximum="100" Height="4"/>
+                                                <ProgressBar Value="{x:Bind Progress, Mode=OneWay}" Maximum="100" Height="4"
+                                                             ShowError="{x:Bind IsError, Mode=OneWay}"/>
                                             </StackPanel>
                                         </Grid>
                                     </DataTemplate>
