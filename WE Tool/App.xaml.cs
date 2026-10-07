@@ -52,6 +52,7 @@ namespace WE_Tool
         private static Json.PropertyWindowSnapshot? _launchSnapshot;
         private static Json.WhitelistWindowSnapshot? _launchWhitelistSnapshot;
         private static Json.MpkgWindowSnapshot? _launchMpkgSnapshot;
+        private static Json.ScenePreviewWindowSnapshot? _launchSceneSnapshot;
         /// <summary>当前进程是属性副窗口子进程(母进程带 --properties-window 自我启动)</summary>
         public static bool IsPropertiesWindowChild => _launchSnapshot != null;
         public static Json.PropertyWindowSnapshot? PropertiesWindowLaunch => _launchSnapshot;
@@ -59,6 +60,8 @@ namespace WE_Tool
         public static Json.WhitelistWindowSnapshot? WhitelistWindowLaunch => _launchWhitelistSnapshot;
         /// <summary>当前进程是移动版队列副窗口子进程(母进程带 --mpkg-window 自我启动,队列已整份交给它)</summary>
         public static Json.MpkgWindowSnapshot? MpkgWindowLaunch => _launchMpkgSnapshot;
+        /// <summary>当前进程是场景预览副窗口子进程(母进程带 --scene-preview-window 自我启动)</summary>
+        public static Json.ScenePreviewWindowSnapshot? ScenePreviewWindowLaunch => _launchSceneSnapshot;
         /// <summary>用户数据根,InitLogging 里定值(日志/配置/缓存同根)</summary>
         public static string AppDataRoot { get; private set; } = "";
 
@@ -79,14 +82,27 @@ namespace WE_Tool
                 case Service.PropertyWindowLink.WindowKind.MpkgQueue:
                     _launchMpkgSnapshot = Service.PropertyWindowLink.ReadMpkgPayload(payloadPath);
                     break;
+                case Service.PropertyWindowLink.WindowKind.ScenePreview:
+                    _launchSceneSnapshot = Service.PropertyWindowLink.ReadScenePayload(payloadPath);
+                    break;
             }
 
-            if (_launchSnapshot != null || _launchWhitelistSnapshot != null || _launchMpkgSnapshot != null)
+            if (_launchSnapshot != null || _launchWhitelistSnapshot != null
+                || _launchMpkgSnapshot != null || _launchSceneSnapshot != null)
             {
-                // 三种副窗口的差别只剩语言 / 日志级别 / 日志文件名 / 横幅上的名字。
-                // 载荷读失败(协议不匹配、json 坏了)时三份全为 null,那时当普通进程往下走,不建一个空壳副窗口。
+                // 四种副窗口的差别只剩语言 / 日志级别 / 日志文件名 / 横幅上的名字。
+                // 载荷读失败(协议不匹配、json 坏了)时四份全为 null,那时当普通进程往下走,不建一个空壳副窗口。
+                // 日志必须一份窗口一个文件:Serilog 的 File sink 独占写句柄,两个进程开同一个文件后者起不来;
+                // 而同一种窗口的多个子进程(属性窗最多 5 个)共用一份文件是既有事实,靠 append 模式共存。
                 string childLanguage, childLevel, childLogFile, childLabel;
-                if (_launchMpkgSnapshot != null)
+                if (_launchSceneSnapshot != null)
+                {
+                    childLanguage = _launchSceneSnapshot.Language;
+                    childLevel = _launchSceneSnapshot.LogLevel;
+                    childLogFile = "preview.txt";
+                    childLabel = "场景预览副窗口";
+                }
+                else if (_launchMpkgSnapshot != null)
                 {
                     childLanguage = _launchMpkgSnapshot.Language;
                     childLevel = _launchMpkgSnapshot.LogLevel;
@@ -107,7 +123,7 @@ namespace WE_Tool
                     childLogFile = "properties.txt";
                     childLabel = "属性副窗口";
                 }
-                ViewModel = null!; // 副模式不构建主 VM:三类副窗口都只吃快照,不再引用它
+                ViewModel = null!; // 副模式不构建主 VM:四类副窗口都只吃快照,不再引用它
                 ApplyLanguage(childLanguage);
                 this.InitializeComponent();
                 InitLogging(childProcess: true, forcedLevel: childLevel, childLogFile: childLogFile);
@@ -211,6 +227,16 @@ namespace WE_Tool
             {
                 // 移动版队列副窗口:本进程的全部就是这块面板,转换也由它自己起 repkg 子进程跑。
                 _window = new Views.MpkgQueueWindow(_launchMpkgSnapshot);
+                MainWindowInstance = _window;
+                _window.Activate();
+                return;
+            }
+
+            if (_launchSceneSnapshot != null)
+            {
+                // 场景预览副窗口:本进程的全部就是这块 WebView2。关掉它整个进程退出,
+                // 连带浏览器进程一起回收——这正是把预览做出进程的理由(详情页里那块小图做不到)。
+                _window = new Views.ScenePreviewWindow(_launchSceneSnapshot);
                 MainWindowInstance = _window;
                 _window.Activate();
                 return;

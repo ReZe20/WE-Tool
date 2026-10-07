@@ -495,6 +495,24 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             return ViewModel?.SelectedWallpaper?.IsTypeScene ?? false;
         }
     }
+
+    /// <summary>
+    /// 「预览」可用性:有条目目录就能试。不按类型挡 —— WebWallGL 自己按 project.json 的 type 分流
+    /// (场景装配、视频/图片/GIF 走媒体、网页走沙箱 iframe),挡在界面上只会挡错。
+    /// </summary>
+    public bool IsPreviewEnabled
+    {
+        get
+        {
+            var folder = PreviewTarget?.FolderPath;
+            return !string.IsNullOrWhiteSpace(folder)
+                   && (Directory.Exists(folder) || File.Exists(folder));
+        }
+    }
+
+    /// <summary>预览的目标那一张:单选就是当前选中项(右键那张已被设为它),多选取选中的第一张。</summary>
+    private WallpaperItem? PreviewTarget =>
+        ViewModel?.SelectedWallpaper ?? (ViewModel?.SelectedWallpapers is { Count: > 0 } s ? s[0] : null);
     public ObservableCollection<WallpaperItem> DisplayedSelectedWallpapers { get; } = [];
 
     /// <summary>多壁纸提取进行中列表数据源:每项 = 一个正在提取的壁纸(名称/预览图/实时进度)</summary>
@@ -663,6 +681,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     OnPropertyChanged(nameof(IsUninstallEnabled));
                     OnPropertyChanged(nameof(IsImportToEditorEnabled));
                     OnPropertyChanged(nameof(IsConvertToMobileEnabled));
+                    OnPropertyChanged(nameof(IsPreviewEnabled));
                     UpdateDetailActionButtons();   // [详情面板备份按钮 2026-09-21] 换选中项 → 文案/可用性重算
                     // 多选模式下详情面板的显示/提示由 ToggleMultiSelectVisuals 全权接管:
                     // 此处不得重新点亮无选择提示(否则勾选引发的 SelectedWallpaper 变动会把提示盖回堆叠视图上)
@@ -672,6 +691,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                     NoSelectionHintText.Visibility = ViewModel.SelectedWallpaper != null
                         ? Visibility.Collapsed : Visibility.Visible;
                     UpdateDetailBlur(); // 详情大图模糊层与列表预览同步
+                    UpdateScenePreview(); // [场景预览 2026-10] 换选中项 → 实时预览跟着换(非场景类自动收起)
                     ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper); // [属性 2026-09] 详情面板属性块(防抖)
                 }
                 return;
@@ -908,6 +928,12 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
                 UiHelper.ReloadGifImages(this);
                 return;
             }
+            if (e.PropertyName == nameof(WallpaperDisplayViewModel.LiveScenePreview))
+            {
+                // 开关一改变立即生效:开=装载当前项,关=收起预览面退回静态图
+                UpdateScenePreview();
+                return;
+            }
             if (e.PropertyName == nameof(WallpaperDisplayViewModel.PaginationMode))
             {
                 // 分页开关/每页数量变化：立即刷新翻页栏状态（ApplyFilters 有延迟，先同步一次）
@@ -946,11 +972,13 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             {
                 // 面板重新打开:收起期间的选中变化不解析属性,这里补一次(收起时那几百个控件也不该建)
                 ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper);
+                UpdateScenePreview(); // 面板收起要把预览面停掉,重新打开再装载
             }
             if (e.PropertyName == nameof(WallpaperDisplayViewModel.RightPanelIndex))
             {
                 // 右侧「详情面板 / 属性面板」二选一:属性块跟着切显隐;已建过行的只切显隐不重建
                 ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper);
+                UpdateScenePreview(); // 切到属性面板时预览面不再可见,同样要停帧
             }
             _ = ApplyFilters();
         };
@@ -968,6 +996,15 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
             if (folder == _wallpaperPropsLoadedFolder) ReloadWallpaperPropsFromDisk();
         });
 
+        // 预览宿主的读数:初始化失败、页面报错、首帧耗时都只从这条出来。
+        // 不接就只剩一块黑面,没人看得出死在哪一步(与属性副窗那条订阅同形态,页面是缓存页、只订一次)。
+        ScenePreviewHost.StatusChanged += () => DispatcherQueue.TryEnqueue(() =>
+        {
+            ScenePreviewStatus.Text = ScenePreviewHost.StatusLine;
+            if (!string.IsNullOrEmpty(ScenePreviewStatus.Text))
+                ScenePreviewStatus.Visibility = Visibility.Visible;
+        });
+
         this.Loaded += async (s, e) =>
         {
 
@@ -981,6 +1018,7 @@ public sealed partial class Papers : Page, INotifyPropertyChanged
 
             UpdateDetailActionButtons();   // [详情面板备份按钮 2026-09-21] 回到本页时按当前选中项重算文案与可用性
             ScheduleWallpaperPropsLoad(ViewModel.SelectedWallpaper); // [属性 2026-09] 页面是缓存页,回到本页补一次属性块
+            UpdateScenePreview(); // [场景预览 2026-10] 缓存页回到本页时,离开期间换掉的选中项要补装载
 
             // [性能 2026-09] 先设预渲染缓冲(减少实化/回收容器数),再钳列宽
             ApplyRepeaterCacheLength();
@@ -2175,6 +2213,9 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             RefreshDisplayedSelectedWallpapers(forceRebuild: true);
             UpdateMultiSelectCount();
         }
+
+        // 堆叠多选态没有「当前项」可预览:两种形态都在方法末尾收敛,让预览面按 _isMultiSelectMode 重判
+        UpdateScenePreview();
     }
     private void CancelAllAnimations()
     {
@@ -2902,6 +2943,45 @@ private void ToggleMultiSelectVisuals(bool isMulti)
             _blurOverlayOwner.Remove(blurOverlay);
             SinglePreviewImage.Visibility = Visibility.Visible;
         }
+    }
+
+    /// <summary>
+    /// 详情面板的场景实时预览:开关关、非场景类、多选堆叠态都收起预览面,静态图照旧。
+    /// 系统没预装 WebView2 运行时时一个浏览器进程都不起,只在预览面上摆安装提醒(见 ScenePreviewNotice)。
+    /// </summary>
+    private async void UpdateScenePreview()
+    {
+        var item = ViewModel.SelectedWallpaper;
+        // 面板收起或切到属性面板时也必须停:WebView2 藏在不可见的面板里照样跑渲染循环、照样吃 GPU
+        var wantLive = ViewModel.WallpaperDisplayVM.LiveScenePreview
+                       && item is not null
+                       && item.IsTypeScene
+                       && !_isMultiSelectMode
+                       && ViewModel.WallpaperDisplayVM.RightSplitViewPaneOpen
+                       && ViewModel.WallpaperDisplayVM.RightPanelIndex == 0;
+
+        if (!wantLive)
+        {
+            ScenePreviewHost.Hide();
+            ScenePreviewNotice.Visibility = Visibility.Collapsed;
+            ScenePreviewStatus.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        if (!ScenePreviewHost.RuntimeAvailable)
+        {
+            ScenePreviewNotice.Visibility = Visibility.Visible;
+            ScenePreviewStatus.Text = ScenePreviewHost.StatusLine;
+            ScenePreviewStatus.Visibility = Visibility.Visible;
+            return;
+        }
+
+        ScenePreviewNotice.Visibility = Visibility.Collapsed;
+        var shown = await ScenePreviewHost.TryShowAsync(PreviewImageContainer, item!.FolderPath);
+        ScenePreviewStatus.Text = ScenePreviewHost.StatusLine;
+        ScenePreviewStatus.Visibility = Visibility.Visible;
+        // 装载失败就退回静态图:留一块黑面在预览位上,比没有预览更像卡死
+        if (!shown) ScenePreviewHost.Hide();
     }
 
     /// <summary>堆叠卡片模糊层:按各模式档位,应模糊的壁纸隐藏背景图、显示高斯模糊位图(与列表卡片同源缓存)</summary>
@@ -4789,6 +4869,30 @@ private void ToggleMultiSelectVisuals(bool isMulti)
     {
         // 经 Page_KeyDown_Core 由窗口分发调用,e 参数恒为 null,不可解引用(Handled 由调用方标记)
         _ = PropertiesAsync();
+    }
+    /// <summary>
+    /// 右键「预览」的三种模式:把这一张交给预览副窗口(同 exe 自我启动的子进程,里面跑 WebWallGL + WebView2)。
+    /// 全局只一扇窗,连模式一起发过去:已经开着就换那张/换模式,不再起第二个进程去付第二份 XAML 运行时。
+    /// </summary>
+    private void PreviewProps_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+        => OpenPreviewWindow(ScenePreviewModes.Properties);
+
+    private void PreviewDesktop_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+        => OpenPreviewWindow(ScenePreviewModes.DesktopRatio);
+
+    private void PreviewPhone_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
+        => OpenPreviewWindow(ScenePreviewModes.PhoneRatio);
+
+    private void OpenPreviewWindow(string mode)
+    {
+        HideWallpaperContextMenu();
+        if (PreviewTarget is not WallpaperItem item)
+        {
+            // 菜单项本应按下就灰掉,走到这里说明可用性判漏了 —— 留读数,不静默
+            Log.Warning("[预览副窗] 菜单按下时取不到可预览的条目");
+            return;
+        }
+        ScenePreviewWindowHost.OpenOrSwitch(ViewModel, item, mode);
     }
     private void Properties_Click_ByCommandBarFlyout(object sender, RoutedEventArgs e)
     {

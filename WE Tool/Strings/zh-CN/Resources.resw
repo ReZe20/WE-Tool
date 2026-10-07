@@ -2155,4 +2155,28 @@
   <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
     <value>移动版转换队列</value>
   </data>
+  <data name="PapersSetting_LiveScenePreview.Content" xml:space="preserve">
+    <value>场景壁纸实时预览</value>
+  </data>
+  <data name="ScenePreview_NeedRuntime.Text" xml:space="preserve">
+    <value>实时预览场景壁纸需要 Microsoft Edge WebView2 运行时，这台电脑上没有预装。</value>
+  </data>
+  <data name="ScenePreview_InstallLink.Content" xml:space="preserve">
+    <value>去安装</value>
+  </data>
+  <data name="AppBarButton_Preview.Label" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="MenuFlyoutItem_PreviewProps.Text" xml:space="preserve">
+    <value>可控制属性预览</value>
+  </data>
+  <data name="MenuFlyoutItem_PreviewDesktop.Text" xml:space="preserve">
+    <value>电脑比例预览</value>
+  </data>
+  <data name="MenuFlyoutItem_PreviewPhone.Text" xml:space="preserve">
+    <value>手机比例预览</value>
+  </data>
+  <data name="ScenePreviewWindowTitle.Title" xml:space="preserve">
+    <value>场景壁纸预览</value>
+  </data>
 </root>

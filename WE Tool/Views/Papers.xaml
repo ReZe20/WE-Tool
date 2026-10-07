@@ -165,6 +165,28 @@
                         <FontIcon Glyph="&#xE90F;"/>
                     </AppBarButton.Icon>
                 </AppBarButton>
+                <!-- 预览:把这一张交给预览副窗口(WebWallGL + WebView2 实时渲染)。
+                     任何类型都能点(场景走装配、视频/图片/GIF 走媒体路径、网页走沙箱 iframe),
+                     类型判定在库里按 project.json 的 type 分流,这里不替它猜。
+                     三种模式挂在按钮自己的二级菜单上:同一扇窗换模式,不再起第二个子进程去付第二份 XAML 运行时。
+                     二级菜单用 AppBarButton.Flyout 而不是 Click 里 ShowAttachedFlyout —— 后者按下时
+                     这一项所在的 CommandBarFlyout 正在收起,锚点已经不在树里,弹层会不知道贴在哪。 -->
+                <AppBarButton x:Uid="AppBarButton_Preview"
+                              IsEnabled="{x:Bind IsPreviewEnabled, Mode=OneWay}">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE768;"/>
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout Placement="Left">
+                            <MenuFlyoutItem x:Uid="MenuFlyoutItem_PreviewProps"
+                                            Click="PreviewProps_Click_ByCommandBarFlyout"/>
+                            <MenuFlyoutItem x:Uid="MenuFlyoutItem_PreviewDesktop"
+                                            Click="PreviewDesktop_Click_ByCommandBarFlyout"/>
+                            <MenuFlyoutItem x:Uid="MenuFlyoutItem_PreviewPhone"
+                                            Click="PreviewPhone_Click_ByCommandBarFlyout"/>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
             </CommandBarFlyout.SecondaryCommands>
         </CommandBarFlyout>
         
@@ -753,7 +775,27 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+
+                                <!-- 场景实时预览的缺运行时提醒:盖在预览面上,不做模态框。
+                                     WebView2 本体由 ScenePreviewHost 在代码里延迟创建并插进同一个 Grid,
+                                     没开这个功能时那个控件根本不存在,不会有浏览器进程常驻 -->
+                                <Grid x:Name="ScenePreviewNotice" Visibility="Collapsed"
+                                      Width="280" Height="280" Margin="0,10,0,0"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                      BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="8" VerticalAlignment="Center" Padding="16,0,16,0">
+                                        <TextBlock x:Uid="ScenePreview_NeedRuntime" FontSize="12" TextWrapping="Wrap"/>
+                                        <HyperlinkButton x:Uid="ScenePreview_InstallLink" FontSize="12" Padding="0"
+                                                         NavigateUri="https://developer.microsoft.com/en-us/microsoft-edge/webview2/"/>
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
+                            <!-- 预览宿主的状态读数:初始化失败/渲染失败时这是页面上唯一的线索 -->
+                            <TextBlock x:Name="ScenePreviewStatus" Visibility="Collapsed" FontSize="11"
+                                       Margin="0,-9,0,0" HorizontalAlignment="Center" TextAlignment="Center"
+                                       MaxWidth="300" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                             <TextBlock x:Name="NoSelectionHintText"
                                        x:Uid="NoSelectionHint"
                                        HorizontalAlignment="Center"

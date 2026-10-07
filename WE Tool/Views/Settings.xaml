@@ -265,6 +265,15 @@
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
                                 <StackPanel Orientation="Horizontal">
+                                    <CheckBox x:Uid="PapersSetting_LiveScenePreview"
+                                                  IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.LiveScenePreview, Mode=TwoWay}"/>
+                                </StackPanel>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <StackPanel Orientation="Horizontal">
                                     <CheckBox x:Uid="PapersSetting_IsWallpaperEnterAnimationEnabled"
                                                   IsChecked="{x:Bind ViewModel.WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled, Mode=TwoWay}"/>
                                 </StackPanel>

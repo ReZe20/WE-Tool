@@ -34,6 +34,10 @@ namespace WE_Tool.ViewModels
         [ObservableProperty]
         public partial bool AutoPlayGif { get; set; }
 
+        /// <summary>场景类壁纸在详情面板里实时预览(WebWallGL + WebView2)。关掉时预览退回静态图。</summary>
+        [ObservableProperty]
+        public partial bool LiveScenePreview { get; set; }
+
         [ObservableProperty]
         public partial bool IsWallpaperEnterAnimationEnabled { get; set; }
 

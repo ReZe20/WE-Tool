@@ -13,10 +13,13 @@
 - 新增:「分享 JSON」与 WE 双向可读:复制出来的是 Base64,可直接贴进 WE 的分享框;从 WE 复制的贴进来会自动还原成 JSON
 - 新增:Papers 属性面板的未保存改动按壁纸存草稿,切走再切回来还在(同时最多留 24 张)
 - 新增:属性窗口与白名单窗口改为独立进程,列表滚动不再被它们拖慢;属性窗口仍限 5 个,同一壁纸重复打开会把已有的前置
+- 新增:场景类壁纸在详情面板里实时预览(渲染库 WebWallGL 2.1.0 vendored 随包,跑在 WebView2 里)。默认关,要在设置里勾「场景壁纸实时预览」;系统没预装 Edge WebView2 运行时时只在预览位上给一句安装提醒,不下载任何东西
+- 新增:Papers 右键菜单加「预览」,把这一张交给预览副窗口(与属性/白名单/队列同一条子进程链路,整窗 60 帧)。再点别的壁纸是让那扇窗换内容,不多开一个进程;关掉窗口连浏览器进程一起回收
 - UI:按钮弹出的二级框改成贴在按钮下方的小卡(只有「分享 JSON」还是模态);导入解包页的提示条从页顶移到操作栏之上
 - 优化:安装包 13.19MB → 11.66MB,便携包 17.79MB → 14.62MB
 - 变更:解包后端不再是随包的 `repkg\RePKG_Re.exe`,改由主程序自己跑;功能与命令行行为不变
 - 变更:自动备份服务改用 C++ 单文件实现,235KB(原 3.37MB),不再需要额外运行库
+- 变更:发布包不再剔除 WebView2 三件套(`Microsoft.Web.WebView2.Core.dll` / `.Core.Projection.dll` / `WebView2Loader.dll`),实时预览要用;浏览器本体仍是系统预装的 Evergreen 运行时,不进包
 - 修复:正式包双击启动即崩、没有任何提示
 - 修复:Papers 与已安装组件页在列表空白处右键不弹菜单;图标模式补上空白区菜单
 - 修复:残留清理页处理完最后一张卡后底部按钮整条消失,离开页面再回来也回不来
@@ -38,10 +41,13 @@
 - Added: "Share JSON" works with WE in both directions — Copy emits Base64 that pastes straight into WE's share box, and a string copied from WE is restored to JSON when pasted here
 - Added: unsaved edits in the Properties panel are kept per wallpaper as drafts, so switching away and back preserves them (up to 24 wallpapers at a time)
 - Added: the properties and whitelist windows run as separate processes, so scrolling a list is no longer slowed by them; still a maximum of 5 properties windows, and reopening the same wallpaper brings the existing one forward
+- Added: scene wallpapers now render live in the details panel, using the vendored WebWallGL 2.1.0 library inside WebView2. Off by default — turn on "Live preview for scene wallpapers" in Settings. If the Edge WebView2 Runtime is not installed, the preview area only shows a reminder to install it, and the app downloads nothing
+- Added: the Papers right-click menu gained "Preview", which hands that wallpaper to a preview window in its own process (the same child-process chain as the properties, whitelist and queue windows; full window at 60 fps). Previewing another wallpaper swaps that window's content instead of starting a second process, and closing the window takes the browser processes with it
 - UI: secondary dialogs are now small cards anchored under the button (only "Share JSON" stays modal); the import page's completion banner moved from the top of the page to above the action bar
 - Optimized: installer 13.19 MB → 11.66 MB, portable archive 17.79 MB → 14.62 MB
 - Changed: the extraction backend is no longer a shipped `repkg\RePKG_Re.exe` — the main program runs it itself; commands and behaviour are unchanged
 - Changed: the auto-backup service is now a single C++ file, 235 KB (was 3.37 MB), with no extra runtime to install
+- Changed: the release package no longer strips the WebView2 assemblies (`Microsoft.Web.WebView2.Core.dll` / `.Core.Projection.dll` / `WebView2Loader.dll`) because live preview needs them; the browser itself is still the system-installed Evergreen runtime and is not shipped
 - Fix: the release build crashed on launch with no message at all
 - Fix: right-clicking empty list space opened no menu on the Papers and installed-components pages; icon mode gained the empty-area menu
 - Fix: on the leftover-cleanup page the bottom button bar vanished after the last card was handled and could not be restored by navigating away and back

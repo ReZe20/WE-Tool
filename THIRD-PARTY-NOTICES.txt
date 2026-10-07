@@ -31,19 +31,23 @@ WE Tool 使用的第三方组件及其许可证声明
   发布）；随包 Microsoft.Graphics.Canvas.dll
 - Microsoft.Windows.SDK.BuildTools 10.0.26100.7705 与 Microsoft.Windows.SDK.BuildTools.MSIX
   1.7.251221100 — Windows SDK 许可条款；仅构建期使用，不随包分发
-- Microsoft.Web.WebView2 1.0.3719.77 — Microsoft 许可条款；仅作为 WinUI 子包的依赖被拉入，
-  本项目零调用，发布时已从包中剔除，不随包分发
+- Microsoft.Web.WebView2 1.0.3719.77 — Microsoft 许可条款；场景壁纸实时预览用它起 WebView2 宿主面，
+  随包分发的是 Microsoft.Web.WebView2.Core.dll、Microsoft.Web.WebView2.Core.Projection.dll 与
+  WebView2Loader.dll。浏览器本体（Edge WebView2 Runtime）不由本项目分发，用系统预装的 Evergreen 运行时
 - .NET 10 类库与运行时、NativeAOT 工具链（Microsoft.DotNet.ILCompiler 与
   Microsoft.NET.ILLink.Tasks 10.0.12）— MIT License / Apache-2.0（.NET 运行时与库）；运行时的
   原生代码静态链进主程序
 
-三、随包分发的原生库
+三、随包分发的原生库与第三方资产
 
 - steam_api64.dll — Valve Steamworks SDK 运行时，依 Steamworks SDK 协议随应用再分发
 - Skia（https://skia.org）— BSD-3-Clause，Google LLC。经 SkiaSharp.NativeAssets 使用：本机把
   精简构建的静态库链进主程序，静态库缺失时随包的是本仓库 native/skia-min-gif/libSkiaSharp.dll
   （对上游构建产物的裁剪，仍按 BSD-3-Clause）
 - SkiaSharp.Views.WinUI.Native.dll — MIT License（SkiaSharp.Views.WinUI 4.151.1 的构建产物）
+- WebWallGL 2.1.0（https://github.com/oneincase/webwallgl）— MIT License，作者 oneincase。场景壁纸
+  渲染库，vendored 随包的是 WebWallGL\webwallgl.min.mjs（未经修改，blob 与 npm 发布物逐字节一致），
+  许可全文见同目录 LICENSE.txt。我们自己的宿主页 WebWallGL\preview.html 不属该库，按本项目 GPL-3.0 分发
 
 四、生成器产物
 

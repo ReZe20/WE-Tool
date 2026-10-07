@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>WE Tool scene preview</title>
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+  #box { position: relative; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<!-- 宿主面:WebWallGL 只吃「一块元素 + 一个资源来源」,解析/装配/渲染循环全在库里。
+     容器用 div 而不是 canvas:网页类型壁纸要往里挂 iframe,canvas 不能有子元素。 -->
+<div id="box"></div>
+<script type="module">
+import { mount, httpSource } from "./webwallgl.min.mjs";
+
+// 版本只作为读数报给宿主,判定逻辑不依赖它(库更新时这一行就是取证出处)
+const LIB_VERSION = "2.1.0";
+
+const post = (payload) => {
+  const wv = window.chrome && window.chrome.webview;
+  // 直接发对象:宿主侧读 WebMessageAsJson 即原文,不必再剥一层字符串编码
+  if (wv) wv.postMessage(payload);
+  else console.log("[preview]", payload); // 用浏览器直接打开本文件调试时没有宿主通道
+};
+
+let wp = null;
+
+async function load(baseUrl, fps) {
+  const t0 = performance.now();
+  const source = httpSource(baseUrl);
+  // 不用 wp.load():实测第二次 load 会报「着色器编译失败: null」并丢掉 WebGL 上下文,画面冻结成黑
+  // (库自己那句「宿主应重挂载」就是这个意思)。destroy() 后 canvas 归还,再 mount() 是它文档认可的路径。
+  if (wp) {
+    try { wp.destroy(); } catch { /* 上一次已经死了,销毁失败不影响重建 */ }
+    wp = null;
+  }
+  try {
+    // volume 留默认 0:预览不该在未获用户手势时出声(与浏览器自动播放策略同源)
+    wp = await mount(document.getElementById("box"), { source, fps: fps > 0 ? fps : 30 });
+    wp.on("diagnostic", (msg, lvl) => post({ t: "diag", lvl: lvl || "info", msg: String(msg) }));
+    wp.on("error", (err) => post({ t: "error", msg: String(err && err.message ? err.message : err) }));
+    post({ t: "ready", ms: Math.round(performance.now() - t0), info: wp.info, lib: LIB_VERSION });
+  } catch (err) {
+    // mount 失败后实例不可信,丢掉让下一次重试从干净状态开始
+    wp = null;
+    post({ t: "error", msg: String(err && err.message ? err.message : err), lib: LIB_VERSION });
+    // 装载失败就地把取包的通道探一遍:Failed to fetch 有两种成因(跨域被拦 / 虚域名压根没接住),
+    // 两者的修法相反,不分开就只能靠猜。三条都是 HEAD,不下载正文。
+    probe(baseUrl);
+  }
+}
+
+async function probe(baseUrl) {
+  const url = baseUrl.replace(/\/+$/, "") + "/scene.pkg";
+  const out = { page: location.origin, target: url };
+  const run = async (key, init) => {
+    try {
+      const r = await fetch(key === "sameOrigin" ? location.href : url, init);
+      out[key] = `status=${r.status} type=${r.type} ok=${r.ok}`;
+    } catch (e) {
+      out[key] = "throw: " + String(e && e.message ? e.message : e);
+    }
+  };
+  await run("sameOrigin", { method: "HEAD" });
+  await run("crossCors", { method: "HEAD" });
+  await run("crossNoCors", { method: "HEAD", mode: "no-cors" });
+  post({ t: "probe", ...out });
+}
+
+// 不自己建探针 canvas:Chromium 的 WebGL 上下文有同进程上限(约 8~16),多占一个就把最旧的挤掉,
+// 而挤掉的正是壁纸那个。有没有 WebGL2 由 mount() 自己报 WEBGL2_UNAVAILABLE,走同一条 error 通道。
+post({ t: "hello", lib: LIB_VERSION });
+
+// 预览面被折叠/页面切走时浏览器自己会停 rAF,这里只管标签页隐藏那一档
+document.addEventListener("visibilitychange", () => {
+  if (!wp) return;
+  document.hidden ? wp.pause() : wp.resume();
+});
+
+// 宿主消息只到 window.chrome.webview,不到 window(后者是 iframe 通道,收了会静默丢命令)。
+// PostWebMessageAsJson 送达时 e.data 已是解析好的对象,字符串形态留给人工调试。
+const onHostMessage = (e) => {
+  let cmd = null;
+  try { cmd = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch { return; }
+  if (!cmd || !cmd.cmd) return;
+
+  if (cmd.cmd === "load") load(cmd.base, cmd.fps);
+  else if (cmd.cmd === "props") {
+    // 属性热更:库就地改属性表/效果常量/脚本沙箱,不重挂不重拉包。
+    // 值由宿主按 project.json 的类型给成 JSON 原生量(布尔/数字/字符串),这里不再转换。
+    // 一次一批:每次 setProperties 都要让场景里所有 applyUserProperties 脚本各跑一遍。
+    if (!wp) return; // 实例还没建好:宿主侧留着台账,首帧后统一补发
+    try { wp.setProperties(cmd.values || {}); }
+    catch (e) { post({ t: "diag", lvl: "warn", msg: "setProperties 失败: " + (e && e.message ? e.message : e) }); }
+  }
+  else if (cmd.cmd === "pause" && wp) { wp.pause(); post({ t: "state", paused: true }); }
+  else if (cmd.cmd === "resume" && wp) { wp.resume(); post({ t: "state", paused: false }); }
+};
+
+if (window.chrome && window.chrome.webview) {
+  window.chrome.webview.addEventListener("message", onHostMessage);
+  // 宿主可能在监听装好之前就把首条 load 送进队列,这里报一声让它补发
+  post({ t: "listening" });
+} else {
+  window.addEventListener("message", onHostMessage);
+}
+</script>
+</body>
+</html>

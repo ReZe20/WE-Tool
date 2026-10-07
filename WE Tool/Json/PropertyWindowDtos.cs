@@ -50,7 +50,8 @@ namespace WE_Tool.Json
         /// reload(母→子:面板刚写了同一张壁纸的 project.json,子窗口重读)/
         /// removed(子→母:白名单移除请求)| size(子→母:最新尺寸)| saved(子→母:已写 project.json)|
         /// mpkg-rows(母→子:页面又入了几行)| mpkg-queue(子→母:整份队列交回,见 Dock)|
-        /// mpkg-busy(子→母:副窗口正在转换,母进程这段时间别开提取)</summary>
+        /// mpkg-busy(子→母:副窗口正在转换,母进程这段时间别开提取)|
+        /// preview(母→子:预览副窗口换一张壁纸,见 Folder/PreviewTitle)</summary>
         public string Kind { get; set; } = "";
         public string? Theme { get; set; }
         public bool BlurEveryone { get; set; }
@@ -73,5 +74,14 @@ namespace WE_Tool.Json
 
         /// <summary>mpkg-busy:子进程这一批还在转。</summary>
         public bool Busy { get; set; }
+
+        /// <summary>preview(母→子):换预览这张壁纸(条目目录),Title 是标题上要显示的名字。
+        /// 预览副窗口只有一扇,再点别的壁纸是发这一条而不是再起一个进程。</summary>
+        public string? Folder { get; set; }
+        public string? PreviewTitle { get; set; }
+
+        /// <summary>preview(母→子):换到哪一模式(见 ScenePreviewModes)。null = 沿用当前模式,
+        /// 换壁纸不换模式才是常态。</summary>
+        public string? Mode { get; set; }
     }
 }

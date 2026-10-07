@@ -11,5 +11,6 @@ namespace WE_Tool.Json
     [JsonSerializable(typeof(PropertyWindowMessage))]
     [JsonSerializable(typeof(WhitelistWindowSnapshot))]
     [JsonSerializable(typeof(MpkgWindowSnapshot))]
+    [JsonSerializable(typeof(ScenePreviewWindowSnapshot))]
     internal partial class PropertyWindowJsonContext : JsonSerializerContext { }
 }

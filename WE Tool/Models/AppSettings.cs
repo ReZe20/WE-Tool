@@ -51,6 +51,8 @@ namespace WE_Tool.Models
     {
         public bool IsBottomBarOpen { get; set; } = true;
         public bool AutoPlayGif { get; set; } = true;
+        /// <summary>详情面板对场景类壁纸起 WebView2 实时预览(需要系统预装的 WebView2 运行时)。默认关:它会另起浏览器进程。</summary>
+        public bool LiveScenePreview { get; set; } = false;
         public bool IsWallpaperEnterAnimationEnabled { get; set; } = false;
         public int WallpaperTagDisplayIndex { get; set; } = 0;
         public int WallpaperViewIndex { get; set; } = 0;

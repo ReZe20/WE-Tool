@@ -401,6 +401,7 @@ namespace WE_Tool.ViewModels
 
             WallpaperDisplayVM.IsBottomBarOpen = _settings.Papers.IsBottomBarOpen;
             WallpaperDisplayVM.AutoPlayGif = _settings.Papers.AutoPlayGif;
+            WallpaperDisplayVM.LiveScenePreview = _settings.Papers.LiveScenePreview;
             WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled = _settings.Papers.IsWallpaperEnterAnimationEnabled;
             WallpaperDisplayVM.WallpaperTagDisplayIndex = _settings.Papers.WallpaperTagDisplayIndex;
             WallpaperDisplayVM.WallpaperViewIndex = _settings.Papers.WallpaperViewIndex;
@@ -794,6 +795,7 @@ namespace WE_Tool.ViewModels
                     _settings.Papers.BlurAdult = WallpaperDisplayVM.BlurAdult;
                     _settings.Papers.WallpaperDisplayMode = WallpaperDisplayVM.WallpaperDisplayMode;
                     _settings.Papers.AutoPlayGif = WallpaperDisplayVM.AutoPlayGif;
+                    _settings.Papers.LiveScenePreview = WallpaperDisplayVM.LiveScenePreview;
                     _settings.Papers.IsWallpaperEnterAnimationEnabled = WallpaperDisplayVM.IsWallpaperEnterAnimationEnabled;
                     _settings.Papers.WallpaperTagDisplayIndex = WallpaperDisplayVM.WallpaperTagDisplayIndex;
                     _settings.Papers.WallpaperListMinWidth = WallpaperDisplayVM.WallpaperListMinWidth;

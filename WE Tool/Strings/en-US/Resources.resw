@@ -2161,4 +2161,28 @@ Disclaimer: This tool is for personal learning and backup purposes only. Wallpap
   <data name="MpkgQueueWindowTitle.Title" xml:space="preserve">
     <value>Mobile conversion queue</value>
   </data>
+  <data name="PapersSetting_LiveScenePreview.Content" xml:space="preserve">
+    <value>Live preview for scene wallpapers</value>
+  </data>
+  <data name="ScenePreview_NeedRuntime.Text" xml:space="preserve">
+    <value>Live scene preview needs the Microsoft Edge WebView2 Runtime, which is not installed on this PC.</value>
+  </data>
+  <data name="ScenePreview_InstallLink.Content" xml:space="preserve">
+    <value>Install it</value>
+  </data>
+  <data name="AppBarButton_Preview.Label" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="MenuFlyoutItem_PreviewProps.Text" xml:space="preserve">
+    <value>Preview with properties</value>
+  </data>
+  <data name="MenuFlyoutItem_PreviewDesktop.Text" xml:space="preserve">
+    <value>Desktop-ratio preview</value>
+  </data>
+  <data name="MenuFlyoutItem_PreviewPhone.Text" xml:space="preserve">
+    <value>Phone-ratio preview</value>
+  </data>
+  <data name="ScenePreviewWindowTitle.Title" xml:space="preserve">
+    <value>Scene wallpaper preview</value>
+  </data>
 </root>

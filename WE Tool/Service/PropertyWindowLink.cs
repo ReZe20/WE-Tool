@@ -10,7 +10,7 @@ using WE_Tool.Json;
 namespace WE_Tool.Service
 {
     /// <summary>
-    /// 副窗口(属性 / 白名单 / 移动版队列)的进程间链路:启动载荷文件 + 命名管道双向行帧。
+    /// 副窗口(属性 / 白名单 / 移动版队列 / 场景预览)的进程间链路:启动载荷文件 + 命名管道双向行帧。
     /// 子进程是 server(它先从载荷里拿到管名并等待连接),母进程是 client 并重试——
     /// WinUI 冷启动比管道重试窗口慢不了多少,所以不需要额外的"就绪"信令。
     /// 只用一条管道,不引入 WndProc 子类化/共享内存:NativeAOT 下没有函数指针生命周期要管。
@@ -18,13 +18,14 @@ namespace WE_Tool.Service
     internal static class PropertyWindowLink
     {
         /// <summary>协议代号:子进程据此拒绝旧母进程(或反过来)的载荷,不做静默兼容。
-        /// 名字里的 property 是历史原因,它现在同时管属性、白名单与移动版队列三种副窗口。</summary>
+        /// 名字里的 property 是历史原因,它现在同时管属性、白名单、移动版队列与场景预览四种副窗口。</summary>
         public const string Protocol = "we-property-1";
 
         /// <summary>副窗口模式的启动开关(生成的 Main 丢弃 args,只能在 App 构造里读命令行)。</summary>
         public const string SwitchProperties = "--properties-window";
         public const string SwitchWhitelist = "--whitelist-window";
         public const string SwitchMpkgQueue = "--mpkg-window";
+        public const string SwitchScenePreview = "--scene-preview-window";
 
         public const string KindTheme = "theme";
         public const string KindBlur = "blur";
@@ -49,7 +50,11 @@ namespace WE_Tool.Service
         /// 免得两个 repkg 批次抢同一批核(两侧原本共用 IsExtracting 这道闸,出进程后只剩这一条消息能顶它)。</summary>
         public const string KindMpkgBusy = "mpkg-busy";
 
-        public enum WindowKind { None, Properties, Whitelist, MpkgQueue }
+        /// <summary>母→子:预览副窗口换一张壁纸(Folder=条目目录,PreviewTitle=标题上的名字)。
+        /// 预览只开一扇窗:再点别的壁纸是发这一条,而不是再起一个进程去付一份 XAML 运行时。</summary>
+        public const string KindPreview = "preview";
+
+        public enum WindowKind { None, Properties, Whitelist, MpkgQueue, ScenePreview }
 
         public static string NewPipeName() => $"we-tool-child-{Guid.NewGuid():N}";
 
@@ -64,6 +69,10 @@ namespace WE_Tool.Service
         public static string WritePayload(MpkgWindowSnapshot snapshot) =>
             WriteTemp($"we-tool-mpkg-{Guid.NewGuid():N}.json", JsonSerializer.Serialize(
                 snapshot, PropertyWindowJsonContext.Default.MpkgWindowSnapshot));
+
+        public static string WritePayload(ScenePreviewWindowSnapshot snapshot) =>
+            WriteTemp($"we-tool-preview-{Guid.NewGuid():N}.json", JsonSerializer.Serialize(
+                snapshot, PropertyWindowJsonContext.Default.ScenePreviewWindowSnapshot));
 
         private static string WriteTemp(string fileName, string text)
         {
@@ -93,6 +102,11 @@ namespace WE_Tool.Service
                 {
                     payloadPath = args[i + 1];
                     return WindowKind.MpkgQueue;
+                }
+                if (string.Equals(args[i], SwitchScenePreview, StringComparison.Ordinal))
+                {
+                    payloadPath = args[i + 1];
+                    return WindowKind.ScenePreview;
                 }
             }
             return WindowKind.None;
@@ -129,6 +143,18 @@ namespace WE_Tool.Service
             if (snapshot != null && !Protocol.Equals(snapshot.Protocol, StringComparison.Ordinal))
             {
                 Log.Error("[移动版副窗] 协议不匹配: 期望 {Want},实际 {Got}", Protocol, snapshot.Protocol);
+                return null;
+            }
+            return snapshot;
+        }
+
+        public static ScenePreviewWindowSnapshot? ReadScenePayload(string path)
+        {
+            var snapshot = ReadAndDelete(path, text => JsonSerializer.Deserialize(
+                text, PropertyWindowJsonContext.Default.ScenePreviewWindowSnapshot));
+            if (snapshot != null && !Protocol.Equals(snapshot.Protocol, StringComparison.Ordinal))
+            {
+                Log.Error("[预览副窗] 协议不匹配: 期望 {Want},实际 {Got}", Protocol, snapshot.Protocol);
                 return null;
             }
             return snapshot;

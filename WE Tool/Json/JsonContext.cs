@@ -23,6 +23,10 @@ namespace WE_Tool.Json
     [JsonSerializable(typeof(LoadPapersEntry))]
     [JsonSerializable(typeof(string))]
     [JsonSerializable(typeof(List<string>))]
+    // 预览的属性热更消息要把单个值原样嵌进 JSON 字面量,三种值类型各占一个源生成的标量转换器
+    // (拼字符串会写出非法 JSON,反射式 Serialize(object) 在 AOT 下是 IL2026)
+    [JsonSerializable(typeof(bool))]
+    [JsonSerializable(typeof(double))]
     [JsonSerializable(typeof(WallpaperScanner.CacheFile))]
     internal partial class JsonContext : JsonSerializerContext { }
 }
